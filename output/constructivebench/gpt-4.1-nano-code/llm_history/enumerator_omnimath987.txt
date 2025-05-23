@@ -1,0 +1,55 @@
+[write_program]
+The theorem seeks to find the greatest natural number \( n \) such that there exists a finite type \( V \) with \( \text{card } V = n \), and an edge relation \( E \) satisfying a specific cyclical pattern akin to a directed 3-cycle or triangle configuration with particular edge orientations. To guess the maximum \( n \), we need to explore small finite sets and check if such arrangements exist, focusing on small sizes to ensure efficiency.
+
+We'll:
+- Iterate over small finite types of sizes from 1 up to, say, 7.
+- For each size, enumerate possible directed graphs (relations) on these vertices.
+- Check if the relation satisfies the recurrent pattern outlined.
+- Stream solutions when found.
+- Keep track of the largest found \( n \).
+
+This approach relies on small explicitly generated graphs because arbitrary enumeration of all relations is exponential but manageable at small sizes.
+
+```python
+import itertools
+
+def check_pattern(n):
+    # Create all possible directed edges (E) combinations
+    vertices = range(n)
+    for edges_bits in range(1 << (n * n)):
+        E = [[False]*n for _ in range(n)]
+        bits = edges_bits
+        for i in range(n):
+            for j in range(n):
+                if i != j:
+                    E[i][j] = (bits & 1) == 1
+                    bits >>= 1
+        # Check the pattern condition for all triples
+        for A in vertices:
+            for B in vertices:
+                for C in vertices:
+                    if len({A, B, C}) == 3:
+                        cond1 = E[A][B] and not E[B][C] and not E[C][A]
+                        cond2 = not E[A][B] and E[B][C] and not E[C][A]
+                        cond3 = not E[A][B] and not E[B][C] and E[C][A]
+                        if not (cond1 or cond2 or cond3):
+                            break
+                else:
+                    continue
+                break
+            else:
+                continue
+            break
+        else:
+            return n  # Found a relation satisfying the pattern
+    return None
+
+max_n_found = 0
+for size in range(1, 8):  # Search sizes up to 7
+    result = check_pattern(size)
+    if result is not None:
+        print(f"Found pattern for size {size}")
+        max_n_found = size
+
+print(f"Maximum n satisfying the pattern is {max_n_found}")
+```

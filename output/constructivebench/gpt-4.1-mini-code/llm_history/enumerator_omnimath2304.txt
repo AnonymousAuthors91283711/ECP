@@ -1,0 +1,90 @@
+[write_program]
+The problem asks to find the greatest real number \( y \) such that there exists a quadratic polynomial \( P(x) = ax^2 + bx + c \) satisfying:
+
+- \( \deg P \leq 2 \),
+- \( P(1) = 20 \),
+- \( P(-1) = 22 \),
+- \( P(P(0)) = 400 \),
+- \( P(10) = y \),
+
+and to find the supremum of all such \( y \).
+
+We want to enumerate all quadratic polynomials fulfilling the first three constraints and then calculate \( P(10) \). This involves:
+
+- Expressing \( a,b,c \) using the constraints \( P(1)=20 \), \( P(-1)=22 \),
+- The condition \( P(P(0))=400 \) involves a nonlinear condition,
+- For such parameters, find \( P(10) \).
+
+We enumerate solutions for polynomial coefficients (using rational or float values) satisfying these constraints approximately or exactly. To keep complexity manageable, we solve symbolically where possible, then enumerate solutions for \( c = P(0) \) in some range, check if conditions hold, then print corresponding \( P(10) \).
+
+The code attempts to find all possible \( y = P(10) \) values for constructed \( P \), then prints the maximum \( y \).
+
+```python
+# Enumerate quadratic polynomials P(x)=a x^2 + b x + c with P(1)=20, P(-1)=22,
+# P(P(0))=400, then compute P(10).
+# Print all candidate y=P(10) and finally output the max y.
+
+def main():
+    # We have P(x)=a x^2 + b x + c
+    # From P(1)=20: a + b + c = 20  => b = 20 - a - c
+    # From P(-1)=22: a - b + c =22
+    # Substitute b: a - (20 - a - c) + c = 22 => a - 20 + a + c + c = 22
+    # => 2a + 2c = 42 => a + c = 21 => a = 21 - c
+    # then b = 20 - (21 - c) - c = 20 - 21 + c - c = -1
+
+    # So b = -1 fixed, a = 21 - c.
+
+    # P(0) = c, so P(P(0))=P(c)=400
+    # P(c) = a c^2 + b c + c = a c^2 + b c + c = a c^2 + (b+1)c
+    # Because P(x)=a x^2 + b x + c, but P(c) = a c^2 + b c + c
+    # (Wait, P(c) = a c^2 + b c + c or a c^2 + b c + c? It should be 
+    # P(c) = a c^2 + b c + c, but c is the constant term, value P(0), careful)
+    # Actually, P(x) = a x^2 + b x + c
+    # so P(c) = a c^2 + b c + c
+
+    # Substituting a =21 - c, b = -1:
+    # P(c) = (21 - c) * c^2 + (-1) * c + c = (21 - c) c^2 + 0 = (21 - c) c^2
+
+    # Set equal to 400:
+    # (21 - c) * c^2 = 400
+
+    # Solve for c:
+    # c^2 (21 - c) = 400
+    # Expand:
+    # 21 c^2 - c^3 = 400
+    # Rearrange:
+    # c^3 - 21 c^2 + 400 = 0
+
+    # We solve the cubic for c:
+    # c^3 -21 c^2 + 400 =0
+
+    # For each real root c of the cubic,
+    # a=21 - c, b=-1, and then compute y= P(10) = a*100 + b*10 + c
+
+    # Finding roots of cubic:
+    from math import isclose
+
+    def cubic_roots():
+        # Use numpy.roots
+        import numpy as np
+        coeffs = [1, -21, 0, 400]  # c^3 -21 c^2 +0 c +400=0
+        roots = np.roots(coeffs)
+        for r in roots:
+            if abs(r.imag) < 1e-10:
+                yield r.real
+
+    max_y = None
+    print("Roots c of cubic c^3 -21 c^2 +400=0 and corresponding y=P(10):")
+    for c in cubic_roots():
+        a = 21 - c
+        b = -1
+        y = a * 100 + b * 10 + c
+        print(f"c={c:.6g}, a={a:.6g}, b={b}, y=P(10)={y:.6g}")
+        if max_y is None or y > max_y:
+            max_y = y
+
+    print(f"\nMaximum y = {max_y:.6g}")
+
+if __name__ == "__main__":
+    main()
+```

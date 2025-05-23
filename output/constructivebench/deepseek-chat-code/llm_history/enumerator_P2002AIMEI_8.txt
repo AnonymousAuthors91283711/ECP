@@ -1,0 +1,43 @@
+[write_program]
+This problem involves finding the smallest positive integer k such that there exist two distinct pairs of initial values (a₁,a₂) and (b₁,b₂) where the 9th term of their Fibonacci-like sequences both equal k. We'll write a Python program to enumerate possible k values and find the minimal one meeting the conditions.
+
+```python
+def fib_like(a1, a2, n):
+    if n == 1: return a1
+    if n == 2: return a2
+    prev_prev, prev = a1, a2
+    for _ in range(3, n+1):
+        current = prev + prev_prev
+        prev_prev, prev = prev, current
+    return prev
+
+def find_min_k():
+    k_dict = {}  # maps k to list of (a1,a2) pairs
+    max_a = 200   # reasonable upper bound for initial values
+    
+    for a1 in range(1, max_a + 1):
+        for a2 in range(a1, max_a + 1):  # since a1 <= a2
+            k = fib_like(a1, a2, 9)
+            if k not in k_dict:
+                k_dict[k] = []
+            k_dict[k].append((a1, a2))
+    
+    # Find minimal k with at least two distinct pairs
+    for k in sorted(k_dict.keys()):
+        pairs = k_dict[k]
+        # Check if there are at least two distinct pairs
+        if len(pairs) >= 2:
+            # Verify they are distinct (either a1 or a2 differs)
+            for i in range(len(pairs)):
+                for j in range(i+1, len(pairs)):
+                    a1_i, a2_i = pairs[i]
+                    a1_j, a2_j = pairs[j]
+                    if a1_i != a1_j or a2_i != a2_j:
+                        print(f"Found candidate k: {k} with pairs {pairs[i]} and {pairs[j]}")
+                        return k
+    return None
+
+if __name__ == "__main__":
+    min_k = find_min_k()
+    print(f"\nThe minimal k is: {min_k}")
+```

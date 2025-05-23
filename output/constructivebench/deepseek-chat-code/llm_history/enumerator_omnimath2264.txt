@@ -1,0 +1,64 @@
+[write_program]
+This problem involves finding the maximum possible value achievable by applying a sequence of 8 operations (4 black steps and 4 white steps) to a cube labeling. The operations involve summing neighboring vertices based on specific adjacency rules.
+
+We'll approach this by:
+1. Modeling the cube as vertices 0-7 (8 vertices total)
+2. Enumerating all possible sequences of 4 black and 4 white steps
+3. Applying each sequence to initial labelings to find the maximum value
+4. Using symmetry to reduce computation (since the cube is symmetric)
+
+```python
+from itertools import combinations
+
+# Cube vertices are labeled 0-7
+# Adjacency rules:
+# Black step neighbors: ±1, ±2 (mod 8)
+# White step neighbors: ±3, ±4 (mod 8)
+
+def black_step(labels):
+    new_labels = [0]*8
+    for v in range(8):
+        neighbors = [(v+1)%8, (v-1)%8, (v+2)%8, (v-2)%8]
+        neighbors = [u for u in neighbors if u != v]
+        new_labels[v] = sum(labels[u] for u in neighbors)
+    return new_labels
+
+def white_step(labels):
+    new_labels = [0]*8
+    for v in range(8):
+        neighbors = [(v+3)%8, (v-3)%8, (v+4)%8, (v-4)%8]
+        neighbors = [u for u in neighbors if u != v]
+        new_labels[v] = sum(labels[u] for u in neighbors)
+    return new_labels
+
+def apply_sequence(initial, sequence):
+    labels = initial.copy()
+    for step in sequence:
+        if step == 'B':
+            labels = black_step(labels)
+        else:
+            labels = white_step(labels)
+    return labels
+
+# Generate all sequences of 4 black and 4 white steps
+sequences = set()
+for positions in combinations(range(8), 4):
+    seq = ['W']*8
+    for pos in positions:
+        seq[pos] = 'B'
+    sequences.add(tuple(seq))
+
+max_value = 0
+# Try different initial conditions (symmetry allows us to test just one vertex)
+initial = [0]*8
+initial[0] = 1
+
+for seq in sequences:
+    final = apply_sequence(initial, seq)
+    current_max = max(final)
+    if current_max > max_value:
+        max_value = current_max
+        print(f"New max: {max_value} with sequence {seq}")
+
+print(f"Final maximum value found: {max_value}")
+```

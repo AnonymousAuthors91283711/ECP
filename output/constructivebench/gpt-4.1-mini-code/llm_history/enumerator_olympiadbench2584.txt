@@ -1,0 +1,54 @@
+[write_program]
+The problem involves solving the equation:
+
+log_{2x}(48 * 3^(1/3)) = log_{3x}(162 * 2^(1/3)),
+
+under conditions 2x > 0, 2x ≠ 1, 3x > 0, and 3x ≠ 1, which means x > 0, and 2x ≠ 1, 3x ≠ 1.
+
+To assist in conjecturing the solution, we'll enumerate values of x (positive and avoiding the forbidden values), compute both log expressions, and print when they are equal (or very close, using exact computations when possible). We'll check rational x with denominators and numerators small (like multiples of 1/10) for efficiency.
+
+We prefer exact values (using sympy) over floating approximations. Let's implement that.
+
+```python
+# Enumerate solutions to log_{2x}(48*3^{1/3}) = log_{3x}(162*2^{1/3}) for positive x, excluding 1/2 and 1/3.
+# We'll use sympy for exact symbolic evaluation and rational numbers.
+
+from sympy import symbols, Rational, log, simplify, cbrt, S
+
+x = symbols('x', positive=True)
+
+# Define expressions:
+lhs = log(48 * cbrt(3), 2 * x)
+rhs = log(162 * cbrt(2), 3 * x)
+
+# We'll loop over rational x values from 0.1 to 3 with step 0.1, avoiding forbidden x=1/2 and x=1/3.
+# Convert floats to Rational for exactness.
+
+def approx_equal(a,b, tol=1e-9):
+    return abs(float(a)-float(b)) < tol
+
+found = False
+print("Enumerating candidates x with step 1/10:")
+
+for numerator in range(1,31):
+    for denominator in range(1,31):
+        candidate = Rational(numerator, denominator)
+        # Check conditions 2x≠1 => x≠1/2, 3x ≠1 => x≠1/3:
+        if candidate == Rational(1,2) or candidate == Rational(1,3):
+            continue
+        # Check positivity:
+        if candidate <= 0:
+            continue
+        try:
+            val_lhs = lhs.subs(x, candidate).evalf()
+            val_rhs = rhs.subs(x, candidate).evalf()
+            if approx_equal(val_lhs, val_rhs):
+                print(f"x = {candidate} => lhs = rhs = {val_lhs}")
+                found = True
+        except Exception:
+            continue
+
+if not found:
+    print("No equality found in this range.")
+```
+

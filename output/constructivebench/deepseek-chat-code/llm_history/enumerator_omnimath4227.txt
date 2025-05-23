@@ -1,0 +1,66 @@
+[write_program]
+This problem involves finding the minimal number of uphill paths in a Nordic square (a bijective grid labeling) where each path starts at a valley (local minimum) and strictly increases. We'll write a Python program to enumerate small cases (n=1,2,3) to help conjecture the pattern.
+
+```python
+from itertools import permutations
+
+def is_adjacent(n, a, b):
+    """Check if two positions (i,j) are adjacent in an n×n grid"""
+    (i1, j1), (i2, j2) = a, b
+    return ((i1 == i2 and abs(j1 - j2) == 1) or 
+            (j1 == j2 and abs(i1 - i2) == 1))
+
+def is_valley(grid, i, j, n):
+    """Check if (i,j) is a valley (all adjacent values are larger)"""
+    for di, dj in [(-1,0),(1,0),(0,-1),(0,1)]:
+        ni, nj = i + di, j + dj
+        if 0 <= ni < n and 0 <= nj < n and grid[ni][nj] < grid[i][j]:
+            return False
+    return True
+
+def count_uphill_paths(grid, n):
+    """Count all uphill paths starting from valleys in the grid"""
+    count = 0
+    # Find all valleys
+    valleys = [(i,j) for i in range(n) for j in range(n) if is_valley(grid, i, j, n)]
+    
+    # For each valley, perform DFS to count paths
+    for start in valleys:
+        stack = [(start, [start])]
+        while stack:
+            (i,j), path = stack.pop()
+            # Count this path if it has length ≥1
+            if len(path) >= 1:
+                count += 1
+            # Explore adjacent cells with higher values
+            for di, dj in [(-1,0),(1,0),(0,-1),(0,1)]:
+                ni, nj = i + di, j + dj
+                if (0 <= ni < n and 0 <= nj < n and 
+                    (ni,nj) not in path and 
+                    grid[ni][nj] > grid[i][j]):
+                    stack.append(((ni,nj), path + [(ni,nj)]))
+    return count
+
+def minimal_uphill_paths(n):
+    """Find minimal number of uphill paths among all n×n permutations"""
+    numbers = list(range(n*n))
+    min_paths = float('inf')
+    
+    # Try all possible permutations (for small n)
+    for perm in permutations(numbers):
+        grid = [list(perm[i*n:(i+1)*n]) for i in range(n)]
+        # Check if it's a Nordic square (bijection)
+        if len(set(perm)) == n*n:
+            paths = count_uphill_paths(grid, n)
+            if paths < min_paths:
+                min_paths = paths
+                print(f"New minimum found for n={n}: {min_paths}")
+                print("Grid:", grid)
+    return min_paths
+
+# Compute for small cases
+for n in range(1, 4):
+    print(f"\nComputing for n={n}")
+    result = minimal_uphill_paths(n)
+    print(f"Minimal uphill paths for n={n}: {result}")
+```

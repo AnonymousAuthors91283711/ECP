@@ -1,0 +1,134 @@
+[write_program]
+This problem involves finding real numbers \(x \neq y\) and parameters \(A, B\) such that \(x, y\) are roots of two cubic equations:
+
+\[
+x^3 + A x + 10 = 0, \quad y^3 + A y + 10 = 0,
+\]
+and
+\[
+x^3 + B x^2 + 50 = 0, \quad y^3 + B y^2 + 50 = 0.
+\]
+
+Additionally, \(x y\) equals some fixed value (\(\text{olympiadbench2958\_answer}\)).
+
+To assist in discovering the relationship and conjecture the value of \(x y\), we enumerate pairs \((A, B)\) in a small integer range, find real roots of the first cubic, check if the second cubic has the same roots, and print the product \(x y\) if all conditions hold.
+
+```python
+# Enumerate A, B in small range; find distinct roots x,y of first cubic; check if both roots satisfy second cubic.
+from sympy import symbols, Poly, solveset, S, Eq, re, im, solveset_real
+from sympy.polys.polytools import degree
+from sympy import Rational
+
+x = symbols('x')
+
+def real_roots(poly):
+    # Get real roots of polynomial
+    roots = solveset(poly.as_expr(), x, domain=S.Reals)
+    return sorted(list(roots))
+
+def check_roots_same_poly(roots, poly):
+    # Check all roots satisfy polynomial == 0
+    # Since roots come from exact solve, just verify evaluation is zero
+    for r in roots:
+        val = poly.eval(r)
+        if abs(val) > 1e-8:
+            return False
+    return True
+
+print("Enumerating possible (A, B) and roots x,y with x!=y:")
+
+for A_int in range(-5, 6):
+    # first poly: x^3 + A x + 10 = 0
+    p1 = Poly(x**3 + A_int * x + 10, x)
+    rts = real_roots(p1)
+    # We want two distinct real roots only
+    for i in range(len(rts)):
+        for j in range(i+1, len(rts)):
+            x1, x2 = rts[i], rts[j]
+            if abs(x1 - x2) < 1e-12:
+                continue
+            for B_int in range(-5, 6):
+                # second poly: x^3 + B x^2 + 50 = 0
+                p2 = Poly(x**3 + B_int * x**2 + 50, x)
+                # Check if x1, x2 satisfy second poly
+                if abs(p2.eval(x1)) < 1e-8 and abs(p2.eval(x2)) < 1e-8:
+                    # Print exact A, B and product x*y
+                    prod = x1 * x2
+                    print(f"A={A_int}, B={B_int}, roots=({x1.evalf(6)}, {x2.evalf(6)}), product = {prod.evalf(6)}")
+```
+This will print candidate parameters and root pairs, helping to guess the true answer.
+[refine_program]
+The original program attempts to find pairs (A, B) and distinct roots x, y of the first cubic such that both roots also satisfy the second cubic, then print A, B, roots, and the product x*y. However, the code produces no output, which means it found no such pairs in the searched integer ranges [-5,5].
+
+The likely issues are:
+
+1. The root finding approach using `solveset` on cubic polynomials with arbitrary integer coefficients may not produce exact roots; real roots of cubics with integer coefficients can be irrational and symbolic forms may not simplify well. But the checking code tolerates this by evaluating numerically with an absolute error threshold.
+
+2. The polynomials being checked have constant terms 10 in the first polynomial and 50 in the second — these values may not produce real roots at all or the roots may be complex.
+
+3. Since the problem requires existence of distinct real roots for the first polynomial and those roots must also be roots of the second polynomial, the search domain may be too small or discrete.
+
+4. The evaluation for roots satisfying the second polynomial checks whether the numeric value is near zero (within 1e-8). If the roots are approximate symbolic results, their evaluation might slightly deviate.
+
+5. Also, the method used to find roots may yield symbolic roots with radicals or more complex expressions; directly evaluting `p2.eval(root)` works only when root is numeric or a simplified expression.
+
+Given the above, the program can be improved by:
+
+- Printing the parameters being tested.
+
+- Computing roots numerically (using `nroots()` in sympy for numerical roots) to get numeric approximations.
+
+- Using float values for A and B (not just integers) by searching over a small grid with finer steps.
+
+- Verifying that both roots satisfy both polynomials within some tolerance.
+
+- Output the product x*y explicitly to required precision.
+
+- Enforce that x != y.
+
+- Avoid checking too large domain to respect output size.
+
+Therefore, I reject the original program and provide a corrected version below that numerically searches A and B in a small range with step 1, computes roots numerically, validates the conditions, and prints the matching values and product.
+
+<<<False>>>
+```python
+# Corrected enumerator for the problem:
+# Find A,B in small integer range such that polynomial x^3 + A x + 10 = 0
+# has distinct real roots x,y that also
+[refine_program]
+The given problem is a theoretical statement in Lean theorem prover syntax, asking to find real numbers x, y, A, B satisfying simultaneous polynomial equations with a specific constraint on x*y. The original input provides no computational program, only the problem statement and definitions, and no code enumerating solutions. Hence, it is not a program, so it must be rejected.
+
+For correction, I will write a Python enumerator that tries to find pairs (x,y) and values A,B satisfying the system:
+
+x^3 + A*x + 10 = 0  
+y^3 + A*y + 10 = 0  
+x^3 + B*x^2 + 50 = 0  
+y^3 + B*y^2 + 50 = 0  
+x != y
+
+From the first two, since x,y distinct roots, then A can be derived from the system; similarly for B. We can use symmetric polynomials approach:
+
+From x^3 + A x + 10 = 0, x,y satisfy it => their polynomial is (t - x)(t - y) = t^2 - (x+y)t + xy
+
+However, the polynomial is cubic, so (t - x)(t - y) is degree 2, but the cubic polynomial must have both x,y as roots, so the cubic factors as (t-x)(t-y)(t-r) = 0 for some root r.
+
+But the condition is that x,y are roots of two different cubics with results respectively.
+
+So let's proceed by choosing a range of rational numbers for x,y (say from -10 to 10), test x != y, then compute A and B from the two equations and check consistency.
+
+The program will output all x,y,A,B that satisfy all four equations (within floating tolerance), and print x*y as the product.
+
+Then print minimal or maximal product if asked (here just print all found).
+
+Because the output is limited to 400 tokens, I will limit the enumeration range and precision.
+
+---
+
+Judgement: The original program is empty (no program), so it is rejected.
+
+<<<False>>>
+
+```python
+# Enumerate real pairs (x,y), x != y, and reals A,B satisfying simultaneously:
+#  x^3 + A*x +10=0 and y^3 + A*y +10=0
+#  x^3 + B*x^2 +50=0 and y^3 +

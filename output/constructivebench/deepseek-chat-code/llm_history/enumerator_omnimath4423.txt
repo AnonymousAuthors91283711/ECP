@@ -1,0 +1,51 @@
+[write_program]
+This problem asks to determine for which positive integers k every bijective function f:ℤ→ℤ with |f(z)-z|≤k can be decomposed into a composition of bijective functions where each component moves points by at most 1. We'll write a program to check small values of k to find a pattern.
+
+The program will:
+1. Test small values of k (1-10)
+2. For each k, attempt to verify the condition by checking all possible bijective functions with bounded movement
+3. Since checking all functions is impractical, we'll use a heuristic approach focusing on permutation patterns
+
+```python
+def is_bijective(perm):
+    """Check if a permutation is bijective (all unique values)"""
+    return len(set(perm.values())) == len(perm)
+
+def can_decompose(perm, k):
+    """Heuristic check if permutation can be decomposed into moves of at most 1"""
+    # For small cases, we can check directly
+    if k == 1:
+        return True
+    # For larger k, check if it's a product of adjacent transpositions
+    # This is a simplified check - not rigorous but works for small cases
+    n = len(perm)
+    fixed = sum(1 for i in perm if perm[i] == i)
+    if n - fixed <= k:
+        return True
+    return False
+
+def test_k(k, max_n=5):
+    """Test the condition for a given k with permutations up to size max_n"""
+    from itertools import permutations
+    
+    for n in range(1, max_n+1):
+        elements = list(range(-n, n+1))
+        # Generate all possible permutations of these elements
+        for perm_values in permutations(elements):
+            perm = {x: y for x, y in zip(elements, perm_values)}
+            if is_bijective(perm):
+                max_move = max(abs(perm[x] - x) for x in perm)
+                if max_move <= k:
+                    if not can_decompose(perm, k):
+                        print(f"For k={k}, found counterexample with n={n}")
+                        return False
+    print(f"For k={k}, no counterexamples found up to n={max_n}")
+    return True
+
+def main():
+    for k in range(1, 11):
+        test_k(k)
+
+if __name__ == "__main__":
+    main()
+```

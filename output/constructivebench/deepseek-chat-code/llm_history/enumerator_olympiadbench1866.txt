@@ -1,0 +1,56 @@
+[write_program]
+This problem asks for the smallest `b` such that there exists a set of numbers (defined by `P(n) = n² + n + 1`) within a consecutive interval `[a, a+b]` that forms a "fragrant" set (where no element is coprime with the product of the others). We'll write a Python program to search for such sets and find the minimal `b`.
+
+The approach:
+1. Define the P(n) function
+2. Generate candidate sets of P(n) values for different a and b
+3. Check if each set is fragrant
+4. Find the minimal b where such a set exists
+
+```python
+import math
+from itertools import combinations
+
+def P(n):
+    return n*n + n + 1
+
+def is_fragrant(s):
+    for x in s:
+        others = [y for y in s if y != x]
+        product = 1
+        for y in others:
+            product *= y
+        if math.gcd(x, product) == 1:
+            return False
+    return True
+
+max_b_to_check = 10  # Reasonable upper bound for demonstration
+
+found = False
+min_b = None
+
+for b in range(1, max_b_to_check + 1):
+    if found:
+        break
+    for a in range(1, 100):  # Arbitrary upper bound for a
+        # Check all possible subset sizes from 2 up to b+1
+        for size in range(2, b+2):
+            # Generate all possible combinations of size 'size' in [a,a+b]
+            for nums in combinations(range(a, a+b+1), size):
+                s = [P(n) for n in nums]
+                if is_fragrant(s):
+                    print(f"Found fragrant set for a={a}, b={b}: {s}")
+                    if min_b is None or b < min_b:
+                        min_b = b
+                    found = True
+                    break
+            if found:
+                break
+        if found:
+            break
+
+if min_b is not None:
+    print(f"\nMinimal b found: {min_b}")
+else:
+    print(f"No fragrant sets found for b up to {max_b_to_check}")
+```

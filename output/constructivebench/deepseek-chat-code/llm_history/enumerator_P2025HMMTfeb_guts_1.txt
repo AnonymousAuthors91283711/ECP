@@ -1,0 +1,57 @@
+[write_program]
+The problem asks for the count of 9-digit prime numbers where:
+1. Each digit is between 1 and 9 (no zeros)
+2. All digits are distinct (no repeats)
+
+We'll write a Python program to enumerate all such primes. The approach is:
+1. Generate all 9-digit numbers with distinct digits from 1-9
+2. Check each for primality
+3. Count the primes found
+
+Since checking all permutations would be slow, we'll:
+1. Precompute primes up to sqrt(999,999,999) using Sieve of Eratosthenes
+2. Generate digit permutations and check primality
+
+```python
+import itertools
+import math
+
+def sieve(limit):
+    sieve = [True] * (limit + 1)
+    sieve[0] = sieve[1] = False
+    for i in range(2, int(math.sqrt(limit)) + 1):
+        if sieve[i]:
+            sieve[i*i::i] = [False] * len(sieve[i*i::i])
+    return sieve
+
+# Precompute primes up to sqrt(999,999,999) ~31622
+max_prime_check = 31622
+prime_cache = sieve(max_prime_check)
+
+def is_prime(n):
+    if n < 2:
+        return False
+    if n <= max_prime_check:
+        return prime_cache[n]
+    # Check divisibility by precomputed primes
+    for p in [i for i, is_p in enumerate(prime_cache) if is_p]:
+        if n % p == 0:
+            return False
+    # Check remaining possible divisors
+    max_div = math.isqrt(n) + 1
+    for d in range(max_prime_check + 1, max_div):
+        if n % d == 0:
+            return False
+    return True
+
+count = 0
+digits = '123456789'
+for num_digits in [9]:  # Only 9-digit numbers
+    for p in itertools.permutations(digits, num_digits):
+        num = int(''.join(p))
+        if is_prime(num):
+            count += 1
+            print(num)  # Stream found primes
+
+print(f"Total count: {count}")
+```

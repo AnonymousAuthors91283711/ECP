@@ -1,0 +1,51 @@
+[write_program]
+The problem involves exploring natural numbers \( n \) for which there exists a polynomial \( P \) over integers such that, for all positive \( m \), the size of the image modulo \( n \) of iterating \( P \) starting at 1 equals \(\lceil n / 2^m \rceil\).
+
+We will test small values \( n \) to enumerate possible candidates for the set `omnimath4265_answer`. For each \( n \), we'll try small degrees and simple polynomials (like linear \(P(x)=ax+b\) with small integer coefficients) to see if the condition might hold for \( m=1,2,3 \) (limiting \( m \) to keep computations feasible).
+
+We print candidates \( n \) when a polynomial \( P \) is found matching the condition for all tested \( m \).
+
+```python
+# Enumerate n up to 20, try linear polynomials P(x)=a*x+b with small integers a,b
+# Check for m=1..3 if the size of {P iterated m times starting at 1 mod n} matches ceil(n / 2^m)
+
+def iterates(P, n, m):
+    # P is a function int->int
+    x = 1
+    seq = set()
+    for _ in range(m):
+        x = P(x) % n
+        seq.add(x)
+    return len(seq)
+
+def ceil_div(a,b):
+    return (a + b - 1)//b
+
+print("Testing n in 1..20, linear polynomials P(x)=a*x+b with a,b in -3..3, excluding a=0")
+for n in range(1,21):
+    found = False
+    for a in range(-3,4):
+        if a == 0:
+            continue
+        for b in range(-3,4):
+            # Define polynomial P
+            def P(x, a=a, b=b):
+                return a*x + b
+            ok = True
+            for m in range(1,4):
+                rems = set()
+                x = 1
+                for _ in range(m):
+                    x = P(x) % n
+                    rems.add(x)
+                if len(rems) != ceil_div(n, 2**m):
+                    ok = False
+                    break
+            if ok:
+                print(f"n={n}, P(x)={a}*x+{b} matches for m=1..3")
+                found = True
+                break
+        if found:
+            break
+```
+

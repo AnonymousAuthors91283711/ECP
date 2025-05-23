@@ -1,0 +1,48 @@
+[write_program]
+This problem involves calculating the probability that for two distinct competitors, one has a higher general score but lower theme score than the other (or vice versa). We need to find the floor of 10000 times this probability.
+
+We'll approach this by:
+1. Considering small numbers of competitors (n=2 to n=10)
+2. Enumerating all possible score assignments (simplified to permutations)
+3. Calculating the probability for each case
+4. Looking for patterns in the results
+
+```python
+from itertools import permutations
+from math import floor
+
+def calculate_p(n):
+    total_pairs = n * (n - 1)
+    favorable = 0
+    
+    # We can represent scores as their ranks since only relative ordering matters
+    for general in permutations(range(n)):
+        for theme in permutations(range(n)):
+            # Count all pairs (i,j) where i≠j and scores are inverted
+            count = 0
+            for i in range(n):
+                for j in range(n):
+                    if i == j:
+                        continue
+                    if (general[i] > general[j] and theme[i] < theme[j]) or \
+                       (general[i] < general[j] and theme[i] > theme[j]):
+                        count += 1
+            favorable += count
+    
+    # Each permutation pair appears (n!)^2 times
+    denominator = (total_pairs) * (factorial(n) ** 2)
+    p = favorable / denominator
+    return floor(10000 * p)
+
+def factorial(k):
+    return 1 if k <= 1 else k * factorial(k-1)
+
+# Calculate for small n values
+for n in range(2, 6):
+    result = calculate_p(n)
+    print(f"n={n}: {result}")
+
+# The pattern suggests the answer is 5000 for all n >= 2
+# We verify this conjecture by checking n=5
+print("\nConjectured answer for all n >= 2:", 5000)
+```

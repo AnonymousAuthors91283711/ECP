@@ -1,0 +1,56 @@
+[write_program]
+This problem asks for the minimum possible value of |w³ + z³| given that |w + z| = 1 and |w² + z²| = 14 for complex numbers w and z. We'll approach this by parameterizing w and z in terms of their sum and difference, then enumerate possible real values to find the minimum.
+
+```python
+import cmath
+import math
+
+def find_min_abs_w3_plus_z3():
+    min_value = float('inf')
+    # We parameterize w and z in terms of s = w+z and d = w-z
+    # Given |s| = 1, we can represent s as e^(iθ)
+    # The condition |w² + z²| = 14 becomes |s² + d²|/2 = 14
+    # So |s² + d²| = 28
+    
+    # Sample θ in [0, π] due to symmetry
+    for theta in [x * math.pi / 180 for x in range(0, 181, 5)]:
+        s = cmath.exp(1j * theta)
+        s_squared = s**2
+        
+        # Solve for d: |s² + d²| = 28
+        # Let d² = a + bi, then |(s².re + a) + i(s².im + b)| = 28
+        # So (s².re + a)² + (s².im + b)² = 784
+        
+        # We can parameterize possible d² values
+        # For simplicity, consider real d² first (b=0)
+        # Then (s².re + a)² + s².im² = 784
+        # So a = -s².re ± sqrt(784 - s².im²)
+        
+        s2_re = s_squared.real
+        s2_im = s_squared.imag
+        discriminant = 784 - s2_im**2
+        if discriminant >= 0:
+            for sign in [-1, 1]:
+                a = -s2_re + sign * math.sqrt(discriminant)
+                d_squared = complex(a, 0)
+                try:
+                    d = cmath.sqrt(d_squared)
+                except ValueError:
+                    continue
+                
+                # Calculate w and z
+                w = (s + d)/2
+                z = (s - d)/2
+                
+                # Compute |w³ + z³|
+                w3_plus_z3 = w**3 + z**3
+                current_abs = abs(w3_plus_z3)
+                
+                if current_abs < min_value:
+                    min_value = current_abs
+                    print(f"New minimum found: {min_value} (θ={theta:.2f} rad)")
+    
+    print(f"Final minimum value: {min_value}")
+
+find_min_abs_w3_plus_z3()
+```

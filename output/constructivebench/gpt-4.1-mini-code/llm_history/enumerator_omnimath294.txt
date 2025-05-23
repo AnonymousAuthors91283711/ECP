@@ -1,0 +1,50 @@
+[write_program]
+The problem involves solving a quartic polynomial equation with very large coefficients, which is challenging to do symbolically. Instead, we enumerate possible roots by testing nearby integers and rational candidates to identify exact roots or good rational approximations. We focus on values around ±10^5 to ±10^6 since coefficients suggest that scale. We'll print each candidate root found that satisfies the polynomial exactly or within a very small numerical tolerance.
+
+```python
+# Enumerate candidate roots for:
+# x^4 - (2*10^10 + 1)*x^2 - x + 10^20 + 10^10 - 1 = 0
+# We'll test integer candidates near ±10^5 ... ±10^6 and some rational approximations.
+
+def poly(x):
+    return x**4 - (2*10**10 + 1)*x**2 - x + 10**20 + 10**10 - 1
+
+def is_zero(val, tol=1e-6):
+    return abs(val) < tol
+
+def main():
+    from fractions import Fraction
+    print("Testing integers near ±10^5, ±10^6...")
+    candidates = list(range(99_990, 100_011)) + list(range(-100_010, -99_989))
+    
+    found = []
+    for x in candidates:
+        val = poly(x)
+        if val == 0:
+            print(f"Exact integer root: x = {x}")
+            found.append(x)
+    if not found:
+        print("No exact integer roots found in ±10^5 range.")
+
+    print("Testing some rational approximations near 1 and -1...")
+    # Since x=1 or x=-1 values might simplify
+    for denom in range(1, 11):
+        for numer in range(-20, 21):
+            frac = Fraction(numer, denom)
+            val = poly(frac)
+            if val == 0:
+                print(f"Exact rational root: x = {frac}")
+            elif is_zero(val, 1e-3):
+                print(f"Approximate rational root: x ≈ {float(frac):.5f}, poly={val:.3e}")
+
+    print("Sampling floats near ±(10^5)...")
+    for base in [10**5, -10**5]:
+        for delta in range(-10, 11):
+            x = base + delta
+            val = poly(x)
+            if is_zero(val):
+                print(f"Approximate float root near {base}: x = {x}")
+
+if __name__ == "__main__":
+    main()
+```

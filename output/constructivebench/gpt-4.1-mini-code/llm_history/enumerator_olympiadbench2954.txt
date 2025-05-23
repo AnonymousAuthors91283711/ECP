@@ -1,0 +1,50 @@
+[write_program]
+The problem concerns finding the smallest positive integer \( n \) such that the number of divisors of \( n^n \) is at least 1,000,000. Since \(\text{number of divisors}(m) = \prod (e_i + 1)\) where \( m = \prod p_i^{e_i} \), for \( n^n \) with the prime factorization of \( n = \prod p_i^{a_i} \), we have
+\[
+n^n = \prod p_i^{a_i n},
+\]
+so the exponents in \( n^n \) are \( a_i n \), and the number of divisors is
+\[
+d(n^n) = \prod (a_i n + 1).
+\]
+
+The program below enumerates small values of \( n \) and computes the number of divisors of \( n^n \), printing all \( n \) where this count exceeds or reaches 1,000,000. It stops at a certain \( n \) limit for feasibility and prints the candidates and the minimal \( n \).
+
+```python
+import math
+
+def prime_factors(n):
+    # Returns a dictionary {prime: exponent} for n
+    factors = {}
+    x = n
+    for i in range(2, int(math.isqrt(n)) + 1):
+        while x % i == 0:
+            factors[i] = factors.get(i, 0) + 1
+            x //= i
+    if x > 1:
+        factors[x] = factors.get(x,0) + 1
+    return factors
+
+threshold = 10**6
+max_n = 100  # limit search for efficiency
+
+candidates = []
+
+for n in range(1, max_n+1):
+    if n == 1:
+        divisors_count = 1  # 1^1=1 has 1 divisor
+    else:
+        pf = prime_factors(n)
+        # number of divisors of n^n = product of (a_i * n + 1)
+        divisors_count = 1
+        for exp in pf.values():
+            divisors_count *= (exp * n + 1)
+    if divisors_count >= threshold:
+        print(f"n={n}, divisors of n^n = {divisors_count}")
+        candidates.append((n, divisors_count))
+if candidates:
+    min_n = min(c[0] for c in candidates)
+    print(f"Minimum n with divisors count ≥ {threshold} is {min_n}")
+else:
+    print(f"No n ≤ {max_n} found with divisors count ≥ {threshold}")
+```

@@ -1,0 +1,80 @@
+[write_program]
+The problem involves characterizing all functions \( f:\mathbb{R} \to \mathbb{R} \) satisfying the functional equation
+\[
+\forall x,y,z \in \mathbb{R}, \quad x+y+z=0 \implies f(x^3) + (f(y))^3 + (f(z))^3 = 3xyz.
+\]
+We are asked to find all such \(f\).
+
+To assist in conjecturing the form of \(f\), we can try some simple polynomial forms and check if they satisfy the equation. For instance, linear or cubic polynomials \(f(t) = a t + b\), \(t \mapsto a t^3\), or others. Also try the identity \(f(t)=t\), or \(f(t)=c t\), or constant functions, or zero function. Check them for small values \(x,y,z\).
+
+We will enumerate:
+- Candidates \(f(t) = a t + b\) for some small \(a,b\)
+- Check if the functional equation holds for sample triples \((x,y,z)\) with \(x+y+z=0\).
+- Print those \(a,b\) for which the equation holds for chosen triples.
+
+This might hint the correct form of \(f\).
+
+```python
+# Enumerate candidate linear functions f(t) = a*t + b and test the given functional condition on sample triples.
+def f(t, a, b):
+    return a * t + b
+
+def check_func(a, b, samples):
+    # Checks the functional equation for all samples
+    # ∀ x,y,z with x+y+z=0: f(x^3) + (f(y))^3 + (f(z))^3 = 3xyz
+    # We test on samples only (necessary condition)
+    for x,y,z in samples:
+        left = f(x**3, a, b) + f(y, a, b)**3 + f(z, a, b)**3
+        right = 3 * x * y * z
+        if abs(left - right) > 1e-6:
+            return False
+    return True
+
+def main():
+    # Sample triplets (x,y,z) with x+y+z=0
+    samples = [
+        (1, -1, 0),
+        (2, -3, 1),
+        (0.5, 0.5, -1),
+        (3, -1, -2),
+        (-1, -1, 2)
+    ]
+
+    print("Testing linear functions f(t) = a*t + b...")
+    # Try a, b in a small grid
+    for a_int in range(-5,6):
+        for b_int in range(-3,4):
+            a = a_int
+            b = b_int
+            if check_func(a, b, samples):
+                # Print candidate (exact integer values)
+                print(f"Candidate: f(t) = {a}*t + {b}")
+
+    # Also try f(t) = k*t (b=0)
+    print("Testing functions f(t) = k*t with k float values ...")
+    for k in [0, 1, -1, 2, -2, 0.5, -0.5]:
+        failures = False
+        for x,y,z in samples:
+            left = k*(x**3) + (k*y)**3 + (k*z)**3
+            right = 3*x*y*z
+            if abs(left - right) > 1e-6:
+                failures = True
+                break
+        if not failures:
+            print(f"Candidate: f(t) = {k}*t")
+
+    # Try f(t) = 0
+    print("Testing zero function f(t)=0 ...")
+    failures = False
+    for x,y,z in samples:
+        left = 0 + 0 + 0
+        right = 3*x*y*z
+        if abs(left - right) > 1e-6:
+            failures = True
+            break
+    if not failures:
+        print("Candidate: f(t) = 0")
+
+if __name__ == "__main__":
+    main()
+```

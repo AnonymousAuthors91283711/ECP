@@ -1,0 +1,60 @@
+[write_program]
+This problem involves finding all integer-coefficient polynomials P such that for every natural number n > 0 with more than 2023^2023 distinct prime factors, P(n) is positive and has no more distinct prime factors than n itself. The solution likely involves constant polynomials and polynomials of the form ±X^k.
+
+We'll write a Python program to enumerate small-degree polynomials and check the condition for small values of n with multiple prime factors. We'll focus on polynomials up to degree 3 with small coefficients.
+
+```python
+def is_positive_and_prime_factors_condition(P, n):
+    """Check if P(n) > 0 and has no more distinct prime factors than n."""
+    if n <= 0:
+        return False
+    # Evaluate polynomial at n
+    value = sum(c * (n**i) for i, c in enumerate(P))
+    if value <= 0:
+        return False
+    
+    # Count distinct prime factors of n
+    def count_prime_factors(x):
+        if x == 1:
+            return 0
+        count = 0
+        p = 2
+        while p * p <= x:
+            if x % p == 0:
+                count += 1
+                while x % p == 0:
+                    x //= p
+            p += 1
+        if x > 1:
+            count += 1
+        return count
+    
+    n_factors = count_prime_factors(n)
+    value_factors = count_prime_factors(abs(value))
+    return value_factors <= n_factors
+
+def test_polynomial(P, max_n=100):
+    """Test polynomial P for numbers with multiple prime factors."""
+    # We test numbers with 2 or more prime factors (since 2023^2023 is huge)
+    test_numbers = [6, 10, 12, 14, 15, 18, 20, 21, 22, 24, 26, 28, 30]
+    for n in test_numbers:
+        if not is_positive_and_prime_factors_condition(P, n):
+            return False
+    return True
+
+def enumerate_polynomials(max_degree=2, max_coeff=2):
+    """Enumerate polynomials with small coefficients and degree."""
+    from itertools import product
+    
+    for degree in range(max_degree + 1):
+        for coeffs in product(range(-max_coeff, max_coeff + 1), repeat=degree + 1):
+            if coeffs[-1] == 0 and degree > 0:  # Skip polynomials with lower degree
+                continue
+            P = coeffs
+            if test_polynomial(P):
+                print(f"Found valid polynomial: {P}")
+
+if __name__ == "__main__":
+    print("Searching for valid polynomials...")
+    enumerate_polynomials()
+```

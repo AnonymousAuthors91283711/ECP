@@ -1,0 +1,119 @@
+[write_program]
+The problem concerns tournaments (directed complete graphs with no loops) on a finite set \( G \) of size \( n \ge 1 \), and a coloring of their edges so that no 3-cycle of vertices \( u,v,w \) with edges \( u \to v \) and \( v \to w \) has the same color on these two edges. The goal is to find the minimal possible number \( k \) of distinct colors used on the edges that appear in such a coloring.
+
+To assist in conjecturing the minimal \( k \) for small values of \( n \), I will enumerate all possible small tournaments (with fixed \( n \)) and valid colorings, and track the minimal number of colors that satisfy the given condition.
+
+However, since enumerating all tournaments becomes very large even for moderate \( n \), I'll test only very small \( n \in \{1, 2, 3, 4\} \), printing the parameters and minimal colorings found, enumerated up to some upper bound on the number of colors.
+
+```python
+# enumerator.py
+from itertools import product, combinations
+from collections import defaultdict
+
+def orientation_edges(n):
+    """Generate all edges in a tournament: pairs (u,v) with u != v for vertices 0..n-1."""
+    return [(u,v) for u in range(n) for v in range(n) if u != v]
+
+def all_tournaments(n):
+    """Generate all tournaments for n vertices by choosing direction for each edge pair."""
+    # For each unordered pair {u,v} with u < v, choose direction u->v or v->u
+    pairs = [(u,v) for u in range(n) for v in range(u+1,n)]
+    for directions in product([0,1], repeat=len(pairs)):
+        # Build adjacency dict
+        adj = {}
+        for idx, (u,v) in enumerate(pairs):
+            if directions[idx] == 0:
+                adj[u,v] = True  # u->v
+                adj[v,u] = False
+            else:
+                adj[u,v] = False
+                adj[v,u] = True  # v->u
+        yield adj
+
+def check_tournament_properties(adj, n):
+    """Check if adjacency encodes a tournament (should be valid by construction)."""
+    # Already ensured
+    return True
+
+def coloring_valid(adj, coloring, n):
+    """Check if coloring satisfies condition: for all distinct u,v,w, 
+    if u->v and v->w, then coloring(u,v) != coloring(v,w)."""
+    for u in range(n):
+        for v in range(n):
+            for w in range(n):
+                if len({u,v,w}) == 3:
+                    if adj.get((u,v), False) and adj.get((v,w), False):
+                        if coloring[(u,v)] == coloring[(v,w)]:
+                            return False
+    return True
+
+def min_colors_tournament(adj, n, max_colors=10):
+    """Find minimal number of colors needed for given tournament adj."""
+    edges = [e for e in adj if e[0] != e[1] and adj[e]]
+    m = len(edges)
+    # Try coloring edges with colors from 0 up to c-1 for c in range(1,max_colors+1)
+    # backtracking to assign colors
+    res = None
+
+    def backtrack(i, assignment, used_colors):
+        nonlocal res
+        if res is not None:
+            return
+        if i == m:
+            if coloring_valid(adj, assignment, n):
+                res = max(assignment.values()) + 1
+            return
+        e = edges[i]
+        for c in range(used_colors+1):
+            assignment[e] = c
+            # Early pruning: check for triples involving e
+            # Check triples where e is first edge: e=(u,v)
+            u,v = e
+            for w in range(n):
+                if w != u and w != v:
+                    if adj.get((v,w), False):
+                        if (v,w) in assignment and assignment[(v,w)] == c:
+                            break
+                    if adj.get((w,u), False):
+                        if (w,u) in assignment and assignment[(w,u)] == c:
+                            break
+            else:
+                new_used = max(used_colors,c)
+                if new_used < max_colors:
+                    backtrack(i+1, assignment, new_used)
+            del assignment[e]
+        # also try new color if allowed
+        if used_colors + 1 < max_colors:
+            assignment[e] = used_colors+1
+            new_used = used_colors+1
+            # Similar pruning skipped for new color, safe to continue
+            backtrack(i+1, assignment, new_used)
+            del assignment[e]
+
+    backtrack(0, {}, 0)
+    if res is None:
+        return max_colors+1
+    else:
+        return res
+
+def main():
+    for n in range(1,5):
+        print(f"n = {n}")
+        min_colors_all = []
+        count = 0
+        for adj in all_tournaments(n):
+            count += 1
+            k = min_colors_tournament(adj, n, max_colors=4)
+            print(f"Tournament {count} minimal colors needed: {k}")
+            min_colors_all.append(k)
+            if count >= 10:  # limit output for brevity
+                break
+        best = min(min_colors_all) if min_colors_all else None
+        if best is not None:
+            print(f"Minimal number of colors over sampled tournaments for n={n}: {best}")
+        print("")
+
+if __name__ == "__main__":
+    main()
+```
+This program enumerates tournaments with 1 to 4 vertices, computes minimal edge colorings obeying the condition, and prints minimal colors found for some tournaments, conjecturing the minimal \( k \) for those \( n \).

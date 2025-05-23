@@ -1,0 +1,102 @@
+[write_program]
+The problem asks to count the number of positive divisors d of 15! such that gcd(d, 60) = 5. We will factor 15!, consider divisors with exponents, filter those divisible by 5, compute gcd(d, 60), and count those with gcd=5.
+
+```python
+import math
+from collections import Counter
+
+# Precompute prime factorization of 15!
+def prime_factors_factorial(n):
+    primes = []
+    sieve = [True]*(n+1)
+    sieve[0]=sieve[1]=False
+    for i in range(2,n+1):
+        if sieve[i]:
+            primes.append(i)
+            for j in range(i*i, n+1, i):
+                sieve[j]=False
+    # Count exponent of each prime in n!
+    factors = {}
+    for p in primes:
+        exp = 0
+        m = n
+        while m > 0:
+            m //= p
+            exp += m
+        factors[p] = exp
+    return factors
+
+def all_divisors(factors):
+    # factors: dict prime->max_exp
+    # Generate all divisors by enumerating exponents
+    ps = list(factors.keys())
+    def backtrack(i, current):
+        if i == len(ps):
+            yield current
+            return
+        p = ps[i]
+        for e in range(factors[p]+1):
+            backtrack(i+1, current*(p**e))
+    yield from backtrack(0, 1)
+
+def gcd(a,b):
+    return math.gcd(a,b)
+
+factors = prime_factors_factorial(15)
+# Divisors d must satisfy d|15!, d>0, gcd(d,60)=5
+
+# Prepare prime factorization of 60=2^2*3*5
+# gcd(d,60)=5 means:
+# gcd(d,60)=5^1 and no 2 or 3 in gcd
+# so d must be divisible by 5 but not by 2 or 3
+
+# Check gcd(d,60) == 5:
+# gcd = product of min powers of p in d and 60
+# 60= 2^2 * 3^1 * 5^1
+# To get gcd = 5 means:
+# d has at least 5^1, but no 2 or 3.
+
+# Enumerate divisors d of 15! with:
+# exponent of 5 >=1
+# exponent of 2 =0
+# exponent of 3 =0
+# other primes any exponent
+
+# Get exponents limits
+p2 = factors.get(2,0)
+p3 = factors.get(3,0)
+p5 = factors.get(5,0)
+
+# Primes sorted for enumeration
+primes = sorted(factors.keys())
+
+count = 0
+for d in all_divisors(factors):
+    # quick filtering by prime exponents is faster
+    # but let's get prime factorization of d quickly
+
+    # We can factor d by dividing primes ascendingly:
+    dtmp = d
+    exps = {}
+    for p in primes:
+        e = 0
+        while dtmp % p == 0:
+            dtmp //= p
+            e += 1
+        exps[p]=e
+    # Check conditions
+    if exps.get(5,0) >= 1 and exps.get(2,0)==0 and exps.get(3,0)==0:
+        # Compute gcd(d,60)
+        # 60_factor = {2:2,3:1,5:1}
+        g = 1
+        if min(exps.get(2,0),2)>0:
+            g *= 2**min(exps.get(2,0),2)
+        if min(exps.get(3,0),1)>0:
+            g *= 3**min(exps.get(3,0),1)
+        if min(exps.get(5,0),1)>0:
+            g *= 5
+        if g == 5:
+            print(d)
+            count += 1
+print("Count =", count)
+```

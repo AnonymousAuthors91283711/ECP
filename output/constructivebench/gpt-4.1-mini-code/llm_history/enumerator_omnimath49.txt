@@ -1,0 +1,51 @@
+[write_program]
+The problem involves complex sequences \( z(k) \) with alternating purely real and purely imaginary terms, satisfying \(|z_k z_{k+1}| = 2^k\), and asks about minimizing norms of partial sums. We enumerate \( z(k) \) for small \( n \), choosing \( z(k) \) on axes (real for odd \( k \), imaginary for even \( k \)) with magnitudes consistent with the constraint, and print norms of partial sums and their products.
+
+```python
+import math
+from itertools import product
+
+# Enumerate possibilities for z(k) with constraints:
+# odd k: z(k).imag=0 (pure real)
+# even k: z(k).real=0 (pure imaginary)
+# |z(k)*z(k+1)|=2^k => |z(k)|*|z(k+1)|=2^k
+# We'll choose signs ±1 for components since magnitudes satisfy product conditions.
+# For n=3 or 4, enumerate sign choices, compute sums norms.
+
+def norm(z):
+    return abs(z.real) + abs(z.imag)  # L1 norm to avoid floats? No, use abs complex.
+
+def main():
+    for n in [3,4]: # small n samples
+        print(f"n={n}")
+        # Determine magnitudes |z(k)|
+        mags = [0]*(n+2)
+        mags[1] = 2**((n+1)//2)  # arbitrary start for |z(1)|
+        # deduce others from product constraints
+        # We solve |z(k+1)| = 2^k / |z(k)|
+        # choose |z(1)|=1 to simplify
+        mags[1]=1.0
+        for k in range(1,n+1):
+            mags[k+1] = 2**k / mags[k]
+        # Signs for each z(k): ±1 in real or imag axis
+        signs = [-1,1]
+        # For each k, assign sign on axis 
+        # sign choices: n+1 values
+        for sign_tuple in product(signs, repeat=n+1):
+            z = []
+            for k in range(1,n+2):
+                mag = mags[k]
+                s = sign_tuple[k-1]
+                if k%2==1:  # odd k: real axis
+                    z.append(complex(s*mag,0))
+                else:        # even k: imag axis
+                    z.append(complex(0,s*mag))
+            sum_n = sum(z[1:n+1],complex(0,0))
+            sum_nplus1 = sum(z[1:n+2],complex(0,0))
+            norm_sum_n = abs(sum_n)
+            norm_prod = norm_sum_n*abs(sum_nplus1)
+            print(f"Signs {sign_tuple} -> ||sum_n||={norm_sum_n:.5f}, product={norm_prod:.5f}")
+
+if __name__ == "__main__":
+    main()
+```

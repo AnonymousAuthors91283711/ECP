@@ -1,0 +1,71 @@
+[write_program]
+This problem asks for values of a linear function \( f \) defined on vectors of length \( n \) with rational entries, where \( f \) satisfies two conditions:
+1. Linearity in each coordinate.
+2. On vectors whose entries are either 3 or 4, \( f \) equals the product of the reciprocals of the entries.
+
+We want to guess the value of \( f(\text{constant vector } 5) \).
+
+Because \( f \) is linear in each coordinate and known exactly on vectors with entries 3 or 4, one can define \( f \) uniquely via multilinear extension from the finite set \(\{3,4\}^n\). Then \( f(5,\dots,5) \) is the multilinear interpolation at all coordinates being 5.
+
+Idea: for small \( n \), enumerate all vectors in \(\{3,4\}^n\), compute \( f \) there (given), then express \( f(5,\ldots,5) \) as the sum over all subsets of weights times \( f \) at these points (multilinear interpolation). This can be done since linearity in each coordinate implies \( f \) is multilinear in transformed variables.
+
+We will:
+
+- For \( n=1,2,3 \), compute the multilinear interpolation of \( f \) at \(5\) based on values at \(3\) and \(4\).
+- Print intermediate results exactly as fractions.
+
+The multilinear interpolation weights in each coordinate (for interpolating from points 3 and 4 to the point 5) come from the unique linear polynomial fitting given function values at these two points, evaluated at 5:
+
+For coordinate \( i \):
+
+If at points 3 and 4 the function values are \( f_3 \) and \( f_4 \), the interpolation at 5 is
+
+\[ f(5) = f_3 \cdot \frac{4-5}{4-3} + f_4 \cdot \frac{5-3}{4-3} = f_3 \cdot (-1) + f_4 \cdot 2 \]
+
+Since our function is multilinear in each coordinate when considering variables that are 3 or 4, the value of \( f(5,\dots,5) \) is:
+
+\[
+\sum_{S \subseteq \{1,\dots,n\}} f(\text{vector where }i \in S \to 4, i \notin S \to 3) \cdot \prod_{i \in S} 2 \cdot \prod_{i \notin S} (-1)
+\]
+
+Since \( f \) at that vertex is \(\prod_i (1 / x_i) \), which is \( 1 / \prod_i x_i \).
+
+Let's enumerate \( n=1, 2, 3 \) and print the values \( f(5,\dots,5) \) as fractions.
+
+```python
+from fractions import Fraction
+from itertools import product
+
+def omnimath2037_answer(n):
+    # For n=0, trivially f()=1 (empty product), so f()=1
+    if n == 0:
+        return Fraction(1,1)
+    vals = {}  # map from tuple in {3,4}^n to f-value = product of 1/x_i
+    points = list(product([3,4], repeat=n))
+    for p in points:
+        prod_inv = Fraction(1,1)
+        for x in p:
+            prod_inv *= Fraction(1, x)
+        vals[p] = prod_inv
+
+    # Compute f(5,...,5) by multilinear interpolation:
+    # f(5,...,5) = sum_{S subset digits} f(v_S) * prod_i weight_i(S)
+    # weight_i(S) = 2 if i in S else -1
+    # since interpolation weight per coordinate at 5: 3-> -1, 4->2
+
+    total = Fraction(0,1)
+    for p in points:
+        # p is a tuple of length n with entries 3 or 4
+        # weight for coordinate i
+        w = Fraction(1,1)
+        for x in p:
+            w *= Fraction(2) if x == 4 else Fraction(-1)
+        total += vals[p]*w
+    return total
+
+if __name__ == "__main__":
+    for n in range(1,4):  # small n
+        ans = omnimath2037_answer(n)
+        print(f"n = {n}, f(5,...,5) = {ans} = {float(ans):.6f}")
+```
+This program enumerates the values \( f \) must assign at the corners {3,4}^n, then uses multilinear interpolation weights to find \( f(5,\dots,5) \). It prints exact fractions and decimal approximations for n=1,2,3.

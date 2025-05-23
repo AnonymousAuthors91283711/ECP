@@ -1,0 +1,55 @@
+[write_program]
+This problem involves finding the sum of the real parts of \(x^2 + (1-x)^2\) for all complex numbers \(x\) that satisfy the conditions \(x + y = 1\) and \(x^{20} + y^{20} = 20\) for some complex \(y\). 
+
+We'll approach this by:
+1. Substituting \(y = 1 - x\) into the second equation
+2. Solving \(x^{20} + (1-x)^{20} = 20\)
+3. For each solution \(x\), computing \((x^2 + (1-x)^2).re\)
+4. Summing these real parts
+
+The program will:
+- Find roots numerically (since exact solutions are complex)
+- Filter for distinct roots (within numerical tolerance)
+- Compute and sum the required real parts
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+
+def solve_equation():
+    # We're solving x^20 + (1-x)^20 = 20
+    # Let's find roots numerically
+    coeffs = np.zeros(21)
+    coeffs[0] = -19  # 1^20 - 20 = -19
+    coeffs[20] = 2    # x^20 + (-x)^20 = 2x^20
+    # Terms 1..19 come from binomial expansion of (1-x)^20
+    for k in range(1, 20):
+        coeffs[k] = (-1)**k * np.math.comb(20, k)
+    
+    p = Polynomial(coeffs)
+    roots = p.roots()
+    
+    # Filter roots with small imaginary part (numerical tolerance)
+    real_roots = [r for r in roots if abs(r.imag) < 1e-10]
+    real_roots = [r.real for r in real_roots]
+    
+    # Remove duplicates (numerical tolerance)
+    unique_roots = []
+    for r in sorted(real_roots):
+        if not unique_roots or abs(r - unique_roots[-1]) > 1e-10:
+            unique_roots.append(r)
+    
+    return unique_roots
+
+def compute_sum():
+    roots = solve_equation()
+    total = 0.0
+    for x in roots:
+        term = x**2 + (1-x)**2
+        total += term  # term is already real since x is real
+    return total
+
+if __name__ == "__main__":
+    result = compute_sum()
+    print(f"Sum of real parts: {result}")
+```

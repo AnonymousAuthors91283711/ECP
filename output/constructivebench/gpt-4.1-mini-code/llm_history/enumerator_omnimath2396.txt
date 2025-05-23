@@ -1,0 +1,68 @@
+[write_program]
+The problem asks to find all positive integers \( n \) such that there exist nontrivial invertible \( n \times n \) real matrices \( A, B \) satisfying the commutator-like equation  
+\[ A B - B A = B^2 A . \]
+
+This is a challenging algebraic problem involving matrix equations and invertibility constraints. Since a direct symbolic approach is difficult here, we will enumerate small dimensions \( n \) (starting from 1 to a small upper bound) and spend effort searching for any pair of invertible matrices \( A, B \) with entries from some small integer range that satisfy the equation up to some numerical tolerance.
+
+We adopt the following approach:  
+- Loop \( n \) from 1 to 4 (small dimensions since the problem is hard).  
+- Enumerate invertible matrices \( A \) and \( B \) with small integers (e.g., entries in \{-1,0,1\}).  
+- Check if the relation \( AB - BA = B^2 A \) holds numerically within a tolerance.  
+- Immediately print \( n \) if such matrices are found.  
+- We only enumerate some matrices, not all to limit output and runtime.  
+- This helps conjecture likely answers.
+
+```python
+import numpy as np
+from itertools import product
+
+def is_invertible(M):
+    return abs(np.linalg.det(M)) > 1e-6
+
+def matrices(n, values):
+    # Generate some matrices with entries in values (not all for speed)
+    # For each row, pick entries from values, but limit total generated matrices
+    # We'll generate random samples instead all product (since 3^(n^2) grows fast)
+    # For small n, enumerate all, else random samples
+    if n*n <= 4:
+        for entries in product(values, repeat=n*n):
+            yield np.array(entries, dtype=float).reshape((n,n))
+    else:
+        # Generate fixed number of random samples
+        for _ in range(1000):
+            M = np.random.choice(values, size=(n,n)).astype(float)
+            yield M
+
+def check_relation(A, B):
+    # Check if AB - BA = B^2 A approximately
+    lhs = A @ B - B @ A
+    rhs = B @ B @ A
+    return np.allclose(lhs, rhs, atol=1e-6)
+
+def find_solutions():
+    values = [-1,0,1]
+    max_n = 4
+    for n in range(1, max_n+1):
+        print(f"Checking dimension n={n}")
+        found = False
+        count = 0
+        for A in matrices(n, values):
+            if not is_invertible(A):
+                continue
+            for B in matrices(n, values):
+                if not is_invertible(B):
+                    continue
+                if check_relation(A,B):
+                    print(f"Found n={n} with matrices A and B satisfying relation")
+                    found = True
+                    break
+            if found:
+                break
+        if found:
+            print(f"n={n} is a candidate dimension")
+        else:
+            print(f"No matrices found for n={n}")
+
+if __name__ == "__main__":
+    find_solutions()
+```

@@ -1,0 +1,146 @@
+[write_program]
+The problem involves the prime factorization of \(13!\) and identifying integers \(m\) such that \(m \mid 13!\) and \( \frac{13!}{m} \) is a perfect square. The set \(m\) such that \(13! = m \cdot k^2\) means \(m\) is the "square-free" part of \(13!\) relative to some \(k\).
+
+Key points:
+- Prime factorization of \(13!\) is given by primes and exponents.
+- \(m\) must be a divisor of \(13!\).
+- The factorization of \(m\) consists of primes raised to either 0 or 1, so that when the exponents of \(13!\) are reduced mod 2, \(m\) accounts exactly for the primes with odd exponent powers.
+- \(m\) is a product of primes raised to either 0 or 1 when the exponent in \(13!\) is odd, and 0 when even.
+- The set of all such \(m\) is the set of all square-free factors of \(13!\) matching these parity conditions.
+- The problem asks for the sum of all such \(m\).
+
+We will:
+- Calculate exponents for primes in \(13!\).
+- Mod 2 reduce exponents, generating all possible \(m\).
+- Sum all \(m\).
+- Decompose sum into prime factorization and print answers stepwise.
+
+```python
+from math import factorial
+
+# Primes and exponents for 13!
+primes = [2, 3, 5, 7, 11, 13]
+
+# Compute exponent of prime p in n!
+def prime_exp_in_factorial(n, p):
+    count = 0
+    x = p
+    while x <= n:
+        count += n // x
+        x *= p
+    return count
+
+n = 13
+exps = [prime_exp_in_factorial(n, p) for p in primes]
+
+# We want all m such that there exists k with 13! = m * k^2
+# This means for each prime:
+# exp_in_m mod 2 = exp_in_13! mod 2
+
+# exponent parity for each prime
+parities = [e % 2 for e in exps]
+
+# m must have prime exponents either 0 or 1, matching parity in multiset sense
+# But m must be a divisor of 13!, so exponent either 0 or 1 (square-free)
+# In fact, m is the product of primes whose exponent in 13! is odd raised to 1 or 0, to build all subsets
+# Actually, we need all m such that 13!/m = k^2 => m includes all primes with odd exponent exactly once
+# Because exp_13! - exp_m must be even => exp_m matches parity of exp_13!
+
+# Thus, for each prime:
+# m exponent = parity (0 or 1)
+
+# The set m_set contains exactly one such m, which is the product of primes with odd exponents
+# But in the problem statement, it seems to ask for all such m with positive exponent guessing from theorem
+# But the square root condition forces m uniquely to primes with odd exponent powers to the power 1
+
+# Re-examining problem, "m_set = { m : 0 < m and exists k, 13! = m * k^2 }" meaning m is exactly the square-free part of 13!.
+
+# In our case, such m are divisors of 13! with exponents matching parity of 13! exponents:
+# That is, use exponents that are either 0 or 1 such that exp_m ≡ exp_13! (mod 2)
+
+# However the problem statement and theorem shows six primes and exponents, sum over m in m_set.
+
+# To enumerate all m, for each prime p:
+# If parity = 1, exponent of m can be only 1
+# If parity = 0, exponent of m can be 0 or 1 (because even exponents difference stays even)
+# Wait, difference exp_13! - exp_m must be even
+# So for primes with exp_13! even, exp_m must be even modular 2, so exponent in m is 0
+# For primes with exp_13! odd, exp_m must be 1
+
+# So m is fixed to product of all primes with odd exponent power exactly once.
+# So unique m
+
+squarefree_m = 1
+for p, parity in zip(primes, parities):
+    if parity == 1:
+        squarefree_m *= p
+
+# sum_m is sum over the finite set m_set, from problem it might be expanded by some condition
+# But from reasoning sum of all such m is just squarefree_m (only one m)
+
+# But the problem states m_set finite, and shows sum of m in m_set.
+
+# So maybe m are all divisors of squarefree_m? That is, all divisors of squarefree part?
+
+# If 13! = m * k^2, then m divides squarefree_m
+
+# So m_set = divisors of squarefree_m (all divisors of squarefree part)
+
+# Let's enumerate divisors of squarefree_m:
+
+def divisors(n):
+    divs = []
+    def rec(i, curr):
+        if i == len(primes):
+            divs.append(curr)
+            return
+        p = primes[i]
+        if n % p == 0:
+            if p & n:
+                rec(i+1, curr)
+                rec(i+1, curr*p)
+            else:
+                rec(i+1, curr)
+        else:
+            rec(i+1, curr)
+    # This function is complicated, skip it, use simpler method: since squarefree_m is small product,
+    # just do subsets of primes with exponent=1 or 0 if prime divides squarefree_m
+    sqf_primes = [p for p in primes if squarefree_m % p == 0]
+    divs = []
+    def backtrack(idx=0, val=1):
+        if idx == len(sqf_primes):
+            divs.append(val)
+            return
+        backtrack(idx+1,val)
+        backtrack(idx+1,val*sqf_primes[idx])
+    backtrack()
+    return divs
+
+divs = divisors(squarefree_m)
+
+sum_m = sum(divs)
+
+# Now factor sum_m into primes from primes list
+# Factor sum_m by trial division with primes list
+def factor_sum(n, primes):
+    factors = []
+    for p in primes:
+        count = 0
+        while n % p == 0:
+            n //= p
+            count += 1
+        factors.append(count)
+    return factors
+
+factor_counts = factor_sum(sum_m, primes)
+exp_letters = ['a','b','c','d','e','f']
+
+for p, e in zip(primes, factor_counts):
+    if e > 0:
+        print(f"{p}^{e}", end=' * ')
+print(f"\nSum of all m in m_set = {sum_m}")
+
+print("Exponent sum:", sum(factor_counts))
+```
+
+The code above enumerates all divisors \(m\) for which \(13! = m \cdot k^2\) holds. It calculates the sum of all such \(m\), then factorizes the sum. The output will help conjecture the exact prime factorization and sum of exponents required in the original theorem.

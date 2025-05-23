@@ -1,0 +1,51 @@
+[write_program]
+The problem appears to involve coin combinations with denominations 1, 10, and 25, and relates to values \( N \) for which the number of coins used exceeds the minimal possible number of coins for that \( N \). The goal is to find the greatest such \( N \).
+
+I'll write a Python program that:
+- Computes the minimal number of coins for values up to a reasonable upper bound (say 300, as 25*12=300).
+- Finds all \( N > 0 \) for which there exists a representation with coins \( (a,b,c) \) such that \( a + b + c \) is greater than the minimal number of coins for \( N \).
+- Prints such \( N \) as they are found.
+- Finally outputs the greatest such \( N \).
+
+```python
+# Enumerate all N ≤ 300, find minimal coin count using denominations 1,10,25
+# For each N, try to find a representation with coin count > minimal, and print N
+
+def min_coins(n):
+    # DP to find minimal coins to represent n
+    dp = [float('inf')] * (n+1)
+    dp[0] = 0
+    for i in range(n+1):
+        if dp[i] == float('inf'):
+            continue
+        for coin in [1,10,25]:
+            if i + coin <= n:
+                dp[i+coin] = min(dp[i+coin], dp[i] + 1)
+    return dp[n]
+
+def representations(n):
+    # Enumerate possible (a,b,c) with a+10b+25c = n
+    # only if sum of coins > min_coins(n)
+    coins_min = min_coins(n)
+    for c in range(n//25 + 1):
+        rem_c = n - 25*c
+        for b in range(rem_c//10 + 1):
+            a = rem_c - 10*b
+            total_coins = a + b + c
+            if total_coins > coins_min:
+                yield (a,b,c,total_coins)
+
+max_n = 0
+print("Checking values up to 300...")
+for N in range(1,301):
+    found = False
+    for (a,b,c,total) in representations(N):
+        print(f"N={N}, a={a}, b={b}, c={c}, coins={total}, min_coins={min_coins(N)}")
+        found = True
+        break  # print only first example per N
+    if found:
+        max_n = N  # update greatest found N
+
+print(f"Greatest N found with coins used > minimal: {max_n}")
+```
+

@@ -1,0 +1,46 @@
+[write_program]
+The problem involves a Markov-like process with different probabilities of winning based on previous result, and we want the probability of winning exactly 3 games before observing 2 losses. To help analyze, I'll enumerate sequences of wins (W) and losses (L) that result in exactly 3 wins before 2 losses, and compute the associated probabilities according to the given transition probabilities.
+
+I'll implement a depth-first search over sequences of outcomes, stopping when 3 wins or 2 losses are reached, accumulating probabilities. The initial probability matches the initial win probability.
+
+```python
+# Enumerate all sequences of W/L with exactly 3 wins before 2 losses,
+# given pInitial=1/2, pWinAfterWin=3/4, pWinAfterLoss=1/3.
+def enumerator():
+    pInitial = 1/2
+    pWinAfterWin = 3/4
+    pWinAfterLoss = 1/3
+
+    # current state: (wins, losses, last result 'W' or 'L')
+    # probability so far
+    results = []
+
+    def dfs(wins, losses, last_result, prob, seq):
+        # stop condition: reached 3 wins or 2 losses
+        if wins == 3 or losses == 2:
+            if wins == 3 and losses < 2:
+                # exactly 3 wins before 2 losses
+                print(f"Sequence: {''.join(seq)}, Probability: {prob}")
+                results.append(prob)
+            return
+        # determine next win probability
+        if last_result == 'W':
+            p_win = pWinAfterWin
+        else:
+            p_win = pWinAfterLoss
+        # next win
+        dfs(wins+1, losses, 'W', prob * p_win, seq + ['W'])
+        # next loss
+        dfs(wins, losses+1, 'L', prob * (1 - p_win), seq + ['L'])
+    
+    # initial step: no last result, start with initial probability for win or loss
+    # First result is win with prob pInitial, or loss with prob (1-pInitial)
+    dfs(1, 0, 'W', pInitial, ['W'])
+    dfs(0, 1, 'L', 1 - pInitial, ['L'])
+
+    total_prob = sum(results)
+    print(f"Total probability of exactly 3 wins before 2 losses: {total_prob}")
+
+if __name__ == "__main__":
+    enumerator()
+```

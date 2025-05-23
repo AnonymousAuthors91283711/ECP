@@ -1,0 +1,41 @@
+[write_program]
+The problem concerns the set of all lengths \( t \) such that there exists some \( c \in [1,2017] \) and positive integer \( m \) making \( \frac{10^t - 1}{c m} \) an integer, but for all smaller \( k < t \), \( \frac{10^k -1}{c m} \) is not an integer. We want to enumerate possible \( n \)'s (cardinalities of such sets of \( t \)) over some small ranges of \( m \) and \( c \), to guess the greatest such \( n \). The program below tries small \( m \) and \( c \), for each determines valid \( t \), records the size of that set, and prints it. It shows various sizes to assist in conjecture on the maximum.
+
+```python
+# Enumerate possible cardinalities of sets t as described for small parameters
+def is_int_div(numer, denom):
+    return numer % denom == 0
+
+def card_t_set(c, m, max_t=50):
+    # Return the set of length t satisfying the condition for fixed c,m
+    valid_t = []
+    for t in range(1, max_t+1):
+        denom = c * m
+        numer = 10**t - 1
+        if not is_int_div(numer, denom):
+            continue
+        # check no smaller k satisfies condition
+        for k in range(1, t):
+            if is_int_div(10**k - 1, denom):
+                break
+        else:
+            valid_t.append(t)
+    return set(valid_t)
+
+if __name__ == '__main__':
+    max_c = 20  # test a few c values under 2017
+    max_m = 20  # test small m values
+    seen_cards = set()
+    print("Enumerating possible cardinalities n for small c,m (c in 1..20, m in 1..20):")
+    for c in range(1, max_c+1):
+        for m in range(1, max_m+1):
+            s = card_t_set(c, m)
+            n = len(s)
+            if n not in seen_cards:
+                print(f"c={c}, m={m}, n={n}, t_set={sorted(s)}")
+                seen_cards.add(n)
+    if seen_cards:
+        mx = max(seen_cards)
+        print(f"Maximum cardinality n found: {mx}")
+
+```

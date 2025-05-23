@@ -1,0 +1,102 @@
+[write_program]
+The problem involves a sequence \( a: \mathbb{N} \to \mathbb{R} \) satisfying
+\[
+a(m+n) + a(m-n) - m + n - 1 = \frac{1}{2} (a(2m) + a(2n)), \quad \text{for } m \ge n,
+\]
+and we know \( a(1) = 3 \). We want to find \( a(2004) \).
+
+We will enumerate values of \( a(k) \) for small \( k \) using the functional equation to guess the form of \( a \). Then we will conjecture a formula and compute \( a(2004) \).
+
+```python
+def approx_equal(x, y, eps=1e-12):
+    return abs(x - y) < eps
+
+# We want to find values a(k) for k in N.
+
+# Process:
+# For m >= n, 
+# a(m+n) + a(m-n) - m + n -1 = 0.5*(a(2m) + a(2n))
+# We'll use this recursively to find values.
+# Given a(1) =3
+
+# Store known a(k)
+a = {1:3}
+
+# Let's guess a general form by trying small values:
+# For n=0, m>=0, note a(m+0) = a(m), a(m-0)=a(m)
+# Then: a(m)+a(m) - m +0 -1 = 0.5*(a(2m)+a(0))
+# => 2 a(m) - m -1 = 0.5 a(2m) + 0.5 a(0)
+# Rearranged:
+# a(2m) = 4 a(m) - 2 m -2 - a(0)
+# We don't know a(0), but problem is over N; let's define a(0) for convenience:
+
+# Let's suppose a(0) = c, unknown constant.
+
+# We'll try to figure out a(0).
+# For m=1, n=1:
+# a(2) + a(0) - 1 + 1 -1 = 0.5(a(2) + a(2))
+# => a(2) + a(0) -1 = a(2)
+# => a(0) =1
+
+a[0] = 1  # deduced
+
+# Now use doubling:
+# a(2m) = 4 a(m) - 2 m -2 - a(0) = 4 a(m) - 2 m -3
+
+# Using this, compute a(2), a(4), a(8) - see if a quadratic fits:
+
+def compute_a(k):
+    if k in a:
+        return a[k]
+    if k == 0:
+        return a[0]
+    if k % 2 == 0:
+        val = 4*compute_a(k//2) - 2*(k//2) - 3
+        a[k] = val
+        return val
+    # For odd k, use functional equation with m = (k+1)//2, n = (k-1)//2:
+    m = (k + 1)//2
+    n = (k - 1)//2
+    # From original:
+    # a(m+n) + a(m-n) - m + n -1 = 0.5*(a(2m) + a(2n))
+    # --> a(k) + a(m - n) - m + n -1 = 0.5*(a(2m) + a(2n))
+    # m - n =1
+    left = compute_a(k) + compute_a(1) - m + n -1
+    right = 0.5*(compute_a(2*m) + compute_a(2*n))
+    # Solve for a(k):
+    # a(k) = right - compute_a(1) + m - n +1
+    val = right - a[1] + m - n + 1
+    a[k] = val
+    return val
+
+print(f"a(0) = {a[0]}")
+print(f"a(1) = {a[1]}")
+
+# Compute some small values:
+for k in range(2, 11):
+    val = compute_a(k)
+    print(f"a({k}) = {val}")
+
+# Guess quadratic form a(k) = A k^2 + B k + C
+# Using known points, solve for A,B,C:
+# a(0) = C =1
+# a(1) = A + B + C =3
+# a(2) = 4 A + 2 B + C = ?
+A = (a[2] - 2 * a[1] + a[0]) / 2
+B = a[1] - A - a[0]
+C = a[0]
+
+print(f"Quadratic guess a(k) = {A} k^2 + {B} k + {C}")
+
+# Validate the guess for k=3..10
+for k in range(3, 11):
+    val_guess = A * k*k + B * k + C
+    val_actual = a[k]
+    print(f"k={k}: guessed={val_guess}, actual={val_actual}, diff={val_guess - val_actual}")
+
+# Calculate a(2004)
+k = 2004
+a_2004 = A * k*k + B * k + C
+print(f"a(2004) ≈ {a_2004}")
+```
+

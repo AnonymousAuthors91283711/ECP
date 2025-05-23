@@ -1,0 +1,57 @@
+[write_program]
+The problem is to find the number of real solutions to the equation:
+\[ \arctan(x) = x^2 - 1.6 \]
+
+We want to enumerate all real solutions (roots) of this equation approximately to help conjecture the exact number of solutions. We'll test values in a reasonable range and refine to find where the function changes sign.
+
+```python
+import math
+
+# Define the function f(x) = arctan(x) - (x^2 - 1.6)
+def f(x):
+    return math.atan(x) - (x**2 - 1.6)
+
+# We'll scan integer and half-integer points in range -3 to 3 to detect sign changes
+# Then use bisection method to locate roots accurately
+def sign(x):
+    return 1 if x > 0 else -1 if x < 0 else 0
+
+def bisection(a, b, tol=1e-6, max_iter=50):
+    fa, fb = f(a), f(b)
+    if sign(fa) == 0:
+        return a
+    if sign(fb) == 0:
+        return b
+    if sign(fa) == sign(fb):
+        return None
+    for _ in range(max_iter):
+        c = (a + b)/2
+        fc = f(c)
+        if abs(fc) < tol:
+            return c
+        if sign(fa) != sign(fc):
+            b, fb = c, fc
+        else:
+            a, fa = c, fc
+    return (a + b)/2
+
+print("Searching for solutions of arctan(x) = x^2 - 1.6")
+
+# Scan steps of 0.1 for better detection in roughly [-3,3]
+xs = [i/10 for i in range(-30,31)]
+roots = []
+
+for i in range(len(xs)-1):
+    a, b = xs[i], xs[i+1]
+    fa, fb = f(a), f(b)
+    if sign(fa)*sign(fb) <= 0:
+        root = bisection(a, b)
+        if root is not None:
+            # To avoid duplicates, round roots to 7 decimals
+            r = round(root,7)
+            if not any(abs(r - rr) < 1e-6 for rr in roots):
+                roots.append(r)
+                print(f"Found root at x = {r}")
+
+print(f"Total number of real solutions found: {len(roots)}")
+```

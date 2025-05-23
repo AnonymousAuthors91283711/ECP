@@ -1,0 +1,77 @@
+[write_program]
+The problem concerns characterizing all real-polynomials \(P\) that satisfy for all real \(a,b,c\):
+\[
+a b + b c + c a = 0 \implies P(a - b) + P(b - c) + P(c - a) = 2 P(a + b + c).
+\]
+
+We want to find all such polynomials \(P\).
+
+**Approach:**
+- Enumerate polynomials \(P(x) = \sum_{k=0}^n c_k x^k\) for small degrees \(n=0,1,2,3.\)
+- For given coefficients \(c_k\), test the identity on randomly chosen triples \((a,b,c)\) satisfying \(a b + b c + c a=0\).
+- Since the equation must hold for all such triples, check if a polynomial candidate satisfies the polynomial identity for all such triples.
+- By sampling sufficiently and detecting if the polynomial identity holds symbolically or numerically, filter possible coefficient vectors.
+- Print all candidates found in this search.
+
+We'll test all polynomials up to degree 3 with coefficients in \(-2,-1,0,1,2\) to find those satisfying the condition approximately on multiple triples. This is a heuristic enumeration to assist conjecture.
+
+```python
+# Enumerate polynomials P(x) = c0 + c1*x + c2*x^2 + c3*x^3 
+# with coefficients in range(-2,3).
+# For each polynomial, test many (a,b,c) with a*b + b*c + c*a=0
+# If P(a-b)+P(b-c)+P(c-a) - 2P(a+b+c) ~ 0 for all samples,
+# print it as a candidate.
+
+from math import isclose
+from itertools import product
+
+def poly_eval(c, x):
+    # Evaluate polynomial at x: c = [c0,c1,...]
+    return sum(c[i]*x**i for i in range(len(c)))
+
+def samples_abc(n=20):
+    # Generate tuples (a,b,c) with a*b+b*c+c*a=0
+    # Use two parameters t,s and solve for c:
+    # c = - (a b) / (b + a) if b+a !=0 else skip
+    # To have variety, choose a,b and solve c.
+    import random
+    for _ in range(n):
+        a = random.uniform(-5,5)
+        b = random.uniform(-5,5)
+        if abs(b+a) < 1e-8:
+            continue
+        c = -a*b / (b+a)
+        yield (a,b,c)
+
+def check_polynomial(c):
+    # Check polynomial defined by c on many samples.
+    for (a,b,c_abc) in samples_abc(15):
+        lhs = poly_eval(c, a-b)+poly_eval(c, b-c_abc)+poly_eval(c, c_abc - a)
+        rhs = 2*poly_eval(c, a+b+c_abc)
+        if not isclose(lhs, rhs, abs_tol=1e-6):
+            return False
+    return True
+
+deg_max = 3
+coeff_range = range(-2,3)
+candidates = []
+
+print("Testing polynomials P(x)=c0+c1*x+c2*x^2+c3*x^3 with c_i in", list(coeff_range))
+for degree in range(deg_max+1):
+    for c in product(coeff_range, repeat=degree+1):
+        # Leading coeff can be zero => lower degree polynomial implicitly
+        if check_polynomial(c):
+            # Print polynomial found
+            p_str = " + ".join(f"{v}*x^{i}" if i>0 else f"{v}" 
+                               for i,v in enumerate(c) if v!=0)
+            if p_str == "": p_str = "0"
+            print(f"Candidate polynomial degree={degree}: P(x) = {p_str}")
+            candidates.append(c)
+
+print("\nSummary of candidates found:")
+for c in candidates:
+    p_str = " + ".join(f"{v}*x^{i}" if i>0 else f"{v}" for i,v in enumerate(c) if v!=0)
+    if p_str == "": p_str = "0"
+    print("P(x) =", p_str)
+```
+

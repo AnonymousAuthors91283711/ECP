@@ -1,0 +1,91 @@
+[write_program]
+This problem defines two sequences \(A_k\) and \(B_k\) related by linear recurrences involving each other. We want to find \(A_4\) given initial conditions on \(A_0, A_1, A_2, A_3\). The sequences are over \(\mathbb{R}\).
+
+We will enumerate values of \(A_k\) and \(B_k\) for some sample indices using the recurrence relations, starting with the known initial values of \(A_k\) at indices 0,1,2,3, and using the functional equations for all integers \(k\). Since there are infinitely many, we restrict to some range.
+
+To keep \(B_k\) values manageable and consistent, we start by guessing \(B_k = 0\) initially and update accordingly using the equations iteratively until steady values emerge.
+
+We print all values \(A_k\) and \(B_k\) obtained for \(k=0\) to 5 and watch the pattern to conjecture \(A_4\).
+
+```python
+# Enumerate A_k and B_k for k=0..5 according to the recurrences:
+# A_k = (A_{k-1} + A_{k+1} + B_k) / 3
+# B_k = (B_{k-1} + B_{k+1} + A_k) / 3
+# Given initial A_0 = A_1 = A_2 = 0, A_3 =1
+# No initial B_k provided; start with zeros
+
+def main():
+    from fractions import Fraction
+
+    # We'll work with rational numbers to keep exactness
+    # Initialize A and B dictionaries with known values
+    A = {0: Fraction(0), 1: Fraction(0), 2: Fraction(0), 3: Fraction(1)}
+    # Initialize B with zeros for k=0..5 (we will extend as needed)
+    B = {k: Fraction(0) for k in range(6)}
+
+    # To solve the system, note that the relations can be rearranged:
+    # 3*A_k = A_{k-1} + A_{k+1} + B_k
+    # 3*B_k = B_{k-1} + B_{k+1} + A_k
+    # This suggests a linear system we can try to solve iteratively
+
+    # Since A and B are defined on all integers, but we only consider k in [0..5]
+    n = 6
+
+    # For k in [0..5], impose boundary conditions for A and iterative update B
+    # Since A_0,1,2,3 fixed, and others unknown, solve for A_4, A_5 and all B_k
+
+    # We'll perform iterative relaxation for A and B starting from known A and zero B.
+    # But given 4 known A values, let's try to express A_4 and A_5 in terms of B_k
+
+    # We'll apply the recurrences as equations:
+    # For k in 1..4:
+    # A_k = (A_{k-1} + A_{k+1} + B_k)/3  => 3*A_k - A_{k-1} - A_{k+1} = B_k
+    # Similarly, for k in 1..4:
+    # B_k = (B_{k-1} + B_{k+1} + A_k)/3  => 3*B_k - B_{k-1} - B_{k+1} = A_k
+
+    # Let's represent unknowns as a vector x = [A_4, A_5, B_0,...,B_5]
+    # But since we want just A_4, and we have no info about A_5 or B_k,
+    # let's just try to solve for A_4 assuming outside values zero or equal 
+    # to nearest known values (boundary conditions).
+
+    # For this exercise, let's try to numerically approximate A and B up to k=5 by iterative update:
+
+    # Initialize unknown A_k for k=4,5 as zero
+    if 4 not in A:
+        A[4] = Fraction(0)
+    if 5 not in A:
+        A[5] = Fraction(0)
+
+    # Iterate updates 20 times
+    for _ in range(20):
+        A_new = A.copy()
+        B_new = B.copy()
+        # Update A for k=1..4 (to keep within known indices)
+        for k in range(1,5):
+            a_left = A.get(k-1,Fraction(0))
+            a_right = A.get(k+1,Fraction(0))
+            b_k = B.get(k,Fraction(0))
+            A_new[k] = (a_left + a_right + b_k) / 3
+        # Keep known A fixed
+        A_new[0] = Fraction(0)
+        A_new[1] = Fraction(0)
+        A_new[2] = Fraction(0)
+        A_new[3] = Fraction(1)
+        # Update B for k=1..4
+        for k in range(1,5):
+            b_left = B.get(k-1,Fraction(0))
+            b_right = B.get(k+1,Fraction(0))
+            a_k = A.get(k,Fraction(0))
+            B_new[k] = (b_left + b_right + a_k) / 3
+        B = B_new
+        A = A_new
+
+    # Print the results for k=0..5
+    print("k\tA_k\t\tB_k")
+    for k in range(6):
+        print(f"{k}\t{float(A[k]):.6f}\t{float(B[k]):.6f}")
+    print(f"\nConjectured A_4 = {float(A[4]):.6f}")
+
+if __name__ == "__main__":
+    main()
+```

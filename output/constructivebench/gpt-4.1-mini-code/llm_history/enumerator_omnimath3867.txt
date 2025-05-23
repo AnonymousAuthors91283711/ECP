@@ -1,0 +1,135 @@
+[write_program]
+The problem involves characterizing all real functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying a functional equation with parameters \(x,y\):
+
+\[
+(f(x+y))^2 = 2 f(x) f(y) + \max\left(f(x^2 + y^2), f(x^2) + f(y^2) \right),
+\]
+
+with the condition \( f(0) \neq 0 \).
+
+To get insight into possible solutions, we enumerate candidate functions over some sample values for \(x,y\). We test some standard function types (constants, linear, quadratic, exponential, etc.) on integer arguments. We print intermediate values for each tested function and input pair, to see which satisfy or nearly satisfy the equation.
+
+```python
+# Enumerate and print candidate functions f:R->R satisfying
+# (f(x+y))^2 = 2*f(x)*f(y) + max(f(x^2+y^2), f(x^2)+f(y^2)),
+# with f(0) != 0.
+# We test sample x,y in small integer range and print functions meeting equality.
+
+import math
+
+# Sample x,y values
+points = [0,1,-1,2,-2]
+
+# Candidate function definitions:
+# We only pick simple closed form functions to test:
+# f(x) = c (constant)
+# f(x) = a*x + b (linear)
+# f(x) = a*x^2 + b (quadratic)
+# f(x) = A * (r^x) (exponential)
+# f(x) = sin(kx)+c
+# f(x) = cos(kx)+c
+
+# We scan over a few constants and parameters.
+print("Testing candidate functions f and parameter values:")
+
+def check_eq(f,x,y):
+    lhs = (f(x+y))**2
+    fx = f(x)
+    fy = f(y)
+    max_term = max(f(x*x + y*y), f(x*x) + f(y*y))
+    rhs = 2*fx*fy + max_term
+    return abs(lhs - rhs) < 1e-9
+
+# Test constant functions: f(x) = c, c !=0
+for c in [1, -1, 2]:
+    f = lambda x, c=c: c
+    ok = True
+    for x in points:
+        for y in points:
+            if not check_eq(f,x,y):
+                ok = False
+                break
+        if not ok:
+            break
+    if ok:
+        print(f"Constant function f(x)={c} satisfies the equation.")
+
+# Test linear functions f(x) = a*x + b, with b!=0 (since f(0) !=0)
+for a in [-1,0,1]:
+    for b in [1,-1,2]:
+        if b==0:
+            continue
+        f = lambda x, a=a,b=b: a*x + b
+        ok = True
+        for x in points:
+            for y in points:
+                if not check_eq(f,x,y):
+                    ok = False
+                    break
+            if not ok:
+                break
+        if ok:
+            print(f"Linear function f(x) = {a}*x + {b} satisfies the equation.")
+
+# Test quadratic functions f(x) = a*x^2 + b, b!=0
+for a in [0,1,-1]:
+    for b in [1,-1,2]:
+        if b==0:
+            continue
+        f = lambda x,a=a,b=b: a*x**2 + b
+        ok = True
+        for x in points:
+            for y in points:
+                if not check_eq(f,x,y):
+                    ok=False
+                    break
+            if not ok:
+                break
+        if ok:
+            print(f"Quadratic function f(x) = {a}*x^2 + {b} satisfies the equation.")
+
+# Test exponential candidate f(x) = c*r^x with c != 0 and r > 0
+for c in [1,2]:
+    for r in [1,2]:
+        f = lambda x,c=c,r=r: c*(r**x)
+        ok = True
+        for x in points:
+            for y in points:
+                try:
+                    if not check_eq(f,x,y):
+                        ok = False
+                        break
+                except OverflowError:
+                    ok = False
+                    break
+            if not ok:
+                break
+        if ok:
+            print(f"Exponential function f(x)={c}*{r}^x satisfies the equation.")
+
+# Test trig functions shifted by a constant
+for c in [1,2]:
+    for k in [0.5,1]:
+        f_sin = lambda x,c=c,k=k: math.sin(k*x)+c
+        ok = True
+        for x in points:
+            for y in points:
+                if not check_eq(f_sin,x,y):
+                    ok = False
+                    break
+            if not ok:
+                break
+        if ok:
+            print(f"Function f(x) = sin({k}*x)+{c} satisfies the equation.")
+        f_cos = lambda x,c=c,k=k: math.cos(k*x)+c
+        ok = True
+        for x in points:
+            for y in points:
+                if not check_eq(f_cos,x,y):
+                    ok = False
+                    break
+            if not ok:
+                break
+        if ok:
+            print(f"Function f(x) = cos({k}*x)+{c} satisfies the equation.")
+```

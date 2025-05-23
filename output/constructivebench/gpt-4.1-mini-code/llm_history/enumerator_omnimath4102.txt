@@ -1,0 +1,43 @@
+[write_program]
+The problem involves functional equations on real functions \(f\) and \(g\) satisfying 
+\[ g(f(x+y)) = f(x) + (2x+y)g(y) \]
+for all real \(x, y\).
+
+To explore candidates, let's enumerate simple polynomial forms for \(f\) and \(g\) with small integer coefficients. We'll verify the equation for these candidates and print those that fit the condition exactly.
+
+
+```python
+# Enumerate polynomial candidates for f, g with low degree and integer coefficients
+# Check if they satisfy g(f(x+y)) = f(x) + (2x + y)*g(y) for many sample x,y
+
+def poly_eval(coeffs, x):
+    return sum(c * x**i for i, c in enumerate(coeffs))
+
+def check_fg(f_coeffs, g_coeffs):
+    # check equation for multiple sample points exactly
+    for x in (-2, -1, 0, 1, 2):
+        for y in (-2, -1, 0, 1, 2):
+            left = poly_eval(g_coeffs, poly_eval(f_coeffs, x + y))
+            right = poly_eval(f_coeffs, x) + (2 * x + y) * poly_eval(g_coeffs, y)
+            if abs(left - right) > 1e-9:
+                return False
+    return True
+
+# Restrict ourselves to degrees 0 or 1 or 2 with coefficients in {-2,-1,0,1,2}
+coeffs_range = [-2, -1, 0, 1, 2]
+
+print("Checking polynomial pairs (f, g) for the functional equation:")
+
+for deg_f in range(3):
+    for f_coeffs in [(a if i <= deg_f else 0) for i, a in enumerate([0]*(deg_f+1))]:
+        # build all combinations for f coeffs
+        from itertools import product
+        f_coeffs_list = list(product(coeffs_range, repeat=deg_f+1))
+        for f_c in f_coeffs_list:
+            # similarly for g
+            for deg_g in range(3):
+                g_coeffs_list = list(product(coeffs_range, repeat=deg_g+1))
+                for g_c in g_coeffs_list:
+                    if check_fg(f_c, g_c):
+                        print(f"f coeffs: {f_c}, g coeffs: {g_c}")
+```

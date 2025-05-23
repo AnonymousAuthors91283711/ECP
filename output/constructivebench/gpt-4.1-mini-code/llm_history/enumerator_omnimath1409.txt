@@ -1,0 +1,138 @@
+[write_program]
+The problem involves real numbers a, b and rounding functions defined as round (to nearest integer) and round_tenth (to nearest tenth). Given two equations with these roundings, we want to find the smallest natural number n equal to round(10*(a+b)) satisfying these equations. To assist, we enumerate candidate integers n and search for real a, b that satisfy the equations within rounding constraints.
+
+We'll:
+- Iterate over candidate n (likely around 980 to 1000 to keep search small),
+- For each n, a and b can be guessed from possible round and round_tenth values implied by the equations,
+- We reconstruct intervals for a, b from rounding definitions,
+- Check if a + b rounds to n/10 by the 10x rounding,
+- Print all candidates with explanations for manual review.
+
+```python
+# Enumerate possible (a,b) and n = round(10*(a+b)) satisfying given rounding equations.
+# round(x) rounds to nearest integer, round_tenth(x) = round(10*x)/10 rounds to nearest tenth.
+# Given round_tenth(a) + round(b) = 98.6 and round(a) + round_tenth(b) = 99.3,
+# find least n in N with round(10*(a+b)) = n.
+
+def round_bounds(x):
+    # Returns interval of reals that round(x) can be, midpoint rounding half up
+    # From definition, e.g. round(3.2) = 3 means x in [2.5,3.5)
+    # We'll invert rounding: round(x)=m means x in [m-0.5,m+0.5), with half round up handled
+    # We'll apply half round up as per hround in statement.
+    return (x - 0.5, x + 0.5)
+
+def round_tenth_bounds(x):
+    # round_tenth(x) = round(10*x)/10 = r,
+    # so 10*x in [10*r - 0.5, 10*r + 0.5), so
+    # x in [(10*r - 0.5)/10, (10*r + 0.5)/10)
+    return ((10*x - 0.5)/10, (10*x + 0.5)/10)
+
+def intersect_intvs(i1, i2):
+    # intersect intervals i1,i2
+    l = max(i1[0], i2[0])
+    r = min(i1[1], i2[1])
+    if l < r:
+        return (l, r)
+    return None
+
+def feasible_a_rounds(round_a_candidates, round_tenth_a_candidates):
+    # Generate intervals for a from round(a) and round_tenth(a) values
+    intervals = []
+    for ra in round_a_candidates:
+        ia = round_bounds(ra)
+        for rta in round_tenth_a_candidates:
+            irta = round_tenth_bounds(rta)
+            iv = intersect_intvs(ia, irta)
+            if iv is not None:
+                intervals.append(iv)
+    return intervals
+
+def feasible_b_rounds(round_b_candidates, round_tenth_b_candidates):
+    intervals = []
+    for rb in round_b_candidates:
+        ib = round_bounds(rb)
+        for rtb in round_tenth_b_candidates:
+            irtb = round_tenth_bounds(rtb)
+            iv = intersect_intvs(ib, irtb)
+            if iv is not None:
+                intervals.append(iv)
+    return intervals
+
+def main():
+    # Given:
+    # round_tenth(a) + round(b) = 98.6
+    # round(a) + round_tenth(b) = 99.3
+
+    # round_tenth( a ) can only be multiples of 0.1 summing with round(b) int to 98.6
+    # Let's enumerate round_tenth(a) in [0..99], round(b) in [0..99]
+    # Similarly for round(a), round_tenth(b)
+    # Both sums are fractional, so round_tenth(a) + round(b) = 98.6 means round_tenth(a) = m/10 for int m
+
+    # Enumerate possible round_tenth(a) as rta = m/10, round(b) = n int, rta+n=98.6
+    # So n = 98.6 - rta must be int, so rta fractional part is 0.6 => rta fractional part = 0.6 mod 1 => rta fractional part = 0.6 => rta fractional = 0.6
+
+    # Therefore round_tenth(a) fractional is 0.6, so round_tenth(a) candidates: numbers like x.6, e.g. 97.6, 98.6, 99.6, but 99.6 > 99.5 no. So possible rta are from 0.6 to 98.6 stepping 1.0
+    
+    rta_candidates = [i + 0.6 for i in range(0,99)]  # 0.6,1.6,...,98.6
+    round_b_candidates = []
+
+    # Calculate round(b) = 98.6 - rta must be integer
+    for rta in rta_candidates:
+        rb = 98.6 - rta
+        if abs(rb - round(rb)) < 1e-9 and 0 <= rb <= 99:
+            round_b_candidates.append(int(round(rb)))
+
+    # Similarly round(a)+round_tenth(b) = 99.3
+    # round_tenth(b) fractional can be 0.3, so candidates x.3
+    rtb_candidates = [i + 0.3 for i in range(0,100)]
+    round_a_candidates = []
+
+    for rtb in rtb_candidates:
+        ra = 99.3 - rtb
+        if abs(ra - round(ra)) < 1e-9 and 0 <= ra <= 99:
+            round_a_candidates.append(int(round(ra)))
+
+    # Compute feasible intervals for a, b
+    a_intervals = feasible_a_rounds(round_a_candidates, rta_candidates)
+    b_intervals = feasible_b_rounds(round_b_candidates, rtb_candidates)
+
+    # For feasibility, test combinations from intervals
+    # round(10*(a+b)) = n integer, enumerate plausible n (a+b in ~[min(a)+min(b), max(a)+max(b)])
+    # We'll check each pair a,b intervals and find n
+
+    # To keep output brief, only consider first 20 pairs detailed
+    count = 0
+    printed = set()
+    for (a_min, a_max) in a_intervals:
+        for (b_min, b_max) in b_intervals:
+            s_min = a_min + b_min
+            s_max = a_max + b_max
+            n_min = int(round(10 * s_min - 0.5))
+            n_max = int(round(10 * s_max + 0.5))
+            # Enumerate n candidates in this range
+            for n in range(n_min, n_max + 1):
+                # Check if there exist a,b in intervals s.t round(10*(a+b))=n,
+                # i.e. 10*(a+b) in [n-0.5, n+0.5)
+                low_bound = (n - 0.5) / 10
+                high_bound = (n + 0.5) / 10
+                if low_bound < s_max and high_bound > s_min:
+                    key = (n,a_min,a_max,b_min,b_max)
+                    if key not in printed:
+                        print(f"Candidate n = {n}: a in [{a_min:.3f},{a_max:.3f}], b in [{b_min:.3f},{b_max:.3f}]")
+                        printed.add(key)
+                        count += 1
+                    if count >= 30:
+                        break
+            if count >= 30:
+                break
+        if count >= 30:
+            break
+
+    # From output, one could infer smallest n. We'll print min n:
+    if printed:
+        min_n = min(k[0] for k in printed)
+        print(f"Minimal candidate n = {min_n}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,76 @@
+[write_program]
+The problem is about finding the maximum number K of non-attacking knights on an infinite chessboard such that there exists a function f that can place a queen not attacking any knight, regardless of how the K knights are placed (as long as they don't attack each other). We'll write a Python program to enumerate possible K values and verify the conditions.
+
+```python
+def attacks_knight(p, q):
+    x1, y1 = p
+    x2, y2 = q
+    dx = x1 - x2
+    dy = y1 - y2
+    return (dx*dx + dy*dy == 5) and (dx != 0 or dy != 0)
+
+def attacks_queen(p, q):
+    x1, y1 = p
+    x2, y2 = q
+    return x1 == x2 or y1 == y2 or abs(x1 - x2) == abs(y1 - y2)
+
+def is_valid_knight_configuration(knights):
+    for i in range(len(knights)):
+        for j in range(i+1, len(knights)):
+            if attacks_knight(knights[i], knights[j]):
+                return False
+    return True
+
+def can_place_queen(knights):
+    # Try center of mass first (common heuristic)
+    if knights:
+        avg_x = sum(k[0] for k in knights) / len(knights)
+        avg_y = sum(k[1] for k in knights) / len(knights)
+        candidates = [
+            (int(avg_x), int(avg_y)),
+            (int(avg_x)+1, int(avg_y)),
+            (int(avg_x), int(avg_y)+1),
+            (int(avg_x)+1, int(avg_y)+1)
+        ]
+        for q in candidates:
+            if all(not attacks_queen(q, k) for k in knights) and q not in knights:
+                return True
+    
+    # If center doesn't work, try other positions near knights
+    for k in knights:
+        for dx in [-2, -1, 0, 1, 2]:
+            for dy in [-2, -1, 0, 1, 2]:
+                q = (k[0]+dx, k[1]+dy)
+                if all(not attacks_queen(q, k2) for k2 in knights) and q not in knights:
+                    return True
+    return False
+
+max_k = 0
+for K in range(1, 10):
+    print(f"Testing K = {K}")
+    # Generate some knight configurations (simplified for demonstration)
+    # In practice, we'd need more sophisticated generation
+    test_configs = [
+        [(0,0), (1,2), (2,4), (3,6)],  # Diagonal line
+        [(0,0), (2,1), (4,2), (6,3)],  # Another diagonal
+        [(0,0), (0,2), (2,0), (2,2)],   # Square
+        [(i, 0) for i in range(K)],     # Horizontal line
+        [(0, i) for i in range(K)],     # Vertical line
+    ]
+    
+    valid = True
+    for config in test_configs:
+        if len(config) == K and is_valid_knight_configuration(config):
+            if not can_place_queen(config):
+                valid = False
+                break
+    
+    if valid:
+        print(f"K = {K} works for tested configurations")
+        max_k = K
+    else:
+        print(f"K = {K} fails for some configurations")
+        break
+
+print(f"Maximum K found: {max_k}")
+```

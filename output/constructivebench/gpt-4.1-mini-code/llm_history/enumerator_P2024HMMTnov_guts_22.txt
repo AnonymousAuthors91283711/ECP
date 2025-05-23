@@ -1,0 +1,50 @@
+[write_program]
+The problem involves finding integers \( k \) between 1 and 50 such that there exist integers \( a > b \) with \( a - b = k \) and the gcd \(\gcd(a^3 - b^3, (a - b)^3)\) is square-free (no square divisor greater than 1).
+
+Key observations:
+- \( a^3 - b^3 = (a-b)(a^2 + ab + b^2) = k(a^2 + ab + b^2) \)
+- \(\gcd(a^3 - b^3, k^3) = \gcd(k(a^2+ab+b^2), k^3) = k \cdot \gcd(a^2+ab+b^2, k^2)\)
+
+The gcd will have a squared prime dividing it if any prime squared divides \(k \cdot \gcd(a^2+ab+b^2, k^2)\).
+
+We want to find for each \(k\) whether there exist \(a,b\) with \(a-b=k\) such that \(\gcd(a^3 - b^3, k^3)\) is square-free.
+
+We'll brute force over \(k\) in 1..50, and for each \(k\), try small \(b\), compute \(a=b+k\), gcd, and check for square factor in the gcd. If no such \(a,b\) yields a non-square-free gcd, \(k\) meets the condition.
+
+Print all such \(k\) as candidates and their count.
+
+```python
+import math
+
+def square_free(n):
+    if n < 2:
+        return True
+    for p in range(2, int(n**0.5)+1):
+        if n % (p*p) == 0:
+            return False
+    return True
+
+def gcd(a,b):
+    while b:
+        a,b = b,a%b
+    return a
+
+print("Checking k from 1 to 50 for P2024HMMTnov_guts_22 condition:")
+valid_ks = []
+for k in range(1,51):
+    found_bad = False
+    # Try several b values to find gcd with prime square factor
+    for b in range(1, 21):
+        a = b + k
+        diff_cubed = k**3
+        diff_cubed_gcd = gcd((a**3 - b**3), diff_cubed)
+        # Check if gcd has a prime square factor > 1
+        if not square_free(diff_cubed_gcd):
+            found_bad = True
+            break
+    if not found_bad:
+        print("k =", k)
+        valid_ks.append(k)
+
+print("Count of valid k =", len(valid_ks))
+```

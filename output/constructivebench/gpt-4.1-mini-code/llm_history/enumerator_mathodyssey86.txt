@@ -1,0 +1,86 @@
+[write_program]
+The problem appears to be about finding the greatest real number \( c \) such that for every positive integer \( n \), and for functions \( a, b: \mathbb{N} \to \mathbb{N} \) satisfying certain conditions, the inequality
+\[
+\frac{\sum_{i=0}^{n-1} b(i)}{n^{3/2}} \geq c
+\]
+holds.
+
+Constraints include:
+- \( n > 0 \)
+- For all \( i \), \( a(i) > 0 \), \( b(i) \) even and positive, and \(\frac{a(i)}{b(i)} \in (0,1)\)
+- The pairs \((a(i), b(i))\) are distinct
+
+We want to investigate possible values of \( c \) by enumerating choices of \( n \), and functions \( a, b \) that satisfy these restrictions while computing
+\[
+\frac{\sum b(i)}{n^{3/2}}.
+\]
+
+The goal is to find the greatest lower bound \( c \). Since the search space is large, we try small \( n \) and small even \( b(i) \), and positive \( a(i) < b(i) \) so that their ratio is in \((0,1)\).
+
+We will:
+- Enumerate \( n = 1, 2, 3, 4 \)
+- For each \( n \), enumerate sequences of distinct pairs \((a(i), b(i))\), with \(a(i)\) from 1 to \(b(i)-1\), \(b(i)\) even from 2 to small values like 6
+- Compute \( S = \sum b(i) / n^{3/2} \) and print the value
+- Collect minimum \( S \) found for each \( n \)
+- Then print the smallest such \( S \) as the greatest lower bound candidate
+
+This brute force approach respects the requirements: streaming outputs, exact values, small parameters.
+
+```python
+# enumerator.py
+from fractions import Fraction
+from math import isclose
+
+def even_numbers(max_b):
+    for b in range(2, max_b+1, 2):
+        yield b
+
+def distinct_pairs(n, max_b):
+    # generate all sequences of length n of distinct (a,b) with conditions:
+    # 0 < a < b, b even
+    # pairs distinct
+    def backtrack(i, seq):
+        if i == n:
+            yield list(seq)
+            return
+        for b in even_numbers(max_b):
+            for a in range(1, b):
+                pair = (a,b)
+                if pair in seq:
+                    continue
+                seq.append(pair)
+                yield from backtrack(i+1, seq)
+                seq.pop()
+    yield from backtrack(0, [])
+
+def main():
+    max_n = 4
+    max_b = 6
+    min_cand = None
+    print("Enumerating ratios sum b(i) / n^(3/2) for small n, distinct (a,b) with 0 < a < b, b even")
+    for n in range(1, max_n+1):
+        n_float = n ** 1.5
+        mn_for_n = None
+        count = 0
+        for seq in distinct_pairs(n, max_b):
+            # Check the ratio condition a(i)/b(i) in (0,1) automatically ensured by a < b, a>0
+            S = sum(b for (a,b) in seq)
+            val = Fraction(S, 1) / Fraction(n_float).limit_denominator(1000)
+            # Print exact fraction approximated as float for human readability
+            approx = float(val)
+            print(f"n={n} seq={seq} sum_b={S} ratio={val} ~ {approx:.4f}")
+            if (mn_for_n is None) or (val < mn_for_n):
+                mn_for_n = val
+            count += 1
+            # limit output count per n to keep output small
+            if count >= 10:
+                break
+        if mn_for_n is not None:
+            print(f"Minimum ratio for n={n}: {mn_for_n} ~ {float(mn_for_n):.4f}")
+            if (min_cand is None) or (mn_for_n < min_cand):
+                min_cand = mn_for_n
+    print(f"Candidate greatest lower bound c: {min_cand} ~ {float(min_cand):.4f}")
+
+if __name__ == '__main__':
+    main()
+```

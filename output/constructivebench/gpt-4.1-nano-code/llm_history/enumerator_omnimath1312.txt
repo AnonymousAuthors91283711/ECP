@@ -1,0 +1,46 @@
+[write_program]
+This problem involves summing the squares of all integers between 1 and 10,000 whose digit sum is exactly 2. The key is to systematically find all such numbers and sum their squares. The main challenge is to generate all numbers with a digit sum of 2 efficiently, then sum their squares—without hardcoding anything or making assumptions.
+
+Approach:
+- Generate all numbers less than or equal to 10,000 with digit sum = 2.
+- Since numbers can be up to 4 digits, consider 1-digit, 2-digit, 3-digit, and 4-digit numbers.
+- For each, generate all combinations of digits that sum to 2, ensuring no leading zeros for multi-digit numbers.
+
+Then, sum the squares of all such numbers and print each number as soon as it is found for streaming.
+
+```python
+# Enumerate all numbers <= 10000 with digit sum = 2
+# Generate candidates based on number length
+# Handle 1-digit, 2-digit, 3-digit, and 4-digit numbers
+
+def generate_numbers_with_digit_sum(target_sum, max_digits):
+    results = []
+    # For 1-digit numbers
+    for d in range(1, 10):
+        if d == target_sum:
+            yield d
+    # For numbers with multiple digits
+    for length in range(2, max_digits + 1):
+        # Generate all digit combinations with sum = target_sum
+        # First digit can't be zero
+        def recurse(current_digits, remaining_sum, position):
+            if position == length:
+                if remaining_sum == 0:
+                    number = 0
+                    for digit in current_digits:
+                        number = number * 10 + digit
+                    if number <= 10000:
+                        print(number)  # stream the result
+                        yield number
+                return
+            start = 1 if position == 0 else 0
+            for digit in range(start, 10):
+                if digit <= remaining_sum:
+                    yield from recurse(current_digits + [digit], remaining_sum - digit, position + 1)
+        yield from recurse([], target_sum, 0)
+
+total_sum = 0
+for num in generate_numbers_with_digit_sum(2, 4):
+    total_sum += num ** 2
+print("Sum of squares:", total_sum)
+```

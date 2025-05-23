@@ -1,0 +1,40 @@
+[write_program]
+The problem involves finding pairs `(n, ks)` where `ks` is a list of length `n`, all non-negative integers, satisfying the sum condition `sum ks = 5 * n - 4` and the harmonic sum condition `(sum (1 / k for k in ks)) = 1`. Since the total sum and harmonic sum are linked to `n`, and the list length `n` is positive, we can limit `n` to a small range, then enumerate all candidate lists `ks` that satisfy the sum condition, and check the harmonic sum condition. We will generate all possible `ks` with length `n` such that their sum equals `5n - 4`. To keep computations manageable, we will limit the maximum `n` to a small value, e.g., 10.
+
+We will:
+- Fix `n` within a small range.
+- Generate all `ks` of length `n` with non-negative integers summing to `5n - 4`.
+- For each candidate, check if the harmonic sum equals exactly 1.
+- For each satisfying candidate, print `(n, ks)`.
+
+This approach streamlines enumeration and matching, aligning with the requirements.
+
+```python
+import math
+
+# Define an upper bound for n for practical enumeration
+max_n = 10
+
+# For each n from 1 to max_n, generate candidate ks
+for n in range(1, max_n + 1):
+    target_sum = 5 * n - 4
+    # Generate all compositions of target_sum into n non-negative parts
+    def generate_compositions(target, length):
+        if length == 1:
+            if target >= 0:
+                yield [target]
+            return
+        for i in range(target + 1):
+            for tail in generate_compositions(target - i, length - 1):
+                yield [i] + tail
+
+    for ks in generate_compositions(target_sum, n):
+        # Compute harmonic sum
+        try:
+            harmonic_sum = sum(1 / k for k in ks if k > 0)
+        except ZeroDivisionError:
+            continue
+        # Check if harmonic sum is exactly 1
+        if math.isclose(harmonic_sum, 1, rel_tol=1e-9):
+            print((n, ks))
+```

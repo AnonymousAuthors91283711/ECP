@@ -1,0 +1,62 @@
+[write_program]
+The problem defines a function \( a(i,j) \) with base case \( a(1,n) = n^n \) (for \( n \geq 1 \)) and a recurrence relation
+\[
+a(i+1,j) = a(i,j) + a(i,j+1).
+\]
+We want to find \( a(128,1) \mod 10 \).
+
+To explore, we can:
+- Implement \( a(i,j) \) with memoization,
+- Compute \( a(i,1) \mod 10 \) for small \( i \) (e.g., up to 10),
+- Print these values to conjecture the pattern,
+- Then compute \( a(128,1) \mod 10 \).
+
+Note: Since \( a(i+1,j) = a(i,j) + a(i, j+1) \), the function shifts values to the left and sums with the next element.
+
+We'll limit the computations since direct naive recursion is expensive. We'll implement bottom-up computation for fixed \( i \).
+
+```python
+# Enumerate a(i,1) mod 10 for i=1..10 and j up to reasonable range.
+# Base case: a(1,n) = n^n mod 10
+# Recurrence: a(i+1,j) = a(i,j) + a(i,j+1)
+# For fixed i, a(i,1) depends on a(i-1,j) for j>=1.
+
+def mod_exp(base, exp, mod=10):
+    if base == 0 and exp == 0:
+        return 1  # define 0^0 as 1 for this context
+    return pow(base % mod, exp, mod)
+
+def compute_a_i_row(i, max_j, prev_row):
+    # Compute a(i,j) for j=1..max_j using prev_row = a(i-1, j)
+    # a(i,j) = a(i-1,j) + a(i, j+1)
+    # So going backward from j=max_j down to 1:
+    cur_row = [0]*(max_j+2)  # 1-based indexing, extra for j+1 access
+    # For j=max_j downto 1:
+    for j in range(max_j,0,-1):
+        cur_row[j] = (prev_row[j] + cur_row[j+1]) % 10
+    return cur_row
+
+def main():
+    max_i = 10
+    max_j = 50  # large enough to stabilize a(i,1)
+    # base row a(1,j) = j^j mod 10
+    base_row = [0]*(max_j+2)
+    for j in range(1,max_j+1):
+        base_row[j] = mod_exp(j,j)
+    print("i, a(i,1) mod 10")
+    prev_row = base_row
+    for i in range(1, max_i+1):
+        # a(i,1) = prev_row[1] for i=1 already
+        if i > 1:
+            prev_row = compute_a_i_row(i, max_j, prev_row)
+        print(i, prev_row[1])
+    # Now compute a(128,1)
+    # Iterate from base_row to 128
+    prev_row = base_row
+    for i in range(2,129):
+        prev_row = compute_a_i_row(i,max_j, prev_row)
+    print("a(128,1) mod 10 =", prev_row[1])
+
+if __name__ == "__main__":
+    main()
+```

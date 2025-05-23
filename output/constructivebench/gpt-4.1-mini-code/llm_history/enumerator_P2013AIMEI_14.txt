@@ -1,0 +1,62 @@
+[write_program]
+The problem involves an angle \(\theta\) in the interval \((\pi/2, \pi)\) satisfying \(\frac{\sin \theta}{1+\cos \theta} = \frac{2\sqrt{2}}{7}\), and the goal appears to be finding coprime natural numbers \(m,n\) such that \(\sin \theta = -\frac{m}{n}\) and \(m+n\) is some minimal or unique number.
+
+We will numerically search rational approximations \(-\frac{m}{n}\) for \(\sin \theta\) with \(m,n\) small and coprime, and check if corresponding \(\theta\) satisfies the equation. Since \(\theta \in (\pi/2, \pi)\), \(\sin \theta\) is positive, but the hypothesis has a negative sign on \(\sin \theta = -m/n\), so \(-m/n > 0 \Rightarrow m/n < 0\), which can't happen for positive \(m,n\). Possibly the sign convention means \(\sin \theta\) is negative or the problem expects negative signs specifically, but we will try small values for \(m,n\).
+
+Let's enumerate:
+
+1. Compute the target value \(v = \frac{2\sqrt{2}}{7}\).
+2. For \(m,n\) up to 30, \(m<n\) (to keep fraction <1), coprime check.
+3. Check if there exists \(\theta\) that satisfies \(\theta \in (\pi/2, \pi)\) and \(\frac{\sin \theta}{1+\cos \theta} = v\) with \(\sin \theta = -m/n\).
+4. Because \(\sin \theta/(1+\cos \theta) = \tan(\theta/2)\) (half angle formula), we can rewrite \( \frac{\sin \theta}{1+\cos \theta} = \tan(\theta/2) \).
+
+Hence \(\tan(\theta/2) = \frac{2\sqrt{2}}{7}\). This uniquely determines \(\theta/2\), so \(\theta = 2 \arctan(\frac{2\sqrt{2}}{7}) \approx 0.785\) radians, which is less than \(\pi/2\), contradicting \(\theta \in (\pi/2, \pi)\). But since \(\theta\in(\pi/2, \pi)\), \(\theta/2 \in (\pi/4, \pi/2)\), so \(\tan(\theta/2)\) should be >1, but \(2\sqrt{2}/7\approx 0.404\), less than 1.
+
+Checking if the equation had a missing sign: \(\frac{\sin\theta}{1+\cos\theta} =\tan(\theta/2)\). For \(\theta \in (\pi/2, \pi)\), \(1+\cos \theta >0\) as \(\cos \theta \in (-1,0)\), so denominator positive.
+
+The equation requires finding integers \(m,n\) with \(\sin \theta = -\frac{m}{n}\) negative since \(\sin \theta = -m/n\) but \(\theta\in (\pi/2 , \pi)\), \(\sin \theta\) positive; this indicates a sign confusion. Perhaps the problem expects negative \(\sin \theta\), so we try \(\theta \in (\pi, 3\pi/2)\) range instead.
+
+Anyway, to follow instructions and generate candidate values for \( (m,n) \), check coprimality and approximate \(\sin \theta\) corresponding to the given ratio and print candidates.
+
+We'll use the formula \(\sin \theta = \frac{2 \tan(\theta/2)}{1+\tan^2(\theta/2)}\). Knowing \(\tan(\theta/2) = \frac{2\sqrt{2}}{7}\), calculate \(\sin \theta\) exactly, then look for coprime integer approximations \((m,n)\) with \(m+n\) minimized.
+
+```python
+from math import sqrt
+from fractions import Fraction
+from math import gcd
+
+# Target value for tan(theta/2)
+target = 2 * sqrt(2)/7
+
+# Compute sin(theta) from tan(theta/2):
+# sin(theta) = 2*t/(1 + t^2)
+t = target
+s = 2*t/(1 + t*t)  # sin(theta) exact float
+
+# Search for coprime m,n with sin(theta) ~ m/n (positive value)
+# Limiting denominators up to 30 for manageable output
+max_denom = 30
+
+# Print the exact sin value
+print(f'sin(theta) exact value: {s} (~{Fraction(s).limit_denominator(max_denom)})')
+
+# Enumerate fractions close to s
+candidates = []
+for n in range(1, max_denom+1):
+    m_approx = round(s * n)
+    for m in [m_approx-1, m_approx, m_approx+1]:
+        if m > 0 and m <= n and gcd(m, n) == 1:
+            approx = m / n
+            diff = abs(approx - s)
+            if diff < 0.01:  # close enough tolerance
+                print(f'Possible: m={m}, n={n}, m+n={m+n}, approx sin={approx:.5f}')
+                candidates.append((m,n,m+n))
+
+# Output candidate with minimal m+n
+if candidates:
+    m_min, n_min, s_min = min(candidates, key=lambda x: x[2])
+    print(f'Minimum m+n = {s_min} with m={m_min}, n={n_min}')
+else:
+    print("No suitable candidates found within tolerance.")
+```
+

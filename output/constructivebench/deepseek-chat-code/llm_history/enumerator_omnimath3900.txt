@@ -1,0 +1,71 @@
+[write_program]
+This problem involves finding a function f: ℕ → ℕ that satisfies two conditions:
+1. For every x, the number of divisors of f(x) equals x
+2. For every x,y, f(x*y) divides (x-1)*y^(x*y-1)*f(x)
+
+We'll write a Python program to enumerate possible functions f that satisfy these conditions for small values of x, looking for patterns.
+
+```python
+from math import gcd
+from functools import lru_cache
+
+def num_divisors(n):
+    if n == 0:
+        return 0
+    count = 1
+    i = 2
+    while i * i <= n:
+        exponent = 0
+        while n % i == 0:
+            exponent += 1
+            n = n // i
+        if exponent > 0:
+            count *= (exponent + 1)
+        i += 1
+    if n > 1:
+        count *= 2
+    return count
+
+@lru_cache(maxsize=None)
+def find_f(x, max_tries=10000):
+    # Find smallest n with exactly x divisors
+    n = 1
+    while True:
+        if num_divisors(n) == x:
+            return n
+        n += 1
+        if n > max_tries:
+            return None
+
+def verify_condition2(f, x, y):
+    if f(x*y) == 0:
+        return False
+    term = (x - 1) * (y ** (x * y - 1)) * f(x)
+    return term % f(x*y) == 0
+
+def main():
+    max_x = 10  # Check up to x=10
+    f_values = {}
+    
+    for x in range(1, max_x + 1):
+        f_x = find_f(x)
+        if f_x is None:
+            print(f"Could not find f({x})")
+            continue
+        f_values[x] = f_x
+        print(f"f({x}) = {f_x}")
+        
+        # Verify condition 2 for small y values
+        for y in range(1, 4):
+            xy = x * y
+            if xy not in f_values:
+                f_xy = find_f(xy)
+                if f_xy is None:
+                    continue
+                f_values[xy] = f_xy
+            if not verify_condition2(f_values, x, y):
+                print(f"Condition fails for x={x}, y={y}")
+
+if __name__ == "__main__":
+    main()
+```

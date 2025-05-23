@@ -1,0 +1,65 @@
+[write_program]
+The problem involves characterizing all real polynomials \( P \) for which there exists a polynomial \( Q \) such that for all real \( t \),
+\[
+\cos(P(t)) = Q(\cos(t)).
+\]
+This relates to expressing \(\cos(P(t))\) as a polynomial in \(\cos(t)\).
+
+Key insight:
+- The classical Chebyshev polynomials \(T_n\) satisfy \(\cos(n t) = T_n(\cos t)\).
+- Hence, polynomials \(P\) that are linear of the form \(P(t) = n t\) for integer \(n\) fit the condition, with \(Q = T_n\).
+- To explore further, we will enumerate polynomials with small integer coefficients and check if \(\cos(P(t))\) can be represented by a corresponding polynomial \(Q\) in \(\cos t\), by sampling points and verifying polynomial fits.
+
+The program below tries small linear polynomials \(P(t) = a t + b\) with \(a, b \in \{-2,...,2\}\), attempts to express \(\cos(P(t))\) as a polynomial in \(\cos t\) by fitting \(Q\), again as polynomial of degree up to 5, and prints candidates.
+
+```python
+import numpy as np
+
+# We test polynomials P(t) = a t + b for integer a,b in [-2,2]
+# For each P, try to fit Q via cos(P(t)) ≈ Q(cos(t)) over sample points
+# If fit is close, print P and Q (coefficients)
+def cos_poly_fit():
+    t_samples = np.linspace(0, 2*np.pi, 50)
+    cos_t = np.cos(t_samples)
+    threshold = 1e-12
+    for a in range(-2,3):
+        for b in range(-2,3):
+            P_t = a * t_samples + b
+            y = np.cos(P_t)
+            # Fit polynomial Q in cos(t) of degree up to 5
+            for deg in range(1,6):
+                # Create Vandermonde matrix in cos_t
+                V = np.vander(cos_t, deg+1)
+                coeffs, residuals, rank, s = np.linalg.lstsq(V, y, rcond=None)
+                # Compute max error
+                y_fit = V @ coeffs
+                err = np.max(np.abs(y - y_fit))
+                if err < threshold:
+                    # Found exact match (within threshold)
+                    # Print P and Q
+                    def poly_str(c):
+                        # c highest degree first
+                        terms = []
+                        for i, coeff in enumerate(c[::-1]):
+                            deg = i
+                            # format coefficient
+                            if abs(coeff) < 1e-12:
+                                continue
+                            s = f"{coeff:.0g}"
+                            if deg == 0:
+                                terms.append(s)
+                            elif deg == 1:
+                                terms.append(f"{s}*x")
+                            else:
+                                terms.append(f"{s}*x^{deg}")
+                        if not terms:
+                            return "0"
+                        return " + ".join(terms)
+                    print(f"P(t) = {a}*t + {b}")
+                    print(f"Q(x) = {poly_str(coeffs)}")
+                    print()
+                    break  # no need higher degree Q for this P
+
+if __name__ == "__main__":
+    cos_poly_fit()
+```

@@ -1,0 +1,69 @@
+[write_program]
+This problem involves finding the minimal number of colors needed to color the divisors of a number N (that's not a prime power) such that for any two distinct divisors a and b, if their gcd is neither a nor b, then all three (a, b, and gcd(a,b)) must have distinct colors.
+
+We'll write a Python program to:
+1. Enumerate small composite numbers N (non-prime-powers)
+2. For each N, find its divisors
+3. Try to find the minimal number of colors needed for such a coloring
+4. Output results for small N values to observe patterns
+
+```python
+import math
+from itertools import product
+
+def is_prime_power(n):
+    if n == 1:
+        return False
+    # Check if n is a power of a single prime
+    for p in range(2, int(math.sqrt(n)) + 1):
+        if n % p == 0:
+            while n % p == 0:
+                n = n // p
+            return n == 1
+    return True
+
+def get_divisors(n):
+    divisors = set()
+    for i in range(1, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            divisors.add(i)
+            divisors.add(n // i)
+    return sorted(divisors)
+
+def is_valid_coloring(divisors, coloring):
+    n = len(coloring)
+    divisor_indices = {d: i for i, d in enumerate(divisors)}
+    for i in range(n):
+        a = divisors[i]
+        for j in range(i+1, n):
+            b = divisors[j]
+            gcd_ab = math.gcd(a, b)
+            if a == b or a == gcd_ab or b == gcd_ab:
+                continue
+            k = divisor_indices[gcd_ab]
+            if (coloring[i] == coloring[j] or 
+                coloring[i] == coloring[k] or 
+                coloring[j] == coloring[k]):
+                return False
+    return True
+
+def find_min_colors(divisors):
+    for k in range(1, 5):  # We suspect answer is ≤4
+        for coloring in product(range(k), repeat=len(divisors)):
+            if is_valid_coloring(divisors, coloring):
+                return k
+    return -1
+
+def main():
+    max_N = 20
+    print("N | Divisors | Min colors needed")
+    print("-------------------------------")
+    for N in range(2, max_N + 1):
+        if not is_prime_power(N):
+            divisors = get_divisors(N)
+            min_colors = find_min_colors(divisors)
+            print(f"{N} | {divisors} | {min_colors}")
+
+if __name__ == "__main__":
+    main()
+```

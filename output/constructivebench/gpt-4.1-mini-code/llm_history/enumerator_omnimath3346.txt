@@ -1,0 +1,65 @@
+[write_program]
+This problem asks us to study real numbers \( a > 0 \) for which there exist distinct real numbers \( b, c, d \) (all different from each other and \(a\)) such that
+
+- \( \{a, b, c, d\} \) all distinct,
+- \( f(a) + f(b) = f(c) + f(d) \),
+- \( a b = c d \),
+
+where \( f(x) = 2x^3 - 2x \).
+
+The problem asks us to characterize the set of such \( a \).
+
+Since exact symbolic solving might be hard, we enumerate \( a \) over a small set of positive values, then for each \( a \) search for triples \( (b,c,d) \) satisfying the conditions.
+
+We should print each \( a \) for which a solution is found.
+
+---
+
+Implementation notes:
+
+1. Because the problem domain is continuous (reals), we'll try small integers and rational values for \( a \).
+2. For each \( a \), we will try grid values for \( b, c \) and compute \( d \) from \( a b = c d \Rightarrow d = \frac{a b}{c} \) (if \( c \neq 0 \)).
+3. We then check \( f(a)+f(b) == f(c) + f(d) \) (within a tolerance or using exact rational arithmetic when possible).
+4. We check all distinctness conditions.
+5. Print each \( a \) immediately when such a triple is found.
+
+We must keep output concise and within 400 tokens, so we'll limit the ranges and values tried.
+
+```python
+# Enumerate candidate values of a > 0 for which there exist distinct b,c,d with
+# f(a)+f(b)=f(c)+f(d) and a*b=c*d, all distinct elements.
+
+def f(x):
+    return 2*x**3 - 2*x
+
+def approx_eq(x,y,eps=1e-9):
+    return abs(x-y) < eps
+
+print("Testing candidate values of a:")
+
+# Try a in {0.5,1,1.5,2,3} (sample positives)
+for a in [0.5,1,1.5,2,3]:
+    found = False
+    # Try b,c from {-3,-2,-1,0.1,0.5,1,1.1,2,3} avoiding a for distinctness
+    candidates = [-3,-2,-1,0.1,0.5,1,1.1,2,3]
+    for b in candidates:
+        if b == a:
+            continue
+        for c in candidates:
+            if c in {a,b,0}:
+                continue
+            d = a*b/c if c != 0 else None
+            if d is None or d in {a,b,c}:
+                continue
+            # check f(a)+f(b) == f(c)+f(d)
+            left = f(a)+f(b)
+            right = f(c)+f(d)
+            if approx_eq(left,right):
+                # found quadruple distinct a,b,c,d satisfying conditions
+                print(f"a={a} with b={b}, c={c}, d={d}")
+                found = True
+                break
+        if found:
+            break
+```
+

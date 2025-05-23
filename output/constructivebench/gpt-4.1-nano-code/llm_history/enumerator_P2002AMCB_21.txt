@@ -1,0 +1,103 @@
+[write_program]
+The problem defines a piecewise function `a(n)` based on divisibility conditions with 11, 13, and 14, and asks for the sum of `a(n)` over `n` from 0 to 2001. To assist in conjecturing and possibly proving the total sum, I will enumerate the contributions of each pattern of divisibility up to 2001, considering their overlaps.
+
+Approach:
+- For each divisibility pattern, find the least common multiple (lcm) of the involved numbers.
+- Count how many `n` in 0..2001 satisfy that pattern.
+- Sum contributions based on the pattern's assigned value.
+- Use inclusion-exclusion to avoid double counting the overlaps.
+
+This will generate exact sum contributions from each pattern, which can be summed for a conjecture.
+
+```python
+import math
+
+# Define the upper limit
+N = 2002  # since range is exclusive at the end, up to 2001 inclusive
+# Define divisors
+divs = [11, 13, 14]
+
+# Helper function to count multiples of a number up to N
+def count_multiples(m):
+    return (N - 1) // m  # since range is [0, N-1], 0-based
+
+# Compute counts for various intersection patterns
+# Use inclusion-exclusion principle
+
+counts = {}
+
+# Single sets
+counts['11'] = count_multiples(11)
+counts['13'] = count_multiples(13)
+counts['14'] = count_multiples(14)
+
+# Pairwise intersections
+lcm_11_13 = math.lcm(11, 13)
+lcm_11_14 = math.lcm(11, 14)
+lcm_13_14 = math.lcm(13, 14)
+
+counts['11&13'] = count_multiples(lcm_11_13)
+counts['11&14'] = count_multiples(lcm_11_14)
+counts['13&14'] = count_multiples(lcm_13_14)
+
+# Triple intersection
+lcm_all = math.lcm(lcm_11_13, 14)
+counts['11&13&14'] = count_multiples(lcm_all)
+
+# Count for each pattern:
+
+# Pattern 1: divisibility by 11, 13, 14
+a1 = 6
+count1 = counts['11&13&14']
+
+# Pattern 2: 11 and 13
+a2 = 4
+count2 = counts['11&13'] - count1  # exclude the triple
+
+# Pattern 3: 11 and 14
+a3 = 3
+count3 = counts['11&14'] - count1
+
+# Pattern 4: 13 and 14
+a4 = 2
+count4 = counts['13&14'] - count1
+
+# Patterns 5,6,7: only one divisor
+# Only 11 (excluding those in other patterns)
+count_only_11 = counts['11'] - (counts['11&13'] + counts['11&14'] - counts['11&13&14'])
+a5 = 1
+
+# Similarly for 13
+count_only_13 = counts['13'] - (counts['11&13'] + counts['13&14'] - counts['11&13&14'])
+a6 = 1
+
+# For 14
+count_only_14 = counts['14'] - (counts['11&14'] + counts['13&14'] - counts['11&13&14'])
+a7 = 1
+
+# Remaining numbers not divisible by any of 11,13,14: value 0, ignore in sum
+
+# Calculate total sum
+total_sum = (
+    a1 * count1 +
+    a2 * count2 +
+    a3 * count3 +
+    a4 * count4 +
+    a5 * count_only_11 +
+    a6 * count_only_13 +
+    a7 * count_only_14
+)
+
+# Print the contributions for verification
+print("Contributions to sum:")
+print(f"Pattern 11&13&14 (a=6): {a1} * {count1} = {a1 * count1}")
+print(f"Pattern 11&13 (a=4): {a2} * {count2} = {a2 * count2}")
+print(f"Pattern 11&14 (a=3): {a3} * {count3} = {a3 * count3}")
+print(f"Pattern 13&14 (a=2): {a4} * {count4} = {a4 * count4}")
+print(f"Only 11 (a=1): {a5} * {count_only_11} = {a5 * count_only_11}")
+print(f"Only 13 (a=1): {a6} * {count_only_13} = {a6 * count_only_13}")
+print(f"Only 14 (a=1): {a7} * {count_only_14} = {a7 * count_only_14}")
+print(f"Total sum: {total_sum}")
+
+P2002AMCB_21_answer = total_sum
+```

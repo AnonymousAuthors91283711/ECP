@@ -1,0 +1,77 @@
+[write_program]
+This problem characterizes all functions \( f: \mathbb{Z} \to \mathbb{Z} \) satisfying the functional equation
+\[
+f(4x + 3y) = f(3x + y) + f(x + 2y)
+\]
+for all integers \( x, y \). The goal is to conjecture the general form of such functions, parameterized by an integer \( a \).
+
+To explore, I will:
+- Enumerate integer functions \( f \) defined by choosing values \( f(0), f(1), f(2), f(3) \) and then propagate values \( f(n) \) for \( n \) from -10 to 10 using the relation.
+- Verify which initial seeds produce consistent values.
+- Print consistent candidates for \( f \) on a sample domain.
+- Attempt to identify a pattern or linear form that might fit the relation.
+
+```python
+# enumerator.py
+def check_relation(f):
+    # Check the relation f(4x+3y) = f(3x+y)+f(x+2y) for x,y in small range
+    for x in range(-3,4):
+        for y in range(-3,4):
+            lhs = f.get(4*x+3*y)
+            rhs = f.get(3*x+y, None)
+            rhs2 = f.get(x+2*y, None)
+            if lhs is None or rhs is None or rhs2 is None:
+                continue
+            if lhs != rhs + rhs2:
+                return False
+    return True
+
+def propagate_f(f, domain):
+    # Using the relation to infer unknown values if possible
+    # We'll try to fill f for all n in domain if a consistent solution exists
+    changed = True
+    while changed:
+        changed = False
+        for x in range(-3,4):
+            for y in range(-3,4):
+                k = 4*x+3*y
+                a = 3*x+y
+                b = x+2*y
+                if k in domain and domain[k] is None:
+                    if (a in domain and domain[a] is not None) and (b in domain and domain[b] is not None):
+                        domain[k] = domain[a] + domain[b]
+                        changed = True
+
+def main():
+    # We test initial seeds on small domain -5..5
+    # Let's try f(0) = 0 fixed (without loss of generality), and sweep f(1), f(2), f(3) in [-2,2]
+    domain = {i: None for i in range(-12,13)}
+    domain[0] = 0
+
+    for f1 in range(-2,3):
+        for f2 in range(-2,3):
+            for f3 in range(-2,3):
+                # reset domain
+                for k in domain:
+                    domain[k] = None
+                domain[0] = 0
+                domain[1] = f1
+                domain[2] = f2
+                domain[3] = f3
+
+                propagate_f(domain, domain)
+
+                # verify relation
+                if check_relation(domain):
+                    # print some values to guess form
+                    values = [domain.get(i, None) for i in range(-5,6)]
+                    print(f"Seed f(1)={f1}, f(2)={f2}, f(3)={f3}: values at -5..5 = {values}")
+
+if __name__ == "__main__":
+    main()
+```
+This program enumerates initial values \( f(1), f(2), f(3) \) in a small range, sets \( f(0) = 0 \), then attempts to propagate the relation to infer other values in \([-12,12]\).
+
+If the relation holds everywhere (at least tested in \([-3,3]^2\)), it prints the resulting sequence on \([-5,5]\).
+
+By observing output candidates, one can conjecture the exact form of solutions \( f = \texttt{omnimath3788_answer}\,a \).

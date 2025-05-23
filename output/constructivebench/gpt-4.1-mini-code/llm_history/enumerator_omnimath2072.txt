@@ -1,0 +1,80 @@
+[write_program]
+The problem concerns the volume of the set of points in \(\mathbb{R}^3\) relative to a 4-point configuration (a tetrahedron with edge length 1), such that the sum of squared distances from a point \(p\) to these 4 points is at most 15. The set is defined by such \(p\) and \(s\), with \(s\) defining vertices of a unit-edge-length tetrahedron.
+
+We want to explore configurations of 4 points in \(\mathbb{R}^3\) with pairwise distances 1, then compute or approximate the volume of points where sum of squared distances to those points is ≤ 15.
+
+Since the size of this problem is complex algebraically, I'll write a Python program that:
+- Enumerates some canonical tetrahedron configurations with edge length 1.
+- Computes the volume of points \( p \) in \(\mathbb{R}^3\) satisfying \( \sum_{i=1}^4 \|p - s_i\|^2 \leq 15 \).
+- \( \sum \|p - s_i\|^2 \) defines a quadratic inequality; the set of \( p \) satisfying this is an ellipsoid.
+- Compute its volume exactly (or approximated by computing the ellipsoid axes lengths).
+- Print these volumes for sample configurations.
+
+This will help conjecture the volume (and thus the omnimath2072 answer).
+
+```python
+import numpy as np
+
+def tetrahedron_vertices_unit_edge():
+    # Coordinates of a regular tetrahedron with edge length 1:
+    # Place first vertex at origin
+    v0 = np.array([0.0, 0.0, 0.0])
+    # Second vertex at (1,0,0)
+    v1 = np.array([1.0, 0.0, 0.0])
+    # Third vertex at (1/2, sqrt(3)/2, 0)
+    v2 = np.array([0.5, np.sqrt(3)/2, 0.0])
+    # Fourth vertex at centroid height to form tetrahedron:
+    # centroid of base triangle:
+    centroid = (v0 + v1 + v2) / 3
+    # height so all edges are length 1:
+    # height^2 + distance(centroid,v0)^2 = 1^2
+    base_edge = 1.0
+    dist_centroid_to_v0 = np.linalg.norm(centroid - v0)
+    height = np.sqrt(base_edge**2 - dist_centroid_to_v0**2)
+    v3 = centroid + np.array([0, 0, height])
+    return np.array([v0, v1, v2, v3])
+
+def ellipsoid_volume_from_quadratic_form(A, b, c, threshold):
+    # Set: p^T A p + 2 b^T p + c <= threshold
+    # Recenter p' = p + A^{-1} b for simplicity
+    # The shape is { p : (p - p0)^T A (p - p0) <= threshold - c + b^T A^{-1} b }
+    # Volume = volume of ellipsoid defined by quadratic form Q = A, scaled by sqrt of det(A)
+    p0 = -np.linalg.solve(A, b)
+    val = threshold - c + b.T @ p0
+
+    # The set is {x^T A x <= val}, volume = (4/3)pi val^{3/2} / sqrt(det(A))
+    # if val>0, else volume=0.
+    if val <= 0:
+        return 0.0
+    detA = np.linalg.det(A)
+    vol = (4/3)*np.pi * val**1.5 / np.sqrt(detA)
+    return vol
+
+def main():
+    # Print parameters and volumes for the canonical tetrahedron configuration
+    print("Sampling regular tetrahedron with edge length 1 vertices:")
+    verts = tetrahedron_vertices_unit_edge()
+    for i, v in enumerate(verts):
+        print(f"Vertex {i}: {v}")
+
+    # Sum of squared distances to points s_i is sum ||p - s_i||^2 = ?
+    # Expand:
+    # sum_i ||p - s_i||^2 = sum_i (p^T p - 2 p^T s_i + s_i^T s_i)
+    # = 4 p^T p - 2 p^T sum s_i + sum ||s_i||^2
+    # inequality: 4 p^T p - 2 p^T sum s_i + sum ||s_i||^2 <= 15
+
+    Sum_s = verts.sum(axis=0)
+    Sum_s_norm2 = np.sum(np.sum(verts*verts, axis=1))
+
+    A = 4*np.eye(3)  # coefficient of p^T A p
+    b = -Sum_s       # coefficient vector b (-1/2 of linear term but we absorb 2)
+    c = Sum_s_norm2
+
+    threshold = 15
+
+    vol = ellipsoid_volume_from_quadratic_form(A, b, c, threshold)
+    print(f"Computed volume of set {{p : sum dist(p,s_i)^2 <= 15}} = {vol:.6f}")
+
+if __name__ == "__main__":
+    main()
+```

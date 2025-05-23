@@ -1,0 +1,64 @@
+[write_program]
+This problem involves finding all prime numbers p that appear in at least 7 triples (t0, t1, t2) of primes where the quadratic equation t0*x² + t1*x + t2 = 0 has a rational solution. We'll write a Python program to enumerate such primes by checking all possible prime triples up to a reasonable limit.
+
+The approach:
+1. Generate all prime triples (p, q, r) up to a threshold (we'll use 100)
+2. For each triple, check if the discriminant is a perfect square (indicating rational roots)
+3. Count how many times each prime appears in valid triples
+4. Output primes that appear in at least 7 valid triples
+
+```python
+import math
+from itertools import product
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def is_square(n):
+    if n < 0:
+        return False
+    s = int(math.isqrt(n))
+    return s * s == n
+
+def main():
+    threshold = 100
+    primes = [p for p in range(2, threshold) if is_prime(p)]
+    prime_counts = {p: 0 for p in primes}
+    
+    for t0, t1, t2 in product(primes, repeat=3):
+        discriminant = t1 * t1 - 4 * t0 * t2
+        if is_square(discriminant):
+            prime_counts[t0] += 1
+            prime_counts[t1] += 1
+            prime_counts[t2] += 1
+    
+    print("Primes appearing in at least 7 valid triples:")
+    for p in sorted(prime_counts):
+        if prime_counts[p] >= 7:
+            print(p)
+
+if __name__ == "__main__":
+    main()
+```

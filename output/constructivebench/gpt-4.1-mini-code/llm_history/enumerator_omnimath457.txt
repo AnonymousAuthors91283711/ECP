@@ -1,0 +1,128 @@
+[write_program]
+The problem describes a board or grid indexed by Fin 2 × Fin 8 (a 2 by 8 grid). The adjacency relation defines moves either horizontally or vertically by one step. The moves relation allows moving from one cell to an adjacent distinct cell. The set to be counted consists of functions m from cells to cells satisfying:
+- For every cell r, there is a unique cell r' such that m r' = r and moves r r'.
+- For every cell r, moves r (m r).
+
+In other words, m defines a permutation on the 16 cells such that m(r) is an adjacent cell to r, with no fixed points. Also, the inverse of m defines a function: for each r, there is a unique r' with moves r r' and m r' = r, so m is bijection with adjacency-restricted edges as possible moves.
+
+This essentially asks: How many permutations of the 16 vertices of a 2x8 grid graph exist where each vertex is mapped to an adjacent and distinct vertex? Equivalently, count all "adjacency permutations" (also called adjacency-respecting permutations).
+
+We aim to enumerate such permutations for the 2x8 grid. This is a hard problem to solve completely by hand. The enumeration program below will:
+
+- Generate the 16 nodes as tuples (row:0 or 1, col:0..7).
+- Compute adjacency (neighbors) for each node.
+- Enumerate permutations restricted to adjacency edges.
+- Due to complexity, small grids will be tried first (like 2x2, 2x3, 2x4) to observe counts and guess pattern, eventually extending to 2x8 if manageable.
+- Print intermediate results and final count.
+
+We will prioritize enumerating all such permutations for small grids (2x2, 2x3, 2x4) then print count for 2x8 (by partial brute force with limitations).
+
+```python
+# Enumerate adjacency permutations on 2 x n grids
+# adjacency means cell connected vertically or horizontally (no diagonal)
+# permutations m: vertices -> vertices, with m(r) adjacent and m(r) != r
+# and m bijection
+# Count |{m: (Fin 2 × Fin n) -> (Fin 2 × Fin n) | m is adjacency-permutation}|
+
+import itertools
+
+def neighbors(r, c, n_cols):
+    nbrs = []
+    # same row neighbors
+    if c > 0: nbrs.append((r, c-1))
+    if c < n_cols-1: nbrs.append((r, c+1))
+    # vertical neighbors
+    if r > 0: nbrs.append((r-1, c))
+    if r < 1: nbrs.append((r+1, c))  # only 2 rows: 0 and 1
+    return nbrs
+
+def adjacency_permutations(n_cols):
+    nodes = [(r,c) for r in (0,1) for c in range(n_cols)]
+    N = len(nodes)  # 2*n
+    index = {node:i for i,node in enumerate(nodes)}
+
+    # For each vertex compute adjacency set as indices
+    adj = []
+    for node in nodes:
+        nbrs = neighbors(node[0], node[1], n_cols)
+        # exclude self loops (m(r) != r)
+        adj.append([index[n] for n in nbrs])
+
+    count = 0
+    # We will try to enumerate all permutations m of [0..N-1] with:
+    # for all i in [0..N-1], m[i] != i and m[i] in adj[i]
+
+    # To speed up, reduce search space:
+    # For each position i, candidates: adj[i] \ {i}
+    # Since i not in adj[i], no fixed point guaranteed, just check neighbors
+
+    # We attempt backtracking search:
+    used = [False]*N
+    m = [-1]*N
+
+    def backtrack(pos):
+        nonlocal count
+        if pos == N:
+            count += 1
+            print(f'Found: {count}')  # print each found adjacency permutation
+            return
+
+        for candidate in adj[pos]:
+            if not used[candidate]:
+                m[pos] = candidate
+                used[candidate] = True
+                backtrack(pos+1)
+                used[candidate] = False
+                m[pos] = -1
+
+    backtrack(0)
+    return count
+
+# We first try small n values
+for n in [2,3,4]:
+    print(f'Adjacency permutations count for 2 x {n} grid:')
+    c = adjacency_permutations(n)
+    print(f'Total: {c}\n')
+
+# For n=8, print vertices count and partial results (limit search)
+print('Starting enumeration for 2 x 8 grid (may take long)...')
+
+# For 2 x 8, we limit printing and search depth due to complexity
+def adjacency_permutations_limited(n_cols, limit=10):
+    nodes = [(r,c) for r in (0,1) for c in range(n_cols)]
+    N = len(nodes)
+    index = {node:i for i,node in enumerate(nodes)}
+
+    adj = []
+    for node in nodes:
+        nbrs = neighbors(node[0], node[1], n_cols)
+        adj.append([index[n] for n in nbrs])
+
+    count = 0
+    found = 0
+    used = [False]*N
+    m = [-1]*N
+
+    def backtrack(pos):
+        nonlocal count, found
+        if pos == N:
+            count += 1
+            if found < limit:
+                found += 1
+                print(f'Found large grid adjacency permutation #{found}')
+            return
+        for candidate in adj[pos]:
+            if not used[candidate]:
+                m[pos] = candidate
+                used[candidate] = True
+                backtrack(pos+1)
+                used[candidate] = False
+                m[pos] = -1
+
+    backtrack(0)
+    return count
+
+count_8 = adjacency_permutations_limited(8, limit=5)
+print(f'Count for 2 x 8 grid adjacency permutations (possibly incomplete): {count_8}')
+```
+This program tries to enumerate explicitly the adjacency permutations for grids 2x2, 2x3, 2x4 completely, printing each result (count) immediately. For 2x8 it attempts a partial enumeration printing the first few found permutations and gives a count estimate. This should assist conjecturing the exact count or formula for the 2x8 case.

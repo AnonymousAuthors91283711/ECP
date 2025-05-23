@@ -1,0 +1,66 @@
+[write_program]
+This problem asks for the maximum number of disjoint triples (3-element subsets) of numbers from 1 to 100 where each triple satisfies the condition that the product of two elements equals the third element. We'll write a Python program to enumerate possible configurations and find this maximum.
+
+The approach:
+1. Generate all valid triples (a,b,c) where a*b = c and a,b,c are distinct numbers in 1..100
+2. Find the maximum number of disjoint triples that can be selected from these valid triples
+
+```python
+from itertools import combinations
+
+def find_max_disjoint_triples():
+    # First generate all valid triples (a,b,c) where a*b = c and a,b,c distinct in 1..100
+    valid_triples = set()
+    for a in range(1, 101):
+        for b in range(a + 1, 101):
+            c = a * b
+            if c <= 100 and c != a and c != b:
+                # Store as frozenset to handle unordered triples
+                valid_triples.add(frozenset({a, b, c}))
+    
+    # Convert to list of sets for easier processing
+    triples = [set(t) for t in valid_triples]
+    n = len(triples)
+    
+    max_count = 0
+    best_solution = []
+    
+    # We'll use a greedy approach to find a maximal disjoint set
+    # This won't guarantee maximum, but will give a lower bound
+    used_numbers = set()
+    solution = []
+    
+    for t in sorted(triples, key=lambda x: min(x)):
+        if used_numbers.isdisjoint(t):
+            solution.append(t)
+            used_numbers.update(t)
+    
+    print(f"Found {len(solution)} disjoint triples in greedy solution:")
+    for t in solution:
+        print(sorted(t))
+    
+    # Now try to find larger solutions by brute force for small cases
+    # This is only feasible for very small numbers of triples
+    if n <= 20:
+        print("\nTrying exhaustive search...")
+        from itertools import combinations
+        for k in range(min(10, n), 0, -1):
+            for candidate in combinations(triples, k):
+                all_disjoint = True
+                seen = set()
+                for t in candidate:
+                    if not seen.isdisjoint(t):
+                        all_disjoint = False
+                        break
+                    seen.update(t)
+                if all_disjoint:
+                    print(f"Found {k} disjoint triples:")
+                    for t in candidate:
+                        print(sorted(t))
+                    return
+    
+    print(f"\nBest found: {len(solution)} disjoint triples")
+
+if __name__ == "__main__":
+    find_max_disjoint_triples()
+```

@@ -1,0 +1,64 @@
+[write_program]
+The problem involves finding the greatest pair of natural numbers \((p_1, p_2)\) such that:
+- \(p_1 < p_2\),
+- Neither \(p_1\) nor \(p_2\) can be represented as \(19x + 9y + 8z\) for natural numbers \(x,y,z\),
+- Every number greater than \(p_2\) can be so represented.
+
+This is related to the Frobenius coin problem or the concept of the largest nonrepresentable numbers given the set {8,9,19}. We want to enumerate pairs \((p_1, p_2)\) by checking representability of numbers and find the greatest such pair where both are nonrepresentable but everything greater than \(p_2\) is representable.
+
+We'll:
+- Enumerate pairs \(p_1 < p_2\) in some range (up to a reasonable max, like 100),
+- Check representability,
+- Check if beyond \(p_2\), all numbers are representable (up to some threshold),
+- Print candidates and finally identify the maximal pair.
+
+```python
+# Enumerate pairs (p1, p2) with p1 < p2, both nonrepresentable by 19x+9y+8z, and all > p2 representable.
+
+def can_represent(n, coins):
+    # Check if n = 19x+9y+8z for some x,y,z ≥ 0
+    # Iterate x from 0 to n//19
+    for x in range(n//19 +1):
+        rem_x = n - 19*x
+        if rem_x < 0:
+            break
+        for y in range(rem_x//9 +1):
+            rem_y = rem_x - 9*y
+            if rem_y < 0:
+                break
+            if rem_y % 8 == 0:
+                return True
+    return False
+
+def main():
+    coins = [8,9,19]
+    max_n = 100  # Range to search for pairs and test representability beyond p2
+
+    # Precompute which numbers are representable
+    representable = [False]*(max_n+50)
+    for num in range(max_n+50):
+        representable[num] = can_represent(num, coins)
+
+    # Find pairs (p1 < p2) both nonrepresentable
+    candidates = []
+    for p2 in range(1, max_n+1):
+        if representable[p2]:
+            continue
+        for p1 in range(1, p2):
+            if representable[p1]:
+                continue
+            # Check all numbers > p2 up to p2+50 representable
+            # Check "all q > p2" condition approximately
+            if all(representable[q] for q in range(p2+1, p2+51)):
+                candidates.append((p1,p2))
+                print(f"Candidate pair: ({p1},{p2})")
+
+    if candidates:
+        max_pair = max(candidates, key=lambda p: p[1])
+        print(f"Greatest candidate pair: {max_pair}")
+        print(f"Product: {max_pair[0]*max_pair[1]}")
+
+if __name__ == "__main__":
+    main()
+```
+

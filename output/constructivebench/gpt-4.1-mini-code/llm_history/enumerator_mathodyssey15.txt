@@ -1,0 +1,66 @@
+[write_program]
+The problem involves the number \( x = (\sqrt{2} + \sqrt{5})^{2000} \), then defining \( n = \lfloor x \rfloor \) and \( d = \lfloor 10 (x - n) \rfloor \). The goal is to explore the digits of \( n \) and the value of \( d \) to conjecture the exact nature of this expression. The program will:
+
+1. Compute \( x = (\sqrt{2} + \sqrt{5})^{2000} \) using exact forms (via integer sequences) where possible.
+2. Calculate \( n = \lfloor x \rfloor \) and \( d = \lfloor 10 (x - n) \rfloor \).
+3. Output the leading digit of \( n \) and the value of \( d \).
+4. Test if the leading digit is 1 and \( d = 9 \).
+
+To handle the large exponentiation exactly, note that \( (\sqrt{2} + \sqrt{5})^{n} + (\sqrt{5} - \sqrt{2})^{n} \) is an integer for all natural \( n \), due to conjugates. Since \( 0 < \sqrt{5} - \sqrt{2} < 1 \), the second term becomes very small. Therefore,
+
+\[
+n = \lfloor (\sqrt{2} + \sqrt{5})^{2000} \rfloor = (\sqrt{2} + \sqrt{5})^{2000} + (\sqrt{5} - \sqrt{2})^{2000} - 1
+\]
+
+and
+
+\[
+x - n = (\sqrt{2} + \sqrt{5})^{2000} - \lfloor (\sqrt{2} + \sqrt{5})^{2000} \rfloor = 1 - (\sqrt{5} - \sqrt{2})^{2000}
+\]
+
+Because \( (\sqrt{5} - \sqrt{2})^{2000} \) is very tiny, \( x - n \approx 1 - \varepsilon \) with \(\varepsilon\) very small, so \( d = \lfloor 10 (1 - \varepsilon) \rfloor = 9 \).
+
+Let's confirm this numerically and print details about \( n \), its leading digit, and \( d \).
+
+```python
+import math
+from decimal import Decimal, getcontext
+
+getcontext().prec = 50  # Higher precision for decimal calculations
+
+# Define sqrt(2) and sqrt(5) with high precision
+sqrt2 = Decimal(2).sqrt()
+sqrt5 = Decimal(5).sqrt()
+
+# Define the conjugate term (sqrt(5) - sqrt(2))
+conj = sqrt5 - sqrt2  # < 1
+
+n_exp = 2000
+
+# Compute (sqrt(2)+sqrt(5))^n and (sqrt(5)-sqrt(2))^n with Decimal
+base = sqrt2 + sqrt5
+
+# Efficiently compute powers using ** operator with Decimal
+x = base ** n_exp
+small_term = conj ** n_exp
+
+# Compute floor values
+n = int(x.to_integral_value(rounding='ROUND_FLOOR'))
+fractional_part = x - n
+d = int((fractional_part * 10).to_integral_value(rounding='ROUND_FLOOR'))
+
+# Check the integer relation:
+# n should equal x + small_term - 1 since x + small_term is integer
+integer_test = int((x + small_term).to_integral_value())
+print(f"(x + small_term) integer: {integer_test}")
+
+print(f"n = floor(x) = {n}")
+first_digit = str(n)[0]
+print(f"Leading digit of n: {first_digit}")
+print(f"d = floor(10 * fractional_part) = {d}")
+
+# Now, print if leading digit == '1' and d == 9
+print(f"Leading digit == 1 and d == 9? {first_digit == '1' and d == 9}")
+```
+
+This script demonstrates the conjecture for the huge power \( n=2000 \). You can adjust `n_exp` to smaller numbers for testing the pattern.

@@ -1,0 +1,75 @@
+[write_program]
+The problem asks for the smallest positive integer \( n \) such that the number of odd divisors of \( n \) is 6 and the number of even divisors of \( n \) is 12.
+
+Recall:
+- Odd divisors come from the odd part of \( n \).
+- Even divisors have at least one factor of 2.
+- Total divisors of \( n = d_1 \cdot d_2 \) where \( d_1 \) are divisors from the odd part \( o \) and \( d_2 \) are from the power of 2 part \( 2^k \).
+
+We want to find \( n = 2^k \times o \) with:
+- Number of odd divisors = number_of_divisors(o) = 6
+- Number of even divisors = number_of_divisors(n) - number_of_divisors(o) = 12
+- So, total divisors number_of_divisors(n) = 18
+
+Enumerate \( k \) and odd \( o \), check these conditions, and print candidates as we find them, then print the minimum at the end.
+
+```python
+# Enumerate n = 2^k * o with o odd, 
+# number_of_divisors(o) = 6, total_divisors = 18,
+# so even_divisors = 12
+
+from math import sqrt
+
+def divisors_count(x):
+    count = 1
+    temp = x
+    for p in range(2, int(sqrt(x)) + 1):
+        exp = 0
+        while temp % p == 0:
+            temp //= p
+            exp += 1
+        if exp > 0:
+            count *= (exp + 1)
+    if temp > 1:
+        count *= 2
+    return count
+
+def odd_divisors_count(x):
+    # count divisors ignoring factors 2
+    while x % 2 == 0:
+        x //= 2
+    return divisors_count(x)
+
+# We want:
+# divisors_count(o) = 6 (o odd)
+# divisors_count(2^k * o) = 18
+# number of even divisors = 12 -> 18 - 6 = 12
+
+# divisors_count(2^k * o) = (k+1)*divisors_count(o)
+# = (k+1)*6 = 18 ==> k+1 = 3 ==> k=2
+
+k = 2  # fixed from equation above
+
+candidates = []
+print(f"Enumerating n = 2^{k} * o with o odd and divisors_count(o)=6:")
+
+# Find odd o with exactly 6 divisors:
+# 6 divisors possible from prime factorization:
+# 6 = 6 *1 = 3*2
+# So o could be p^5 (6 divisors), or p^2 * q^1 (3*2=6 divisors)
+
+# Let's enumerate odd o up to 10000 for performance
+for o in range(1, 10000, 2):
+    if divisors_count(o) == 6:
+        n = (2**k) * o
+        total_div = (k+1)*6
+        # even_div = total_div - odd_div = 12
+        # print candidate n
+        print(n)
+        candidates.append(n)
+
+if candidates:
+    print("Minimum n:", min(candidates))
+else:
+    print("No candidates found under 10000")
+```

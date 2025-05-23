@@ -1,0 +1,48 @@
+[write_program]
+The problem is to find all functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying the functional equation:
+\[ f(x) f(y) - f(x-1) - f(y+1) = f(xy) + 2x - 2y - 4 \quad \forall x,y \in \mathbb{R}. \]
+
+To explore this, let's substitute some simple values for \(x,y\) and try some candidate function forms (like polynomials of degree 1 or 2), and print any candidates that satisfy the equation approximately on several test points. We won't guess the exact general solution but will enumerate promising candidates.
+
+```python
+# Enumerate candidate functions f:R->R satisfying
+# f(x)*f(y) - f(x-1) - f(y+1) = f(x*y) + 2*x - 2*y -4
+# We will try polynomials f(x) = a*x**2 + b*x + c with integer coefficients in a small range.
+# For each candidate, test the equation on several points.
+
+def check_candidate(a, b, c):
+    def f(x):
+        return a*x**2 + b*x + c
+    test_points = [(0,0),(1,1),(2,-1),(-1,2),(0.5,-0.5)]
+    for x,y in test_points:
+        lhs = f(x)*f(y) - f(x-1) - f(y+1)
+        rhs = f(x*y) + 2*x - 2*y -4
+        if abs(lhs - rhs) > 1e-8:
+            return False
+    return True
+
+print("Trying quadratic candidates f(x)=a x^2 + b x + c with a,b,c in -3..3")
+for a in range(-3,4):
+    for b in range(-3,4):
+        for c in range(-3,4):
+            if check_candidate(a,b,c):
+                print(f"Candidate function: f(x) = {a} x^2 + {b} x + {c}")
+
+print("Trying linear candidates f(x)=b x + c with b,c in -10..10")
+# also try linear after quadratic
+for b in range(-10,11):
+    for c in range(-10,11):
+        # override check to linear function
+        f = lambda x: b*x + c
+        passed = True
+        test_points = [(0,0),(1,1),(2,-1),(-1,2),(0.5,-0.5)]
+        for x,y in test_points:
+            lhs = f(x)*f(y) - f(x-1) - f(y+1)
+            rhs = f(x*y) + 2*x - 2*y -4
+            if abs(lhs - rhs) > 1e-8:
+                passed = False
+                break
+        if passed:
+            print(f"Candidate linear function: f(x) = {b} x + {c}")
+```
+

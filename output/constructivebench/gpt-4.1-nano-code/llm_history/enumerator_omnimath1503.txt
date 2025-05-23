@@ -1,0 +1,55 @@
+[write_program]
+This problem models a grid navigation where moves alternate between horizontal (|x₁ - x₂|=1) and vertical (|y₁ - y₂|=k), with the starting point at (1,1). The main goal is to determine the number of reachable points under these move constraints for a specific k between 51 and 99.
+
+Instead of solving symbolically, we'll empirically enumerate all reachable points for each k in a small sample range. The approach involves:
+- Starting from (1,1).
+- Alternating between horizontal and vertical moves.
+- Limiting to grid bounds 1..100.
+- Collecting all reachable points.
+
+We'll choose a small k (e.g., 51) for the demonstration, but the code is designed to handle the entire range.
+
+Maximizing efficiency:
+- Use a BFS-like approach.
+- Avoid duplicate state processing.
+- Save and print each reachable point as soon as it is found.
+
+```python
+from collections import deque
+
+def enumerate_reachable(k):
+    max_coord = 100
+    start = (1, 1)
+    visited = set([start])
+    queue = deque([(start, True)])  # True: horizontal move next, False: vertical move next
+
+    # Directions for moves
+    def neighbors(x, y, horiz):
+        moves = []
+        if horiz:
+            # horizontal move: |x - x2|=1, y fixed
+            for dx in [-1, 1]:
+                x2 = x + dx
+                if 1 <= x2 <= max_coord:
+                    moves.append((x2, y))
+        else:
+            # vertical move: |y - y2|=k, x fixed
+            for dy in [-k, k]:
+                y2 = y + dy
+                if 1 <= y2 <= max_coord:
+                    moves.append((x, y2))
+        return moves
+
+    while queue:
+        (x, y), horiz_next = queue.popleft()
+        for nx, ny in neighbors(x, y, horiz_next):
+            if (nx, ny) not in visited:
+                visited.add((nx, ny))
+                print((nx, ny))
+                queue.append(((nx, ny), not horiz_next))
+    return visited
+
+# Example: enumerate reachable points for k=51 (a representative small sample)
+reachable_points = enumerate_reachable(51)
+print(f"Total reachable points for k=51: {len(reachable_points)}")
+```

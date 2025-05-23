@@ -1,0 +1,56 @@
+[write_program]
+The problem involves finding rational values \( m, n \) with \(\gcd(m,n)=1\) such that \(((1-x)(1-y)(1-z))^2 = \frac{m}{n}\) and \(x,y,z\) satisfy given polynomial constraints. We will enumerate real triples \((x,y,z)\) approximately satisfying the constraints and calculate candidates \((m,n,m+n)\) by approximating the squared product with fractions.
+
+```python
+from fractions import Fraction
+from math import isclose
+import itertools
+
+def approx_fraction(value, max_den=10000):
+    # Approximate value by fraction with bounded denominator
+    frac = Fraction(value).limit_denominator(max_den)
+    # Return numerator, denominator in lowest terms
+    return frac.numerator, frac.denominator
+
+def satisfies_constraints(x, y, z):
+    s1 = x + y + z
+    s2 = x*x + y*y + z*z
+    s3 = x**3 + y**3 + z**3
+    # Check constraints with small tolerance (typed approx)
+    return (isclose(s1, 1, abs_tol=1e-3) and
+            isclose(s2, 2, abs_tol=1e-3) and
+            isclose(s3, 3, abs_tol=1e-3) and
+            x > 0 and y > 0 and z > 0)
+
+def gcd(a,b):
+    while b:
+        a,b = b,a%b
+    return a
+
+print("Enumerating candidates (x,y,z) with step 0.05 in (0,1)...")
+
+step = 0.05
+candidates = []
+for x in (i*step for i in range(1,21)):
+    for y in (j*step for j in range(1,21)):
+        z = 1 - x - y
+        if z <= 0 or z > 1:
+            continue
+        if satisfies_constraints(x,y,z):
+            val = (1-x)*(1-y)*(1-z)
+            sq = val*val
+            m,n = approx_fraction(sq)
+            if gcd(m,n) == 1:
+                candidates.append((m,n,m+n))
+                print(f"x={x:.2f}, y={y:.2f}, z={z:.2f} -> ((1-x)(1-y)(1-z))^2 = {m}/{n}, m+n={m+n}")
+
+if candidates:
+    # Print minimal sum m+n
+    minsum = min(c[2] for c in candidates)
+    print("\nMinimum m+n found:", minsum)
+    for m,n,s in candidates:
+        if s == minsum:
+            print(f"m={m}, n={n}, m+n={s}")
+else:
+    print("No candidates found.")
+```

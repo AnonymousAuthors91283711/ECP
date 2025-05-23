@@ -1,0 +1,60 @@
+[write_program]
+The problem asks for the number of integers \( k \) between 1 and 2004 inclusive, such that \( k = \frac{mn + 1}{m + n} \) for some positive integers \( m, n \). We aim to enumerate such \( k \).
+
+Key points:
+- \( m, n > 0 \).
+- \( k = \frac{m n + 1}{m + n} \) must be an integer.
+- \( k \in [1, 2004] \).
+
+Outline:
+- For efficiency, iterate over possible \( k \), and then for each \( k \), find if there exist \( m, n > 0 \) integers satisfying \( k = \frac{mn + 1}{m + n} \).
+- Rearranging: \( k(m + n) = m n + 1 \Rightarrow k m + k n = m n + 1 \).
+- Rewrite as \( m n - k m - k n = -1 \Rightarrow (m - k)(n - k) = k^2 -1 \).
+- Thus, \( (m-k)(n-k) = k^2 - 1 \).
+- For a fixed \( k \), we factor \( k^2 - 1 \) and find pairs \( (a,b) \) such that \( a b = k^2 - 1 \) with \( m = a + k > 0 \), \( n = b + k > 0 \), and positive \( m,n \).
+- Enumerate divisors of \( k^2 -1 \) to find \( (a,b) \).
+- Output each \( k \) found, then count total.
+
+We print each valid \( k \) as found, then print the count.
+
+```python
+# Enumerate integers k in [1..2004] such that ∃ m,n>0 with k=(m n + 1)/(m + n).
+# Use (m - k)(n - k) = k^2 -1.
+
+def divisors(x):
+    # Efficient to find divisors of x > 0.
+    divs = []
+    i = 1
+    while i*i <= x:
+        if x % i == 0:
+            divs.append(i)
+            if i*i != x:
+                divs.append(x//i)
+        i += 1
+    return divs
+
+max_k = 2004
+found_k = []
+for k in range(1, max_k+1):
+    val = k*k - 1
+    if val <= 0:
+        # For k=1, val=0 no positive divisors, skip.
+        continue
+    divs = divisors(val)
+    # Try pairs a,b with a*b=val, a,b > -k to get m,n > 0
+    # (m,n) = (a+k,b+k)
+    # We look for just one valid pair to confirm existence.
+    exists = False
+    for a in divs:
+        b = val // a
+        m = a + k
+        n = b + k
+        if m > 0 and n > 0:
+            # Since m,n>0, and k=(m n +1)/(m + n) integer by construction
+            exists = True
+            break
+    if exists:
+        print(k)
+        found_k.append(k)
+print("count =", len(found_k))
+```

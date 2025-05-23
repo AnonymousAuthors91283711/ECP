@@ -1,0 +1,122 @@
+[write_program]
+The problem considers functions \( f: \mathbb{N} \to \mathbb{N} \) such that:
+- For all \( n \), \( f(n) > 0 \),
+- For \( n > 2 \), \( f(n) = 3 f(n-1) - 2 f(n-2) \).
+
+Set \( S \) of these functions is parameterized by \( f(1), f(2) \) and then the recurrence defines all further values.
+
+Set \( T \subseteq S \) has functions with \( f(2010) \leq 2^{2012} \).
+
+We want the number of such functions \( |T| \).
+
+---
+
+**Key insight:**
+
+\( f(n) \) is determined by \( f(1), f(2) \), both positive integers.
+
+The recurrence is linear with characteristic polynomial \( x^2 - 3x + 2 = 0 \) with roots 1 and 2.
+
+The general solution:  
+\( f(n) = A \cdot 1^n + B \cdot 2^n = A + B \cdot 2^n \).
+
+Initial conditions:
+- \( f(1) = A + 2B \),
+- \( f(2) = A + 4B \).
+
+Solve:
+- \( A = 2 f(1) - f(2) \),
+- \( B = f(2) - f(1) \).
+
+Positivity for all \( n \):
+- \( f(n) = A + B 2^n > 0 \).
+- Since \( 2^n \to \infty \), positivity implies \( B \geq 0 \).
+- For \( n=1 \), \( A + 2B > 0 \), so \( 2 f(1) - f(2) + 2(f(2) - f(1)) = f(2) > 0 \).
+- For \( n=0 \), if considered, \( f(0) = A + B \geq 1 \) for positivity from zero? The problem states \( f: \mathbb{N} \to \mathbb{N} \), presumably starting at 1.
+
+Hence \( f(1), f(2) > 0 \), \( B \geq 0 \implies f(2) \geq f(1) \).
+
+Condition \( f(2010) \leq 2^{2012} \):
+
+\[
+f(2010) = A + B 2^{2010} = 2 f(1) - f(2) + (f(2) - f(1)) 2^{2010} \leq 2^{2012}.
+\]
+
+Enumerate positive integer pairs \( (f(1), f(2)) \) with \( f(2) \ge f(1) \), \( f(1), f(2) \ge 1 \), satisfying the above.
+
+---
+
+We will scan \( f(1) \) from 1 up to some bound and \( f(2) \) from \( f(1) \) upward, checking the inequality.
+
+We must print all such function pairs as found.
+
+Finally, output total count.
+
+---
+
+```python
+# Enumerate integers f(1), f(2) >= 1, with f(2) >= f(1),
+# satisfying f(2010) = 2f(1)-f(2)+(f(2)-f(1))*2^2010 <= 2^2012
+# and positivity constraints.
+
+# 2^2010 is huge, so check inequalities using big integers efficiently.
+
+def main():
+    limit = 2**2012
+    pow_2010 = 2**2010
+
+    count = 0
+    # Try f1 from 1 up to 2^2012 (obviously too large, we limit sensibly):
+    # Since f(2010) increases with f2, limit f1 and f2 to smaller reasonable bounds.
+    # Rearrange inequality:
+    # f(2010) = 2f1 - f2 + (f2 - f1)*pow_2010 <= limit
+    # => 2f1 - f2 + f2*pow_2010 - f1*pow_2010 <= limit
+    # => (f2)(pow_2010 -1) + f1(2 - pow_2010) <= limit
+
+    # For given f1, f2 >= f1 >= 1:
+    # (f2)(pow_2010 -1) <= limit - f1(2 - pow_2010)
+    # but (2 - pow_2010) < 0 since pow_2010 >> 2.
+
+    # Let's fix f1, find max f2.
+
+    # Note pow_2010 -1 ~ 2^2010, very large.
+    # To get any f2, right side must be non-negative.
+    # Since f1(2 - pow_2010) is negative, the right side decreases as f1 increases.
+
+    # We attempt to find upper bound f1 max ~ small (to keep right side positive).
+
+    # For f1=1:
+    # RHS = limit - 1*(2 - pow_2010) = 2^2012 - 2 + 2^2010
+    # ~ 2^2012 + 2^2010
+    # LHS = f2*(pow_2010-1) ~ f2 * 2^2010
+
+    # So f2 <= (2^2012 + 2^2010) / (2^2010 - 1) ~ (2^2012 + 2^2010) / 2^2010 ~ 4 + 1 = 5 approx
+
+    # Let's cap f1 (and f2) at 10 for practicality and to avoid huge outputs.
+
+    pow2010_minus_1 = pow_2010 - 1
+
+    for f1 in range(1, 11):
+        rhs = limit - f1 * (2 - pow_2010)  # RHS = 2^2012 - f1*(2 - 2^2010)
+        # Compute max f2:
+        # f2*(pow_2010-1) <= rhs
+        # f2 <= rhs // (pow_2010 - 1)
+        if rhs < 0:
+            # No f2 possible
+            continue
+        max_f2 = rhs // pow2010_minus_1
+        # Since f2 >= f1:
+        for f2 in range(f1, max_f2 +1):
+            # Check f(2010):
+            val = 2*f1 - f2 + (f2 - f1)*pow_2010
+            if val <= limit and f1 > 0 and f2 > 0:
+                # Check positivity at n=1: f(1) = f1 > 0 correct
+                # Check positivity at n=2: f(2) = f2 > 0 correct
+                # B = f2 - f1 >= 0 satisfied since f2 >= f1
+                print(f"f(1)={f1}, f(2)={f2}, f(2010)={val}")
+                count += 1
+    print(f"Total functions in T for f(1),f(2) ≤ 10: {count}")
+
+if __name__ == "__main__":
+    main()
+```

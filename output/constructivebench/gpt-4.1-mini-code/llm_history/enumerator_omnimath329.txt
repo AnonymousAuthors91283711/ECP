@@ -1,0 +1,84 @@
+[write_program]
+The problem involves the real variable \(x > 0\) satisfying the equation
+
+\[
+x^2 + 9x + 2 \sqrt{x^2 \cdot 9x} = 121.
+\]
+
+Simplifying the square root term,
+
+\[
+\sqrt{x^2 \cdot 9x} = \sqrt{9x^3} = 3 x^{3/2}.
+\]
+
+So the equation becomes
+
+\[
+x^2 + 9x + 2 \cdot 3 x^{3/2} = 121 \implies x^2 + 9x + 6 x^{3/2} = 121.
+\]
+
+We want to find the positive solution(s) \(x\).
+
+To assist in conjecturing the answer, I will enumerate for some candidate \(x\) values and print those where the left side is close to 121, prioritizing exact powers or nice radicals when possible.
+
+```python
+# enumerator.py
+import math
+
+def lhs(x):
+    # Compute x^2 + 9x + 6 * x^{3/2}
+    return x**2 + 9*x + 6 * x**(1.5)
+
+print("Enumerating x > 0 for lhs(x) = 121")
+
+# We'll try rational candidates with small denominators,
+# and perfect squares for easy sqrt(x) computation.
+candidates = []
+for m in range(1, 20):
+    x = m  # integer candidates
+    val = lhs(x)
+    if abs(val - 121) < 1e-6:
+        # Exact or very close to 121, print
+        print(f"x={x} lhs={val}")
+
+for m in range(1, 50):
+    # try fractions of the form n^2 (perfect squares) to have exact sqrt
+    x = (m/10)**2
+    val = lhs(x)
+    if abs(val - 121) < 0.5:
+        # Show all with value close to 121 with 0.5 tolerance
+        print(f"x={x:.3f} lhs={val:.3f}")
+
+# Try to find:
+# Since if we try x=4
+# lhs(4) = 16 + 36 + 6*8 = 16+36+48=100 < 121
+# x=5:
+# 25 + 45 + 6 * 5^{1.5} = 25+45+6*sqrt(125)
+# sqrt(125)=11.1803, 6*11.1803=67.08, sum=25+45+67.08=137.08 >121
+
+# So solution lies between 4 and 5; let's do bisection search with tolerance.
+
+def bisect(f, a, b, target, tol=1e-6):
+    while b - a > tol:
+        c = (a + b) / 2
+        val = f(c)
+        if val < target:
+            a = c
+        else:
+            b = c
+    return (a + b) / 2
+
+root = bisect(lhs, 4, 5, 121)
+print(f"\nApproximate root found by bisection: x = {root:.6f}, lhs = {lhs(root):.6f}")
+
+# Try to recognize perfect squares or nice roots near this root
+# sqrt(root) ~ sqrt(4.68) ~ 2.16, maybe exact form involves fraction squared.
+
+# Let's try a few rational squares near root:
+for p in range(19, 25):
+    x = (p/10)**2
+    val = lhs(x)
+    if abs(val - 121) < 1e-3:
+        print(f"Close candidate: x=({p}/10)^2={x:.4f} lhs={val:.6f}")
+```
+

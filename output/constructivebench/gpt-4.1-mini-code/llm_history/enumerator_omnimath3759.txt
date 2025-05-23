@@ -1,0 +1,59 @@
+[write_program]
+The problem involves matrices \( A \) of size \( n \times n \) with entries \( A_{ij} = (i+1)+(j+1) \), i.e., \( A_{ij} = i + j + 2 \), where \( i,j \) range from 0 to \( n-1 \).
+
+We want to enumerate the rank of \( A \) viewed over the rationals for small values of \( n \). Given the special structure, we expect a pattern or closed formula for the rank.
+
+The matrix entries form \( A = u \mathbf{1}^T + \mathbf{1} v^T \) for vectors \( u, v \) related to \( i+1 \) and \( j+1 \), so this matrix might have rank 2 (or less) for all \( n \).
+
+Let's write a Python program that:
+- For \( n = 1 \) to 10,
+- construct the matrix \( A \) with \( A_{ij} = (i+1) + (j+1) \),
+- calculate its rank over rationals (using exact arithmetic with fractions),
+- print \( n \) and the rank immediately.
+
+This will help conjecture the general formula for the rank (likely 1 if \( n=1 \), and 2 otherwise).
+
+```python
+from fractions import Fraction
+from math import isclose
+
+def matrix_rank(M):
+    # Compute rank of matrix M over rationals using Gaussian elimination with fractions
+    M = [row[:] for row in M]  # copy matrix
+    n_rows = len(M)
+    n_cols = len(M[0]) if M else 0
+    rank = 0
+    row_used = [False]*n_rows
+
+    for col in range(n_cols):
+        pivot_row = None
+        for r in range(n_rows):
+            if not row_used[r] and M[r][col] != 0:
+                pivot_row = r
+                break
+        if pivot_row is None:
+            continue
+        # Swap to correct place
+        M[rank], M[pivot_row] = M[pivot_row], M[rank]
+        row_used[rank] = True
+        # Normalize pivot row
+        pivot = M[rank][col]
+        M[rank] = [x / pivot for x in M[rank]]
+        # Eliminate below and above
+        for r in range(n_rows):
+            if r != rank and M[r][col] != 0:
+                factor = M[r][col]
+                M[r] = [M[r][c] - factor*M[rank][c] for c in range(n_cols)]
+        rank += 1
+        if rank == n_rows:
+            break
+    return rank
+
+print("Enumerating ranks of matrices A with A_ij = (i+1)+(j+1) for n=1..10")
+for n in range(1, 11):
+    A = [[Fraction(i+1)+Fraction(j+1) for j in range(n)] for i in range(n)]
+    r = matrix_rank(A)
+    print(f"n={n}, rank={r}")
+```
+
+This enumerates ranks for the first 10 sizes, printing each immediately to help see the pattern.

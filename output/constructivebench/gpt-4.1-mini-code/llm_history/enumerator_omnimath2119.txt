@@ -1,0 +1,69 @@
+[write_program]
+The problem involves finding the largest size \( k \) of a family of pairwise disjoint subsets (pairs) of \( \mathrm{Fin}(17) \times \mathrm{Fin}(17) \) such that for any assignment \( \text{reps}: \mathrm{Fin}(17) \to \mathrm{Fin}(5) \), there is a family of pairs of size \( k \) with the "neighboring" difference property \(|\text{reps}(p_1) - \text{reps}(p_2)| \leq 1\) for every pair \((p_1,p_2)\).
+
+To explore this combinatorially:
+- We will consider random or systematic assignments reps: 17 elements → {0,...,4}.
+- For each assignment, we seek disjoint pairs with the difference ≤1 condition.
+- We enumerate possible pairs and find maximal packings for given reps.
+- This is computationally heavy, so we only try a few reps and print possible sizes of such pair-sets found.
+- This can help conjecturing the max k.
+
+```python
+from itertools import combinations
+from collections import defaultdict
+
+# r: represents a reps mapping Fin 17 -> Fin 5 represented as list of length 17 with entries 0..4
+# We find the largest set of disjoint pairs (edges) where abs(r[i]-r[j])<=1 and i!=j.
+
+def is_valid_edge(i, j, r):
+    return i != j and abs(r[i] - r[j]) <= 1
+
+def find_max_k(r):
+    # Construct graph edges meeting condition
+    nodes = list(range(17))
+    edges = [(i, j) for i, j in combinations(nodes, 2) if is_valid_edge(i, j, r)]
+    # We want largest matching (set of disjoint edges)
+    # Maximal matching: use greedy approx since exact is expensive
+    # Let's use a greedy heuristic sort edges by degree or randomly
+    # For simplicity, pick edges lex order, add if no overlap
+    selected = []
+    used = set()
+    for (i, j) in edges:
+        if i not in used and j not in used:
+            selected.append((i, j))
+            used.add(i)
+            used.add(j)
+    return len(selected)
+
+def enumerate_reps_samples():
+    # Try various reps s.t. reps has values in 0..4 for 17 elements
+    # To limit output, we try reps with repeated patterns or random values
+    samples = [
+        [0]*17,
+        [1]*17,
+        [2]*17,
+        list(range(5))*3 + [0,1],
+        [i%5 for i in range(17)],
+        [0,1,2,3,4]*3 + [0,1],
+        [4,3,2,1,0]*3 + [4,3],
+    ]
+    import random
+    random.seed(0)
+    for _ in range(3):
+        samples.append([random.randint(0,4) for _ in range(17)])
+    return samples
+
+def main():
+    samples = enumerate_reps_samples()
+    max_k_overall = 0
+    for idx, r in enumerate(samples):
+        k = find_max_k(r)
+        print(f"reps {idx}: {r}")
+        print(f"max disjoint pairs with abs diff ≤ 1: {k}")
+        if k > max_k_overall:
+            max_k_overall = k
+    print(f"Conjectured largest k ≤ {max_k_overall}")
+
+if __name__ == "__main__":
+    main()
+```

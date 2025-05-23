@@ -1,0 +1,58 @@
+[write_program]
+The problem concerns the polynomial \( p(X) = X^3 - 5X^2 + 8X - 13 \) with roots \( r \), and the sequence defined by \( s(n) = \sum r^n \) for the roots \( r \). We want to find constants \( a, b, c \) such that for all \( k \geq 2 \),
+
+\[
+s(k+1) = a \cdot s(k) + b \cdot s(k-1) + c \cdot s(k-2),
+\]
+
+and also to find \( a + b + c \).
+
+From Newton sums and the relation of symmetric sums of roots to coefficients, the sequence \( s(n) \) of power sums of roots satisfies a linear recurrence relation whose coefficients relate to the polynomial coefficients. To conjecture \( a, b, c \), we can:
+
+1. Compute \( s(0), s(1), s(2), s(3), s(4), s(5) \),
+2. Set up a system of linear equations based on \( s(k+1) = a s(k) + b s(k-1) + c s(k-2) \) for \( k=2,3,4 \),
+3. Solve for \( a, b, c \),
+4. Then sum \( a+b+c \).
+
+We'll enumerate the roots approximately using numpy's roots function and compute exact sums of powers symbolically via coefficients. I will provide only approximate numerical roots since exact symbolic roots are complicated. By symmetry of the problem, it's safe to use approximate roots for conjecture.
+
+```python
+# enumerator.py
+import numpy as np
+
+# Polynomial coefficients for p(x) = x^3 - 5x^2 + 8x - 13
+coeffs = [1, -5, 8, -13]
+
+# Find roots approximately
+roots = np.roots(coeffs)
+
+# Function to compute s(n) = sum of roots^n
+def s(n):
+    return sum(r**n for r in roots)
+
+# We’ll compute s(n) for n = 0 to 5
+s_values = [s(n) for n in range(6)]
+for n, val in enumerate(s_values):
+    print(f"s({n}) = {val:.6f}")
+
+# Try to find a, b, c satisfying for k=2,3,4:
+# s(k+1) = a s(k) + b s(k-1) + c s(k-2)
+import sympy as sp
+
+a, b, c = sp.symbols('a b c')
+eqns = []
+for k in range(2, 5):
+    lhs = s_values[k+1]
+    rhs = a * s_values[k] + b * s_values[k-1] + c * s_values[k-2]
+    eqns.append(sp.Eq(lhs, rhs))
+
+sol = sp.solve(eqns, (a, b, c))
+print("Solutions for (a,b,c):")
+print(sol)
+
+if sol:
+    a_val, b_val, c_val = sol[a], sol[b], sol[c]
+    sum_abc = a_val + b_val + c_val
+    print(f"a + b + c = {sum_abc}")
+```
+This program prints computed power sums, solves for \(a,b,c\), then prints their sum, helping conjecture the exact answer.

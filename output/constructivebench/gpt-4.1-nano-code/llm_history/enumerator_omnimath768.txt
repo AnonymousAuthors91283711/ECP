@@ -1,0 +1,58 @@
+[write_program]
+Given the problem's structure, it involves sets of 2D grid subregions, and their counts relate to rectangles within a 4x4 grid. We aim to determine the ratio of the count of pairs with non-empty intersection and difference to the total number of pairs of such subsets.
+
+To help find the ratio, we'll:
+- Enumerate all rectangles within a 4x4 grid (indices from 0 to 3).
+- Count all rectangles.
+- Enumerate all pairs of rectangles that are distinct and intersect.
+- Calculate the ratio using exact rational arithmetic.
+
+Since the grid size is small (4x4), brute-force enumeration is efficient.
+
+```python
+# Enumerate all rectangles in a 4x4 grid:
+# Each rectangle is defined by its top-left (r,c) and bottom-right (r2,c2) with r<=r2, c<=c2
+# Count total rectangles and pairs that intersect, then compute the ratio
+
+from fractions import Fraction
+
+def enumerate_rectangles():
+    rects = []
+    for r in range(4):
+        for c in range(4):
+            for r2 in range(r, 4):
+                for c2 in range(c, 4):
+                    rects.append(((r, c), (r2, c2)))
+    return rects
+
+def rectangles_intersect(r1, r2):
+    # Check if two rectangles intersect
+    (r1_top, c1_left), (r1_bottom, c1_right) = r1
+    (r2_top, c2_left), (r2_bottom, c2_right) = r2
+    # rectangles don't intersect if one is completely to the left or above the other
+    return not (r1_bottom < r2_top or r2_bottom < r1_top or
+                c1_right < c2_left or c2_right < c1_left)
+
+def main():
+    rects = enumerate_rectangles()
+    total_rects = len(rects)
+
+    total_pairs = 0
+    intersecting_pairs = 0
+
+    # Count total pairs (excluding identical pairs)
+    for i in range(total_rects):
+        for j in range(i + 1, total_rects):
+            total_pairs += 1
+            if rectangles_intersect(rects[i], rects[j]):
+                intersecting_pairs += 1
+
+    ratio = Fraction(intersecting_pairs, total_pairs)
+    print(f"Total rectangles: {total_rects}")
+    print(f"Total pairs: {total_pairs}")
+    print(f"Intersecting pairs: {intersecting_pairs}")
+    print(f"Ratio: {ratio.numerator}/{ratio.denominator} ≈ {float(ratio):.4f}")
+
+if __name__ == "__main__":
+    main()
+```

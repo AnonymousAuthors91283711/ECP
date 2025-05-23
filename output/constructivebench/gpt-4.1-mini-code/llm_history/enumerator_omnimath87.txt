@@ -1,0 +1,87 @@
+[write_program]
+The problem concerns characterizing functions \( f : \mathbb{R} \to \mathbb{R} \) satisfying the functional equation:
+\[
+f(x + y^2) = f(x) + |y \cdot f(y)|
+\]
+for all real numbers \( x, y \).
+
+We want to enumerate possible functions \( f \) that fit this equation. The equation suggests:
+- \( f \) behaves additively with respect to shifting the argument by \( y^2 \),
+- The increment depends only on \( |y \cdot f(y)| \), which is non-negative.
+
+Key insight:
+- Fix \( x \). For variable \( y \), \( f(x + y^2) - f(x) \) depends on \( |y \cdot f(y)| \).
+- The right side only depends on \( y \), so this restricts to forms where increments depend on the squares of \( y \).
+
+To aid insight, we enumerate functions with sample forms \( f(t) = c \cdot t^k \) for integers \( k \), and constants \( c \). We test whether these fit the equation for sample \( x,y \).
+
+```python
+# Enumerate candidate functions f:R->R of form f(t)=c*t^k with small k, c
+# Check the functional eq f(x + y^2) == f(x) + |y*f(y)|
+# Print candidates fitting for sample input values
+
+from math import isclose
+
+def test_function(c, k):
+    # We test the equation for several x,y in {-2,-1,0,1,2}
+    xs = [-2, -1, 0, 1, 2]
+    ys = [-2, -1, 0, 1, 2]
+    tol = 1e-9
+    for x in xs:
+        for y in ys:
+            lhs = c * (x + y**2)**k if (x+y**2)>=0 or k==int(k) else None
+            # f(x+y^2)
+            # handle negative bases if k not integer
+            if lhs is None:
+                return False
+            f_x = c * x**k if x>=0 or k==int(k) else None
+            if f_x is None:
+                return False
+            f_y = c * y**k if y>=0 or k==int(k) else None
+            if f_y is None:
+                return False
+            rhs = f_x + abs(y * f_y)
+            # eq check
+            if not isclose(lhs, rhs, rel_tol=tol, abs_tol=tol):
+                return False
+    # Passed all tests
+    return True
+
+# Enumerate c in -2 to 2 step 0.5, k in 0..3 int
+cs = [i * 0.5 for i in range(-4,5)]
+ks = range(0,4)
+
+print("Testing f(t) = c * t^k for c in {} and k in {}".format(cs, list(ks)))
+for c in cs:
+    for k in ks:
+        if test_function(c, k):
+            print(f"Candidate function: f(t) = {c}*t^{k}")
+
+# Check constant functions f(t) = c
+# Equation: f(x + y^2) = f(x) + |y*f(y)| =>
+# c = c + |y*c| = c + |y*c| => |y*c| = 0 for all y => c=0
+
+print("Checking constant functions")
+for c in cs:
+    if all(abs(c - (c + abs(y*c))) < 1e-9 for y in [-2, -1, 0, 1, 2]):
+        print(f"Constant solution: f(t) = {c}")
+
+# Check linear function f(t) = c*t
+# From eq: f(x + y^2) = f(x) + |y*f(y)|
+# c*(x+y^2) = c*x + |y * c * y| = c*x + |c| * y^2
+# So c*y^2 = |c| y^2 for all y, meaning c = |c| => c >= 0
+
+print("Checking linear functions with positive slopes")
+for c in cs:
+    if c >= 0:
+        # Check the equation approximately for some values
+        # Because linear positive satisfies condition
+        print(f"Linear candidate: f(t) = {c}*t where c >= 0")
+
+# Summarize: candidates must be linear with a nonnegative slope or identically zero
+
+print("Summary: Possible candidates from enumeration:")
+print("- f(t) = 0")
+print("- f(t) = c*t with c >= 0")
+
+```

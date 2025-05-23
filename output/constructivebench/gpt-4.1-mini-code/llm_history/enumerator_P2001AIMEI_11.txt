@@ -1,0 +1,41 @@
+[write_program]
+This problem investigates the smallest positive integer \( N \) such that there exist \( x_i \in [1+(i-1)N, iN] \) for \( i=0,\ldots,4 \) and a defined \( y_i = ((x_i - 1) \mod N) \times 5 + i \) satisfying a system of equalities between \( x_i \) and \( y_j \). We need to find the minimal \( N \) allowing this.
+
+Below is a Python program that enumerates \( N \) starting from 1 upwards and tries all possible \( x_i \) in their intervals. It checks the permutation conditions explicitly. To control output length, it prints any candidates found up to some small \( N \), then prints the minimal suitable \( N \) discovered.
+
+```python
+# Enumerate N and x_i fulfilling the conditions for the 2001 AIME I #11 problem.
+def main():
+    from itertools import product
+
+    # i ranges 0..4, intervals: x_i in [1 + i*N, (i+1)*N]
+    # y_i = ((x_i -1) mod N)*5 + i
+    # Equalities:
+    # x0 = y1, x1 = y0, x2 = y3, x3 = y4, x4 = y2
+
+    max_N = 20  # check N up to 20 for feasibility within output limit
+    found = []
+
+    for N in range(1, max_N+1):
+        intervals = [range(1 + i*N, (i+1)*N +1) for i in range(5)]
+        # To reduce runtime, we consider only x_i modulo N, since y depends on (x_i-1)%N
+        # But direct enumeration here is clearer.
+
+        for x in product(*intervals):
+            y = [ ((xi -1) % N)*5 + i for i, xi in enumerate(x) ]
+            if (x[0] == y[1] and x[1] == y[0] and
+                x[2] == y[3] and x[3] == y[4] and x[4] == y[2]):
+                print(f'N={N}, x={x}')
+                found.append(N)
+                break  # only print first found per N
+
+    if found:
+        minN = min(found)
+        print(f'Minimal N found: {minN}')
+    else:
+        print(f'No suitable N found up to {max_N}')
+
+if __name__ == '__main__':
+    main()
+```
+This program systematically tests \( N \), enumerates candidate \( x_i \), prints any solutions immediately, and finally outputs the minimal \( N \). Adjust `max_N` to search broader if needed.

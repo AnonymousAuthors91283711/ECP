@@ -1,0 +1,46 @@
+[write_program]
+The problem involves a 3x3 grid and removing 4 cells (excluding start (0,0) and home (2,2)) such that no path remains from start to home moving only horizontally or vertically by 1. We want to count how many such 4-cell subsets cause disconnection.
+
+The program below enumerates all 4-cell removals excluding start and home, checks connectivity (using BFS), and counts valid sets. It prints each valid removal immediately. The final number of such valid removals is printed as the answer.
+
+```python
+from itertools import combinations
+from collections import deque
+
+def neighbors(r, c):
+    for nr, nc in [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]:
+        if 0 <= nr < 3 and 0 <= nc < 3:
+            yield (nr, nc)
+
+def is_connected(blocked):
+    start = (0,0)
+    home = (2,2)
+    if start in blocked or home in blocked:
+        return False
+    visited = set()
+    queue = deque([start])
+    while queue:
+        cur = queue.popleft()
+        if cur == home:
+            return True
+        for nxt in neighbors(*cur):
+            if nxt not in blocked and nxt not in visited:
+                visited.add(nxt)
+                queue.append(nxt)
+    return False
+
+def main():
+    grid = [(r,c) for r in range(3) for c in range(3)]
+    # Remove start and home from possible removals
+    removable = [cell for cell in grid if cell not in {(0,0), (2,2)}]
+    valid_count = 0
+    for removed in combinations(removable,4):
+        removed_set = set(removed)
+        if not is_connected(removed_set):
+            print("Valid removal:", removed)
+            valid_count += 1
+    print("Total valid removals:", valid_count)
+
+if __name__ == "__main__":
+    main()
+```

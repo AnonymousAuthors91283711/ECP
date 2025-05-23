@@ -1,0 +1,81 @@
+[write_program]
+The problem involves finding the minimum value (IsLeast) of the sum of absolute values of complex numbers \(\alpha\) and \(\gamma\) subject to conditions related to the imaginary parts of a quadratic polynomial evaluated at \(1\) and \(i\). We'll enumerate sample values for \(\alpha\) and \(\gamma\), check the constraints, and print candidates for \(|\alpha| + |\gamma|\). To keep the search space manageable, we'll use a small grid over a reasonable range for the real and imaginary parts of \(\alpha\) and \(\gamma\).
+
+```python
+# Enumerate α, γ ∈ ℂ where polynomial f(z) = (4 + i)z^2 + α z + γ
+# satisfies Im(f(1))=0 and Im(f(i))=0, print |α|+|γ| candidates.
+
+def main():
+    import math
+    from cmath import phase
+
+    def im(p):
+        return p.imag
+
+    def norm(z):
+        return abs(z)
+
+    # Given f(z) = (4 + i) z^2 + α z + γ
+    # Conditions: Im(f(1)) = 0, Im(f(i)) = 0
+    # For z=1: f(1) = (4 + i)*1 + α*1 + γ = (4 + i) + α + γ
+    #          Im((4 + i) + α + γ) = 1 + Im(α) + Im(γ) = 0
+    # For z=i: f(i) = (4 + i)*i^2 + α*i + γ = (4 + i)*(-1) + α * i + γ
+    #          = (-4 - i) + α i + γ
+    # Im(f(i)) = Im(-4 - i + α i + γ) = -1 + Re(α) + Im(γ) = 0
+
+    # So the system is:
+    # 1 + Im(α) + Im(γ) = 0  --> Im(γ) = -Im(α) - 1
+    # -1 + Re(α) + Im(γ) = 0 --> Im(γ) = 1 - Re(α)
+
+    # Equate Im(γ) from both:
+    # -Im(α) - 1 = 1 - Re(α)
+    # => -Im(α) - 1 = 1 - Re(α)
+    # => -Im(α) + Re(α) = 2
+    # => Re(α) - Im(α) = 2
+
+    # Now Im(γ) = 1 - Re(α)
+    # γ = Re(γ) + i Im(γ) = Re(γ) + i (1 - Re(α))
+
+    # So α = a + ib with a, b real, subject to a - b = 2
+    # γ = c + i (1 - a), c real
+
+    # Parameters: a,b,c real with constraint a - b = 2.
+
+    # Let's enumerate (a,b,c) with a - b=2. So given a, b = a - 2.
+    # We'll choose a from a range, compute b = a - 2.
+    # c is free.
+
+    print("Enumerating candidates for |α| + |γ| with constraints:")
+    print("α = a + i b, γ = c + i (1 - a), with a - b = 2")
+
+    step = 0.5
+    a_vals = [x * step for x in range(-4, 5)]
+    c_vals = [x * step for x in range(-4, 5)]
+
+    min_sum = None
+    min_vals = []
+
+    for a in a_vals:
+        b = a - 2
+        α = complex(a, b)
+        Im_γ = 1 - a
+        for c in c_vals:
+            γ = complex(c, Im_γ)
+            val = abs(α) + abs(γ)
+            # Print each candidate immediately
+            print(f"α={α}, γ={γ}, |α|+|γ|={val:.5f}")
+            if (min_sum is None) or (val < min_sum - 1e-9):
+                min_sum = val
+                min_vals = [(α, γ, val)]
+            elif abs(val - min_sum) < 1e-9:
+                min_vals.append((α, γ, val))
+
+    print()
+    print(f"Minimal |α|+|γ| found: {min_sum:.5f}")
+    print("Candidate(s) achieving minimum:")
+    for α, γ, val in min_vals:
+        print(f"α={α}, γ={γ}, sum={val:.5f}")
+
+if __name__ == "__main__":
+    main()
+```

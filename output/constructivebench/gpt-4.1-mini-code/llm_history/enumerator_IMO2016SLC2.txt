@@ -1,0 +1,68 @@
+[write_program]
+The problem asks for enumerating positive integers n that can be represented as an r×c grid of distinct divisors of n such that each row sums to the same value and each column sums to the same value. This is a challenging combinatorial number theory problem.
+
+To investigate, we will try small values of n (say up to 30) and enumerate all possible grid shapes r×c and divisor assignments f. We will check whether the conditions hold. When solutions are found, we will print n and example parameters.
+
+This enumeration will help conjecture the set IMO2016SLC2_answer. We print partial results immediately, without hardcoding the answer.
+
+```python
+from math import gcd
+from itertools import combinations, permutations, product
+from functools import lru_cache
+
+# Get divisors of n
+def divisors(n):
+    divs = [1]
+    for i in range(2, n//2+1):
+        if n % i == 0:
+            divs.append(i)
+    if n > 1:
+        divs.append(n)
+    return divs
+
+# Check if sequence sums to target for all rows and all columns uniquely arranged into r x c
+def check_grid(n, r, c, grid):
+    # grid is a flat list of length r*c
+    # distinctness checked by construction
+    # each element divides n checked by construction
+    # rows sums equal
+    row_sums = [sum(grid[i*c:(i+1)*c]) for i in range(r)]
+    if len(set(row_sums)) != 1:
+        return False
+    # columns sums equal
+    col_sums = []
+    for j in range(c):
+        col_sums.append(sum(grid[i*c+j] for i in range(r)))
+    if len(set(col_sums)) != 1:
+        return False
+    return True
+
+def try_n(n):
+    divs = divisors(n)
+    divs = list(set(divs))
+    divs = [d for d in divs if d > 0 and n % d == 0]
+    # Try all possible r*c partitions with r*c <= len(divs)
+    for r in range(1, len(divs)+1):
+        for c in range(1, len(divs)+1):
+            if r * c > len(divs):
+                break
+            # choose subsets of divisors of size r*c
+            for subset in combinations(divs, r*c):
+                # permute subset to try all grids
+                for perm in permutations(subset):
+                    if check_grid(n, r, c, perm):
+                        print(f"n={n}, r={r}, c={c}, grid={perm}")
+                        return True
+    return False
+
+def main():
+    # check n from 2 to 30
+    found = []
+    for n in range(2, 31):
+        if try_n(n):
+            found.append(n)
+    print("Candidates:", found)
+
+if __name__ == "__main__":
+    main()
+```

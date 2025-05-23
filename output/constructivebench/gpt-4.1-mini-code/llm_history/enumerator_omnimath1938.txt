@@ -1,0 +1,56 @@
+[write_program]
+The problem involves a Markov chain on the vertices of a pentagon with a transition matrix where each vertex moves with probability 1/2 to each adjacent vertex. We want to find the (0,0) entry of the 10th power of this matrix. I'll enumerate all entries by computing powers of the matrix numerically for small powers and print the (0,0) entry at the 10th power as a rational. This will help conjecture the exact rational value.
+
+```python
+from fractions import Fraction
+
+# Adjacency of pentagon vertices (0 to 4)
+n = 5
+
+# Matrix as list of lists (fractions)
+def pentagon_matrix():
+    mat = [[Fraction(0) for _ in range(n)] for _ in range(n)]
+    for i in range(n):
+        mat[i][(i+1)%n] = Fraction(1,2)
+        mat[i][(i-1)%n] = Fraction(1,2)
+    return mat
+
+# Matrix multiplication for rational matrices
+def matmul(A, B):
+    n = len(A)
+    result = [[Fraction(0) for _ in range(n)] for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            s = Fraction(0)
+            for k in range(n):
+                s += A[i][k] * B[k][j]
+            result[i][j] = s
+    return result
+
+# Matrix exponentiation by squaring
+def matpow(mat, power):
+    n = len(mat)
+    result = [[Fraction(int(i==j),1) for j in range(n)] for i in range(n)] # Identity
+    base = mat
+    p = power
+    while p > 0:
+        if p & 1:
+            result = matmul(result, base)
+        base = matmul(base, base)
+        p >>= 1
+    return result
+
+def main():
+    M = pentagon_matrix()
+    # Print initial matrix entries
+    print("Transition matrix (pentagon):")
+    for row in M:
+        print([float(x) for x in row])
+    # Compute powers up to 10 and print M^k[0][0]
+    for k in range(1, 11):
+        Mk = matpow(M, k)
+        print(f"M^{k}[0][0] = {Mk[0][0]} ≈ {float(Mk[0][0])}")
+
+if __name__ == "__main__":
+    main()
+```

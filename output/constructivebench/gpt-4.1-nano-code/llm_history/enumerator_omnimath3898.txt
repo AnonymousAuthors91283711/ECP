@@ -1,0 +1,57 @@
+[write_program]
+The problem appears to explore functions \(f : \mathbb{Q} \to \mathbb{Z}\) satisfying a particular functional equation involving rational and integer parameters. To understand the possible solutions, we need to analyze the given property:
+
+\[
+\forall x \in \mathbb{Q}, \forall a, b \in \mathbb{Z} \text{ with } b > 0,\quad f\left(\frac{f(x) + a}{b}\right) = f\left(\frac{x + a}{b}\right).
+\]
+
+Since \(f\) takes rational inputs to integers, and the property is a form of invariance under certain rational transformations, plausible solutions might be constant functions or functions closely aligned with integer parts or linear functions.
+
+We'll empirically test various candidate functions, especially constant functions and linear functions, over a bounded set of rational inputs and integer parameters \((a, b)\) to observe whether they satisfy the property.
+
+Let's implement an enumeration:
+
+- Test constant functions \(f(x) = c\) for \(c \in \{-2, -1, 0, 1, 2\}\).
+- Test linear functions \(f(x) = kx + m\) with small integer coefficients \(k, m \in \{-1, 0, 1\}\).
+- For each candidate, check the condition over a small set of \(x, a, b\).
+
+Any function that satisfies the property consistently for all tested inputs might be part of the answer set.
+
+```python
+# Enumerate candidate functions and test the functional equation over small sample inputs
+import fractions
+
+# Generate small rational inputs
+x_values = [fractions.Fraction(i, 1) for i in range(-2, 3)]  # -2, -1, 0, 1, 2
+a_values = [-1, 0, 1]
+b_values = [1, 2, 3]
+
+def test_function(f):
+    for x in x_values:
+        for a in a_values:
+            for b in b_values:
+                if b <= 0:
+                    continue
+                left = f((f(x) + a) / b)
+                right = f((x + a) / b)
+                if left != right:
+                    return False
+    return True
+
+# Candidate 1: constant functions
+for c in range(-2, 3):
+    def const_f(x, c=c):
+        return c
+    if test_function(const_f):
+        print(f"Constant function: f(x) = {c} satisfies the property.")
+
+# Candidate 2: linear functions with small integer coefficients
+for k in range(-1, 2):
+    for m in range(-1, 2):
+        def linear_f(x, k=k, m=m):
+            # f(x) = k*x + m
+            val = fractions.Fraction(k) * x + m
+            return int(val)  # Since f maps to integers, take floor
+        if test_function(linear_f):
+            print(f"Linear function: f(x) = {k}*x + {m} (rounded down) satisfies the property.")
+```

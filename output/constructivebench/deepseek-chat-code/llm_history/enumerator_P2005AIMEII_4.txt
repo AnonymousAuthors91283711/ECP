@@ -1,0 +1,47 @@
+[write_program]
+This problem asks for the number of positive divisors of at least one of the numbers \(10^{10}\), \(15^7\), or \(18^{11}\). To solve this, we'll use the inclusion-exclusion principle to count the divisors while avoiding double-counting.
+
+The approach is:
+1. Factorize each number into primes
+2. Compute the number of divisors for each number individually
+3. Compute pairwise GCDs and their divisor counts
+4. Compute the three-way GCD and its divisor count
+5. Apply inclusion-exclusion: |A∪B∪C| = |A| + |B| + |C| - |A∩B| - |A∩C| - |B∩C| + |A∩B∩C|
+
+```python
+def num_divisors(factors):
+    """Compute number of divisors from prime factorization (as dict)"""
+    count = 1
+    for exp in factors.values():
+        count *= (exp + 1)
+    return count
+
+def gcd_factors(f1, f2):
+    """Compute GCD of two numbers represented by their factorizations"""
+    common = {}
+    for p in set(f1) & set(f2):
+        common[p] = min(f1[p], f2[p])
+    return common
+
+# Factorizations
+factors_10_10 = {2:10, 5:10}
+factors_15_7 = {3:7, 5:7}
+factors_18_11 = {2:11, 3:11}
+
+# Individual counts
+a = num_divisors(factors_10_10)
+b = num_divisors(factors_15_7)
+c = num_divisors(factors_18_11)
+
+# Pairwise intersections
+ab = num_divisors(gcd_factors(factors_10_10, factors_15_7))
+ac = num_divisors(gcd_factors(factors_10_10, factors_18_11))
+bc = num_divisors(gcd_factors(factors_15_7, factors_18_11))
+
+# Three-way intersection
+abc = num_divisors(gcd_factors(gcd_factors(factors_10_10, factors_15_7), factors_18_11))
+
+# Inclusion-exclusion result
+result = a + b + c - ab - ac - bc + abc
+print(result)
+```

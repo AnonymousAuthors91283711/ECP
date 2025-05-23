@@ -1,0 +1,48 @@
+[write_program]
+The problem appears to seek the smallest positive integer \( d \) such that there are no functions \( a, b: \text{Finset.Icc } 1\, n \to \mathbb{N} \) satisfying the sum \(\sum_{i} (-1)^{a(i)} \cdot 2^{b(i)} = d \). Essentially, for each \( n \), we want to find the minimal \( d \) that cannot be expressed in such a form.
+
+Given this, let's consider small \( n \) and enumerate all valid sums of the given form. We'll generate all feasible sums from functions \( a, b \) over the index set \( \text{Finset.Icc } 1\, n \). Since in Lean, \( \text{Finset.Icc } 1\, n \) would correspond to indices \( 1, 2, ..., n \), for small \( n \), this is manageable.
+
+Here's a Python script that:
+- Enumerates all functions \( a, b: [1..n] \to \{0, 1\} \) for simplicity (since \( (-1)^{a(i)} \) only depends on whether \( a(i) \) is 0 or 1).
+- Computes the sum \( \sum_{i=1}^n (-1)^{a(i)} \cdot 2^{b(i)} \).
+- Tracks all such sums and finds the smallest positive integer not in this set.
+
+```python
+# Enumeration to find the smallest positive integer d
+# that cannot be expressed as sum of (-1)^a(i) * 2^b(i) over i=1..n,
+# with a(i), b(i) in {0,1} for small n.
+
+def enumerate_sums(n, verbose=False):
+    sums = set()
+    # Generate all possible functions a, b: [1..n] -> {0,1}
+    # There are 2^n choices for a and 2^n choices for b, total 4^n
+    for a_bits in range(1 << n):
+        a = [(a_bits >> i) & 1 for i in range(n)]
+        for b_bits in range(1 << n):
+            b = [(b_bits >> i) & 1 for i in range(n)]
+            total = 0
+            for i in range(n):
+                sign = -1 if a[i] == 1 else 1
+                total += sign * (2 ** b[i])
+            sums.add(total)
+            if verbose:
+                print(f"a={a}, b={b}, sum={total}")
+    return sums
+
+def find_min_unreachable(n):
+    generated_sums = enumerate_sums(n)
+    # Search from 1 upwards for the smallest positive integer not in sums
+    d = 1
+    while True:
+        if d not in generated_sums:
+            print(f"For n={n}, smallest unreachable positive integer is {d}")
+            return d
+        d += 1
+
+# For small n, e.g., n=3, execute and find answer
+# Adjust n for larger if needed, but keep small for efficiency
+if __name__ == "__main__":
+    n = 3  # Sample small value
+    find_min_unreachable(n)
+```

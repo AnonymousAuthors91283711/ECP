@@ -1,0 +1,49 @@
+[write_program]
+The problem describes a polynomial functional equation parameterized by an integer \( m \neq 0 \) and asks about the characterization of polynomials \( P \) satisfying it. To assist in conjecturing the structure of such polynomials, we try small integer values of \( m \) and search for low-degree polynomials \( P \) that satisfy the condition exactly.
+
+We let \( P \) have degrees 0 to 3 and check the given polynomial relation at many \( x \) values symbolically or numerically. Since the problem is from a high school context, the polynomial \( P \) likely has low degree and special forms. We print polynomials that satisfy the relation approximately at sampled points to help guess the final characterization.
+
+```python
+from sympy import symbols, Poly, solve, Eq
+from sympy.abc import x
+
+# We'll try small integers m and search for P of degree <=3
+ms = [1, 2, -1]
+max_degree = 3
+
+def check_equation(P, m):
+    # Check if (x^3 - m x^2 +1)*P(x+1) + (x^3 + m x^2 +1)*P(x-1) == 2*(x^3 - m x +1)*P(x)
+    # as polynomials: simplify the difference
+    x1 = x + 1
+    x2 = x - 1
+    left = (x**3 - m*x**2 + 1)*P(x1) + (x**3 + m*x**2 + 1)*P(x2)
+    right = 2*(x**3 - m*x + 1)*P(x)
+    eq = left - right
+    # eq should be zero polynomial
+    return eq.expand().simplify()
+
+print("Searching for polynomials P over R with degree <= 3 satisfying the equation for m in", ms)
+
+for m in ms:
+    print(f"\nParameter m = {m}:")
+    # Parametrize P = a0 + a1 x + a2 x^2 + a3 x^3
+    a0,a1,a2,a3 = symbols('a0 a1 a2 a3')
+    coeffs = [a0,a1,a2,a3]
+    for deg in range(max_degree+1):
+        # P(x) = sum_{i=0}^deg a_i x^i
+        Px = sum(coeffs[i]*x**i for i in range(deg+1))
+        # form the equation eq = 0 polynomial => coefficients all zero
+        eq_poly = check_equation(lambda t: Px.subs(x, t), m)
+        eq_poly = Poly(eq_poly, x)
+        # get coefficients polynomial in a0,a1,a2,a3
+        constraints = eq_poly.all_coeffs()  # coefficients of eq_poly in descending order
+        # solve system constraints == 0
+        system = [Eq(c,0) for c in constraints]
+        sol = solve(system, coeffs[:deg+1], dict=True)
+        # print all solutions found
+        for s in sol:
+            # Build polynomial from solution
+            Psol = sum(s.get(coeffs[i],0)*x**i for i in range(deg+1))
+            print(f" Degree {deg} polynomial solution: P(x) = {Psol}")
+
+```

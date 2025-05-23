@@ -1,0 +1,75 @@
+[write_program]
+The problem counts paths of length 6 in a 5-dimensional hypercube starting and ending at the zero vertex, with the constraint that each step flips exactly 2 bits. We want to find the number of such paths. To gain insight, we enumerate parameters and count valid sequences step-by-step. Each vertex can be represented by a 5-bit binary string. Each move flips exactly 2 bits. The path starts and ends at 00000. Steps: path0=00000, path5=00000, each move changes exactly 2 bits.
+
+We enumerate all 6-step paths (with vertices v0..v5) satisfying the conditions:
+- v0 = 0 (all bits = 0)
+- v5 = 0
+- for each step i, Hamming distance between v(i) and v(i+1) is exactly 2
+
+To reduce complexity:
+- Number of vertices: 2^5=32
+- Moves are edges connecting vertices differing in 2 bits.
+- We count number of 5-step walks from vertex 0 to vertex 0 in the graph where edges connect differing by 2 bits.
+
+This is counting the (0,0)-entry of the 5-step power of the adjacency matrix of the graph defined by edges between vertices differing in 2 bits.
+
+We implement this via adjacency matrix exponentiation for N=5 steps starting and ending at 0.
+
+```python
+# Count number of length-5 walks in 5-hypercube graph where edges connect vertices differing in exactly 2 bits.
+# Vertices: 0..31 (5-bit integers)
+# Edges: between vertices with Hamming distance exactly 2
+
+def hamming_distance(a, b):
+    return bin(a ^ b).count('1')
+
+def neighbors(v):
+    # neighbors differ by exactly 2 bits
+    res = []
+    for w in range(32):
+        if hamming_distance(v, w) == 2:
+            res.append(w)
+    return res
+
+def mat_mult(A, B):
+    n = len(A)
+    res = [[0]*n for _ in range(n)]
+    for i in range(n):
+        Ai = A[i]
+        for j in range(n):
+            s = 0
+            for k in range(n):
+                s += Ai[k]*B[k][j]
+            res[i][j] = s
+    return res
+
+def mat_pow(M, power):
+    n = len(M)
+    # initialize result as identity
+    R = [[0]*n for _ in range(n)]
+    for i in range(n): R[i][i] = 1
+    base = M
+    p = power
+    while p > 0:
+        if p & 1:
+            R = mat_mult(R, base)
+        base = mat_mult(base, base)
+        p >>= 1
+    return R
+
+def main():
+    n = 32
+    # build adjacency matrix A
+    A = [[0]*n for _ in range(n)]
+    for v in range(n):
+        for w in neighbors(v):
+            A[v][w] = 1
+    # We count walks of length 5 from 0 to 0
+    A5 = mat_pow(A, 5)
+    answer = A5[0][0]
+    print("Number of 6-vertex paths in 5-hypercube flipping 2 bits each step, starting and ending at 0:")
+    print(answer)
+
+if __name__ == "__main__":
+    main()
+```

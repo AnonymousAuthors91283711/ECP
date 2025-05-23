@@ -1,0 +1,54 @@
+[write_program]
+The problem is to find the smallest sum \( s = a + b + c + d \) where \(a,b,c,d\) are distinct perfect squares such that \(a^b = c^d\). We want to enumerate all quadruples of distinct square integers \(a,b,c,d\) satisfying \(a^b = c^d\) and find the minimal sum.
+
+We consider small perfect squares for \(a,b,c,d\) to find candidates, then print them as found, ending with the minimal sum found.
+
+```python
+import math
+
+# Generate some perfect squares up to a small threshold
+max_val = 20  # to keep search space small for demonstration
+squares = [i*i for i in range(1, max_val+1)]
+
+# To avoid large powers we use tuple (base, exponent)
+# We'll search for quadruples (a,b,c,d) with a,b,c,d ∈ squares, distinct values,
+# satisfying a^b = c^d
+# We'll enumerate all combinations with small values
+
+found_solutions = []
+
+def fast_pow(base, exp):
+    # Use pow with integer base and exponent
+    # But base and exponent can be large so careful not to overflow too heavily
+    # power results won't fit in int if numbers too large, so keep small ranges
+    return pow(base, exp)
+
+# We'll try all distinct a,b,c,d squares with some limits
+for a in squares:
+    for b in squares:
+        if b == a:
+            continue
+        for c in squares:
+            if c in (a,b):
+                continue
+            for d in squares:
+                if d in (a,b,c):
+                    continue
+                # To limit search, skip if sum already bigger than found min
+                s = a+b+c+d
+                # Check a^b == c^d quickly by comparing logs or direct pow (if not too big)
+                try:
+                    val1 = fast_pow(a,b)
+                    val2 = fast_pow(c,d)
+                except OverflowError:
+                    # skip too big powers
+                    continue
+                if val1 == val2:
+                    print(f"a={a}, b={b}, c={c}, d={d}, sum={s}")
+                    found_solutions.append(s)
+
+if found_solutions:
+    print("Minimum sum found:", min(found_solutions))
+else:
+    print("No solutions found in searched range.")
+```

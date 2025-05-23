@@ -1,0 +1,43 @@
+[write_program]
+The problem counts functions \( s: \{0,1,2,3,4\} \to \mathbb{Z} \) with \( s(i) \leq 1 \) for all \( i \), and partial sums \( \sum_{i=0}^n s(i) \geq 0 \) for each \( n \). We want to enumerate such sequences and count them.
+
+To do this efficiently, we can use backtracking to generate sequences \( (s_0,\ldots,s_4) \) with \( s_i \in \{\ldots,-2,-1,0,1\} \) but here \( s_i \leq 1 \), and we also enforce partial sums \(\geq 0\). Since any value below -4 would force partial sums negative quickly, we can limit \( s_i \in \{-4,-3,-2,-1,0,1\} \), but more simply, let's try \( s_i \in \{-4,-3,-2,-1,0,1\} \).
+
+However, since \( s_i \leq 1 \) but the problem does not say \( s_i \geq \), we could have arbitrarily negative values, but partial sums must be \(\geq 0\), which restricts negative values heavily. Actually, the problem says \( s(i) \in \mathbb{Z} \) with \( s(i) \leq 1 \) for all \(i\), so possibilities for \( s(i) \) are all integers less or equal 1, so the infinite set \(\ldots,-3,-2,-1,0,1\).
+
+But since partial sums for each \( n \) must be ≥ 0, that restricts the entries quite strongly.
+
+To enumerate all such sequences, we can use backtracking with pruning:
+
+- At step i, partial sum psum must be ≥ 0.
+
+- For next \( s_i \), possible values are from \(-10\) to 1 (this is arbitrary but tries to capture typical negative values).
+
+- But since partial sum must remain ≥ 0, if psum + s_i < 0, discard and try another s_i.
+
+We can enumerate all sequences \( s \) of length 5 with \( s_i \leq 1 \) integers, and partial sums nonnegative, from \( s_i \in [-10,1] \) for instance, pruning sequences early when partial sums go below zero.
+
+To keep output small and enumerating effectively, we print each sequence found and finally print the count.
+
+```python
+# Enumerate sequences s : {0..4}→Z with s[i] ≤ 1, partial sums ≥ 0.
+# Only s[i] in [-10..1] (arbitrary bound) for efficiency.
+# Print each valid sequence and finally the count.
+
+def backtrack(i, seq, psum):
+    if i == 5:
+        print(seq)
+        results.append(tuple(seq))
+        return
+    for val in range(-10, 2):  # s[i] ≤ 1, integer ≥ -10 (arbitrary limit)
+        if psum + val >= 0:
+            seq.append(val)
+            backtrack(i + 1, seq, psum + val)
+            seq.pop()
+
+results = []
+backtrack(0, [], 0)
+print("Total count:", len(results))
+```
+
+This program will print all sequences satisfying constraints and total count, helping conjecture the exact finite number and possibly find a pattern.

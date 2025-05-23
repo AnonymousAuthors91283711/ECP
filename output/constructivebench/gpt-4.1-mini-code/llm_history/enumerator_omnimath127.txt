@@ -1,0 +1,45 @@
+[write_program]
+The problem involves finding the smallest size \( k \) of the sumset \(\{ a_i + a_j : 0 \le i,j \le n \}\), where \(a\) is a strictly increasing sequence with \(a_0=0\) and \(a_n=2n-1\). The program will test small \(n\) and enumerate possible strictly increasing sequences with the given endpoints, compute the sumset sizes, and print them to conjecture the minimal \(k\).
+
+```python
+# Enumerate strictly increasing sequences a: [0..n] with a0=0 and an=2n-1
+# For small n, find all such sequences, compute |{a_i + a_j}|, and print minimal results.
+
+from itertools import combinations
+
+def sumset_size(seq):
+    s = set()
+    for i in seq:
+        for j in seq:
+            s.add(i + j)
+    return len(s)
+
+def enum_sequences(n):
+    # We want sequences a0=0 < a1 < ... < a_{n-1} < a_n=2n-1
+    # The middle elements come from strictly increasing numbers in (0, 2n-1)
+    # There are n+1 elements total; we fix 0 and 2n-1, we choose n-1 numbers in between
+    candidates = range(1, 2*n)  # up to 2n-1 exclusive for simplicity, but strict < 2n-1
+    nk = n-1
+    for middle in combinations(range(1, 2*n-1), nk):
+        seq = (0,) + middle + (2*n-1,)
+        yield seq
+
+print("Enumerating minimal sumset sizes for n=2 to 5")
+
+for n in range(2,6):
+    print(f"\nn = {n}")
+    min_size = None
+    min_seqs = []
+    for seq in enum_sequences(n):
+        s = sumset_size(seq)
+        print(f"Seq: {seq}, sumset size: {s}")
+        if (min_size is None) or (s < min_size):
+            min_size = s
+            min_seqs = [seq]
+        elif s == min_size:
+            min_seqs.append(seq)
+    print(f"Minimum sumset size for n={n} is {min_size} achieved by sequences:")
+    for ms in min_seqs:
+        print(ms)
+```
+

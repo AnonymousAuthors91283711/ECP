@@ -1,0 +1,70 @@
+[write_program]
+The problem involves finding the minimum number of nonzero homogeneous linear forms (planes through the origin) needed to cover all nonzero points with coordinates in [0, n]^3. We'll enumerate some small values of n and count minimal such sets of planes by brute force over small integer coefficients.
+
+```python
+from itertools import product, combinations
+
+def is_zero_vector(v):
+    return all(x == 0 for x in v)
+
+def eval_plane(a,b,c,x,y,z):
+    return a*x + b*y + c*z == 0
+
+def norm_vec(a,b,c):
+    # Normalize vector by dividing by gcd and making first nonzero positive
+    from math import gcd
+    g = gcd(abs(a), gcd(abs(b), abs(c)))
+    if g == 0: return (0,0,0)
+    a, b, c = a//g, b//g, c//g
+    # Ensure first nonzero positive
+    if a < 0 or (a == 0 and b < 0) or (a == 0 and b == 0 and c < 0):
+        a,b,c = -a,-b,-c
+    return (a,b,c)
+
+def all_nonzero_points(n):
+    pts = []
+    for x in range(n+1):
+        for y in range(n+1):
+            for z in range(n+1):
+                if not (x == y == z == 0):
+                    pts.append((x,y,z))
+    return pts
+
+def generate_planes(max_coef=2):
+    # Generates all planes a*x+b*y+c*z=0 with (a,b,c)!=0 and |a,b,c|<=max_coef
+    planes = set()
+    for a,b,c in product(range(-max_coef,max_coef+1), repeat=3):
+        if (a,b,c) == (0,0,0):
+            continue
+        planes.add(norm_vec(a,b,c))
+    return list(planes)
+
+def covers(plane, pts):
+    a,b,c = plane
+    return set(p for p in pts if eval_plane(a,b,c,*p))
+
+def main():
+    # Sample n values
+    for n in [1,2]:
+        print(f"n = {n}")
+        pts = all_nonzero_points(n)
+        planes = generate_planes(max_coef=2)
+        coverage = {p: covers(p, pts) for p in planes}
+        # Try all subsets of planes starting from 1 up to len(planes)
+        found = False
+        for k in range(1, len(planes)+1):
+            for subset in combinations(planes, k):
+                covered_pts = set()
+                for p in subset:
+                    covered_pts |= coverage[p]
+                if len(covered_pts) == len(pts):
+                    print(f"Found cover with {k} planes: {subset}")
+                    found = True
+                    break
+            if found:
+                print(f"Minimum number of planes for n={n} is {k}")
+                break
+
+if __name__ == "__main__":
+    main()
+```

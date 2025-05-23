@@ -1,0 +1,174 @@
+[write_program]
+This problem involves analyzing the expression \((n - 1001)(n - 2001)(n - 2002)(n - 3001)(n - 3002)(n - 3003)\) for integer \(n\). The value of the product's sign depends on the number of factors less than or greater than \(n\).
+
+Since the product is positive, it means an even number of the factors are negative or zero:
+
+- Zero factors imply the product is zero, but the problem stipulates the product \(> 0\), so no zero factors.
+- For positive product, either all factors are positive or an even number are negative.
+
+Given the factors:
+
+- 1001, 2001, 2002, 3001, 3002, 3003
+
+The critical points occur at the roots:
+
+- \(n = 1001, 2001, 2002, 3001, 3002, 3003\)
+
+Between these points, the sign of the product changes at each root.
+
+We can analyze intervals between roots:
+
+- For \(n < 1001\), all factors are negative → product positive if an even number of negatives.
+- For \(n\) between roots, signs alternate.
+
+Considering the number line:
+
+- For \(n < 1001\), all factors are negative:
+    - 1001, 2001, 2002, 3001, 3002, 3003 > n
+    - The number of negative factors is six → product positive.
+
+- For \(1001 < n < 2001\):
+    - Factors less than \(n\): 1001 (since n > 1001), the other factors are higher.
+    - Count negatives: only one (1001), which gives an odd number → product negative → discard.
+
+Similarly, evaluate at each interval:
+
+- Between 2001 and 2002: two factors less than \(n\): 1001, 2001 → product positive
+- Between 2002 and 3001: three factors: 1001, 2001, 2002 → negative.
+- Between 3001 and 3002: four factors: 1001, 2001, 2002, 3001 → positive.
+- Between 3002 and 3003: five factors: 1001, 2001, 2002, 3001, 3002 → negative
+- For \(n > 3003\): all factors less than \(n\):
+  - six factors → positive case.
+
+Thus, the intervals where the product \(> 0\):
+
+- \(n < 1001\)
+- \(2001 < n < 2002\) (but note, \(n\) integral)
+- \(3001 < n < 3002\)
+- \(n > 3003\)
+
+Now, to find the least such \(n\), \(n\) should be just beyond the upper bounds of these intervals, so minimal \(n\) where sign is positive are:
+
+- \(n \leq 1000\) (since at 1000 all factors negative, product positive)
+- Between 2001 and 2002, the only integer \(n = 2001\) (product negative) or \(n=2002\) (product positive). So at \(n=2002\), product>0.
+- Similarly, at \(n=3002\), product>0.
+- For \(n>3003\), all factors positive, so at \(n=3004\), product>0.
+
+The minimal \(n\) where the product is positive is at \(n=1000\).
+
+Now, the problem asks for the minimal number of digits of the absolute value of this product evaluated at such \(n\).
+
+At \(n=1000\):
+
+\[
+(n - 1001)(n - 2001)(n - 2002)(n - 3001)(n - 3002)(n - 3003)
+\]
+
+evaluates to:
+
+\[
+(-1) \times (-1001) \times (-1002) \times (-2001) \times (-2002) \times (-3001)
+\]
+
+Number of negative factors:
+
+- First factor: \(1000 - 1001 = -1\): negative
+- \(1000 - 2001 = -1001\): negative
+- \(1000 - 2002 = -1002\): negative
+- \(1000 - 3001 = -2001\): negative
+- \(1000 - 3002 = -2002\): negative
+- \(1000 - 3003 = -2003\): negative
+
+Total negatives: 6 → product positive.
+
+Absolute value:
+
+\[
+1 \times 1001 \times 1002 \times 2001 \times 2002 \times 2003
+\]
+
+Now, approximate the number of digits:
+
+- \(1001 \approx 10^3\), but 4 digits
+- Similarly, 1002, 2001, 2002, 2003 all around 4 digits.
+
+Number of digits of the product is approximately the sum of their logs:
+
+\[
+\text{digits} \approx \lfloor \log_{10}(\text{product}) \rfloor + 1
+\]
+
+But for this enumeration correction, our goal is to find the number of digits of this product.
+
+Implementing the code to compute the exact digit count of this particular number:
+
+```python
+# Enumerates all factors and computes the number of digits of the absolute value at n=1000
+import math
+
+# Factors at n=1000:
+factors = [-1, -1001, -1002, -2001, -2002, -2003]
+
+# Compute the absolute value:
+abs_product = 1
+for f in factors:
+    abs_product *= abs(f)
+
+# Number of digits:
+digits = len(str(abs_product))
+print(digits)
+```
+
+This code yields the exact number of digits for the minimal candidate.
+
+---
+
+**Full code to enumerate and print the minimal \(n\) and its associated product digit count:**
+
+```python
+import math
+
+# Critical points where sign changes:
+points = [1001, 2001, 2002, 3001, 3002, 3003]
+
+# Check intervals:
+intervals = [
+    ('less than 1001', float('-inf'), 1001),
+    ('between 1001 and 2001', 1001, 2001),
+    ('between 2001 and 2002', 2001, 2002),
+    ('between 2002 and 3001', 2002, 3001),
+    ('between 3001 and 3002', 3001, 3002),
+    ('between 3002 and 3003', 3002, 3003),
+    ('greater than 3003', 3003, float('inf'))
+]
+
+candidate_ns = []
+
+# For intervals where product>0, pick minimal n:
+# For intervals with n<1001, minimal n at -∞, but for integers n, minimal for the interval is minus infinity
+# But the minimal finite n with product>0 is at n= -∞, infinity in the negative direction with the product positive.
+# For practical purposes, minimal n at large negative integers, but for this problem, focus on minimal finite n.
+
+# For the specific intervals, picking the minimal n satisfying positivity:
+candidate_ns.append(-10**9)  # a large negative n for the first interval
+
+# For other intervals, pick minimal integer n within the interval:
+candidate_ns.append(2002)    # between 2001 and 2002
+candidate_ns.append(3002)    # between 3001 and 3002
+candidate_ns.append(3004)    # greater than 3003
+
+# Compute for the minimal n in the first interval:
+# At n=-10^9:
+# All factors are large in magnitude, negative or positive, but since the number is large negative:
+# the product sign pattern: all factors are negative for large negative n, producing positive (since 6 negatives).
+# Now, compute the absolute value of the product at n=-10^9:
+
+n = -10**9
+product = 1
+for root in points:
+    factor = n - root
+    product *= abs(factor)
+
+digits = len(str(product))
+print(digits)
+```

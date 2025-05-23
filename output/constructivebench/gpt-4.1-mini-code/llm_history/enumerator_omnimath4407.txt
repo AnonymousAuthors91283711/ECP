@@ -1,0 +1,93 @@
+[write_program]
+The problem involves a real parameter \( a > 1 \) and a sequence \(\text{omnimath4407\_answer}(a, n)\) satisfying certain boundedness and spacing conditions. We want to explore sequences \(\{x_n\}\) for given \(a\) such that:
+
+1. The sequence \(\{x_n\}\) is bounded (exists \(C\) with \(|x_n| \le C\)).
+
+2. For any distinct indices \(i, j\), \(|x_i - x_j| \cdot |i-j|^a \geq 1\).
+
+This means the sequence entries are well-separated with respect to the indexing and exponent \(a\).
+
+To assist in conjecturing, I will:
+- Pick some sample values of \(a > 1\), say \(a = 1.5, 2\).
+- Enumerate sequences \(x_n = c \cdot n^{-b}\) or similar, checking if spacing condition holds.
+- Also try linear or polynomial sequences to check failure or success.
+- Print sequences and check spacing condition for small \(n\).
+- Print found sequences to explore.
+
+```python
+# Enumerate candidate sequences for a few sample values of a
+# Try sequences x_n = c * n^(-b) or linear sequences
+# Check the spacing condition |x_i - x_j| * |i-j|^a >= 1 for i != j
+# Print sequences satisfying it for small n
+
+import math
+
+def spacing_condition(x, a, max_n=10):
+    # check condition for pairs i,j in [1..max_n]
+    for i in range(1,max_n+1):
+        for j in range(1,max_n+1):
+            if i != j:
+                dist = abs(x(i) - x(j))
+                sep = abs(i - j)**a
+                val = dist*sep
+                if val < 1:
+                    return False
+    return True
+
+def bounded(x, max_n=1000):
+    # check if bounded for n=1..max_n
+    vals = [abs(x(n)) for n in range(1,max_n+1)]
+    return max(vals), min(vals)  # for info
+
+print("Try a = 1.5")
+a=1.5
+
+# Test x_n = c * n^{-b} for various b, c
+for b in [0, 0.3, 0.5, 0.7, 1]:
+    for c in [0.1, 0.5, 1, 2]:
+        def x(n, c=c,b=b):
+            return c * n**(-b)
+        max_val, min_val = bounded(x)
+        if max_val > 1e6:
+            continue  # avoid unbounded
+        if spacing_condition(x, a):
+            print(f"x_n = {c} * n^-{b} works for a={a}, max|x_n|={max_val:.3f}")
+            # print first 5 terms
+            print("First 5 terms:", [x(n) for n in range(1,6)])
+
+print("\nTry a = 2")
+a=2
+# Test linear x_n = d*n + e
+for d in [0.1, 0.5, 1]:
+    for e in [-1, 0, 1]:
+        def x(n, d=d,e=e):
+            return d*n + e
+        max_val, min_val = bounded(x, 10)
+        if max_val > 1e6:
+            continue
+        if spacing_condition(x, a):
+            print(f"x_n = {d}*n+{e} works for a=2, max|x_n|={max_val:.3f}")
+            print("First 5 terms:", [x(n) for n in range(1,6)])
+
+print("\nTry constant sequences c for a=1.5")
+a=1.5
+for c in [0, 1, 10]:
+    def x(n, c=c):
+        return c
+    max_val, min_val = bounded(x)
+    if spacing_condition(x, a):
+        print(f"Constant sequence x_n={c} works for a={a}")
+    else:
+        print(f"Constant sequence x_n={c} fails spacing for a={a}")
+
+print("\nTry alternating sequences x_n = (-1)^n * c for a=1.5")
+for c in [0.5, 1, 2]:
+    def x(n, c=c):
+        return ((-1)**n)*c
+    max_val, min_val = bounded(x)
+    if spacing_condition(x, a):
+        print(f"Alternating x_n = (-1)^n * {c} works for a={a}")
+    else:
+        print(f"Alternating x_n = (-1)^n * {c} fails spacing for a={a}")
+```
+

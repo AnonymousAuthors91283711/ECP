@@ -1,0 +1,48 @@
+[write_program]
+This problem involves quadratic functions with certain symmetry and intersection conditions. To explore possible values of `a + c`, I will construct a Python script that considers small parameter values and satisfies the given conditions, especially focusing on the vertex and intersection properties. The script enumerates candidate coefficients `a, b, c, d` based on the constraints, verifies that the functions are distinct, and then outputs potential sums `a + c`. It prioritizes exact solutions and streams results as soon as they satisfy the conditions.
+
+```python
+# The code searches for small values of a, c, b, d satisfying:
+# 1. g(-a/2) = 0 -> d = (-a/2)^2 + c*(-a/2)
+# 2. f(-c/2) = 0 -> b = (-c/2)^2 + a*(-c/2)
+# 3. f != g -> ensure at least one of a, c, b, d differ
+# 4. f(2012) = -2012 and g(2012) = -2012
+# 5. Min of ranges are equal (approximated by checking the minimum value of f and g)
+# Collect all solutions and print a + c.
+
+import itertools
+
+def quadratic_vertex_params(a, c):
+    b = (-c/2)**2 + a*(-c/2)
+    d = (-a/2)**2 + c*(-a/2)
+    return b, d
+
+def quadratic_value(x, coeff, constant):
+    return x**2 + coeff * x + constant
+
+solutions = set()
+
+for a, c in itertools.product(range(-10, 11), repeat=2):
+    b, d = quadratic_vertex_params(a, c)
+    # Check that f != g
+    if a == c and b == d:
+        continue
+    # Check f(2012) and g(2012)
+    f2012 = quadratic_value(2012, a, b)
+    g2012 = quadratic_value(2012, c, d)
+    if abs(f2012 + 2012) > 1e-6 or abs(g2012 + 2012) > 1e-6:
+        continue
+    # Approximate minima of f and g
+    # Minimum at vertex: x = -a/2 for f, x = -c/2 for g
+    # Check if minima are equal (since hmin: sInf of the range)
+    min_f = min(quadratic_value(x, a, b) for x in [-a/2 - 1, -a/2 + 1])
+    min_g = min(quadratic_value(x, c, d) for x in [-c/2 - 1, -c/2 + 1])
+    if abs(min_f - min_g) > 1e-2:
+        continue
+    # Record possible a + c
+    solutions.add(a + c)
+    print(f"a={a}, c={c}, b={b:.2f}, d={d:.2f}, a+c={a+c}")
+
+# Output some solutions and the set of possible sums
+print("Possible sums a + c:", sorted(solutions))
+```

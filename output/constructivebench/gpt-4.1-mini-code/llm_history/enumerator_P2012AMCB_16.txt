@@ -1,0 +1,41 @@
+[write_program]
+The problem involves three girls and four songs, with preference functions assigning to each song a subset of girls satisfying certain conditions:
+- Each song's subset is a strict subset of girls (not all three).
+- For every pair of distinct girls, there exists a song whose preference subset is exactly that pair.
+
+We want to count the number of preference functions meeting these rules: f : {0,1,2,3} → P({0,1,2}), where:
+- For each s, f(s) ⊆ {0,1,2} and f(s) ≠ {0,1,2}
+- For every distinct pair of girls (there are three pairs), there is some song s with f(s) = that pair.
+
+This is a combinatorial enumeration. Let's enumerate all functions f from 4 songs to subsets of {0,1,2}, omitting the full set {0,1,2}. That gives 7 possible subsets per song (excluding the full triple), so 7^4 total assignments = 2401.
+
+The condition about pairs means the images of the function must include all three pairs: {0,1}, {0,2}, {1,2} appear among f(0), f(1), f(2), f(3).
+
+We'll enumerate all these, check the condition, and count. We'll print every function that satisfies the condition.
+
+```python
+from itertools import product
+
+girls = {0, 1, 2}
+all_subsets = []
+# All subsets of girls excluding full set {0,1,2}
+for mask in range(1 << 3):
+    subset = frozenset(i for i in range(3) if (mask & (1 << i)) != 0)
+    if subset != girls:
+        all_subsets.append(subset)
+
+# The required pairs
+required_pairs = [frozenset([0,1]), frozenset([0,2]), frozenset([1,2])]
+
+count = 0
+print("Enumerating preference functions (f: 4 songs -> subsets of girls) that cover all pairs:")
+for f in product(all_subsets, repeat=4):
+    fsets = set(f)
+    # Check if all required pairs appear among the values f(s)
+    if all(pair in fsets for pair in required_pairs):
+        count += 1
+        # Print function as tuple of frozenset girls, e.g. ({0,1}, {0,2}, {1}, {0})
+        print(f)
+print(f"Total number of such preference functions: {count}")
+```
+

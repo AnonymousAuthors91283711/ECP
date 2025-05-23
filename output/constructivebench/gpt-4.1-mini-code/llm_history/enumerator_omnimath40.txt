@@ -1,0 +1,94 @@
+[write_program]
+The problem involves a 40-periodic real sequence \(a_i\) with zero sum and bounded consecutive differences. We want to explore possible values of 
+1. \(s_1 = a_9 + a_{19} + a_{29} + a_{39}\),
+2. \(s_2 = a_9 a_{19} + a_{29} a_{39}\).
+
+To enumerate possible values under the constraints efficiently:
+- We simulate \(a\) with length 40, enforce \(a_{40} = a_0\),
+- sum zero: \(\sum a_i = 0\),
+- \(|a_i - a_{i+1}| \leq 1\) for all \(i\),
+- try integer values for \(a_0\) and small integer incremental differences \(d_i = a_{i+1} - a_i\) with \(|d_i| \leq 1\),
+- reconstruct \(a\), check sum zero, compute \(s_1\) and \(s_2\),
+- print values found.
+
+We limit exploration by:
+- fixing \(a_0=0\) to reduce degrees of freedom (translating sequence won't change differences),
+- exploring difference vectors \(d_i \in \{-1,0,1\}\),
+- ensure total telescopes to zero: \(\sum d_i = 0\),
+- recompute \(a_i\) as cumulative sum,
+- filter by sum zero,
+- print candidates.
+
+This should give an idea about possible maxima or patterns.
+
+```python
+# Enumerate sequences (a0,...,a39) with |a_i - a_{i+1}| ≤ 1, sum zero, a40=a0.
+# Compute s1 = a9+a19+a29+a39 and s2 = a9*a19 + a29*a39.
+# Print found (s1,s2) pairs to conjecture max values.
+
+def enumerate_sequences():
+    from itertools import product
+    # Differences d_i in {-1,0,1}, sum d_i=0 (periodic condition)
+    n = 40
+    indices = range(n)
+    # To make sum d_i=0, sum of all differences must be 0
+    # Since each d_i in {-1,0,1}, sum(d_i)=0 means equal number of +1 and -1
+    # Number of +1s must equal number of -1s.
+    # Let's precompute all difference patterns with equal +1 and -1 count.
+    
+    max_diff_count = n // 2  # max number of +1 or -1
+    # We'll fix the number of +1 and -1 and generate sequences with exactly k +1s and k -1s
+    
+    s1_set = set()
+    s2_set = set()
+    max_s1 = None
+    max_s2 = None
+    
+    # To limit output and computation, we try small k values up to 6
+    for k in range(0, 7):
+        # Number of +1 = number of -1 = k, number of 0 = n - 2k
+        # Generate all positions for +1 and -1
+        from itertools import combinations
+        
+        pos_plus_candidates = list(combinations(indices, k))
+        # For each +1 positions, choose -1 positions disjoint
+        for plus_pos in pos_plus_candidates:
+            remaining_indices = [i for i in indices if i not in plus_pos]
+            neg_pos_candidates = list(combinations(remaining_indices, k))
+            for neg_pos in neg_pos_candidates:
+                # Build difference array
+                d = [0]*n
+                for i in plus_pos:
+                    d[i]=1
+                for i in neg_pos:
+                    d[i]=-1
+                # Reconstruct a from a_0 = 0
+                a = [0]*(n+1)
+                for i in range(n):
+                    a[i+1] = a[i]+d[i]
+                # Periodicity: a[40] = a[0] =0 (holds due to sum d_i=0)
+                seq = a[:-1]
+                # Check sum zero
+                if sum(seq) != 0:
+                    continue
+                # Compute s1 and s2
+                a9, a19, a29, a39 = seq[9], seq[19], seq[29], seq[39]
+                s1 = a9 + a19 + a29 + a39
+                s2 = a9*a19 + a29*a39
+                if (s1,s2) not in s1_set:
+                    print(f"s1 = {s1}, s2 = {s2}, sequence snapshot: a9={a9}, a19={a19}, a29={a29}, a39={a39}")
+                    s1_set.add((s1,s2))
+                # Track max
+                if max_s1 is None or s1 > max_s1:
+                    max_s1 = s1
+                if max_s2 is None or s2 > max_s2:
+                    max_s2 = s2
+        # Limit total output size, break if too many found
+        if len(s1_set) > 50:
+            break
+    print(f"Maximum s1 found: {max_s1}")
+    print(f"Maximum s2 found: {max_s2}")
+
+if __name__ == "__main__":
+    enumerate_sequences()
+```

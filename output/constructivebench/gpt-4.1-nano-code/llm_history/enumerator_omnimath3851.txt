@@ -1,0 +1,67 @@
+[write_program]
+This problem involves finding the least positive integer \(k\) such that there exist non-empty subsets \(s_1, s_2 \subseteq \{0, 1, 2, ..., 2015\}\) with the sum of their sizes equal to \(4032 - k\), and the product of \((x - (i+1))\) over \(s_1\) is never equal to the product of \((x - (i+1))\) over \(s_2\) for any real \(x\).
+
+To approach this computationally:
+
+- The total sum of the sizes of \(s_1\) and \(s_2\) should be close to 4032.
+- We look for pairs of non-empty subsets with sum of sizes close to that, avoiding subset pairs whose polynomial products are identical over all \(x\).
+- The minimal \(k\) corresponds to the smallest difference in total subset sizes, indicating the minimal deviation from the maximum total size \(4032\).
+
+Given the huge combinatorial size, we'll focus on small subset sizes and check for potential overlaps, approximating the answer.
+
+```python
+import itertools
+
+def main():
+    max_element = 2015
+    total_cardinality = 4032
+    min_k = None
+    answer_sets = []
+    
+    # Generate all non-empty subsets of range(0, 2016)
+    # Limit sizes to small for feasibility
+    max_subset_size = 3
+    all_subsets = []
+    for size in range(1, max_subset_size + 1):
+        for subset in itertools.combinations(range(max_element + 1), size):
+            all_subsets.append(subset)
+    
+    # Store polynomials as tuple of roots (subset elements)
+    subset_polys = {}
+    for s in all_subsets:
+        key = frozenset(s)
+        # Polynomial represented by its roots (roots = i+1)
+        roots = [i+1 for i in s]
+        subset_polys[key] = roots
+    
+    # For all pairs of subsets, check sizes and polynomial equality
+    # Prioritize pairs with total size close to 4032
+    min_diff = None
+    for s1 in all_subsets:
+        for s2 in all_subsets:
+            if s1 != s2 and len(s1) > 0 and len(s2) > 0:
+                total_size = len(s1) + len(s2)
+                diff = total_cardinality - total_size
+                # Check polynomial identity
+                roots1 = subset_polys[frozenset(s1)]
+                roots2 = subset_polys[frozenset(s2)]
+                # Polynomial over roots: the polynomial is uniquely determined
+                # Two polynomials are equal iff roots sets are equal as multisets
+                if sorted(roots1) == sorted(roots2):
+                    continue  # polynomials are identical
+                # Found a candidate with difference = diff
+                if (min_diff is None) or (diff < min_diff):
+                    min_diff = diff
+                    answer_sets = [(len(s1), len(s2))]
+                elif diff == min_diff:
+                    answer_sets.append((len(s1), len(s2)))
+    
+    # Output the minimal difference found
+    print(f"Minimal difference (k) is {min_diff}")
+    print("Candidate subset size pairs (s1 size, s2 size):")
+    for pair in answer_sets:
+        print(pair)
+
+if __name__ == "__main__":
+    main()
+```

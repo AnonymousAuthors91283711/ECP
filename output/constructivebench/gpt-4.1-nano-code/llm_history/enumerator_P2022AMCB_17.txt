@@ -1,0 +1,48 @@
+[write_program]
+This problem involves counting the number of 4×4 matrices over Fin 2 with certain sum conditions that are preserved under permutations of rows and columns. To enumerate possible solutions, I will:
+
+- Generate all permutation pairs (σ for rows, τ for columns).
+- For each pair, construct matrices M where row sums and column sums match the permutation constraints.
+- Count matrices satisfying the conditions, ensuring we list all possibilities.
+
+Assuming M(i,j) ∈ {0,1} due to Fin 2, the approach is:
+- For each permutation pair, determine target sums for each row and column.
+- Generate all matrices with row sums matching the permuted indices plus 1.
+- From these, filter those matching the column sum conditions.
+
+Here's the code:
+
+```python
+import itertools
+import math
+
+# Generate all permutations of size 4
+perms = list(itertools.permutations(range(4)))
+
+# Store count of matrices matching any permutation pair
+total_count = 0
+
+# Iterate over all row and column permutation pairs
+for sigma in perms:
+    for tau in perms:
+        # Compute required row sums
+        row_sums = [sigma_i + 1 for sigma_i in sigma]
+        # Compute required column sums
+        col_sums = [tau_j + 1 for tau_j in tau]
+
+        # Generate all 4x4 matrices over {0,1}
+        for matrix_bits in itertools.product([0, 1], repeat=16):
+            M = [list(matrix_bits[i*4:(i+1)*4]) for i in range(4)]
+            # Check row sums
+            if all(sum(row) == row_sums[i] for i, row in enumerate(M)):
+                # Check column sums
+                if all(sum(M[i][j] for i in range(4)) == col_sums[j] for j in range(4)):
+                    total_count += 1
+                    print(f"Permutation pair (σ, τ): {sigma}, {tau}")
+                    print(f"Matrix:")
+                    for row in M:
+                        print(''.join(str(bit) for bit in row))
+                    print("-" * 20)
+
+print(f"Total matrices satisfying conditions: {total_count}")
+```

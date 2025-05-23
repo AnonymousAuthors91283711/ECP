@@ -1,0 +1,54 @@
+[write_program]
+The problem asks for the count of integers \( n \) in the range 1 to 50 for which \((n^2)! \) is divisible by \((n!)^n\).
+
+We want to find all \( n \in [1,50] \) such that \((n^2)! \equiv 0 \pmod{(n!)^n}\).
+
+This can be tested by checking if the prime factorization of \((n!)^n\) is contained in that of \((n^2)!\).
+
+We will write a program to enumerate all such \( n \) by computing prime factorization counts and checking divisibility conditions efficiently using Legendre's formula.
+
+```python
+# Enumerate n in [1..50] such that (n^2)! divisible by (n!)^n.
+# Using prime factorization count via Legendre's formula for factorials.
+
+def prime_sieve(limit):
+    sieve = [True] * (limit+1)
+    sieve[0] = sieve[1] = False
+    for i in range(2,int(limit**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i, limit+1, i):
+                sieve[j] = False
+    return [p for p in range(2,limit+1) if sieve[p]]
+
+def legendre_factorial_power(n,p):
+    """Count exponent of prime p in n!"""
+    count = 0
+    div = p
+    while div <= n:
+        count += n//div
+        div *= p
+    return count
+
+def check_divisibility(n, primes):
+    # Check if (n^2)! divisible by (n!)^n by comparing prime exponents
+    # For each prime p: exp_p((n^2)!) >= n * exp_p(n!)
+    for p in primes:
+        exp_n2_fact = legendre_factorial_power(n*n, p)
+        exp_n_fact = legendre_factorial_power(n, p)
+        if exp_n2_fact < n * exp_n_fact:
+            return False
+    return True
+
+def main():
+    limit=50
+    primes = prime_sieve(limit*limit)
+    answers = []
+    for n in range(1, limit+1):
+        if check_divisibility(n, primes):
+            print(f"n={n} satisfies (({n}^2)! divisible by (n!)^{n})")
+            answers.append(n)
+    print(f"Total count: {len(answers)}")
+
+if __name__=="__main__":
+    main()
+```

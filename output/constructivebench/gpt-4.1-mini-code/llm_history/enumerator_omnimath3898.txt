@@ -1,0 +1,76 @@
+[write_program]
+The problem involves functions from rationals to integers, subject to a functional equation involving rational arguments of the form \((f(x) + a)/b\) and \((x + a)/b\). The goal is to characterize all such functions \(f\).
+
+To assist in conjecturing the form of such functions, we'll enumerate candidate integer-valued functions on rationals with bounded complexity (e.g., piecewise linear on rationals with small denominators or simple functions) and verify whether the functional equation holds for a selected range of rationals and parameters \(a,b\). We'll print candidates fulfilling the condition on these samples, to highlight potential patterns or forms of \(f\).
+
+We won't hardcode any known answer; instead, we'll generate many simple functions \(f:\mathbb{Q}\to\mathbb{Z}\) and test the condition for sample values to guess the structure of \(f\).
+
+```python
+# enumerator.py
+# Enumerate candidate functions f: Q->Z and test condition:
+# For all rational x, integers a,b>0: f((f(x)+a)/b) = f((x+a)/b).
+# We'll test on finite samples to find possible f's.
+
+from fractions import Fraction
+
+# Sample rationals with denominator <=4 and numerators in [-4,4]
+sample_x = [Fraction(n, d) 
+            for d in range(1,5) for n in range(-4*d, 4*d+1)]
+
+# Sample parameters a,b with 1 <= b <=3, a in {-1,0,1}
+sample_a = [-1,0,1]
+sample_b = [1,2,3]
+
+# We'll try functions of form f(x)=round(c*x)+k for small c,k in Z
+# but f(x) must be integer-valued for any rational x
+# To keep it simple, restrict c = 0 or 1, k in -1..1
+# Also constant functions
+
+def test_function(f):
+    for x in sample_x:
+        fx = f(x)
+        for a in sample_a:
+            for b in sample_b:
+                if b <= 0:
+                    continue
+                lhs_arg = Fraction(fx + a, b)
+                rhs_arg = Fraction(x + a, b)
+                # f(lhs_arg) and f(rhs_arg) must be defined (integer)
+                if f(lhs_arg) != f(rhs_arg):
+                    return False
+    return True
+
+def f_const(c):
+    return lambda x: c
+
+def f_identity(x):
+    return int(x)  # integral part
+
+def f_floor(x):
+    return x.numerator // x.denominator
+
+def f_round(x):
+    return round(float(x))
+
+def main():
+    print("Testing constant functions f(x)=c for c in -2..2")
+    for c in range(-2, 3):
+        f = f_const(c)
+        if test_function(f):
+            print(f"f(x) = {c} works")
+
+    print("Testing floor function f(x) = floor(x)")
+    if test_function(f_floor):
+        print("f(x) = floor(x) works")
+
+    print("Testing identity on integers f(x) = int_part(x)")
+    if test_function(f_identity):
+        print("f(x) = int_part(x) works")
+
+    print("Testing rounding f(x) = round(x)")
+    if test_function(f_round):
+        print("f(x) = round(x) works")
+
+if __name__ == "__main__":
+    main()
+```

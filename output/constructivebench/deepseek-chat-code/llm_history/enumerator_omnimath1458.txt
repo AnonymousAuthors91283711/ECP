@@ -1,0 +1,61 @@
+[write_program]
+This problem asks for all positive real triples (a,b,c) satisfying three equations involving floor functions. We'll enumerate possible integer values for floor(a), floor(b), floor(c) that satisfy the multiplicative constraints, then find corresponding real ranges for a,b,c.
+
+The approach is:
+1. Let k=floor(a), m=floor(b), n=floor(c) (positive integers)
+2. The equations become: k*b*c=3, a*m*c=4, a*b*n=5
+3. For each valid (k,m,n) combination where k*m*n divides lcm(3,4,5)=60, solve for a,b,c ranges
+4. Check if the ranges maintain the floor conditions
+
+```python
+from math import floor, gcd
+from itertools import product
+
+def lcm(a, b):
+    return a * b // gcd(a, b)
+
+def main():
+    # Find possible (k,m,n) where k*m*n divides 60
+    target = lcm(lcm(3, 4), 5)  # 60
+    max_k = 60
+    solutions = []
+    
+    for k in range(1, max_k + 1):
+        for m in range(1, max_k // k + 1):
+            remaining = target // (k * m)
+            if remaining == 0:
+                continue
+            for n in range(1, remaining + 1):
+                if k * m * n > target:
+                    continue
+                if target % (k * m * n) != 0:
+                    continue
+                
+                # Now solve equations:
+                # k*b*c=3 => b*c=3/k
+                # a*m*c=4 => a*c=4/m
+                # a*b*n=5 => a*b=5/n
+                try:
+                    a_sq = (4/m)*(5/n)/(3/k)  # (a*c)*(a*b)/(b*c) = a^2
+                    a = (a_sq)**0.5
+                    b = (5/n)/a
+                    c = (3/k)/b
+                    
+                    # Check floor conditions
+                    if (floor(a) == k and floor(b) == m and floor(c) == n and
+                        a > 0 and b > 0 and c > 0):
+                        print(f"Found solution: a={a}, b={b}, c={c} with floors k={k}, m={m}, n={n}")
+                        solutions.append((a, b, c))
+                except ZeroDivisionError:
+                    continue
+    
+    if solutions:
+        print("\nAll solutions found:")
+        for sol in solutions:
+            print(f"({sol[0]}, {sol[1]}, {sol[2]})")
+    else:
+        print("No solutions found")
+
+if __name__ == "__main__":
+    main()
+```

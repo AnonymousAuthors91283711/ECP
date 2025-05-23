@@ -1,0 +1,61 @@
+[write_program]
+The problem is to find the least natural number \( x = a + b + c \) for distinct positive natural numbers \( a, b, c \) such that there exists an integer \( k \) with
+\[
+k = \sqrt{a \sqrt{b \sqrt{c}}}.
+\]
+
+We want to enumerate triples \((a,b,c)\) with distinct positive integers summing to some \(x\), check if \( \sqrt{a \sqrt{b \sqrt{c}}} \) is an integer, and find the smallest such \(x\). The computation involves nested square roots and checking integer-ness without floating errors.
+
+We enumerate small values for \(a,b,c\), \(a,b,c \leq 20\), to keep computations quick. We print each triple and sum where the integer condition holds and finally print the minimum sum found.
+
+```python
+from math import isqrt, sqrt
+
+def is_perfect_square(n):
+    r = isqrt(n)
+    return r*r == n
+
+def rational_nested_sqrt(a, b, c):
+    # Compute a * sqrt(b * sqrt(c))
+    # Check if sqrt(value) is integer, i.e., value is a perfect square
+    # value = a * sqrt(b * sqrt(c))
+    # Let's compute inner = b * sqrt(c)
+    inner_root = sqrt(c)
+    inner = b * inner_root
+    # sqrt(inner) = (b * sqrt(c))^{1/2} = b^{1/2} * c^{1/4}
+    # total = a * sqrt(inner)
+    # total_sqrt = sqrt(a * sqrt(b * sqrt(c))) = k integer
+    # Check if total_sqrt is integer:
+    # Let's do approximate check (then verify close integers)
+    val = a * sqrt(b * sqrt(c))
+    k = round(val**0.5)
+    if abs(k*k - val) < 1e-10:
+        # Check if k is integer (this is float approx, but close enough)
+        # Better: check if val is a perfect square in exact arithmetic?
+        # Since floats are inexact, check val ~ k^2
+        return k
+    return None
+
+found = []
+min_sum = None
+
+# Enumerate distinct positive integers a,b,c up to 20
+for a in range(1,21):
+    for b in range(1,21):
+        if b == a:
+            continue
+        for c in range(1,21):
+            if c == a or c == b:
+                continue
+            s = a + b + c
+            k = rational_nested_sqrt(a,b,c)
+            if k is not None:
+                print(f"a={a}, b={b}, c={c}, sum={s}, k={k}")
+                if (min_sum is None) or (s < min_sum):
+                    min_sum = s
+
+if min_sum is not None:
+    print("Minimum sum with integer k:", min_sum)
+else:
+    print("No triple found with the condition in given range.")
+```

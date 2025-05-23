@@ -1,0 +1,71 @@
+[write_program]
+The problem concerns a finite set \( S \subset \mathbb{R} \) with \( n \) elements such that each element \( x \in S \) can be expressed as a sum of exactly \( k \) distinct other elements from \( S \setminus \{x\} \).
+
+Our goal is to enumerate values of \( n \) and \( k \) for small ranges (e.g. k=2 or 3, n up to some manageable number), and find such sets \( S \), then conjecture the function \( \text{olympiadbench1997\_answer}(k) \).
+
+We proceed by:
+- Choosing small \( k \ge 2 \),
+- For each \( k \), trying \( n \) from \( k+1 \) up to some limit,
+- Testing if there exists a finite set \( S \subset \mathbb{R} \) with cardinality \( n \) satisfying the condition that for every \( x \in S \), there is a \( k \)-subset of \( S \setminus \{x\} \) summing to \( x \).
+
+We try the minimal examples by trial-and-error:
+- Use integer sets for simplicity and to get exact values,
+- Enumerate candidate sets \( S \) in increasing order or chosen pattern,
+- For each \( x \in S \), check all \( k \)-subsets of \( S \setminus \{x\} \), sum them, and see if \( x \) equals any such sum.
+
+Due to complexity, we limit ourselves to small parameters \( k = 2,3 \) and focus on \( n \) values up to about 7.
+
+Below is a Python enumerator implementing this logic.
+
+```python
+from itertools import combinations
+
+def check_set(S, k):
+    # S: sorted list of distinct integers
+    # For each x in S, check if exists T ⊆ S\{x}, |T|=k, sum(T)==x
+    # Return True if condition holds for all x, else False
+    for x in S:
+        found = False
+        others = [y for y in S if y != x]
+        for T in combinations(others, k):
+            if sum(T) == x:
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+def try_sets(n, k, search_range=range(-10, 11)):
+    # Generate all combinations of 'n' distinct integers within search_range
+    # to find sets S satisfying condition.
+    # To limit output, only proceed while printing found solutions.
+    from itertools import combinations
+    vals = list(search_range)
+    count_found = 0
+    # Using ascending order to reduce duplicates
+    for S in combinations(vals, n):
+        if check_set(S, k):
+            print(f"k={k} n={n} set={S}")
+            count_found +=1
+            if count_found > 5:  # avoid too much output per parameters
+                break
+    return count_found>0
+
+def main():
+    # We try k=2 and 3, n from k+1 up to 7 or 8
+    for k in [2,3]:
+        print(f"=== Trying k={k} ===")
+        for n in range(k+1,8):
+            found = try_sets(n,k)
+            if found:
+                print(f"Found example sets for k={k}, n={n}")
+            else:
+                print(f"No example sets for k={k}, n={n}")
+
+if __name__ == "__main__":
+    main()
+```
+
+This code prints any example sets \( S \) found. From the printed sets, one may conjecture the minimal \( n \) for given \( k \) such that the condition holds, i.e., \( \text{olympiadbench1997\_answer}(k) = n \).
+
+This helps identify the values for unique \( n \) satisfying the problem condition.

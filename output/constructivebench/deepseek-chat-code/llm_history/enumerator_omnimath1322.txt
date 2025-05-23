@@ -1,0 +1,46 @@
+[write_program]
+This problem asks for the cardinality of the set of complex roots of unity that are also roots of quadratic equations with integer coefficients. We need to enumerate all roots of unity that satisfy quadratic equations with integer coefficients.
+
+The approach is:
+1. Generate roots of unity (roots of z^n = 1 for various n)
+2. For each root, check if it satisfies any quadratic equation with integer coefficients
+3. Count the distinct roots that meet both conditions
+
+We'll limit our search to roots of unity up to a reasonable order (n=12) since higher orders are unlikely to produce new quadratic roots.
+
+```python
+import cmath
+from math import gcd
+from itertools import product
+
+def roots_of_unity(n):
+    """Generate primitive nth roots of unity"""
+    return [cmath.exp(2j * cmath.pi * k / n) for k in range(n) if gcd(k, n) == 1]
+
+def is_quadratic_root(z, max_coeff=2):
+    """Check if z is root of quadratic with integer coefficients in [-max_coeff, max_coeff]"""
+    for a, b in product(range(-max_coeff, max_coeff+1), repeat=2):
+        if abs(z**2 + a*z + b) < 1e-10:  # account for floating point precision
+            return True
+    return False
+
+def main():
+    max_n = 12
+    seen_roots = set()
+    count = 0
+    
+    for n in range(1, max_n+1):
+        roots = roots_of_unity(n)
+        for z in roots:
+            # Round to avoid floating point precision issues
+            rounded = complex(round(z.real, 10), round(z.imag, 10))
+            if rounded not in seen_roots and is_quadratic_root(z):
+                seen_roots.add(rounded)
+                count += 1
+                print(f"Found root: {rounded} from order {n}")
+    
+    print(f"Total distinct roots found: {count}")
+
+if __name__ == "__main__":
+    main()
+```

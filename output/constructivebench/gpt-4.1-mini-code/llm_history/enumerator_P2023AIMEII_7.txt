@@ -1,0 +1,51 @@
+[write_program]
+The problem concerns counting functions \( f : \{0,\ldots,11\} \to \{0,1\} \) (i.e., Boolean-valued functions on 12 elements) with the condition that for any distinct quadruple \( (a,b,c,d) \) of indices satisfying certain additive relations, not all values \( f(a),f(b),f(c),f(d) \) are equal.
+
+This can be reframed as counting zero-one sequences of length 12 avoiding any monochromatic quadruple where the indices satisfy the sum conditions.
+
+The conditions involve sums of indices in \(\{0,\ldots,11\}\) with equal sums among pairs: \(a+c = b+d\) or \(a+b = c+d\) or \(a+d = b+c\).
+
+A direct enumeration is large (4096 functions), but manageable with pruning, especially since the property is local (for quadruples meeting the sum conditions).
+
+We'll generate all functions \(f\) and check forbidden quadruples, printing each valid one immediately via its value as an integer. We'll also output the final count.
+
+To keep output brief, we print found values as integers and finally the total count.
+
+```python
+# Enumerate all f: {0..11} -> {0,1} binary sequences avoiding monochromatic quadruples 
+# with indices a,b,c,d all distinct satisfying sum conditions.
+from itertools import combinations
+
+N = 12
+
+# Precompute all quadruples (a,b,c,d) with distinct a,b,c,d in [0..11] satisfying
+# the conditions:
+# a!=b,c,d; b!=c,d; c!=d; and (a+c=b+d or a+b=c+d or a+d=b+c)
+
+quadruples = []
+# To avoid duplicates, sort (a,b,c,d)
+for quad in combinations(range(N),4):
+    a,b,c,d = sorted(quad)
+    sums = [a+c, b+d, a+b, c+d, a+d, b+c]
+    # Check if any of the three sum equalities hold
+    cond = (a+c == b+d) or (a+b == c+d) or (a+d == b+c)
+    if cond:
+        quadruples.append((a,b,c,d))
+
+def violates(f):
+    # f: integer representing the binary function on [0..11]
+    for a,b,c,d in quadruples:
+        # Extract bits
+        vals = [(f>>x)&1 for x in (a,b,c,d)]
+        if vals[0] == vals[1] == vals[2] == vals[3]:
+            return True
+    return False
+
+count = 0
+for f in range(1<<N):
+    if not violates(f):
+        count += 1
+        print(f"{f}")
+
+print(f"Total count: {count}")
+```

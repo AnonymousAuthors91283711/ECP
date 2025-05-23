@@ -1,0 +1,123 @@
+[write_program]
+The problem concerns integer values \(a\) for which the polynomial \(x^2 - a x + 2a\) has integer roots (either one repeated root or two distinct integer roots). We want to enumerate all such \(a\) values and sum them. The polynomial has roots \(m,n\) with \(m,n \in \mathbb{Z}\), so by Vieta's formulas:
+
+- \(m + n = a\)
+- \(m n = 2a\)
+
+We want to find all integer \(a\) such that these equations have integer solutions \(m,n\).
+
+From the system:
+
+- From \(m + n = a\), \(n = a - m\)
+- From \(m n = 2a\), plug \(n = a - m\):
+
+  \( m(a - m) = 2a \Rightarrow a m - m^2 = 2a \Rightarrow -m^2 + a m - 2a = 0 \)
+
+Rearranged:
+
+\( m^2 - a m + 2 a = 0 \)
+
+Since \(m\) is an integer root, the discriminant for this quadratic in \(m\) must be a perfect square:
+
+\[ \Delta = a^2 - 8 a \]
+
+Let \(\Delta = k^2\), for some integer \(k\).
+
+Thus,
+
+\[ a^2 - 8 a = k^2 \implies a^2 - 8 a - k^2 = 0 \]
+
+For fixed \(k\), this is a quadratic in \(a\), whose discriminant must be a perfect square. But it is simpler to parametrize:
+
+Let’s rewrite:
+
+\[
+a^2 - 8a = k^{2}
+\Rightarrow (a - 4)^2 - 16 = k^{2}
+\Rightarrow (a - 4)^2 - k^{2} = 16
+\Rightarrow ((a-4) - k) ((a-4) + k) = 16
+\]
+
+So, set
+
+\[
+x = a - 4 - k, \quad y = a - 4 + k
+\]
+
+with \(xy = 16\).
+
+Since \(a,k \in \mathbb{Z}\), and \(x,y \in \mathbb{Z}\), we can enumerate all integer factor pairs \(x,y\) with \(xy = 16\), then \(a = \frac{x + y}{2} + 4\), \(k = \frac{y - x}{2}\), both must be integers.
+
+Check for all divisor pairs of 16:
+
+The divisors of 16 are \(\pm1, \pm2, \pm4, \pm8, \pm16\).
+
+For each pair \((x,y)\) with \(x y = 16\), compute \(a\) and \(k\).
+
+Further, for each \(a\), check the roots for integrality.
+
+Write a Python program to enumerate all such \(a\) and output them immediately.
+
+```python
+# Enumerate all integer a such that polynomial x^2 - a x + 2 a has integer roots
+# The key equation is (a - 4)^2 - k^2 = 16 with integer k
+# So (a - 4 - k)(a -4 + k) = 16
+# For each integer divisor pair (x,y) of 16, compute a and k, then check roots.
+
+def divisors(n):
+    divs = []
+    for i in range(1, abs(n)+1):
+        if n % i == 0:
+            divs.append(i)
+            divs.append(-i)
+    return list(set(divs))
+
+def integer_roots(a):
+    # Polynomial: x^2 - a x + 2a
+    # roots satisfy x^2 - a x + 2a = 0
+    # roots = (a +- sqrt(a^2 - 8 a)) / 2
+    disc = a*a - 8*a
+    if disc < 0:
+        return None
+    sqrt_disc = int(disc**0.5)
+    if sqrt_disc * sqrt_disc != disc:
+        return None
+    r1_num = a + sqrt_disc
+    r2_num = a - sqrt_disc
+    if r1_num % 2 == 0 and r2_num % 2 == 0:
+        r1 = r1_num // 2
+        r2 = r2_num // 2
+        return (r1, r2)
+    return None
+
+def main():
+    n = 16
+    ds = divisors(n)
+    found_a = set()
+    for x in ds:
+        y = n // x
+        # x*y=16 by definition since y = n//x only if n%x==0
+        # actually since we generate divisors with negs, check product is 16
+        if x * y != 16:
+            continue
+        # a = (x + y)//2 + 4 must be integer, also k = (y - x)//2 integer
+        if (x + y) % 2 != 0 or (y - x) % 2 != 0:
+            continue
+        a = (x + y) // 2 + 4
+        k = (y - x) // 2
+        if (a,k) in found_a:
+            continue
+        found_a.add((a,k))
+        roots = integer_roots(a)
+        if roots is not None:
+            m, n = roots
+            # Check that roots indeed satisfy Vieta: m + n = a, m*n = 2*a
+            if m + n == a and m * n == 2*a:
+                print(f'a = {a}, roots = {roots}')
+    s = sum(a for a,_ in found_a if integer_roots(a) is not None)
+    print('Sum of all such a:', s)
+
+if __name__ == '__main__':
+    main()
+```
+This enumerates all \(a\) with integer roots and prints them immediately. Then prints the sum.

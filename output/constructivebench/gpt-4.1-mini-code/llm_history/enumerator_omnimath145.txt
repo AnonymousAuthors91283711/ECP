@@ -1,0 +1,73 @@
+[write_program]
+The problem involves identifying the greatest natural number \( n \) for which there exists a function \( \text{answers} : \text{Fin } 16 \to \text{Fin } n \to \text{Fin } 4 \) satisfying the condition that for any two distinct \( s_1, s_2 \in \text{Fin } 16 \), the number of positions \( p \in \text{Fin } n \) where \( \text{answers}(s_1, p) = \text{answers}(s_2, p) \) is at most 1.
+
+This can be interpreted as: for 16 different sequences (indexed by \( s \in \text{Fin } 16 \)) of length \( n \) over an alphabet of size 4, any two distinct sequences share at most one position with the same letter.
+
+Our goal is to enumerate possible \( n \) and attempt to construct or rule out such families of sequences, printing out constructions or signaling when the condition fails. We will try increasing values of \( n \), build candidate sequences, and check the intersection property.
+
+To keep computation feasible, we'll focus on brute-forcing or heuristic checks for small \( n \). We'll print \( n \) when such an arrangement is found.
+
+```python
+# enumerator.py
+from itertools import product, combinations
+
+# We seek sequences seq_s for s in 16 sequences,
+# each of length n, over alphabet {0,1,2,3}.
+# The pairwise coincidence count at equal positions ≤ 1.
+
+def check_property(seqs):
+    # seqs: list of 16 sequences of length n
+    # returns True if pairwise intersection ≤1 everywhere
+    for i, j in combinations(range(16), 2):
+        count = sum(1 for a, b in zip(seqs[i], seqs[j]) if a == b)
+        if count > 1:
+            return False
+    return True
+
+def print_seqs(seqs):
+    for i, seq in enumerate(seqs):
+        print(f"seq[{i}] = {seq}")
+
+def main():
+    import sys
+    from math import comb
+
+    alphabet = [0,1,2,3]
+    # We try increasing n from 1 upwards.
+    # For each n, try to find 16 sequences with the property.
+
+    # To reduce complexity, we try random sampling of seqs,
+    # because full search is huge.
+
+    import random
+
+    max_n = 15
+    found_n = []
+
+    for n in range(1, max_n+1):
+        print(f"Trying n = {n}")
+        tries = 10000  # number of random trials
+        success = False
+        # Generate 16 sequences per trial and check
+        for _ in range(tries):
+            seqs = [tuple(random.choices(alphabet, k=n)) for __ in range(16)]
+            if check_property(seqs):
+                print(f"Found sequences for n={n}:")
+                print_seqs(seqs)
+                found_n.append(n)
+                success = True
+                break
+        if not success:
+            print(f"No sequences found for n={n}")
+
+    # Report maximal found n
+    if found_n:
+        m = max(found_n)
+        print(f"Maximal n with successful sequences found: {m}")
+    else:
+        print("No sequences found for n up to", max_n)
+
+if __name__ == "__main__":
+    main()
+```
+

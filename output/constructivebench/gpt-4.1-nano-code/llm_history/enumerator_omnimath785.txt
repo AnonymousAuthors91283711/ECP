@@ -1,0 +1,111 @@
+[write_program]
+This problem involves a recursive sequence \( s:\mathbb{N} \to \mathbb{N} \) with specific initial conditions and relations. The key parts are:
+
+- \( s(0) = 1 \)
+- \( s(1) = 1 \)
+- Recursion relations:
+  - \( s(2n) = s(n) \)
+  - \( s(4n + 1) = s(2n + 1) \)
+  - \( s(4n - 1) = s(2n - 1) + \frac{(s(2n - 1))^2}{s(n - 1)} \)
+
+The relation for \( s(4n - 1) \) involves division, which heavily constrains possible integer solutions. To explore solutions, we'll write a simple enumerator that:
+
+- Tries small values for \( s(n) \) (e.g., 1, 2, 3, ...) up to a certain limit.
+- For each possible assignment that satisfies the relations, attempts to propagate values.
+- Since the relations are recursive with conditions on \( s(n) \), we'll do a depth-limited search of potential assignments up to a certain \( n \).
+- This is feasible because the relations only depend on smaller indices, so recursive evaluation is straightforward.
+
+Below, the code performs an enumeration of candidate values for small \( s(n) \) (say, 1-3) for the initial terms, propagates the values, checks consistency, and prints solutions where the conditions hold respectively. The code isn't exhaustive over all possible sequences but systematically checks possible small initial values.
+
+```python
+# Enumerates small possible sequences s up to n=10, considering s(n) in {1,2,3}.
+# Checks the given recursive conditions and prints consistent sequences.
+# Focus is on small values for feasible enumeration.
+
+def check_sequence(s_values):
+    # s_values: dict of index: value
+    # Verify recursive relations
+    for n in range(1, 11):
+        # s(2n) = s(n)
+        if 2*n in s_values and n in s_values:
+            if s_values[2*n] != s_values[n]:
+                return False
+        # s(4n + 1) = s(2n + 1)
+        if 4*n + 1 in s_values and 2*n + 1 in s_values:
+            if s_values[4*n + 1] != s_values[2*n + 1]:
+                return False
+        # s(4n - 1) = s(2n - 1) + (s(2n - 1))^2 / s(n - 1)
+        # ensure division is integer
+        if 4*n - 1 in s_values and 2*n - 1 in s_values and (n - 1) in s_values:
+            numerator = s_values[2*n - 1] ** 2
+            denominator = s_values[n - 1]
+            if denominator == 0 or numerator % denominator != 0:
+                return False
+            if s_values[4*n - 1] != s_values[2*n - 1] + numerator // denominator:
+                return False
+    return True
+
+# Generate candidate sequences for n=0..10
+solutions = []
+for s0 in [1, 2, 3]:
+    for s1 in [1, 2, 3]:
+        s_dict = {0: s0, 1: s1}
+        # Propagate values using recursive relations
+        # For simplicity, assign possible small values to other s(n)
+        # For indices where relations are defined, try all small possibilities
+        def recurse(n):
+            if n > 10:
+                return True
+            # Define relations based on previous values
+            # For even index
+            if n % 2 == 0:
+                s_prev = s_dict.get(n // 2)
+                if s_prev is not None:
+                    s_dict[n] = s_prev
+                else:
+                    for v in [1,2,3]:
+                        s_dict[n] = v
+                        if recurse(n+1): return True
+                    return False
+            # For indices of the form 4n+1
+            elif (n - 1) % 4 == 0:
+                n_half = (n - 1)//2
+                s_half = s_dict.get(n_half)
+                if s_half is not None:
+                    s_dict[n] = s_half
+                else:
+                    for v in [1,2,3]:
+                        s_dict[n] = v
+                        if recurse(n+1): return True
+                    return False
+            # For indices of the form 4n-1
+            elif (n + 1) % 4 == 0:
+                n_half = (n + 1)//2
+                n_prev = n - 1
+                s_half = s_dict.get(n_half)
+                s_prev = s_dict.get(n_prev)
+                s_n_minus_1 = s_dict.get(n - 1)
+                if s_half is not None and s_prev is not None and s_n_minus_1 is not None:
+                    numerator = s_prev ** 2
+                    denominator = s_n_minus_1
+                    if denominator == 0 or numerator % denominator != 0:
+                        return False
+                    s_candidate = s_prev + numerator // denominator
+                    s_dict[n] = s_candidate
+                else:
+                    for v in [1,2,3]:
+                        s_dict[n] = v
+                        if recurse(n+1): return True
+                    return False
+            else:
+                # For other indices, assign default (e.g., 1)
+                s_dict[n] = 1
+            return recurse(n+1)
+        if recurse(2):
+            if check_sequence(s_dict):
+                print(f"Sequence: {s_dict}")
+                solutions.append(s_dict)
+
+# Print all solutions found
+print(f"Total solutions: {len(solutions)}")
+```

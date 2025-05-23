@@ -1,0 +1,97 @@
+[write_program]
+The problem seems about analyzing multisets of 12 numbers, each number is either even or odd near twice an integer ≤11, whose sum is 132 = 11*12.
+We want to find indices n in Fin 5 = {0,1,2,3,4} for which a predicate P2015AMCA_13_answer n is false, and this condition characterizes n=4 uniquely.
+
+To assist, I will enumerate multisets of 12 integers between 0 and 23 (since 2*11+1=23), each a 2k or 2k+1 for k ≤ 11, summing to 132.
+Since the search space is huge, I will generate random samples and look at sums mod 5 or other invariant patterns, and print candidate n values for which some tests failed/passed. This may help conjecture which n satisfies or not.
+
+```python
+import itertools
+
+# We want 12 numbers s_i with s_i in {2k, 2k+1} for k = 0..11, sum s_i = 132
+# Each s_i is from 0..23, integer, parity unrestricted but from pairs 2k or 2k+1.
+# We'll enumerate combinations with repetition allowed.
+
+# For feasibility, enumerate only combinations with fixed number of odd numbers from 0..12.
+# Because sum parity depends on number of odd numbers.
+
+def is_valid_score(s):
+    # Check if s can be written as 2*k or 2*k+1 with k ≤11
+    # That means s in [0..23]
+    return 0 <= s <= 23 and (s % 2 == 0 or s % 2 == 1)
+
+def generate_candidates():
+    # All numbers s_i in 0..23
+    # s_i = 2*k or 2*k+1 for k ≤ 11, so s_i in range 0..23 as above.
+    # We look for 12-element multisets summing 132.
+    # We try to speed up: number of odd numbers (odd_count) affects sum parity.
+    # sum = 132 (even), so even number of odd numbers.
+
+    # We'll try even odd_counts in 0..12
+    max_s = 23
+    target_sum = 132
+    n_scores = 12
+
+    # We generate candidates with odd_count odd elements, the rest even.
+    for odd_count in range(0, n_scores + 1, 2):
+        even_count = n_scores - odd_count
+
+        # possible odd scores = odd numbers in [0..23], from 1 to 23 step 2
+        odd_scores = list(range(1, 24, 2))
+        # possible even scores = even numbers in [0..23], from 0 to 22 step 2
+        even_scores = list(range(0, 24, 2))
+
+        # We'll iterate over combinations with repetition for odd_count odd numbers and even_count even numbers.
+        # To reduce search space, limit to sums near target_sum break quickly.
+        # Using itertools.combinations_with_replacement with caching sums.
+
+        # Because of large number of combinations, restrict max iteration per odd_count.
+        max_iter = 100000
+
+        # Generate all combinations of odd_count odd numbers with repetition
+        odd_combs = itertools.combinations_with_replacement(odd_scores, odd_count) if odd_count > 0 else [()]
+
+        for odd_tuple in odd_combs:
+            sum_odd = sum(odd_tuple)
+            # Similarly generate even combinations:
+            # target_even_sum = target_sum - sum_odd
+            target_even_sum = target_sum - sum_odd
+            if target_even_sum < 0 or target_even_sum > even_count * max_s:
+                continue
+
+            # Generate even_count numbers sum to target_even_sum
+            # For small even_count (<=12), enumerate partitions of target_even_sum into even_count parts with values in even_scores
+            
+            # To limit search, for small even_count, enumerate
+            # We use helper function:
+            def partitions(n, k, max_val):
+                # Generate k-element tuples of numbers (in even_scores) summing to n, with each ≤ max_val
+                # Do a recursive generator
+                if k == 0:
+                    if n == 0:
+                        yield ()
+                    return
+                min_val = even_scores[0]
+                max_val = min(max_val, n)
+                for val in even_scores:
+                    if val > max_val:
+                        break
+                    for tail in partitions(n - val, k - 1, val):
+                        # sorted to avoid duplicate permutations
+                        yield (val,) + tail
+            
+            even_parts_gen = partitions(target_even_sum, even_count, 22)
+            for even_tuple in even_parts_gen:
+                # Combine odd and even tuples
+                combined = tuple(sorted(odd_tuple + even_tuple))
+                # Check predicate P2015AMCA_13_answer for n from 0 to 4?
+                # We don't know definition, so just print found combination and basic stats
+                # Print sum and counts of odd
+                print(f"Combination sum=132 odd_count={odd_count} scores={combined}")
+                # To respect output length, break after some prints
+                return
+
+print("Enumerating candidate multisets with sum=132, scores from {2k,2k+1} with k<=11:")
+generate_candidates()
+```
+

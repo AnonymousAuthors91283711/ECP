@@ -1,0 +1,68 @@
+[write_program]
+This problem asks whether there exists a vector of 20 positive real numbers (a₁,...,a₂₀) such that:
+1. The polynomial P(x) = x²⁰ + Σ aᵢxⁱ has no real roots
+2. For any two distinct indices i,j, swapping aᵢ and aⱼ in P(x) creates a polynomial with at least one real root
+
+We'll write a Python program to search for such vectors with small coefficients (since large coefficients would make P(x) dominated by x²⁰ term). We'll test vectors where aᵢ are small positive integers.
+
+```python
+import numpy as np
+from itertools import product
+from scipy.optimize import root_scalar
+
+def has_real_root(coeffs):
+    """Check if polynomial has real roots using Sturm's theorem approximation"""
+    # Build polynomial in numpy format (highest degree first)
+    poly = np.zeros(21)
+    for i in range(20):
+        poly[20 - i - 1] = coeffs[i]
+    poly[20] = 1  # x^20 term
+    
+    # Try to find a root between -100 and 100
+    try:
+        def f(x):
+            return np.polyval(poly, x)
+        # Check sign changes
+        if f(-100) * f(100) < 0:
+            return True
+        # Try to find critical points
+        derivative = np.polyder(poly)
+        crit_points = np.roots(derivative)
+        real_crit = crit_points[np.isreal(crit_points)].real
+        for cp in real_crit:
+            if abs(cp) < 100 and f(cp) * f(-100) < 0:
+                return True
+            if abs(cp) < 100 and f(cp) * f(100) < 0:
+                return True
+        return False
+    except:
+        return False
+
+def test_vector(a):
+    """Test if vector a satisfies all conditions"""
+    # Original polynomial must have no real roots
+    if has_real_root(a):
+        return False
+    
+    # Check all swaps
+    for i in range(20):
+        for j in range(i+1, 20):
+            swapped = a.copy()
+            swapped[i], swapped[j] = swapped[j], swapped[i]
+            if not has_real_root(swapped):
+                return False
+    return True
+
+# Search small integer vectors (1-3) of length 5 (for demonstration)
+max_coeff = 3
+vector_length = 5  # Reduced from 20 for computational feasibility
+
+print(f"Searching vectors of length {vector_length} with coefficients 1-{max_coeff}")
+for coeffs in product(range(1, max_coeff+1), repeat=vector_length):
+    if test_vector(list(coeffs)):
+        print("Found candidate vector:", coeffs)
+        # For full solution we'd continue searching, but exit after first find for demo
+        break
+else:
+    print("No suitable vector found in search space")
+```

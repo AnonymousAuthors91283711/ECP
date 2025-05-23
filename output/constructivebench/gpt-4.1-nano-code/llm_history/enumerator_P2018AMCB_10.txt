@@ -1,0 +1,88 @@
+[write_program]
+The problem asks for the least number \(k\) of distinct positive integers in a list \(l\), such that:
+- all elements are positive integers,
+- exactly one integer appears exactly 10 times,
+- all counts are ≤ 10,
+- the size of the list (number of distinct elements) is minimized,
+- and the total list size is \(k\).
+
+Our goal: Find the minimal list length \(k\), satisfying these constraints.
+
+Approach:
+- We seek the minimal total length \(k\),
+- with exactly one element appearing 10 times,
+- other elements appearing at most 10 times,
+- and at least one other element to ensure the count of distinct elements increases.
+
+To minimize total length:
+- Use exactly 1 element with count 10,
+- Try to add as few other distinct elements as possible,
+- Each additional element can appear at most 10 times.
+
+Possible minimal configurations:
+- One element with 10 counts,
+- possibly adding other elements with minimal counts.
+
+We want the minimal total length \(k\), i.e., 
+\[k = 10 + \text{number of additional distinct elements} \times \text{their counts}\].
+
+Since other elements can have counts ≤ 10, to keep total minimal:
+- Add 1 other element with count 1 (minimum positive),
+- Total length: \(10 + 1 = 11\),
+- Distinct elements: 2.
+
+Check whether fewer elements can give total length less than 11:
+- Only 1 element with count 10: total length = 10, but then total list length = 10, count of distinct elements = 1 (which is less than 2).
+
+But the problem asks for the *least* possible \(\,k\) such that the list's size is \(k\):
+
+Actually, the real minimal is when total list length is 11:
+- 1 element (with count 10) + 1 element (with count 1), total length 11,
+- and number of distinct elements is 2,
+- satisfying all conditions.
+
+Now, we can implement code to generate such lists by enumerating combinations:
+
+```python
+# The following code searches for minimal total list length k satisfying the constraints
+# We know the minimal is at least 11 (from the reasoning above),
+# so iterate from 11 upward until we find a valid configuration.
+
+# We only need to find the minimal k, so we can stop at the first success.
+
+def generate_list_with_counts(total_length, distinct_count):
+    # Generate possible count distributions:
+    # One element with count 10, remaining total_length - 10 distributed among other distinct elements (each ≤10, ≥1)
+    for counts in distribute_counts(total_length - 10, distinct_count - 1):
+        # Check counts constraints
+        if all(1 <= c <= 10 for c in counts):
+            # Construct list
+            list_items = [1]*10  # element with count 10
+            for c in counts:
+                list_items.append(2)  # other elements
+            yield list_items
+
+def distribute_counts(total, parts):
+    # Distribute 'total' among 'parts' parts, each at least 1 and at most 10
+    # Use recursive generator
+    if parts == 1:
+        if 1 <= total <= 10:
+            yield [total]
+    else:
+        for first in range(1, min(10, total - parts + 1) + 1):
+            for rest in distribute_counts(total - first, parts - 1):
+                yield [first] + rest
+
+k = 11  # Starting from minimal estimate
+while True:
+    for _ in generate_list_with_counts(k, 2):  # trying with 2 distinct elements
+        # Found valid list
+        print(f"Answer: minimal list length k = {k}")
+        # Generate the list explicitly
+        for l in generate_list_with_counts(k, 2):
+            print(l)
+        exit()
+    k += 1
+```
+
+This code finds the minimal list length \(k\) where such a list exists, starting from the minimal estimated length 11 and increasing until found. It enumerates possible distributions of counts, constructing example lists satisfying all conditions.

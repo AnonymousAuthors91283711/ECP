@@ -1,0 +1,65 @@
+[write_program]
+The problem involves functional equations and positive real-valued functions. To gain insights, we'll test candidate functions over small values and output values of f(x) satisfying the property for x,y > 0. We'll attempt to enumerate simple forms such as constant or linear functions and confirm whether they satisfy the equation f(x)*f(y) = 2*f(x + y*f(x)).
+
+```python
+# Enumerate candidate functions f: R+ → R+ satisfying
+# f(x)*f(y) = 2*f(x + y*f(x)) for x,y>0
+# Test some simple functions and sample points
+import math
+
+# Define candidate functions to test
+def f_const(c):
+    return lambda x: c
+
+def f_linear(a, b):
+    return lambda x: a*x + b
+
+def f_reciprocal_shift(a, b):
+    # avoid zero division, f(x) = a/(x+b)
+    return lambda x: a/(x+b) if x+b != 0 else None
+
+def check_eq(f, x, y, eps=1e-9):
+    fx, fy = f(x), f(y)
+    if fx is None or fy is None or fx <= 0 or fy <= 0:
+        return False
+    lhs = fx*fy
+    rhs = 2*f(x + y*fx)
+    if rhs is None or rhs <= 0:
+        return False
+    return abs(lhs - rhs) < eps
+
+def test_f(f, samples):
+    for x in samples:
+        for y in samples:
+            if x > 0 and y > 0:
+                if not check_eq(f, x, y):
+                    return False
+    return True
+
+samples = [0.1, 0.5, 1, 2]
+
+print("Testing constant functions f(x)=c")
+for c in [0.5, 1, 2]:
+    f = f_const(c)
+    if test_f(f, samples):
+        print(f"Constant function f(x) = {c} satisfies the equation")
+
+print("Testing linear functions f(x)=a*x+b")
+for a in [0.5, 1, 2]:
+    for b in [0.1, 0.5, 1]:
+        f = f_linear(a,b)
+        if any(f(x) <= 0 for x in samples):
+            continue
+        if test_f(f, samples):
+            print(f"Linear function f(x) = {a}*x + {b} satisfies the equation")
+
+print("Testing reciprocal-shift functions f(x) = a/(x+b)")
+for a in [1, 2]:
+    for b in [0.1, 1]:
+        f = f_reciprocal_shift(a,b)
+        if any(f(x) is None or f(x) <= 0 for x in samples):
+            continue
+        if test_f(f, samples):
+            print(f"Reciprocal-shift function f(x) = {a}/(x + {b}) satisfies the equation")
+```
+

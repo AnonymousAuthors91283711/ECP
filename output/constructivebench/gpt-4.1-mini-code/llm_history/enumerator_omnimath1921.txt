@@ -1,0 +1,71 @@
+[write_program]
+The problem involves real numbers \( p, q \) satisfying certain equations, related to sums and squared sums involving fractions. We want to explore solutions \( (p,q) \) meeting:
+
+\[
+q \leq p
+\]
+\[
+p + q + \frac{1}{6} = 1
+\]
+\[
+p^2 + q^2 + \left(\frac{1}{6}\right)^2 = \frac{1}{2}
+\]
+
+We can enumerate possible rational approximations to \( p, q \) given the constraints and check if there's any exact or close solution. Since \( r = \frac{1}{6} \) is fixed, we rewrite:
+
+\[
+p + q = 1 - \frac{1}{6} = \frac{5}{6}
+\]
+\[
+p^2 + q^2 = \frac{1}{2} - \frac{1}{36} = \frac{17}{36}
+\]
+
+We try to find rational numbers \( p, q \) with denominators up to some small limit satisfying these equations, and \( q \leq p \).
+
+```python
+# Enumerate rational numbers p,q with denominator up to 12 (to include sixths),
+# check the constraints
+from fractions import Fraction
+
+max_den = 12
+r = Fraction(1,6)
+target_sum = Fraction(5,6)
+target_sum_sq = Fraction(17,36)
+
+print("Enumerating candidate (p,q) with denominators ≤", max_den)
+for dp in range(1, max_den+1):
+    for np in range(dp+1):  # p in [0,1]
+        p = Fraction(np, dp)
+        q = target_sum - p
+        # Check q has denominator within limit and q ≤ p
+        if q < 0 or q > 1:
+            continue
+        # Ensure denominator of q at most max_den by approximate denominators test
+        # Instead try all denominator of q <= max_den exactly:
+        # We'll check q as fraction simplified and if denominator ≤ max_den
+        q_frac = q.limit_denominator(max_den)
+        if q_frac != q or q_frac.denominator > max_den:
+            continue
+        if q > p:
+            continue
+        # Check sum of squares
+        if p*p + q*q == target_sum_sq:
+            print(f"Found exact solution p={p}, q={q}")
+# Try some approximate floats as well with small step around fractions
+import math
+eps = 1e-10
+
+def approx_eq(a,b):
+    return abs(a - b) < eps
+
+for dp in range(1, max_den+1):
+    for np in range(dp+1):
+        p = np / dp
+        q = float(target_sum) - p
+        if q < 0 or q > 1 or q > p:
+            continue
+        sum_sq = p*p + q*q
+        if abs(sum_sq - float(target_sum_sq)) < 1e-8:
+            print(f"Approximate float solution p={p:.6f}, q={q:.6f}, sum_sq={sum_sq:.6f}")
+```
+

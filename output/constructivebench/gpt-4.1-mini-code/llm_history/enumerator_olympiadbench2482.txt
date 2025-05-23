@@ -1,0 +1,92 @@
+[write_program]
+The equation to analyze is:
+
+3^(x + 2) + 2^(x + 2) + 2^x = 2^(x + 5) + 3^x.
+
+Our goal is to find all real values x satisfying this equation.
+
+We will enumerate x over a range of integer and fractional values to find all solutions. Since 3^x and 2^x grow quickly, values beyond a range like -10 to 10 are unlikely to help.
+
+We will print exact solutions if possible, and decimal approximations otherwise.
+
+```python
+import math
+
+def f(x):
+    return 3**(x + 2) + 2**(x + 2) + 2**x - (2**(x + 5) + 3**x)
+
+# We'll try integer and half-integer values from -10 to 10
+# and check f(x) near zero.
+
+# A small tolerance for floating comparisons
+tol = 1e-10
+
+print("Enumerating candidates for x in [-10, 10] in steps of 0.5:")
+
+candidates = []
+
+x = -10
+while x <= 10:
+    val = f(x)
+    if abs(val) < tol:
+        # print exact if integer x, else print float
+        if abs(x - round(x)) < tol:
+            print(f"x = {int(round(x))} => f(x) ≈ 0")
+        else:
+            print(f"x = {x:.1f} => f(x) ≈ 0")
+        candidates.append(x)
+    x += 0.5
+
+# Also check values near zero with smaller steps to find root more precisely
+# For example, try every 0.1 between candidate intervals with sign changes:
+print("\nRefining search on intervals where sign changes:")
+
+def sign(v):
+    if v > 0:
+        return 1
+    elif v < 0:
+        return -1
+    else:
+        return 0
+
+# Check sign pattern at half-steps
+points = [-10 + 0.5*i for i in range(41)]
+for i in range(len(points)-1):
+    a = points[i]
+    b = points[i+1]
+    fa, fb = f(a), f(b)
+    if fa == 0:
+        print(f"Exact root at x = {a}")
+        if a not in candidates:
+            candidates.append(a)
+    if fb == 0:
+        print(f"Exact root at x = {b}")
+        if b not in candidates:
+            candidates.append(b)
+    if sign(fa)*sign(fb) < 0:
+        # root in (a, b), do bisection search
+        low, high = a, b
+        for _ in range(30):
+            mid = (low + high)/2
+            fmid = f(mid)
+            if abs(fmid) < tol:
+                break
+            if sign(fmid)*sign(fa) < 0:
+                high = mid
+            else:
+                low = mid
+        print(f"Root approximated near x = {mid:.6f}")
+        candidates.append(mid)
+
+# Remove duplicates (within tolerance)
+unique_candidates = []
+for x in candidates:
+    if not any(abs(x - y) < tol for y in unique_candidates):
+        unique_candidates.append(x)
+
+print("\nAll candidate solutions found:")
+
+for x in sorted(unique_candidates):
+    print(f"x ≈ {x:.6f}, f(x) = {f(x):.2e}")
+```
+

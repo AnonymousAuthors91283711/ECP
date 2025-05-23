@@ -1,0 +1,86 @@
+[write_program]
+The problem involves counting certain sequences with modular difference restrictions depending on a boolean parameter and the primality and oddness of parameter \( n \). To explore this combinatorial object, I'll write a Python program that:
+
+- Enumerates sequences \( seq : \{0, \dots, n\} \to \{0, \dots, n-1\} \) with \( seq(n) = seq(0) \).
+- Verifies the given modular difference conditions depending on the parameter `isPartB`.
+- Prints out counts for small odd \( n \) (prime and non-prime) and both boolean settings.
+- Prints parameters before enumerations for clarity.
+
+Since the domain size grows quickly, we limit \( n \leq 7 \).
+
+```python
+# Enumerate the count of sequences seq: [0..n] -> [0..n-1] with seq[n]=seq[0]
+# satisfying modular difference restrictions 
+# For isPartB=True:
+#   For all i in [0..n-1],
+#    (seq[i+1]-seq[i]) mod n != (i+1) mod n
+#    and (seq[i+1]-seq[i]) mod n != 2*(i+1) mod n
+# For isPartB=False:
+#   For all i in [0..n-1],
+#    (seq[i+1]-seq[i]) mod n != (i+1) mod n
+# The program prints the count of such sequences for several n and isPartB.
+
+def omnimath143_enumerate(n, isPartB):
+    # seq length is n+1, domain is {0,..., n-1}
+    # seq[n]=seq[0]
+    # we use brute force: enumerate all seq[0..n-1], seq[n]=seq[0]
+    # check conditions on differences mod n
+    from itertools import product
+    mod = n
+    count = 0
+    # For efficiency, we check the differences incrementally
+    # seq has length n+1, seq[n]=seq[0], so differences indices i in 0..n-1
+    # diff[i] = (seq[i+1] - seq[i]) mod n
+
+    # We'll enumerate seq[0..n-1], last element seq[n] = seq[0]
+
+    def valid(seq):
+        for i in range(n):
+            diff = (seq[(i+1) % n] - seq[i]) % n
+            if isPartB:
+                if diff == ((i + 1) % n) or diff == (2 * (i + 1)) % n:
+                    return False
+            else:
+                if diff == ((i + 1) % n):
+                    return False
+        return True
+
+    # Iterate over all seq[0..n-1]
+    # The length is n, values in 0..n-1
+    # The last element seq[n]=seq[0]
+    for seq_partial in product(range(n), repeat=n):
+        seq = seq_partial + (seq_partial[0],)  # seq[n]=seq[0]
+        if valid(seq):
+            count += 1
+            print(f"Found sequence for n={n}, isPartB={isPartB}: {seq}")
+
+    print(f"Total count for n={n}, isPartB={isPartB}: {count}")
+    return count
+
+
+def is_prime(x):
+    if x < 2:
+        return False
+    for i in range(2, int(x**0.5)+1):
+        if x % i == 0:
+            return False
+    return True
+
+
+def main():
+    # Test small odd n ≤ 7, with isPartB False and True
+    ns = [3, 5, 7]
+    for n in ns:
+        odd = (n % 2 == 1)
+        prime = is_prime(n)
+        print(f"\nParameters: n={n} (odd={odd}, prime={prime}), isPartB=False")
+        omnimath143_enumerate(n, False)
+
+        print(f"\nParameters: n={n} (odd={odd}, prime={prime}), isPartB=True")
+        # For PartB, n should be prime according to hypothesis,
+        # but we check anyway for exploration
+        omnimath143_enumerate(n, True)
+
+if __name__ == '__main__':
+    main()
+```

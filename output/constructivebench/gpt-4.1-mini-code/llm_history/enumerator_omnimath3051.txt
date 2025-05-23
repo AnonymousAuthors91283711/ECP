@@ -1,0 +1,77 @@
+[write_program]
+This problem defines a function \( f: \mathbb{N} \to \mathbb{N} \) with two initial conditions and a functional equation:
+
+- \( f(2) = 5 \)
+- \( f(3) = 7 \)
+- \( f(m) + f(n) = f(mn) \) for all positive integers \( m,n \).
+
+We want to find \( f(12) \).
+
+Given the relation, \( f \) transforms multiplication into addition, so this is a homomorphism from the multiplicative semigroup of positive integers into addition. The function behaves like a logarithm but with integer outputs.
+
+Since \( f(mn) = f(m) + f(n) \), \( f \) is completely determined by its values on prime numbers and extended additively over prime factorizations.
+
+We know \( f(2) = 5 \), \( f(3) = 7 \), so for \( f(12) = f(2^2 \cdot 3) = 2 f(2) + f(3) = 2 \times 5 + 7 = 17 \).
+
+To programmatically confirm this, we can:
+
+- Define \( f \) on prime factors.
+- Enumerate factor pairs \( m, n \) with \( m \cdot n = 12 \).
+- Check the consistency of sums based on initial values.
+- Compute \( f(12) \) through the additive relation.
+
+Here's a Python program enumerating factor pairs and printing \( f(12) \) based on the given conditions.
+
+```python
+# Enumerate possible values of f(12) given f(2)=5, f(3)=7, and f(mn)=f(m)+f(n)
+
+def prime_factors(n):
+    factors = {}
+    d = 2
+    while d * d <= n:
+        while n % d == 0:
+            factors[d] = factors.get(d, 0) + 1
+            n //= d
+        d += 1
+    if n > 1:
+        factors[n] = factors.get(n, 0) + 1
+    return factors
+
+def f(n, values):
+    # f(n) = sum of exponents times f(prime)
+    factors = prime_factors(n)
+    res = 0
+    for p, e in factors.items():
+        if p not in values:
+            return None  # unknown prime factor
+        res += e * values[p]
+    return res
+
+def main():
+    # Given initial values
+    values = {2:5, 3:7}
+
+    # We'll enumerate factor pairs (m,n) with m*n=12
+    n = 12
+    print(f"Given f(2)={values[2]}, f(3)={values[3]}, and f(mn)=f(m)+f(n) for m,n>0")
+
+    # Find factor pairs of 12
+    fact_pairs = []
+    for m in range(1, n+1):
+        if n % m == 0:
+            fact_pairs.append((m, n//m))
+
+    for m, k in fact_pairs:
+        fm = f(m, values)
+        fk = f(k, values)
+        if fm is not None and fk is not None:
+            fn = fm + fk
+            print(f"f({m}) + f({k}) = {fm} + {fk} = {fn} -> f({n}) = {fn}")
+
+    # Compute f(12) directly through prime factorization
+    f12 = f(n, values)
+    print(f"Therefore, f({n}) = {f12}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,46 @@
+[write_program]
+This problem involves counting the number of 4×4 binary matrices where:
+1. Each row sum equals σ(i)+1 for some permutation σ of {0,1,2,3}
+2. Each column sum equals τ(j)+1 for some permutation τ of {0,1,2,3}
+
+We'll enumerate all possible 4×4 binary matrices (there are 2^16=65536 possibilities) and count those satisfying the conditions. To optimize, we'll:
+1. Generate all possible row sums (permutations of {1,2,3,4})
+2. For each valid row sum combination, generate matrices with those row sums
+3. Check if column sums also form a permutation of {1,2,3,4}
+
+```python
+from itertools import permutations, product
+
+def solve():
+    n = 4
+    # All possible row sum permutations (1-4)
+    row_perms = list(permutations(range(1, n+1)))
+    count = 0
+    
+    for row_sums in row_perms:
+        # Generate all possible rows with given sums
+        possible_rows = []
+        for s in row_sums:
+            rows = []
+            # Generate all binary vectors with sum s
+            for bits in product([0,1], repeat=n):
+                if sum(bits) == s:
+                    rows.append(bits)
+            possible_rows.append(rows)
+        
+        # Check all combinations of these rows
+        for matrix in product(*possible_rows):
+            # Check column sums
+            col_sums = [0]*n
+            for row in matrix:
+                for j in range(n):
+                    col_sums[j] += row[j]
+            # Check if column sums are a permutation of 1-4
+            if sorted(col_sums) == list(range(1, n+1)):
+                count += 1
+                print(f"Found valid matrix #{count}")
+    
+    print(f"Total count: {count}")
+
+solve()
+```

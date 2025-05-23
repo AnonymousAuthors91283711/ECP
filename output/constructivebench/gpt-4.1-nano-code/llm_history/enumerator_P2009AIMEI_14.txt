@@ -1,0 +1,36 @@
+[write_program]
+This problem asks us to find the minimum value of \( S_2 = \sum_{i} (a_i)^2 \) among functions \( a : \{1, \dots, 350\} \to \{1, 2, 3, 4\} \) satisfying
+\[
+\sum_{i=1}^{350} a_i = 513 \quad \text{and} \quad \sum_{i=1}^{350} (a_i)^4 = 4745.
+\]
+Given the constraints, a logical approach is to try different distributions of \( a_i \) values. Since the \( a_i \) are limited to \{1, 2, 3, 4\}, and the sums are fixed, we can brute-force over possible counts of each value type that satisfy the constraints.
+
+Let's implement a small search over possible counts of each value, then compute \( S_2 \).
+
+```python
+# Enumerate possible distributions of counts of a_i values in {1,2,3,4}
+# that satisfy sum constraints: total count=350, sum=513, sum of 4th powers=4745
+# We solve for counts c1, c2, c3, c4 with c1 + c2 + c3 + c4 = 350
+# sum: c1*1 + c2*2 + c3*3 + c4*4 = 513
+# sum of 4th powers: c1*1 + c2*16 + c3*81 + c4*256 = 4745
+# We search over c1,c2,c3,c4 in reasonable ranges
+
+min_S2 = None
+best_solution = None
+# Upper bounds roughly estimated to limit computation
+for c4 in range(0, 351):
+    for c3 in range(0, 351 - c4):
+        for c2 in range(0, 351 - c4 - c3):
+            c1 = 350 - c2 - c3 - c4
+            if c1 < 0:
+                continue
+            sum_vals = c1*1 + c2*2 + c3*3 + c4*4
+            sum_pow4 = c1*1 + c2*16 + c3*81 + c4*256
+            if sum_vals == 513 and sum_pow4 == 4745:
+                S2 = c1*1 + c2*4 + c3*9 + c4*16
+                print(f"Counts: c1={c1}, c2={c2}, c3={c3}, c4={c4}, S2={S2}")
+                if (min_S2 is None) or (S2 < min_S2):
+                    min_S2 = S2
+                    best_solution = (c1, c2, c3, c4)
+print(f"Minimum S2: {min_S2} with counts {best_solution}")
+```

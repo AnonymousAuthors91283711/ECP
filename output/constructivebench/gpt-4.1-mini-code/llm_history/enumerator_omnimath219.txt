@@ -1,0 +1,53 @@
+[write_program]
+The problem is about real polynomials \( P \) (with degree \(\neq 0\)) satisfying a functional equation involving evaluations at \( z \) and \( 1/z \) related by 
+\[
+\frac{1}{P(z)} + \frac{1}{P(1/z)} = z + \frac{1}{z}, \quad z \neq 0, P(z) \neq 0, P(1/z) \neq 0.
+\]
+
+We want to conjecture possible polynomial forms \( P \). This suggests possible symmetric or reciprocal relation polynomials. The program tries small degrees \( \leq 3 \), tests sample \( z \) values, and prints \( P \) candidates that satisfy the relation approximately. Only polynomials without roots at tested \( z \) or \( 1/z \) are considered.
+
+```python
+from sympy import symbols, Poly, simplify
+from sympy.abc import x
+
+def eval_poly(P, val):
+    return P.eval(val)
+
+def check_relation(P, z):
+    # Avoid division by zero
+    val_z = eval_poly(P, z)
+    val_inv = eval_poly(P, 1/z)
+    if val_z == 0 or val_inv == 0:
+        return False
+    lhs = 1/val_z + 1/val_inv
+    rhs = z + 1/z
+    return simplify(lhs - rhs) == 0
+
+# We test polynomials with degree 1 to 3 and coefficients in -2..2
+# Use finite test z values away from zero to check approx equality
+test_zs = [2, 3, 0.5]
+
+print("Enumerating candidate polynomials P for the relation:")
+
+for deg in range(1, 4):
+    # Generate polynomials with integer coefficients in range (-2..2)
+    from itertools import product
+    coeff_ranges = [range(-2,3) for _ in range(deg+1)]
+    for coeffs in product(*coeff_ranges):
+        # Leading coefficient can't be zero for deg polynomial
+        if coeffs[-1] == 0:
+            continue
+        P = Poly(coeffs[::-1], x)  # coeffs in ascending order for Poly
+        valid = True
+        for z in test_zs:
+            try:
+                if not check_relation(P, z):
+                    valid = False
+                    break
+            except ZeroDivisionError:
+                valid = False
+                break
+        if valid:
+            print(f"P = {P.as_expr()}, coefficients = {coeffs}")
+```
+

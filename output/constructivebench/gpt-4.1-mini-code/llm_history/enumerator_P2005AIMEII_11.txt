@@ -1,0 +1,44 @@
+[write_program]
+The problem defines a sequence \(a_k\) with given initial values \(a_0 = 37\), \(a_1 = 72\), and \(a_m = 0\), and a recurrence relation \(a_{k+2} = a_k - \frac{3}{a_{k+1}}\). We want to find \(m\), the length of such a sequence ending in zero. We will enumerate \(m\) and compute the sequence values to detect when \(a_m = 0\).
+
+The program below:
+- Tries values of \(m\) from 2 up to a certain limit.
+- Iteratively computes the sequence \(a_k\) with exact rational arithmetic (using `fractions.Fraction`) to avoid floating-point inaccuracies.
+- Prints each sequence end when \(a_m = 0\).
+- At the end, prints the smallest \(m\) for which this holds.
+
+```python
+from fractions import Fraction
+
+# Sequence defined by:
+# a0 = 37
+# a1 = 72
+# a_{k+2} = a_k - 3 / a_{k+1}
+# Find m > 0 such that a_m = 0
+
+def check_sequence(m):
+    a = [Fraction(37), Fraction(72)]
+    for k in range(m - 1):
+        # Avoid division by zero
+        if a[k+1] == 0:
+            return None
+        next_val = a[k] - Fraction(3,1) / a[k+1]
+        a.append(next_val)
+    return a
+
+max_m = 15  # reasonable upper bound for search
+candidates = []
+for m in range(2, max_m + 1):
+    seq = check_sequence(m)
+    if seq is None:
+        continue
+    if seq[m] == 0:
+        print(f"m = {m}, sequence end a_m = 0 reached:")
+        print([float(x) if x.denominator != 1 else int(x) for x in seq])
+        candidates.append(m)
+
+if candidates:
+    print("\nMinimum m with a_m = 0:", min(candidates))
+else:
+    print("No m with a_m = 0 found up to", max_m)
+```

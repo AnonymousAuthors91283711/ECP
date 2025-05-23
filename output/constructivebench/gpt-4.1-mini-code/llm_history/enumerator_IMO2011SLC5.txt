@@ -1,0 +1,102 @@
+[write_program]
+The problem explores the maximum time \( t \) such that ants moving from positions inside an \( m \times m \) grid remain inside it, where each ant moves in one of the four axial directions at one unit per time. We want to enumerate possible values of \( t \) for small grid sizes \( m \) by trying all configurations of ants and directions to conjecture the maximum time.
+
+We will:
+- Enumerate ants' initial positions on the integer lattice points in the grid \( [0,m]^2 \).
+- Assign directions from \{(1,0), (-1,0), (0,1), (0,-1)\}.
+- For each configuration, find the maximum \( t \) where all ants remain in the grid for times \( t' \le t \).
+- Print each candidate \( t \).
+
+To keep enumeration manageable, we consider ants only at integer lattice points and a small number of ants. We print discovered candidates and also show the parameters used (values of \( m \)). This will help form conjectures about \( t \).
+
+```python
+# Enumerate candidates for maximum t as per IMO 2011 SLC5 for small m
+# Only consider ants at integer grid points with directions in {(1,0), (-1,0), (0,1), (0,-1)}
+
+from itertools import product, combinations
+from fractions import Fraction
+
+dirs = [(1,0), (-1,0), (0,1), (0,-1)]
+
+def in_grid(x, y, m):
+    return 0 <= x <= m and 0 <= y <= m
+
+def strictly_inside(x, y, m):
+    return 0 < x < m and 0 < y < m
+
+def add(p, q):
+    return (p[0]+q[0], p[1]+q[1])
+
+def scale(p, t):
+    # Scale vector p=(p1, p2) by t (Fraction)
+    return (p[0]*t, p[1]*t)
+
+def positions(p, d, t):
+    # Position of ant starting at p with direction d at time t (Fraction)
+    return (p[0]+d[0]*t, p[1]+d[1]*t)
+
+def can_stay(ants_dirs, m, t):
+    # Check if for all ants, position at all times t' ≤ t is in grid
+    # and for all t'<t, some ant strictly inside
+    # We test only t and one less fraction for approximation
+    # but here just test t and 0
+    # We check boundary conditions exactly at t.
+    for p,d in ants_dirs:
+        pos = positions(p, d, t)
+        if not in_grid(pos[0], pos[1], m):
+            return False
+    # For all t' < t (test at t - epsilon), check some ant strictly inside
+    # Choose epsilon as Fraction(1,1000)
+    epsilon = Fraction(1,1000)
+    t_minus = t - epsilon
+    if t_minus <= 0:
+        return False
+    for p,d in ants_dirs:
+        pos = positions(p, d, t_minus)
+        if strictly_inside(pos[0], pos[1], m):
+            return True
+    return False
+
+print("Enumerating possible t for small m with known ants and directions...")
+
+for m in [1,2,3]:
+    print(f"m={m}")
+    # Consider ants only at corners and centers to reduce complexity
+    pts = [(x,y) for x in range(m+1) for y in range(m+1)]
+    # To keep enumeration tractable, try sets of size 1 or 2 ants
+    for k in [1,2]:
+        for ants in combinations(pts, k):
+            # assign directions
+            for dirs_ass in product(dirs, repeat=k):
+                ants_dirs = list(zip(ants, dirs_ass))
+                # maximum t limited by distances to border along direction
+                t_candidates = []
+                for p,d in ants_dirs:
+                    # Distance to nearest border in direction d
+                    if d[0] > 0:
+                        dist_x = Fraction(m - p[0],1)
+                    elif d[0] < 0:
+                        dist_x = Fraction(p[0],1)
+                    else:
+                        dist_x = Fraction(10**9)  # large
+                    
+                    if d[1] > 0:
+                        dist_y = Fraction(m - p[1],1)
+                    elif d[1] < 0:
+                        dist_y = Fraction(p[1],1)
+                    else:
+                        dist_y = Fraction(10**9)
+                    dist = min(dist_x, dist_y)
+                    t_candidates.append(dist)
+                # The maximum t is limited by smallest dist
+                max_t = min(t_candidates)
+                # check maximal t where conditions hold - test fractions around max_t
+                # test at max_t and max_t - epsilon
+                epsilon = Fraction(1, 1000)
+                for tt in [max_t, max_t - epsilon]:
+                    if tt > 0 and can_stay(ants_dirs, m, tt):
+                        print(f"m={m}, ants={ants}, dirs={dirs_ass}, valid t={float(tt):.3f} (exact {tt})")
+
+print("Enumeration done.")
+```
+

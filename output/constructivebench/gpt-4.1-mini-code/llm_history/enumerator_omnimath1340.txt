@@ -1,0 +1,61 @@
+[write_program]
+The problem searches for triples (a, b, c) of natural numbers with sums of reciprocals less than 1/4, and with conditions that no smaller index k can replace a, b, or c without the sum exceeding 1/4 at each partial stage. The given candidate is (5, 21, 421) with sum 1/5 + 1/21 + 1/421. We want to enumerate all such triples for small parameters to observe if better sums exist near 1/4, respecting the ordering conditions.
+
+```python
+# Enumerate triples (a,b,c) with a,b,c in small ranges
+# Conditions:
+# q = 1/a + 1/b + 1/c < 1/4
+# For all k < a: 1/k > 1/4
+# For all k < b: 1/a + 1/k > 1/4
+# For all k < c: 1/a + 1/b + 1/k > 1/4
+# Print each triple and their sum q immediately when conditions hold
+
+def fractions_sum(a,b,c):
+    return 1/a + 1/b + 1/c
+
+def check_conditions(a,b,c):
+    q = fractions_sum(a,b,c)
+    if q >= 0.25:
+        return False
+    # 1/k > 1/4 for all k < a => all k < a have 1/k > 0.25 => k < 4
+    # So a must satisfy that all k < a satisfy 1/k > 1/4
+    # Since 1/4=0.25, 1/k > 0.25 means k < 4, so all k < a < 4 means a <=4
+    # Let's check explicitly
+    for k in range(1, a):
+        if 1/k <= 0.25:
+            return False
+    for k in range(1,b):
+        if 1/a + 1/k <= 0.25:
+            return False
+    for k in range(1,c):
+        if 1/a + 1/b + 1/k <= 0.25:
+            return False
+    return True
+
+print("Triples (a,b,c) with sum < 1/4 and conditions:")
+
+limit = 50  # reasonable small limit
+
+max_q = 0
+best_triples = []
+
+for a in range(2, limit):
+    for b in range(a, limit):
+        for c in range(b, limit*10): # allow larger c to reach sums near 1/4
+            if check_conditions(a,b,c):
+                s = fractions_sum(a,b,c)
+                print(f"a={a}, b={b}, c={c}, sum={s:.10f}")
+                if s > max_q:
+                    max_q = s
+                    best_triples = [(a,b,c)]
+                elif abs(s - max_q) < 1e-12:
+                    best_triples.append((a,b,c))
+            # Prune: if sum(1/a,1/b,1/b) alone >= 0.25 skip increasing c
+            if 1/a + 1/b + 1/b >= 0.25:
+                break
+
+print("\nMax sum found under conditions:")
+for t in best_triples:
+    a,b,c = t
+    print(f"a={a}, b={b}, c={c}, sum={fractions_sum(a,b,c):.10f}")
+```

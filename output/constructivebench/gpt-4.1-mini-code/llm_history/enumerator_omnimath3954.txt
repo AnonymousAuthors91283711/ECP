@@ -1,0 +1,58 @@
+[write_program]
+The problem involves characterizing all real functions \( f:\mathbb{R} \to \mathbb{R} \) that are bounded above and satisfy a certain functional equation:
+
+\[
+\exists M, \forall x, f(x) < M \quad \text{and} \quad \forall x,y, f(x f(y)) + y f(x) = x f(y) + f(x y)
+\]
+
+We want to enumerate functions (or their potential closed-form formulas) satisfying this. A natural step is to test sample functions and values to conjecture the form.
+
+Key observations:
+- Boundedness is crucial; constant functions are bounded.
+- We should check linear functions \( f(x) = c x \), constants, zero function, or others.
+  
+The program below enumerates plausible function types \(f\) on a sample of points (here a small finite set to keep concise) verifying the equation. It prints any \(f\) passing the equation and boundedness check for these samples.
+
+```python
+# Enumerate candidate functions f: R -> R with small sample values to satisfy:
+# f(x f(y)) + y f(x) = x f(y) + f(x y)
+# and bounded above condition.
+# We test discrete sets for x,y and small parametric forms f(x)=c x^k or constant.
+
+import math
+
+xs = [-2, -1, 0, 1, 2]
+ys = [-2, -1, 0, 1, 2]
+
+# We'll test functions of form: f(x) = c (constant), f(x) = c * x (linear), f(x) = 0
+# and check boundedness and functional eq. on sample xs, ys.
+
+def check_func(f, name):
+    # Check bounded above on sample points
+    vals = [f(x) for x in xs]
+    if max(vals) >= 1e6:  # rough check - treat as unbounded
+        return False
+    # Check functional equation on all pairs
+    for x in xs:
+        for y in ys:
+            left = f(x * f(y)) + y * f(x)
+            right = x * f(y) + f(x * y)
+            if abs(left - right) > 1e-9:
+                return False
+    print(f"Candidate function found: f(x) = {name}")
+    print("Sample values:", [round(f(x),4) for x in xs])
+    return True
+
+# Try constant functions f(x) = c
+for c in [-2, -1, 0, 1, 2]:
+    check_func(lambda x, c=c: c, f"{c}")
+
+# Try linear functions f(x) = c x
+for c in [-2, -1, 0, 1, 2]:
+    check_func(lambda x, c=c: c*x, f"{c}*x")
+
+# Try zero function
+check_func(lambda x: 0, "0")
+
+```
+This enumerates simple candidates and prints those satisfying the equation approximately on samples, helping conjecture the actual form \(f\).

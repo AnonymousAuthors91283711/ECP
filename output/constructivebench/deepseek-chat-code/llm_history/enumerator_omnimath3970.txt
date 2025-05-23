@@ -1,0 +1,81 @@
+[write_program]
+This problem involves finding all natural number polynomials `f` such that for every prime `p` and positive integer `n`, evaluating `f` at `p` gives a prime power `q^m` where `q` is prime and `m > 0`. We'll write a Python program to enumerate possible polynomial candidates and check the condition for small primes.
+
+The approach:
+1. Consider polynomials of degree ≤ 2 (higher degrees are unlikely to satisfy the condition)
+2. Generate polynomials with small natural coefficients
+3. For each polynomial, test evaluation at small primes
+4. Check if all evaluations are prime powers
+
+```python
+import math
+from itertools import product
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def is_prime_power(n):
+    if n == 1:
+        return False
+    # Check all possible exponents
+    max_exp = int(math.log2(n)) + 2
+    for e in range(1, max_exp + 1):
+        root = round(n ** (1/e))
+        if root ** e == n and is_prime(root):
+            return True
+    return False
+
+def eval_poly(coeffs, x):
+    return sum(c * (x ** i) for i, c in enumerate(coeffs))
+
+def main():
+    max_degree = 2
+    max_coeff = 5
+    test_primes = [2, 3, 5, 7, 11, 13]
+    
+    for degree in range(max_degree + 1):
+        for coeffs in product(range(1, max_coeff + 1), repeat=degree + 1):
+            valid = True
+            for p in test_primes:
+                val = eval_poly(coeffs, p)
+                if not is_prime_power(val):
+                    valid = False
+                    break
+            if valid:
+                print(f"Found candidate: {coeffs}")
+                # Verify with more primes
+                extra_primes = [17, 19, 23, 29]
+                all_valid = True
+                for p in extra_primes:
+                    val = eval_poly(coeffs, p)
+                    if not is_prime_power(val):
+                        all_valid = False
+                        break
+                if all_valid:
+                    print(f"Strong candidate: {coeffs}")
+
+if __name__ == "__main__":
+    main()
+```

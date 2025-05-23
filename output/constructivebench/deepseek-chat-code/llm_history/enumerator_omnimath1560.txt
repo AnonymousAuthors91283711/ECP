@@ -1,0 +1,51 @@
+[write_program]
+This problem asks for the largest natural number `n` such that there exists a function `X` from `{1,...,n}` to finite subsets of natural numbers, where for any three indices `a < b < c`, the cardinality of `X(a) ∪ X(b) ∪ X(c)` equals the ceiling of the square root of `a*b*c`.
+
+We'll write a Python program to search for such `n` by:
+1. Trying small values of `n` in increasing order
+2. For each `n`, attempting to construct suitable sets `X(1),...,X(n)`
+3. Checking the union cardinality condition for all triples `a < b < c`
+
+```python
+import math
+from itertools import combinations
+
+def find_max_n(max_trial=10):
+    for n in range(1, max_trial + 1):
+        # Try to find suitable X for current n
+        found = False
+        # We'll represent X as list of sets, starting with minimal elements
+        # Since exact construction is complex, we'll try small sets first
+        for size in range(1, 10):  # Try sets with up to 'size' elements
+            from itertools import product
+            # Generate all possible combinations of n sets with elements up to size
+            for sets in product([frozenset(range(s)) for s in range(size+1)], repeat=n):
+                valid = True
+                # Check all triples a < b < c
+                for a, b, c in combinations(range(n), 3):
+                    union = sets[a] | sets[b] | sets[c]
+                    required = math.ceil(math.sqrt((a+1)*(b+1)*(c+1)))
+                    if len(union) != required:
+                        valid = False
+                        break
+                if valid:
+                    print(f"Found solution for n={n}: {[set(s) for s in sets]}")
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
+            print(f"No solution found for n={n}")
+            return n - 1
+    return max_trial
+
+print("Searching for maximum n...")
+max_n = find_max_n(10)
+print(f"Largest n found: {max_n}")
+```
+
+Note: This program uses a brute-force approach with several limitations:
+1. It only checks small set sizes (up to 9 elements)
+2. It stops at n=10 for demonstration
+3. The output shows constructed sets when found
+The actual mathematical solution likely requires deeper combinatorial reasoning.

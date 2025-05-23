@@ -1,0 +1,75 @@
+[write_program]
+The problem concerns sequences \( a : \mathbb{N} \to \mathbb{N} \) that are eventually periodic on multiples of some period depending on \(k\), and whether this implies a global period \(T\) for all \(k\). To gain insight, we'll enumerate sequences \(a\) with small periods, check the property that for each \(k\) there is some period \(t\) with \(a(k+m t) = a(k)\) for all \(m\), and then see if a global period \(T\) exists.
+
+We will:
+- Enumerate sequences \(a\) of length \(N\) (say 6) with values from a small alphabet (say {0,1}).
+- Check for each \(k\) if there's a \(t\) dividing length so \(a(k + m t) = a(k)\) holds (modulo indexing).
+- If so for all \(k\), attempt to find \(T\) valid for all \(k\).
+- Print sequences that satisfy the local periodicity condition, and if found, print any global period \(T\).
+
+This enumeration can help us conjecture if such a global period \(T\) always exists.
+
+```python
+# Enumerate binary sequences of length N=6,
+# check local periodicities for each position k,
+# and print sequences where local periodicity holds for all k.
+# Then try to find a global period T for entire sequence.
+
+N = 6
+alphabet = [0,1]
+
+from math import gcd
+
+def divides(x,y):
+    return y % x == 0
+
+def check_local_period(a, k, t):
+    # Check for all m: a(k + m t) = a(k), mod N
+    # Since sequence length is N, wrap indices mod N
+    base_val = a[k % N]
+    for m in range(N // t):
+        if a[(k + m * t) % N] != base_val:
+            return False
+    return True
+
+def find_local_period(a, k):
+    # Find some t dividing N with this property
+    for t in range(1, N+1):
+        if divides(t, N) and check_local_period(a, k, t):
+            return t
+    return None
+
+def find_global_period(a):
+    # Global period T divides N and satisfies a[i]==a[i+T mod N] for all i
+    for T in range(1, N+1):
+        if divides(T, N):
+            if all(a[i]==a[(i+T)%N] for i in range(N)):
+                return T
+    return None
+
+def main():
+    from itertools import product
+    count = 0
+    # Enumerate all sequences length N over alphabet {0,1}
+    for a in product(alphabet, repeat=N):
+        local_ts = []
+        ok = True
+        for k in range(N):
+            t = find_local_period(a, k)
+            if t is None:
+                ok=False
+                break
+            local_ts.append(t)
+        if ok:
+            count += 1
+            print(f"Seq {a} local periods {local_ts}", flush=True)
+            T = find_global_period(a)
+            if T is not None:
+                print(f"  -> Global period T = {T}", flush=True)
+            else:
+                print("  -> No global period found", flush=True)
+    print(f"Checked {count} sequences with local periodicity property.", flush=True)
+
+if __name__=="__main__":
+    main()
+```

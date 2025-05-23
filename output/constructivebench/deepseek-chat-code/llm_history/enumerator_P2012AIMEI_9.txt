@@ -1,0 +1,53 @@
+[write_program]
+This problem involves solving a system of logarithmic equations with positive real variables x, y, z, and finding minimal p+q where x*y^5*z can be expressed as (1/2)^(p/q) with coprime p,q. We'll enumerate possible rational exponents by checking small denominators.
+
+```python
+import math
+from fractions import Fraction
+
+def solve():
+    # First solve the system of logarithmic equations
+    # From the equations, we can derive:
+    # x + y + z = 1
+    # x + y - z = 1/e
+    # x - y + z = 1/e^2
+    # -x + y + z = 1/e^3
+    
+    # Solving gives:
+    e = math.e
+    x = (1 + 1/e - 1/e**2 - 1/e**3)/2
+    y = (1 - 1/e + 1/e**2 - 1/e**3)/2
+    z = (1 - 1/e - 1/e**2 + 1/e**3)/2
+    
+    # Compute x*y^5*z
+    product = x * (y**5) * z
+    
+    # Find rational approximations of -log2(product) with small denominators
+    target = -math.log2(product)
+    min_pq = None
+    
+    # Check denominators up to 20
+    for q in range(1, 21):
+        # Find best p for this q
+        p = round(target * q)
+        # Check nearby values in case of rounding errors
+        for delta in [-1, 0, 1]:
+            current_p = p + delta
+            if current_p <= 0:
+                continue
+            current_frac = Fraction(current_p, q)
+            # Check if approximation is close enough
+            if abs(target - current_frac.numerator/current_frac.denominator) < 1e-8:
+                # Reduce to simplest form
+                reduced = current_frac.limit_denominator(1000)
+                p_reduced = reduced.numerator
+                q_reduced = reduced.denominator
+                sum_pq = p_reduced + q_reduced
+                print(f"Found candidate: p/q = {p_reduced}/{q_reduced}, p+q = {sum_pq}")
+                if min_pq is None or sum_pq < min_pq:
+                    min_pq = sum_pq
+    
+    print(f"Minimal p+q found: {min_pq}")
+
+solve()
+```

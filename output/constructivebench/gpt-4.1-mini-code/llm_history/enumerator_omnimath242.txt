@@ -1,0 +1,53 @@
+[write_program]
+The problem seeks the largest size \(k\) of a subset \(T\) of the grid \(\{1, \dots, 1993\} \times \{1, \dots, 4\}\) with no quadruple of points forming a specific rectangle configuration involving equal distances.
+
+To experiment, I will enumerate subsets in smaller grids (e.g., up to 6 by 4) and try to find sets without the forbidden configuration, printing large subsets found. This helps conjecture the maximal size \(k\).
+
+```python
+from itertools import product, combinations
+# Checks if four points form the forbidden rectangle configuration
+def forbidden_quad(a,b,c,d):
+    # Conditions from problem:
+    # a.1 = b.1, a.2 = c.2, b.2 = d.2, c.1 = d.1
+    # dist(a,b) = dist(a,c) = dist(b,d) = dist(c,d)
+    (x1,y1),(x2,y2),(x3,y3),(x4,y4) = a,b,c,d
+    if not (x1 == x2 and y1 == y3 and y2 == y4 and x3 == x4):
+        return False
+    d_ab = abs(y1 - y2)
+    d_ac = abs(x1 - x3)
+    d_bd = abs(x2 - x4)
+    d_cd = abs(y3 - y4)
+    return d_ab == d_ac == d_bd == d_cd and d_ab > 0
+
+# Enumerate subsets in smaller grids to find large sets without forbidden quads
+def test_grid(n,m):
+    points = list(product(range(1,n+1), range(1,m+1)))
+    max_found = 0
+    # We'll try all subsets of size up to threshold (here 8 for time)
+    from time import time
+    start = time()
+    for size in range(1,9):
+        # comb = combinations(points,size)
+        for T in combinations(points,size):
+            # Check forbidden quads in T
+            forbidden = False
+            for quad in combinations(T,4):
+                if forbidden_quad(*quad):
+                    forbidden = True
+                    break
+            if not forbidden:
+                if size > max_found:
+                    max_found = size
+                    print(f"Grid {n}x{m}: Found size {max_found} safe set: {T}")
+        # Timeout to avoid long runtimes
+        if time()-start>5:
+            print("Timeout")
+            break
+    print(f"Grid {n}x{m} max safe set size found: {max_found}")
+
+# Try smaller sample grids as per requirement:
+for (n,m) in [(4,4),(5,4),(6,4)]:
+    print(f"Testing grid {n}x{m}")
+    test_grid(n,m)
+```
+

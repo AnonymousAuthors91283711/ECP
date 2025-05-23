@@ -1,0 +1,72 @@
+[write_program]
+The problem concerns functions \( f: \mathbb{Q} \to \mathbb{Q} \) with the property that the "additive deviation" \( f(x+y) - f(x) - f(y) \) always lies in the integer image inside rationals, and asks to characterize when \( f \) differs from a linear function \( cx \) by integer values.
+
+We want to explore the structure of such functions \( f \), searching for possible \( c \in \mathbb{Q} \) such that \( f(x) - c x \in \mathbb{Z} \) for all \( x \in \mathbb{Q} \), i.e., the difference is integer-valued.
+
+We enumerate simple candidate functions of the form \( f(x) = c x + g(x) \) where \( g \) takes values in integers or rationals, and check if the given condition holds for small values. We also try sample values for \( x \) and \( y \) in a small range and check the image.
+
+This enumeration aids conjecture about the answer.
+
+```python
+# Enumerate candidates to understand functions f: Q → Q s.t.
+# f(x+y) - f(x) - f(y) ∈ Z for all x,y in Q,
+# and existence of c in Q with f(x) - c x ∈ Z for all x.
+
+from fractions import Fraction
+
+def verify_c(f, c, sample_points):
+    # Check if f(x) - c*x ∈ Z for all sample x
+    for x in sample_points:
+        val = f(x) - c*x
+        if val.denominator != 1:
+            return False
+    return True
+
+def check_additive_deviation(f, sample_pairs):
+    # Check if f(x+y)-f(x)-f(y) integer for all sample x,y
+    for x,y in sample_pairs:
+        val = f(x+y) - f(x) - f(y)
+        if val.denominator != 1:
+            return False
+    return True
+
+def main():
+    # Sample rational points (denominator up to 3)
+    denom_vals = [1,2,3]
+    numer_vals = range(-3,4)
+    sample_points = []
+    for d in denom_vals:
+        for n in numer_vals:
+            sample_points.append(Fraction(n,d))
+
+    sample_pairs = [(x,y) for x in sample_points for y in sample_points]
+
+    # Try functions f(x) = c * x + g(x) where g(x) takes only integer values or zero
+    # We try simple c in small rationals and g(x) = floor(kx) or g=0
+
+    # Enumerate candidate c in simple fractions
+    candidate_cs = [Fraction(n,d) for d in denom_vals for n in range(-3,4)]
+
+    # For illustration: f(x) = c * x (linear), and f(x) = c * x + floor(k x) for k in {0,1}
+    # floor is not rational-valued, so approximate with int part for testing integer difference
+    # Instead we'll test only linear functions f(x)=c x since floor is not rational function
+
+    for c in candidate_cs:
+        f = lambda x, c=c: c * x
+        if check_additive_deviation(f, sample_pairs):
+            print(f"Linear function f(x)= {c}*x satisfies integer deviation condition")
+            if verify_c(f, c, sample_points):
+                print(f" -> For c={c}, f(x)-c*x is 0 (integer), holds trivially")
+
+    # Now test f(x) = c x + m for m integers in -3..3
+    for c in candidate_cs:
+        for m in range(-3,4):
+            f = lambda x, c=c, m=m: c*x + Fraction(m)
+            if check_additive_deviation(f, sample_pairs):
+                print(f"f(x) = {c}*x + {m} satisfies integer deviation")
+                if verify_c(f, c, sample_points):
+                    print(f" -> For c={c}, f(x)-c*x = {m} ∈ Z, holds")
+
+if __name__ == "__main__":
+    main()
+```

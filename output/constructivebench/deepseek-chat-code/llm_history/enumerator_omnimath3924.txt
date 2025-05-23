@@ -1,0 +1,55 @@
+[write_program]
+This problem involves finding the minimal positive real number C such that there exists a sequence in [0,C] satisfying an expansive condition. We'll write a Python program to search for such C by testing candidate sequences and checking the condition.
+
+The approach will:
+1. Test small rational values of C
+2. For each C, generate candidate sequences and check the expansive condition
+3. Print valid C values as they're found
+
+```python
+from fractions import Fraction
+
+def is_expansive(sequence):
+    """Check if sequence satisfies the expansive condition |a_i - a_j| >= 1/j for all i < j"""
+    n = len(sequence)
+    for i in range(n):
+        for j in range(i+1, n):
+            if abs(sequence[i] - sequence[j]) < 1/(j+1):  # j+1 since Python is 0-indexed
+                return False
+    return True
+
+def test_candidate_sequences(C, max_length=5):
+    """Test sequences of length up to max_length in [0,C] with denominator up to 10"""
+    denominator = 10
+    C_frac = Fraction(C).limit_denominator(denominator)
+    
+    # Generate all possible sequences with values k/d where 0 <= k <= C*d
+    for length in range(2, max_length+1):
+        max_k = int(C_frac * denominator)
+        from itertools import product
+        for seq in product(range(0, max_k+1), repeat=length):
+            sequence = [Fraction(k, denominator) for k in seq]
+            if is_expansive(sequence):
+                print(f"Found valid sequence for C={float(C)}: {[float(x) for x in sequence]}")
+                return True
+    return False
+
+def find_minimal_C():
+    """Search for minimal C by testing increasing values"""
+    # Test C values starting from 1 upwards with small increments
+    min_found = None
+    for numerator in range(10, 30):
+        C = Fraction(numerator, 10)
+        if test_candidate_sequences(C):
+            if min_found is None or C < min_found:
+                min_found = C
+                print(f"New minimal C found: {float(C)}")
+    
+    if min_found:
+        print(f"\nFinal minimal C found: {float(min_found)}")
+    else:
+        print("No suitable C found in tested range")
+
+if __name__ == "__main__":
+    find_minimal_C()
+```

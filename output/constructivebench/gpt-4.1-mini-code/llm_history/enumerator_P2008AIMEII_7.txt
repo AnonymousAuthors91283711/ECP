@@ -1,0 +1,61 @@
+[write_program]
+The problem appears to involve a cubic polynomial \(p(x) = x^3 - 8x^2 - 200x + 2008\) with integer roots \(r, s, t\). We want to numerically explore possible integer triples \((r, s, t)\) satisfying the polynomial's root conditions and verify the constant properties such as sum, product, and sum of products of roots from Vieta's formulas. This exploration assists in conjecturing the unknown function \(P2008AIMEII_7\_answer\).
+
+We implement enumeration over integer candidates for \(r, s, t\) within a range and print those triples satisfying all root conditions of the polynomial exactly (i.e., \(p(r)=0, p(s)=0, p(t)=0\)) and the relations:  
+- \(r + s + t = 8\) (from coefficient of \(x^2\))  
+- \(rs + rt + st = -200\) (from coefficient of \(x\))  
+- \(rst = -2008\) (constant term)  
+
+We will focus on integers in a moderate range since roots are integers (or else condition fails) and product \(rst = -2008\) suggests factors roughly in \([-30,30]\).
+
+```python
+# Enumerate integer triples (r,s,t) that satisfy the polynomial conditions exactly.
+# Polynomial: x^3 - 8x^2 - 200x + 2008 = 0
+# Using Vieta's formulas:
+# r + s + t = 8
+# rs + rt + st = -200
+# rst = -2008
+
+def main():
+    from math import isclose
+
+    # Since rst = -2008, factors are divisors of 2008
+    # Find all integer divisors of 2008
+    def divisors(n):
+        res = set()
+        for i in range(1, abs(n) + 1):
+            if n % i == 0:
+                res.add(i)
+                res.add(-i)
+        return res
+
+    divs = divisors(2008)
+
+    # To reduce complexity, we fix r and s, compute t from sum =8
+    # and check product and sum of products conditions.
+
+    # We'll limit r,s to divisors of 2008 as candidates for roots.
+    # Enumerate r,s within divisors, compute t = 8 - r - s, check conditions
+    found = []
+    for r in divs:
+        for s in divs:
+            t = 8 - r - s
+            # Compute check conditions:
+            # rs + rt + st = -200 => rs + r t + s t
+            sum_products = r*s + r*t + s*t
+            prod = r*s*t
+            if sum_products == -200 and prod == -2008:
+                print(f"Found roots: r={r}, s={s}, t={t}")
+                # Since roots satisfy polynomial factorization, p(x) = (x-r)(x-s)(x-t)
+                # could be ordered differently; sort roots for consistency
+                roots = tuple(sorted([r,s,t]))
+                if roots not in found:
+                    found.append(roots)
+
+    # If needed, print the extremal or summary value here (problem claims answer = 753)
+    # but per instructions, do not hardcode answer.
+    print(f"Total distinct root triples found: {len(found)}")
+
+if __name__ == "__main__":
+    main()
+```

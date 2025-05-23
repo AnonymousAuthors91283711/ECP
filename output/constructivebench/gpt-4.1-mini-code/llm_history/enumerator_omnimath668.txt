@@ -1,0 +1,49 @@
+[write_program]
+The problem seeks the smallest size \( k \) of a subset \( A \) of integers such that every residue modulo 100 is represented as \( a^n \bmod 100 \) for some \( a \in A \) and \( n > 0 \). To explore this, the program enumerates subsets of \( \mathbb{Z}/100\mathbb{Z} \) of increasing sizes and checks whether their powers cover all residues mod 100. The program outputs subsets that achieve this coverage and finally prints the minimal such size.
+
+```python
+from itertools import combinations, product
+
+MOD = 100
+RESIDUES = list(range(MOD))
+
+def powers(a):
+    # Return set of all powers a^n mod 100, for n≥1, until cycle is detected
+    seen = set()
+    x = a % MOD
+    while x not in seen:
+        seen.add(x)
+        x = (x * a) % MOD
+    return seen
+
+def covers_all(A):
+    # Check if union of powers(a) for a in A covers all residues mod 100
+    covered = set()
+    for a in A:
+        covered |= powers(a)
+        if len(covered) == MOD:
+            return True
+    return False
+
+# We only consider 1..99 as representatives for residues mod 100 (0 mod 100 is 0 always)
+elements = list(range(1, MOD))
+min_size = None
+
+print("Enumerating subsets and their coverage for modulus 100:")
+
+for k in range(1, 6):  # limit to size 5 for efficiency
+    print(f"Trying subsets of size {k}...")
+    for A in combinations(elements, k):
+        if covers_all(A):
+            print(f"Found covering subset of size {k}: {A}")
+            if min_size is None or k < min_size:
+                min_size = k
+    if min_size is not None:
+        print(f"Minimum k found at most {min_size}, stopping search.")
+        break
+
+if min_size is not None:
+    print(f"Minimal size k for coverage mod {MOD} is {min_size}")
+else:
+    print("No covering subset found up to size 5.")
+```

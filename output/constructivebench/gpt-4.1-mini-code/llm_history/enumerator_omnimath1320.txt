@@ -1,0 +1,50 @@
+[write_program]
+The problem concerns natural numbers \( n \geq 3 \) with a condition about concatenating reversed digit lists of certain large powers of 2 and evaluating congruences mod \( 2^{170} \).
+
+To assist in conjecturing solutions, we will implement a program that for feasible small \( n \) values:
+
+- Computes \( 2^{10(k+1)} \) for \( k \in [0,n-1] \)
+- Gets their decimal digits, reverses them, then concatenates all lists
+- Converts concatenation back to an integer
+- Checks the integer mod \( 2^{170} \) against \( 2^{10n} \) mod \( 2^{170} \)
+
+Due to the magnitude of numbers, we'll handle digits carefully and compare modulo efficiently. We'll enumerate from 3 to a reasonable upper limit (say 7 or 8) because digit strings grow exponentially.
+
+```python
+# Enumerate n >= 3, check congruence condition mod 2^170 for digit-reversal concatenation
+def digits_base_10(x):
+    return list(map(int, str(x)))
+
+def reversed_digits_of_power(k):
+    # 2^(10*(k+1))
+    val = pow(2, 10*(k+1))
+    d = digits_base_10(val)
+    d.reverse()
+    return d
+
+def concat_lists(lists):
+    res = []
+    for lst in lists:
+        res.extend(lst)
+    return res
+
+def digits_to_number(digits):
+    # digits is list of int, most significant first
+    # but here digits come reversed and concatenated, so digits are in natural order after concatenation
+    # convert entire list to int
+    # For large digits, convert to string then int
+    return int(''.join(map(str, digits)))
+
+MOD = 2**170
+
+print("Enumerating n from 3 to 7:")
+for n in range(3, 8):
+    lists = [reversed_digits_of_power(k) for k in range(n)]
+    concatenated = concat_lists(lists)
+    A = digits_to_number(concatenated)
+    lhs = A % MOD
+    rhs = pow(2,10*n, MOD)
+    print(f"n = {n}, A mod 2^170 = {lhs}, 2^(10*n) mod 2^170 = {rhs}, Equal? {lhs == rhs}")
+```
+
+This will output intermediate results immediately for each \( n \). Observing outputs could help conjecture the smallest \( n \) satisfying the condition, possibly corresponding to `omnimath1320_answer`.

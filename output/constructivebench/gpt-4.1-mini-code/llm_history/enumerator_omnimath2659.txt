@@ -1,0 +1,77 @@
+[write_program]
+The problem involves characterizing all integer functions \( f: \mathbb{Z} \to \mathbb{Z} \) such that for all integers \( a, b \), there exists an integer \( k \) with 
+\[
+f(f(a) - b) + b \cdot f(2a) = k^2.
+\]
+This implies the expression is always a perfect square.
+
+To explore this, our program will:
+- Enumerate small candidate functions \( f \) defined on a small domain (e.g., \(-2 \leq x \leq 2\)) that map to small integer values.
+- For sampled pairs \((a,b)\) in that domain, verify if the condition yields a perfect square for some integer \( k \).
+- Print candidate functions \( f \) that satisfy the condition across these sampled values.
+
+The enumeration is limited to small ranges to control output length and computation time. This will help conjecture forms of \( f \) fitting the condition.
+
+```python
+# Enumerate integer functions f: { -2,...,2 } -> { -4,...,4 } satisfying
+# For all a,b in -1,..,1: f(f(a)-b) + b*f(2a) is a perfect square.
+
+from math import isqrt
+
+def is_square(x):
+    if x < 0:
+        return False
+    r = isqrt(x)
+    return r*r == x
+
+domain = [-2, -1, 0, 1, 2]
+values_range = range(-4,5)
+
+# To keep output reasonable, we check only for a,b in [-1,0,1]
+ab_pairs = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,0),(0,1),(1,-1),(1,0),(1,1)]
+
+# Functions represented as dict a->f(a)
+# Enumerate all mappings f: domain -> values_range
+# We'll print only those f functions where for all (a,b) in ab_pairs, 
+# there exists k with f(f(a)-b) + b*f(2*a) = k^2
+
+# Precompute indices for quick lookup
+index_map = {x:i for i,x in enumerate(domain)}
+
+def get_f_of(fdict,x):
+    # If x not in domain, skip to avoid KeyError
+    return fdict.get(x,None)
+
+count = 0
+for vals in range(len(values_range)**len(domain)):
+    # Unpack vals into function values
+    fdict = {}
+    nv = vals
+    for x in domain:
+        fdict[x] = values_range[nv % len(values_range)]
+        nv //= len(values_range)
+    # Check condition on sample pairs
+    valid = True
+    for a,b in ab_pairs:
+        fa = fdict.get(a, None)
+        if fa is None:
+            valid = False
+            break
+        arg1 = fa - b
+        fv1 = fdict.get(arg1, None)
+        if fv1 is None:
+            valid = False
+            break
+        fa2 = fdict.get(2*a, None)
+        if fa2 is None:
+            valid = False
+            break
+        val = fv1 + b*fa2
+        if not is_square(val):
+            valid = False
+            break
+    if valid:
+        count += 1
+        print(f"Candidate function {count}:")
+        print("f =", {k: fdict[k] for k in sorted(fdict)})
+```

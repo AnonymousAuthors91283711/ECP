@@ -1,0 +1,55 @@
+[write_program]
+The problem involves evaluating the average value of the function M(a,b,c,d,e,f) mod 64 over all 6-tuples (a,b,c,d,e,f) where each coordinate is an integer from 1 to 100. We want to enumerate some values of M modulo 64 and accumulate the sum to guess the average.
+
+Since M = a + 2b + 4c + 8d + 16e + 32f, mod 64 it behaves like adding weighted variables mod 64. Each variable is from 1 to 100, but the modulo bounds it within 0 to 63.
+
+To manage output size and time, we try small ranges (e.g., 1 to 5) first to see partial sums and approximate the average. Then we increase sample size. We'll output partial sums, averages, and the modulos used.
+
+```python
+# Enumerate sums of M(a,b,c,d,e,f) mod 64 for small ranges to guess average over 1..100.
+def mod64(x):
+    return x % 64
+
+def main():
+    # We'll try ranges 1..5, 1..10, ... up to 1..20 for partial enumeration.
+    print("Enumerating sums of M mod 64 for sample ranges")
+    weights = [1, 2, 4, 8, 16, 32]
+
+    for N in [5, 10, 20]:
+        total = 0
+        count = N ** 6
+        # Enumerate all 6-tuples in 1..N
+        # To reduce computation, sum over each dimension separately then combine using convolution-like approach.
+        # But direct iteration is simplest here.
+
+        # Since count = N^6 grows fast, we do direct iteration only up to N=10 here.
+        if N <= 10:
+            for a in range(1, N+1):
+                wa = weights[0]*a
+                for b in range(1, N+1):
+                    wb = wa + weights[1]*b
+                    for c in range(1, N+1):
+                        wc = wb + weights[2]*c
+                        for d in range(1, N+1):
+                            wd = wc + weights[3]*d
+                            for e in range(1, N+1):
+                                we = wd + weights[4]*e
+                                for f in range(1, N+1):
+                                    val = we + weights[5]*f
+                                    total += val % 64
+        else:
+            # For N=20, do a statistical sample instead of full enumeration
+            import random
+            samples = 10**6
+            total = 0
+            for _ in range(samples):
+                tuple_vals = [random.randint(1,N) for _ in range(6)]
+                val = sum(w*v for w,v in zip(weights, tuple_vals))
+                total += val % 64
+            count = samples
+        avg = total / count
+        print(f"N={N}, Sum mod 64 over all tuples (or samples): {total}, Count: {count}, Average mod 64 value: {avg:.6f}")
+
+if __name__ == "__main__":
+    main()
+```

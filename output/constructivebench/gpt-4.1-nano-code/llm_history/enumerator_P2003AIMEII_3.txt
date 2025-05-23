@@ -1,0 +1,40 @@
+[write_program]
+The problem appears to involve counting the number of functions `w: Fin 7 → Fin 3` where certain adjacent value relations are forbidden. The set constraint says that for all `i` in `Fin 6`, the pattern `(w i, w (i+1))` must not be one of { (0, 1), (1, 2), (2, 0) }. In other words, these three pairs are forbidden transitions. We need to count the number of functions from `7` elements to `3` colors with these adjacency restrictions.
+
+This is equivalent to counting sequences of length 7 over {0,1,2} where none of these specific pairs occur. We can model this as a finite-state automaton or recursive counting problem. Interestingly, these forbidden pairs form a cycle that excludes certain transitions, so the sequences are constrained.
+
+We'll implement a recursive dynamic programming with memoization to count valid sequences, then verify the total count.
+
+```python
+# Count sequences of length n over {0,1,2} avoiding specific forbidden transitions
+# forbidden pairs: (0,1), (1,2), (2,0)
+# Valid transitions: 0->0, 0->2, 1->0, 1->1, 2->1, 2->2
+
+def count_sequences(n):
+    from functools import lru_cache
+    
+    # Allowed transitions from each digit
+    transitions = {
+        0: [0, 2],
+        1: [0, 1],
+        2: [1, 2]
+    }
+
+    @lru_cache(None)
+    def dp(pos, last):
+        if pos == n:
+            return 1
+        total = 0
+        for next_digit in transitions[last]:
+            total += dp(pos + 1, next_digit)
+        return total
+
+    total_count = 0
+    # Start with each possible initial digit
+    for start in range(3):
+        total_count += dp(1, start)
+    return total_count
+
+result = count_sequences(7)
+print(result)
+```

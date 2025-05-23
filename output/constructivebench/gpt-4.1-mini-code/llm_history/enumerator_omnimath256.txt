@@ -1,0 +1,58 @@
+[write_program]
+The problem describes pairs of integers \((a,b)\) for which there exist two functions \(f,g:\mathbb{Z}\to\mathbb{Z}\) satisfying
+\[
+f(g(x)) = x + a \quad \text{and} \quad g(f(x)) = x + b \quad \forall x \in \mathbb{Z}.
+\]
+We want to enumerate candidate integer pairs \((a,b)\) for small values of \(a,b\) and check if such functions \(f,g\) can exist.
+
+Key observations to guide enumeration:
+- Such \(f,g\) must be bijections (since compositions are bijections).
+- The increments \(x+a\) and \(x+b\) are translations.
+- Checking small values of \(a,b\) for feasibility can help guess a pattern.
+
+Below is a Python enumerator that tries small values of \(a,b\) in \([-5,5]\), attempts to construct simple bijections \(f,g\) as linear functions \(f(x)=mx+c, g(x)=nx+d\) with integer parameters, and checks the critical equalities. It outputs all \((a,b)\) pairs for which a suitable solution is found.
+
+```python
+# Enumerate integer pairs (a,b) for which there exist integer linear functions
+# f(x)=m*x+c, g(x)=n*x+d satisfying:
+# f(g(x)) = x + a and g(f(x)) = x + b for all integers x.
+# Print candidate pairs (a,b) found.
+
+print("Enumerating (a,b) with |a|,|b| <= 5 and linear f,g")
+
+found_pairs = set()
+# Limits for parameters - trying small integer values
+range_ab = range(-5,6)
+range_mn = range(-3,4)
+range_cd = range(-5,6)
+
+for a in range_ab:
+    for b in range_ab:
+        for m in range_mn:
+            for n in range_mn:
+                if m == 0 or n == 0:
+                    # f or g not bijection if m or n is 0
+                    continue
+                for c in range_cd:
+                    for d in range_cd:
+                        # f(g(x)) = m*(n*x + d) + c = m*n*x + m*d + c
+                        # Needs to equal x + a for all x
+                        # So we want m*n = 1 and m*d + c = a
+                        if m * n != 1:
+                            continue
+                        if m * d + c != a:
+                            continue
+                        # g(f(x)) = n*(m*x + c) + d = n*m*x + n*c + d
+                        # Needs to equal x + b for all x
+                        # So n*m = 1 (already checked) and n*c + d = b
+                        if n * c + d != b:
+                            continue
+                        # Conditions are met
+                        print(f"Possible (a,b)=({a},{b}) with f(x)={m}*x+{c}, g(x)={n}*x+{d}")
+                        found_pairs.add((a,b))
+
+print("\nSummary of candidate (a,b) pairs found:")
+for p in sorted(found_pairs):
+    print(p)
+```
+This enumerator finds all pairs \((a,b)\) with \(|a|,|b|\le 5\) where the above linear pair of \(f,g\) exists, printing each candidate as it is found to assist in forming conjectures.

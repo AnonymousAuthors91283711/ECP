@@ -1,0 +1,71 @@
+[write_program]
+The problem involves finding a natural number \( u \) such that there exist nonnegative integers \( a,b,c,d,e,f,g,h \) satisfying:
+
+- \( [a,b,c,d,e,f,g,h,u] = [n, n+1, \ldots, n+8] \) (a rearrangement of these nine consecutive numbers),
+- and four linear equalities involving sums of triples all equal to the same sum \( S = a+b+c \):
+
+\[
+a + b + c = d + e + f = g + h + u = c + f + u = a + e + h.
+\]
+
+The goal is to find the least such \( u \) fulfilling these constraints for a given \( n \).
+
+We can interpret this as solving a finite combinatorial problem for \( n \) small.
+
+Approach for enumeration:
+- \( n \) small (e.g., 1, 2).
+- The list \([n..n+8]\) is fixed, but \(u\) must be one of its elements re-arranged.
+- Enumerate all permutations of \([n .. n+8]\) assigning to \((a,b,c,d,e,f,g,h,u)\).
+- Check the equality conditions.
+- Print all satisfying \( u \), then print minimal \( u \).
+
+We will pick some sample \( n \), e.g. n=1, n=2.
+
+```python
+# enumerator.py
+import itertools
+
+def check_conditions(arr):
+    a,b,c,d,e,f,g,h,u = arr
+    S = a+b+c
+    return (S == d+e+f and
+            S == g+h+u and
+            S == c+f+u and
+            S == a+e+h)
+
+def enumerate_for_n(n):
+    base = list(range(n, n+9))
+    found_u = set()
+    print(f"=== n={n} ===")
+    # Generate permutations for (a,b,c,d,e,f,g,h,u)
+    # Since u = one of [n..n+8], but u is the 9th element of arr
+    # To reduce search space, we can iterate over permutations of first 8 positions, then assign u as remaining element.
+
+    # Get all permutations of first 8 elements (choose 8 from 9 elements)
+    # The remaining element is automatically u
+
+    elems = base[:]
+    for comb in itertools.permutations(elems,8):
+        used = set(comb)
+        rem = set(elems) - used
+        if len(rem) != 1:
+            continue
+        u = rem.pop()
+        arr = comb + (u,)
+        if check_conditions(arr):
+            print(f"a,b,c,d,e,f,g,h,u = {arr}, sum={a+b+c}")
+            found_u.add(u)
+    if found_u:
+        print(f"Found u values: {sorted(found_u)}")
+        print(f"Minimal u = {min(found_u)}")
+    else:
+        print("No valid u found.")
+
+def main():
+    for n in [1,2]:
+        enumerate_for_n(n)
+
+if __name__ == "__main__":
+    main()
+```
+This program enumerates solutions for \( n=1, 2 \), prints each found valid 9-tuple immediately with their sum \( S \), then lists all found \( u \) and minimal \( u \). This can guide the conjecture about the minimal \( u \) and the function \( \text{omnimath2909_answer}(n) \).

@@ -1,0 +1,56 @@
+[write_program]
+The problem asks to find the smallest positive natural number \( n \) such that \( n \) is a perfect square and \( n \) is divisible by 2023. That is, find the smallest \( n = k^2 \) with \( 2023 \mid n \).
+
+Since \( 2023 \mid n = k^2 \), \( k^2 \) is divisible by 2023. Because 2023 may have prime factors, \( k \) must be divisible by every prime factor of 2023 raised to half their powers in the factorization of \( n \).
+
+The goal is to enumerate perfect squares divisible by 2023 and find the smallest \( n \). To do this, factor 2023, find the minimal perfect square divisible by 2023, and enumerate multiples. Our program will factor 2023, then compute candidates, and print all candidates with \( k^2 \) divisible by 2023 and \( n \) up to a threshold (e.g., \( 10^8 \)).
+
+```python
+# Enumerate squares divisible by 2023 and find the minimal such square
+
+def prime_factors(n):
+    # Returns prime factors and their exponents as {prime: exp}
+    factors = {}
+    x = n
+    f = 2
+    while f * f <= x:
+        while x % f == 0:
+            factors[f] = factors.get(f, 0) + 1
+            x //= f
+        f += 1 if f == 2 else 2
+    if x > 1:
+        factors[x] = factors.get(x, 0) + 1
+    return factors
+
+def lcm_of_sqrt_factors(factors):
+    # For square divisibility, k must be divisible by the product of primes raised to ceil(exp/2)
+    from math import ceil
+    k = 1
+    for p, e in factors.items():
+        k *= p ** ((e + 1) // 2)
+    return k
+
+def main():
+    N = 2023
+    print(f"Factoring 2023: {prime_factors(N)}")
+    factors = prime_factors(N)
+    base_k = lcm_of_sqrt_factors(factors)
+    print(f"Minimal k divisible by prime powers for k^2 divisible by 2023: {base_k}")
+
+    # Enumerate multiples of base_k and print squares up to 10^8
+    LIMIT = 10**8
+    k = base_k
+    while True:
+        n = k * k
+        if n > LIMIT:
+            break
+        print(f"n = {n} = {k}^2 divisible by 2023")
+        k += base_k
+
+    # Output minimal such n explicitly
+    minimal_n = base_k * base_k
+    print(f"Minimal n with n=k^2 divisible by 2023: {minimal_n}")
+
+if __name__ == "__main__":
+    main()
+```

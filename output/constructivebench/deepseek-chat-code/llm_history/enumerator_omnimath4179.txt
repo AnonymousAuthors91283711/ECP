@@ -1,0 +1,55 @@
+[write_program]
+This problem involves finding all natural numbers n for which there exists a sequence of n moves (flips) on a 4×4 grid of lights (initially all off) that turns all lights on. Each flip toggles a light and its orthogonally adjacent neighbors. We'll write a Python program to enumerate possible n values where such a sequence exists.
+
+The approach:
+1. Represent the grid as a 16-bit integer (each bit represents a light)
+2. Model each flip as a bitmask operation (toggling center + adjacent bits)
+3. Use BFS to find minimal sequences that reach the all-on state
+4. Track which n values can reach the solution
+
+```python
+from collections import deque
+
+def main():
+    size = 4
+    total = size * size
+    target = (1 << total) - 1  # All lights on
+    
+    # Precompute flip masks for each position
+    masks = []
+    for i in range(size):
+        for j in range(size):
+            mask = 0
+            for di, dj in [(0,0), (0,1), (0,-1), (1,0), (-1,0)]:
+                ni, nj = i + di, j + dj
+                if 0 <= ni < size and 0 <= nj < size:
+                    pos = ni * size + nj
+                    mask ^= (1 << pos)
+            masks.append(mask)
+    
+    # BFS to find minimal steps
+    visited = {0: 0}  # state: steps
+    queue = deque([0])
+    possible_n = set()
+    
+    while queue:
+        state = queue.popleft()
+        steps = visited[state]
+        
+        if state == target:
+            possible_n.add(steps)
+            continue
+        
+        for mask in masks:
+            new_state = state ^ mask
+            if new_state not in visited:
+                visited[new_state] = steps + 1
+                queue.append(new_state)
+    
+    # Output possible n values in order
+    print("Possible n values:", sorted(possible_n))
+    print("Minimal solution:", min(possible_n))
+
+if __name__ == "__main__":
+    main()
+```

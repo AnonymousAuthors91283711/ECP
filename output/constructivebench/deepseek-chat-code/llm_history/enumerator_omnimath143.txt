@@ -1,0 +1,46 @@
+[write_program]
+This problem involves counting certain sequences modulo n with specific difference constraints. For part A (isPartB=False), the constraint is that consecutive differences can't equal i+1 mod n. For part B (isPartB=True), there are additional constraints.
+
+We'll write a Python program to enumerate valid sequences for small odd n values (both prime and composite) to help identify patterns. The program will:
+1. Handle both parts A and B
+2. Generate all possible sequences of length n+1 with values in 0..n-1
+3. Check the circular condition (last equals first) and difference constraints
+4. Count valid sequences for small n values
+
+```python
+from itertools import product
+
+def is_valid_sequence(seq, n, is_part_b):
+    if seq[0] != seq[-1]:
+        return False
+    for i in range(n):
+        diff = (seq[i+1] - seq[i]) % n
+        forbidden = [(i+1) % n]
+        if is_part_b:
+            forbidden.append((2*(i+1)) % n)
+        if diff in forbidden:
+            return False
+    return True
+
+def count_sequences(n, is_part_b):
+    count = 0
+    # First n elements can vary, last must equal first
+    for first_part in product(range(n), repeat=n):
+        seq = list(first_part) + [first_part[0]]
+        if is_valid_sequence(seq, n, is_part_b):
+            count += 1
+    return count
+
+def main():
+    sample_n_values = [3, 5, 7, 9]  # Includes both prime and composite odd numbers
+    for is_part_b in [False, True]:
+        print(f"\nPart {'B' if is_part_b else 'A'}:")
+        for n in sample_n_values:
+            if is_part_b and not all(n % i != 0 for i in range(2, int(n**0.5)+1)):
+                continue  # Skip composite n for part B
+            count = count_sequences(n, is_part_b)
+            print(f"n={n}: {count} sequences")
+
+if __name__ == "__main__":
+    main()
+```

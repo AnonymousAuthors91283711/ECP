@@ -1,0 +1,64 @@
+[write_program]
+The problem concerns finding the minimal degree of a monic integer polynomial \( P \) such that \( P(\sqrt{3}+\sqrt{2}) = P(\sqrt{3}-\sqrt{2}) \), and then evaluating such polynomials at specific points.
+
+We enumerate monic polynomials with integer coefficients, starting from degree 1 up to 5, checking if the equality condition holds exactly. For degree 4, we then compute \( Q(10) - Q(0) \) for the polynomials that satisfy the condition.
+
+To keep computations feasible, we limit coefficients to a small range. We print polynomials when the condition is met and output the minimal degree found and the special value for degree 4.
+
+```python
+import itertools
+
+# Evaluate polynomial at a given x, coefficients in decreasing degree order
+def eval_poly(coeffs, x):
+    res = 0
+    for c in coeffs:
+        res = res * x + c
+    return res
+
+# Check if polynomial satisfies P(sqrt(3)+sqrt(2)) == P(sqrt(3)-sqrt(2))
+# Evaluate exactly: test if P(sqrt(3)+sqrt(2)) - P(sqrt(3)-sqrt(2)) == 0
+# Since sqrt(3)+sqrt(2) and sqrt(3)-sqrt(2) are conjugates in Q(sqrt(2), sqrt(3)),
+# the difference is 0 if polynomial is symmetric under swapping sqrt(2) -> -sqrt(2).
+# We test numerically with a tolerance and also check difference's low precision to confirm exactness.
+def check_poly(coeffs):
+    x1 = (3**0.5) + (2**0.5)
+    x2 = (3**0.5) - (2**0.5)
+    v1 = eval_poly(coeffs, x1)
+    v2 = eval_poly(coeffs, x2)
+    return abs(v1 - v2) < 1e-10
+
+def monic_coeffs(deg, bound=3):
+    # Generate all integer coefficients for x^{deg-1} ... constant term in range [-bound,bound]
+    # Leading coefficient is 1 (monic)
+    for coeffs in itertools.product(range(-bound, bound+1), repeat=deg):
+        # coeffs for x^{deg-1} ... constant term
+        yield (1,) + coeffs
+
+min_degree_found = None
+answers_deg_4 = []
+print("Enumerating polynomials with monic leading coefficient and degree 1 to 5, coefficients in [-3,3]")
+
+for deg in range(1, 6):
+    found_in_deg = False
+    for coeffs in monic_coeffs(deg):
+        if check_poly(coeffs):
+            found_in_deg = True
+            # Print polynomial
+            # Format: degree and polynomial coefficients
+            print(f"Degree {deg} polynomial satisfies condition: coeffs = {coeffs}")
+            if deg == 4:
+                # Evaluate Q(10)-Q(0)
+                q_10 = eval_poly(coeffs, 10)
+                q_0 = eval_poly(coeffs, 0)
+                diff = q_10 - q_0
+                answers_deg_4.append(diff)
+                print(f"Degree 4 Q(10)-Q(0) = {diff}")
+    if found_in_deg and min_degree_found is None:
+        min_degree_found = deg
+
+if min_degree_found is not None:
+    print(f"Minimal degree with polynomial satisfying condition: {min_degree_found}")
+if answers_deg_4:
+    min_answer = min(answers_deg_4)
+    print(f"Among degree 4 polynomials, minimal Q(10)-Q(0) = {min_answer}")
+```

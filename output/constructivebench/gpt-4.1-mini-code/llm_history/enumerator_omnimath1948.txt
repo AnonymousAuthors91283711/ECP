@@ -1,0 +1,56 @@
+[write_program]
+The problem involves finding the smallest number \( S \) such that there exists a nonempty finite set of positive coins including 100, with pairwise distinct positive integers, and the subset sums cover exactly the integers from 1 to \( S \).
+
+We will enumerate sets containing 100 and other positive distinct integers, check their subset sums, and report values of \( S \) that correspond to continuous coverage from 1 to \( S \).
+
+Due to complexity, we limit to small sets with 100 and a few other coins under 100, and enumerate sums by subset sums.
+
+```python
+# Enumerate coin sets containing 100 and other distinct positive integers (<= 100)
+# Check which values up to sum(coins) are covered by subset sums exactly (continuous from 1 to S)
+# Print each candidate S and the corresponding coin set
+
+from itertools import combinations, chain
+
+def powerset(iterable):
+    # all subsets, including empty
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+max_coin = 100
+coins_pool = list(range(1, max_coin))
+fixed_coin = 100
+
+print("Enumerating candidate sets with fixed coin 100 and up to 3 other coins...")
+
+# Limit number of other coins to keep runtime manageable
+for r in range(1, 4):
+    for other_coins in combinations(coins_pool, r):
+        # coins set must be nonempty and includes 100
+        coins = set(other_coins)
+        coins.add(fixed_coin)
+        # positive check implicit from range; distinct check implicit from combinations
+        total_sum = sum(coins)
+
+        # Compute subset sums
+        sums = set()
+        c_list = list(coins)
+        for subset in powerset(c_list):
+            sums.add(sum(subset))
+        
+        # We need coverage from 1 to some S exactly
+        # Exclude 0 from sums, check lower interval continuity
+        sums.discard(0)
+
+        # Find maximal S with sums == [1..S]
+        if len(sums) == 0:
+            continue
+        min_sum = min(sums)
+        max_sum = max(sums)
+        # We want sums == set(range(1, max_sum+1))
+        if sums == set(range(1, max_sum+1)) and min_sum == 1:
+            print(f"S={max_sum}, coins={sorted(coins)}")
+
+print("Enumeration done.")
+```
+

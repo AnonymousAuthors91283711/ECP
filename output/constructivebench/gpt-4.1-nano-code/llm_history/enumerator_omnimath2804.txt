@@ -1,0 +1,166 @@
+[write_program]
+The problem defines a set of sequences \(f: \text{Fin } 11 \to \mathbb{R}\) with specific boundary conditions and a recursive relation involving a geometric mean. We need to find the number of such sequences modulo 100.
+
+Observations:
+- The sequence is defined for \( n = 0, 1, ..., 10 \).
+- Boundary conditions: \(f(0) = 4\), \(f(10) = 1024\).
+- Recursive relation: \(f(n) + f(n-1) = \frac{5}{2} \sqrt{f(n)f(n-1)}\), for \(n \in 1..10\).
+- For \(f(n)\) to be real, \(\sqrt{f(n)f(n-1)}\) must be real and positive.
+- The relation resembles a geometric mean relation. Let \(g(n) = \sqrt{f(n)}\). then the relation becomes linear in \(g(n)\) and \(g(n-1)\).
+
+Rearranged:
+\[
+f(n) + f(n-1) = \frac{5}{2} \sqrt{f(n)f(n-1)} \implies g(n)^2 + g(n-1)^2 = \frac{5}{2} g(n)g(n-1)
+\]
+Divide both sides by \(g(n)g(n-1)\):
+\[
+\frac{g(n)^2}{g(n)g(n-1)} + \frac{g(n-1)^2}{g(n)g(n-1)} = \frac{5}{2}
+\]
+\[
+\frac{g(n)}{g(n-1)} + \frac{g(n-1)}{g(n)} = \frac{5}{2}
+\]
+Set \(r = \frac{g(n)}{g(n-1)}\).
+
+Thus:
+\[
+r + \frac{1}{r} = \frac{5}{2}
+\]
+Multiply through by \(r\):
+
+\[
+r^2 - \frac{5}{2} r + 1 = 0
+\]
+Quadratic in \(r\):
+\[
+2r^2 - 5r + 2 = 0
+\]
+Discriminant:
+\[
+D = 25 - 16 = 9
+\]
+
+Solutions:
+\[
+r = \frac{5 \pm 3}{4}
+\]
+\[
+r_1 = \frac{8}{4} = 2, \quad r_2 = \frac{2}{4} = 0.5
+\]
+
+Hence, at each step, the ratio \(r = g(n)/g(n-1)\) is either 2 or 0.5.
+
+Given:
+\[
+f(0) = 4 \implies g(0) = \sqrt{4} = 2
+\]
+
+Sequence of ratios: each \(r_i \in \{2, 0.5\}\).
+
+Sequence \(f(n) = g(n)^2\).
+
+Since \(g(n) = g(0) \times \prod r_i\), with \(g(0)=2\):
+
+\[
+g(n) = 2 \times \prod_{i=1}^{n} r_i
+\]
+
+and:
+
+\[
+f(n) = g(n)^2 = 4 \times \left( \prod_{i=1}^{n} r_i \right)^2
+\]
+
+Boundary condition:
+\[
+f(10) = 1024
+\]
+which means:
+\[
+g(10) = \sqrt{1024} = 32
+\]
+
+Since:
+\[
+g(10) = 2 \times \prod_{i=1}^{10} r_i
+\]
+we have:
+\[
+32 = 2 \times \prod_{i=1}^{10} r_i \implies \prod_{i=1}^{10} r_i = 16
+\]
+
+Now, each \(r_i \in \{2, 0.5\}\). The product:
+
+\[
+\prod_{i=1}^{10} r_i = 2^{k} \times (0.5)^{(10 - k)} = 2^{k} \times 2^{-(10 - k)} = 2^{k - (10 - k)} = 2^{2k - 10}
+\]
+
+Set equal to 16 (which is \(2^4\)):
+
+\[
+2^{2k - 10} = 2^{4} \implies 2k - 10 = 4 \implies 2k = 14 \implies k=7
+\]
+
+Thus, exactly 7 of the ratios are 2, and 3 are 0.5.
+
+Number of such sequences:
+\[
+\binom{10}{7} = \binom{10}{3} = 120
+\]
+
+Each sequence corresponds to choosing which 7 steps are 'up' (ratio 2) and which 3 steps are 'down' (ratio 0.5). Computing:
+
+\[
+f(n) = 4 \times \left( \prod_{i=1}^n r_i \right)^2
+\]
+
+For each sequence, the sequence of \(f(n)\) is determined uniquely.
+
+Final tally:
+Number of sequences \(= 120\). Since we only need the count mod 100:
+
+\[
+120 \equiv 20 \pmod{100}
+\]
+
+---
+
+```python
+# This program enumerates all sequences of ratios with exactly 7 'up' (2) and 3 'down' (0.5).
+# It computes the corresponding sequence boundary for f(10) and confirms boundary conditions.
+# Counts are then summed and printed modulo 100.
+
+from itertools import combinations
+
+# total steps
+n = 10
+
+# number of 'up' steps
+k_up = 7
+
+# positions of 'up' steps
+positions = range(n)
+
+count_sequences = 0
+
+for up_indices in combinations(positions, k_up):
+    ratios = []
+    for i in range(n):
+        ratios.append(2 if i in up_indices else 0.5)
+    # compute g(0)
+    g0 = 2.0
+    g = g0
+    sequence_f = [4]  # f(0) = 4
+    for r in ratios:
+        g = g * r
+        f_n = g * g
+        sequence_f.append(f_n)
+    # verify boundary condition f(10) == 1024
+    # Due to calculations, all should match exactly
+    if abs(sequence_f[-1] - 1024) < 1e-6:
+        count_sequences += 1
+        # print the sequence or partial results if desired
+        # print(f"Sequence ratios: {ratios}")
+        # print(f"f sequence: {sequence_f}")
+
+print(f"Number of sequences: {count_sequences % 100}")
+```

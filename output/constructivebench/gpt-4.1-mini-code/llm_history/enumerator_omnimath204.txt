@@ -1,0 +1,40 @@
+[write_program]
+The problem involves a polynomial \( P \) of degree \( 3n \) with specific values at arithmetic sequences. The goal is to find the integer \( n \) for which \( P(3n+1) = 730 \) under given constraints.
+
+We will:
+- Enumerate \( n \) starting from 1.
+- For each \( n \), try to construct the polynomial \( P \) of degree \( 3n \) fitting the values:
+  - \( P(3k) = 2 \) for \( k = 0, \dots, n \)
+  - \( P(3k+1) = 1 \) for \( k = 0, \dots, n-1 \)
+  - \( P(3k+2) = 0 \) for \( k = 0, \dots, n-1 \)
+- Evaluate \( P(3n+1) \), print it, and check if equals 730.
+- Stop at a reasonable upper bound to avoid excessive computation.
+
+We will use SymPy for polynomial interpolation and solving.
+
+```python
+from sympy import symbols, interpolate, Eq, solve, S
+
+x = symbols('x')
+
+# We try small n from 1 to 6 (degree up to 18 is computationally feasible)
+for n in range(1, 7):
+    points = []
+    # Add points for P(3k) = 2, k=0..n
+    for k in range(n + 1):
+        points.append((3 * k, 2))
+    # Add points for P(3k+1) = 1, k=0..n-1
+    for k in range(n):
+        points.append((3 * k + 1, 1))
+    # Add points for P(3k+2) = 0, k=0..n-1
+    for k in range(n):
+        points.append((3 * k + 2, 0))
+    # Interpolate the polynomial of degree at most 3n
+    P = interpolate(points, x)
+    val = P.subs(x, 3 * n + 1)
+    # val can be rational, keep as is
+    print(f"n={n}, P(3n+1)={val}")
+    if val == 730:
+        print(f"=> Found n={n} with P(3n+1)=730")
+        break
+```

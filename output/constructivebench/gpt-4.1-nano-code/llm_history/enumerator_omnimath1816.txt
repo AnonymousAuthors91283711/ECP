@@ -1,0 +1,52 @@
+[write_program]
+This problem relates to coloring points in a 3D unit cube divided into small cubes (with 8 points), where adjacency is defined between points differing by 1 in one coordinate (cube adjacency). The goal seems to be finding the maximum size of a subset of points with no two adjacent points both marked True, akin to a maximum independent set in a graph.
+
+Given the structure:
+- The points are arranged in 2 x 2 x 2 grid (8 points)
+- adjacency is between points differing in exactly one coordinate by 1
+- the theorem involves the size of the largest independent set avoiding adjacent pairs both True
+
+Since the total grid has 8 points, and adjacency is straightforward, I will approach this problem combinatorially:
+- generate all subsets of points
+- check for adjacency conflicts
+- track the maximum size subset fitting the constraints
+
+Here's a Python program to enumerate, find, and output the maximum independent set size:
+
+```python
+# Enumerate all subsets of the 8 points and find the maximum size subset
+# with no two adjacent points both in the subset, based on cube adjacency.
+
+def cube_points():
+    # Generate all points as indices 0..7
+    return range(8)
+
+def cube_adj(i, j):
+    # Compute x, y, z from index
+    x1, y1, z1 = i // 4, (i // 2) % 2, i % 2
+    x2, y2, z2 = j // 4, (j // 2) % 2, j % 2
+    return abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2) == 1
+
+points = list(cube_points())
+adj_pairs = [(i, j) for i in points for j in points if i < j and cube_adj(i, j)]
+
+max_size = 0
+max_subset = []
+
+from itertools import combinations
+
+# Iterate over all subsets
+for r in range(1, 9):
+    for subset in combinations(points, r):
+        # Check if subset is independent (no adjacent points both in)
+        if all((i, j) not in adj_pairs and (j, i) not in adj_pairs for i in subset for j in subset):
+            # Found a valid subset
+            print(f"Found subset of size {r}: {subset}")
+            if r > max_size:
+                max_size = r
+                max_subset = subset
+
+print(f"Maximum independent set size: {max_size}")
+```
+
+This code systematically enumerates all possible subsets, checks adjacency constraints, and reports each maximal subset as it is found, then outputs the maximum size. It prioritizes clear, exact enumeration over approximations, adheres to efficiency by only checking relevant pairs, and is suitable for the problem's scale.

@@ -1,0 +1,57 @@
+[write_program]
+The problem is about characterizing functions \( f: \mathbb{N} \to \mathbb{N} \) satisfying:
+- \( f(xy) = f(x) + f(y) \) for all \( x, y \),
+- \( \exists n \) with \( f(n) \neq 0 \),
+- infinitely many \( n \) satisfy for all \( k < n \), \( f(k) = f(n-k) \).
+
+We want to experimentally enumerate such functions or verify the symmetry condition for candidate functions of the form \( f(n) = a \cdot v_p(n) \) where \( v_p(n) \) is the exponent of prime \( p \) dividing \( n \). This corresponds to the characterization in the theorem.
+
+The program will:
+- Select sample primes \( p \) (2, 3, 5).
+- Select small values for \( a \) (1, 2).
+- Enumerate \( f(n) = a \times v_p(n) \) for \( n \) up to 20.
+- Check which \( n \) satisfy symmetry condition \( \forall k < n: f(k) = f(n-k) \).
+- Print such \( n \) values and the function parameters.
+- This helps conjecture the theorem experimentally.
+
+```python
+from math import log
+from sympy import primerange
+
+# Computes v_p(n): exponent of prime p dividing n
+def v_p(n, p):
+    if n == 0:
+        return 0  # define v_p(0)=0 for safety
+    count = 0
+    while n % p == 0 and n > 0:
+        n //= p
+        count += 1
+    return count
+
+# Check symmetry condition for f at n: forall k<n, f(k)=f(n-k)
+def is_symmetric(n, f):
+    for k in range(1,n):
+        if f(k) != f(n - k):
+            return False
+    return True
+
+def main():
+    primes = [2,3,5]
+    a_values = [1, 2]
+    N = 20
+
+    for p in primes:
+        for a in a_values:
+            def f(n): return a * v_p(n, p)
+            print(f"Trying f(n) = {a} * v_{p}(n), n up to {N}")
+            sym_n = []
+            for n in range(2, N):
+                if is_symmetric(n, f):
+                    sym_n.append(n)
+                    print(f" n={n} symmetric (f(k)=f(n-k) for all k<{n})")
+
+            print(f"Total symmetric n count: {len(sym_n)}\n")
+
+if __name__ == "__main__":
+    main()
+```

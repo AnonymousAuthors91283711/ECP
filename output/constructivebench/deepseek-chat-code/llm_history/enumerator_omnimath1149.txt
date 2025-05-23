@@ -1,0 +1,46 @@
+[write_program]
+This problem asks for the largest length `n` of an arithmetic progression where all terms `a + k*d` (for k=0 to n-1) are primes below 1,000,000. We'll write a Python program to search for such progressions by checking possible differences `d` and starting values `a`.
+
+The approach:
+1. Precompute primes below 1,000,000 using sieve
+2. For increasing lengths `n`, check if any arithmetic progression of that length exists
+3. Output found progressions and track the maximum length
+
+```python
+import sys
+import math
+
+def sieve(limit):
+    sieve = [True] * (limit + 1)
+    sieve[0] = sieve[1] = False
+    for i in range(2, int(math.sqrt(limit)) + 1):
+        if sieve[i]:
+            sieve[i*i::i] = [False] * len(sieve[i*i::i])
+    return sieve
+
+def find_max_progression(limit=1000000):
+    sieve_list = sieve(limit)
+    primes = [i for i, is_prime in enumerate(sieve_list) if is_prime]
+    prime_set = set(primes)
+    max_n = 0
+    
+    # Check progressions starting from each prime
+    for a in primes:
+        # Check possible differences (only need to check up to (limit-a)/max_possible_n)
+        max_possible_d = (limit - a) // (max_n + 1) if max_n > 0 else limit - a
+        for d in range(2, max_possible_d + 1, 2):  # d must be even (except when n=1)
+            n = 1
+            while n < 22:  # Known upper bound is 21, so we can limit search
+                term = a + n * d
+                if term >= limit or term not in prime_set:
+                    break
+                n += 1
+            if n > max_n:
+                max_n = n
+                print(f"New max length: {n}, progression starts at {a} with difference {d}")
+    
+    print(f"Final maximum progression length found: {max_n}")
+
+if __name__ == "__main__":
+    find_max_progression()
+```

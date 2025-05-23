@@ -1,0 +1,139 @@
+[write_program]
+The problem involves the function \( f(z) = z^2 - 19z \) on complex numbers and identifying right triangles with vertices \( z \), \( f(z) \), and \( f(f(z)) \). We want to find positive integers \( m, n \) such that
+\[
+z = m + \sqrt{n} + 11i,
+\]
+and the triangle formed by \( z \), \( f(z) \), \( f(f(z)) \) is right-angled (with a specific condition relating the vertices).
+
+The goal is to enumerate possible \((m,n)\) pairs that satisfy the right triangle condition and eventually conjecture the sum \( m + n \).
+
+We can:
+- Enumerate small positive integers \( m \) and \( n \),
+- Construct \( z = m + \sqrt{n} + 11i \),
+- Compute \( f(z) \), \( f(f(z)) \),
+- Check if the triangle with these vertices is right angled according to the given conditions,
+- Print all candidates \( (m,n) \),
+- Finally print the conjectured answer \( m+n \).
+
+Note: We'll treat complex numbers of the form \( m + \sqrt{n} + 11i \) as complex with real part \( m + \sqrt{n} \) and imaginary part \( 11 \).
+
+```python
+import math
+
+def is_right_triangle(z, fz, ffz):
+    def dist_sq(a,b):
+        return (a[0]-b[0])**2 + (a[1]-b[1])**2
+    ab = dist_sq(z, fz)
+    bc = dist_sq(fz, ffz)
+    ac = dist_sq(z, ffz)
+    # Check the three right angle conditions with vertex condition
+    conds = []
+    # Right angle at C = f(z)
+    conds.append((math.isclose(ab + bc, ac, abs_tol=1e-9) and ffz == fz))
+    # Right angle at B = f(f(z))
+    conds.append((math.isclose(ab + ac, bc, abs_tol=1e-9) and fz == ffz))
+    # Right angle at A = z
+    conds.append((math.isclose(bc + ac, ab, abs_tol=1e-9) and z == ffz))
+    return any(conds)
+
+def f(z):
+    # z is (x,y), interpret as complex x+iy; x may be a float involving sqrt.
+    x, y = z
+    # z^2 = (x+iy)^2 = (x^2 - y^2) + 2ixy
+    z_sq_x = x*x - y*y
+    z_sq_y = 2*x*y
+    # f(z) = z^2 - 19z
+    # 19z = (19x, 19y)
+    fx = z_sq_x - 19*x
+    fy = z_sq_y - 19*y
+    return (fx, fy)
+
+def approx_equal(a, b, eps=1e-9):
+    return abs(a-b) < eps
+
+# Since the problem is complicated, we analyze the law of cosines and vertex condition
+# Actually, the condition is that the vertex of the right angle corresponds to the image point
+# So check the three cases exactly:
+def is_right_triangle_with_vertex(z, fz, ffz):
+    def dist_sq(a,b):
+        return (a[0]-b[0])**2 + (a[1]-b[1])**2
+    ab = dist_sq(z, fz)
+    bc = dist_sq(fz, ffz)
+    ac = dist_sq(z, ffz)
+    # Case 1: right angle at C=ffz, and ffz = fz
+    if approx_equal(ab + bc, ac) and ffz == fz:
+        return True
+    # Case 2: right angle at B=fz, and fz = ffz
+    if approx_equal(ab + ac, bc) and fz == ffz:
+        return True
+    # Case 3: right angle at A=z, and z = ffz
+    if approx_equal(bc + ac, ab) and z == ffz:
+        return True
+    return False
+
+# However, the problem says:
+# A right triangle with vertices A,B,C satisfies one of:
+# ‖A-B‖²+‖B-C‖²=‖A-C‖² and C=f(B)
+# or ‖A-B‖²+‖A-C‖²=‖B-C‖² and B=f(C)
+# or ‖B-C‖²+‖A-C‖²=‖A-B‖² and A=f(C).
+
+# So the vertex of the right angle is that which equals f(...) of the other vertex.
+
+# So we implement these three checks directly:
+
+def is_right_triangle_condition(z, fz, ffz):
+    def dist_sq(a,b):
+        return (a[0]-b[0])**2 + (a[1]-b[1])**2
+    ab = dist_sq(z,fz)
+    bc = dist_sq(fz,ffz)
+    ac = dist_sq(z,ffz)
+    # Check each condition:
+    # 1) Right angle at C, C=f(B): ab + bc = ac and C == f(B)
+    cond1 = abs(ab + bc - ac) < 1e-9 and ffz == fz
+    # 2) Right angle at B, B=f(C): ab + ac = bc and B == f(C)
+    cond2 = abs(ab + ac - bc) < 1e-9 and fz == ffz
+    # 3) Right angle at A, A=f(C): bc + ac = ab and A == f(C)
+    cond3 = abs(bc + ac - ab) < 1e-9 and z == ffz
+    return cond1 or cond2 or cond3
+
+# Actually, checking ffz==fz or fz==ffz or z==ffz with floats is unlikely.
+# The original problem likely means equal as complex numbers; here we keep exact comparisons.
+
+# Our approach:
+# For integers m,n >0, z = (m + sqrt(n), 11)
+# We'll compute f(z), f(f(z)), each as complex points.
+# Then test the 3 conditions using approximations.
+# If satisfied, print (m,n).
+
+# Let's fix max ranges for speed:
+max_m = 20
+max_n = 20
+
+def main():
+    print("Enumerating (m,n) with m,n>0, z=m + sqrt(n) + 11i such that triangle z,f(z),f(f(z)) right:")
+    for m in range(1, max_m+1):
+        for n in range(1, max_n+1):
+            # z = (m + sqrt(n), 11)
+            z = (m + math.sqrt(n), 11.0)
+            fz = f(z)
+            ffz = f(fz)
+            # Check 3 conditions exactly:
+            def dist_sq(a,b):
+                return (a[0]-b[0])**2 + (a[1]-b[1])**2
+            ab = dist_sq(z,fz)
+            bc = dist_sq(fz,ffz)
+            ac = dist_sq(z,ffz)
+            cond1 = abs(ab + bc - ac) < 1e-9 and all(abs(ffz[i] - fz[i])<1e-9 for i in (0,1))
+            cond2 = abs(ab + ac - bc) < 1e-9 and all(abs(fz[i] - ffz[i])<1e-9 for i in (0,1))
+            cond3 = abs(bc + ac - ab) < 1e-9 and all(abs(z[i] - ffz[i])<1e-9 for i in (0,1))
+            if cond1 or cond2 or cond3:
+                print(f"Found: m={m}, n={n}, sum={m+n}")
+
+    # After enumeration, conjecture P2019AIMEI_12_answer as maximum sum found
+    # or print all sums found.
+    # For demonstration, just print max sum found:
+    # (In full solve, use problem insight. Here just printing for conjecture.)
+
+if __name__ == "__main__":
+    main()
+```

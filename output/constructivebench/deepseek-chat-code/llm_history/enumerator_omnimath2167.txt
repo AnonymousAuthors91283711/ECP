@@ -1,0 +1,44 @@
+[write_program]
+This problem involves finding the minimum possible value of |a + bω + cω²| where a,b,c are integers with abc=60, ω is a primitive cube root of unity (ω≠1, ω³=1). We'll enumerate possible integer triples (a,b,c) with product 60 and compute the complex norm.
+
+```python
+import math
+import itertools
+
+def complex_norm(a, b, c):
+    # |a + bω + cω²| where ω = e^(2πi/3)
+    # ω² = -1 - ω, so expression becomes (a - c) + (b - c)ω
+    # Norm squared is (a-c)^2 + (b-c)^2 - (a-c)(b-c)
+    x = a - c
+    y = b - c
+    return math.sqrt(x**2 + y**2 - x*y)
+
+def factor_pairs(n):
+    factors = []
+    for i in range(1, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            factors.append(i)
+            if i != n // i:
+                factors.append(n // i)
+    return sorted(factors)
+
+min_norm = float('inf')
+best_triple = None
+
+# Generate all ordered triples with product 60
+for a in factor_pairs(60):
+    remaining = 60 // a
+    for b in factor_pairs(remaining):
+        if remaining % b == 0:
+            c = remaining // b
+            # Consider all permutations since order matters
+            for triple in itertools.permutations((a, b, c)):
+                current_norm = complex_norm(*triple)
+                if current_norm < min_norm:
+                    min_norm = current_norm
+                    best_triple = triple
+                    print(f"New minimum: {min_norm:.6f} from {triple}")
+
+print(f"\nFinal minimum norm: {min_norm:.6f}")
+print(f"Achieved by triple: {best_triple}")
+```

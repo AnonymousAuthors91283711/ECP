@@ -1,0 +1,104 @@
+[write_program]
+This problem involves analyzing a 300x300 grid with four corner 100x100 blocks fixed to false, and the rest unconstrained except for a forbidden pattern among adjacent cells. The question centers on counting edges crossing between true and false cells.
+
+To assist conjecturing the maximum number k of such edges, we'll enumerate smaller grids, identifying edges where grid cells differ and validating the forbidden pattern constraint locally. The full 300x300 grid is too large, so we'll sample smaller grid sizes (e.g., 10x10) and test different boolean grid configurations with the corner blocks fixed to false.
+
+The program below enumerates boolean grids over a small n x n grid (n=10), with analogous "corner" blocks set to False, and counts edges between differing adjacent cells that avoid the forbidden pattern. It prints candidate counts, attempting to find maximal values.
+
+```python
+# Enumerate boolean grids on small n x n grid with four corner blocks false,
+# count edges where adjacent cells differ, and forbidden pattern avoided.
+# Print counts of edges found for different grid configurations to assist conjecture.
+
+def neighbors(n):
+    for i in range(n):
+        for j in range(n):
+            if i + 1 < n:
+                yield (i, j), (i + 1, j)
+            if j + 1 < n:
+                yield (i, j), (i, j + 1)
+
+def forbidden(grid, i, j, n):
+    # forbidden pattern: for 2x2 square starting at (i,j), the top left != top right,
+    # and top left == bottom left == other? Check exactly the pattern in problem.
+    # The problem forbids: grid[i, j] == grid[i+1, j], grid[i, j+1] == grid[i+1, j+1], but grid[i,j] != grid[i, j+1]
+    if i + 1 >= n or j + 1 >= n:
+        return False
+    a = grid[i][j]
+    b = grid[i+1][j]
+    c = grid[i][j+1]
+    d = grid[i+1][j+1]
+    return a == b and c == d and a != c
+
+def fixed_false(n):
+    # Four corner blocks of size 3x3 set false (scaled down from 100)
+    f = set()
+    block_size = 3
+    for i in range(block_size):
+        for j in range(block_size):
+            f.add((i, j))
+            f.add((i, n - 1 - j))
+            f.add((n - 1 - i, j))
+            f.add((n - 1 - i, n - 1 - j))
+    return f
+
+def print_grid(grid):
+    for row in grid:
+        print("".join(['#' if x else '.' for x in row]))
+
+def count_edges(grid, n):
+    cnt = 0
+    for (i1, j1), (i2, j2) in neighbors(n):
+        if grid[i1][j1] != grid[i2][j2]:
+            cnt += 1
+    return cnt
+
+def check_forbidden(grid, n):
+    for i in range(n):
+        for j in range(n):
+            if forbidden(grid, i, j, n):
+                return True
+    return False
+
+def enumerate_grids(n):
+    fixed = fixed_false(n)
+    total = 0
+    max_edges = -1
+    max_config = None
+    # We'll enumerate grids by rows as binary numbers to limit output.
+    # To reduce complexity, we vary only inside the free cells.
+    free_cells = [(i,j) for i in range(n) for j in range(n) if (i,j) not in fixed]
+
+    from itertools import product
+    # limit enumeration to 2^10 = 1024 candidates for performance
+    sample_steps = 10
+    if len(free_cells) > sample_steps:
+        free_cells = free_cells[:sample_steps]
+
+    for bits in product([False, True], repeat=len(free_cells)):
+        grid = [[False]*n for _ in range(n)]
+        # fixed false cells
+        for (i,j) in fixed:
+            grid[i][j] = False
+        # assign bits
+        for idx, (i,j) in enumerate(free_cells):
+            grid[i][j] = bits[idx]
+
+        if check_forbidden(grid, n):
+            continue
+        c = count_edges(grid, n)
+        print(f"Edges={c}")
+        if c > max_edges:
+            max_edges = c
+            max_config = [row[:] for row in grid]
+    print(f"Max edges found: {max_edges}")
+    if max_config:
+        print("Example configuration:")
+        print_grid(max_config)
+
+if __name__ == "__main__":
+    n = 10
+    print(f"Enumerating grids with n={n}")
+    enumerate_grids(n)
+```
+This program enumerates boolean grids on a 10x10 grid fixing four corner 3x3 blocks to False, checks forbidden patterns and counts edges between differing cells. It prints edges counts immediately and finally outputs the max edges found with an example configuration. Adjust `n` and fixed block size for other samples.

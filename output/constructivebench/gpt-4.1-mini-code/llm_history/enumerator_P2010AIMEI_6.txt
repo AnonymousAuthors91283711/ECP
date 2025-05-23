@@ -1,0 +1,88 @@
+[write_program]
+This problem involves a quadratic polynomial \( P(x) = ax^2 + bx + c \) bounded by two quadratic functions for all real \( x \):
+\[
+x^2 - 2x + 2 \leq P(x) \leq 2x^2 - 4x + 3
+\]
+and satisfies \( P(11) = 181 \). We want to find \( P(16) \).
+
+To assist in conjecturing the solution, we will enumerate possible triples \((a,b,c)\) such that the polynomial lies between the bounds for integer values \(x \in \{0, 1, \ldots, 20\}\) (as a practical domain to check), satisfies \(P(11) = 181\), and respect the inequalities. We'll print such polynomials' \(P(16)\) values exactly if possible.
+
+We pick small rational values around the bounds and check. Since the problem is from a contest, likely the true polynomial is a "nice" quadratic touching the bounds at some points.
+
+```python
+# Enumerate quadratic polynomials P(x) = a x^2 + b x + c
+# satisfying the bounds for x in 0..20 and P(11) = 181
+# Then print P(16).
+
+def main():
+    # We'll check integer or half-integer coefficients in a range near the given bounds.
+    # For the lower bound polynomial q1(x) = x^2 - 2x + 2
+    # Must have P(x) >= q1(x)
+    # For the upper bound polynomial q2(x) = 2x^2 - 4x +3
+    # Must have P(x) <= q2(x)
+
+    # Since:
+    # For each x, q1(x) <= P(x) <= q2(x)
+    # So for each x, a x^2 + b x + c in [q1(x), q2(x)]
+
+    # Because inequalities must hold for all real x, the graphs do not cross improperly:
+    # Checking at integers 0..20 as a heuristic
+
+    candidates = []
+    xs = range(0, 21)
+    target_x = 11
+    target_val = 181
+
+    # We infer from P(11) = 181:
+    # a*11^2 + b*11 + c = 181
+
+    # 11^2 = 121
+    # => 121a + 11b + c = 181
+    # For fixed a,b, c = 181 - 121a -11b
+
+    # So enumerate a,b, compute c accordingly.
+
+    # Let's try a in [1.0, 2.0] stepping by 0.1 (since bounds are between x^2 and 2 x^2)
+    # b in [-5, 5], step 0.5 for efficiency
+
+    import fractions
+    for a_num in range(10, 21):  # a from 1.0 to 2.0 step 0.1
+        a = a_num / 10
+        for b_num in range(-10, 11):  # b from -5.0 to 5.0 step 0.5
+            b = b_num / 2
+            c = 181 - 121*a - 11*b  # meet P(11)=181 exactly
+
+            # Check inequalities at all xs
+            valid = True
+            for x in xs:
+                px = a*x*x + b*x + c
+                lower = x*x - 2*x + 2
+                upper = 2*x*x - 4*x + 3
+                if not (lower - 1e-12 <= px <= upper + 1e-12):
+                    valid = False
+                    break
+
+            if valid:
+                # Print exact rational coefficients and P(16)
+                # Also print P(16)
+                p16 = a*16*16 + b*16 + c
+                # Print as fraction approximation
+                from fractions import Fraction
+                a_f = Fraction(a).limit_denominator(100)
+                b_f = Fraction(b).limit_denominator(100)
+                c_f = Fraction(c).limit_denominator(100)
+                p16_f = Fraction(p16).limit_denominator(1000)
+                print(f"a={a_f}, b={b_f}, c={c_f}, P(16)={p16_f} ~ {float(p16):.3f}")
+                candidates.append((float(p16), (a,b,c)))
+
+    if candidates:
+        # Print min and max P(16)
+        vals = [p for p, coef in candidates]
+        print(f"\nMinimum P(16) found: {min(vals):.3f}")
+        print(f"Maximum P(16) found: {max(vals):.3f}")
+    else:
+        print("No polynomials found satisfying conditions within search.")
+
+if __name__ == '__main__':
+    main()
+```

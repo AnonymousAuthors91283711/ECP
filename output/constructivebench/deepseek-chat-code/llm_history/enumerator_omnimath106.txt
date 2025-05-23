@@ -1,0 +1,54 @@
+[write_program]
+This problem involves finding the maximum value of a ratio involving matrix norms with different exponents. We'll write a Python program to explore small integer values of m, n, r, and s to help conjecture the general answer.
+
+The program will:
+1. Iterate through small values of m and n (starting from 2)
+2. Use simple rational values for r and s (like r=1, s=2)
+3. Generate simple non-zero matrices and compute the ratio
+4. Track the maximum ratio found for each parameter set
+
+```python
+import numpy as np
+from itertools import product
+from fractions import Fraction
+
+def compute_ratio(matrix, r, s):
+    """Compute the ratio for a given matrix and exponents r,s"""
+    m, n = matrix.shape
+    # Compute denominator: sum over i of (sum over j of a_ij^r)^(s/r)
+    denom = sum((sum(matrix[i,j]**r for j in range(n)))**(Fraction(s,r)) for i in range(m))
+    denom = denom ** Fraction(1,s)
+    
+    # Compute numerator: sum over j of (sum over i of a_ij^s)^(r/s)
+    numer = sum((sum(matrix[i,j]**s for i in range(m)))**(Fraction(r,s)) for j in range(n))
+    numer = numer ** Fraction(1,r)
+    
+    return float(numer / denom)
+
+def enumerate_ratios(max_mn=3, max_k=3):
+    """Enumerate ratios for small matrices and exponents"""
+    for m in range(2, max_mn+1):
+        for n in range(2, max_mn+1):
+            for k in range(1, max_k+1):
+                r = Fraction(1,1)
+                s = Fraction(k+1,1)
+                print(f"\nm={m}, n={n}, r={r}, s={s}")
+                
+                # Generate simple binary matrices
+                for bits in product([0,1], repeat=m*n):
+                    if sum(bits) == 0: continue  # skip zero matrix
+                    mat = np.array(bits).reshape(m,n)
+                    ratio = compute_ratio(mat, r, s)
+                    print(f"Matrix:\n{mat}\nRatio: {ratio:.4f}")
+                
+                # Also try a matrix with one 1 and rest 0s
+                for i in range(m):
+                    for j in range(n):
+                        mat = np.zeros((m,n))
+                        mat[i,j] = 1
+                        ratio = compute_ratio(mat, r, s)
+                        print(f"Single 1 matrix at ({i},{j}): Ratio: {ratio:.4f}")
+
+if __name__ == "__main__":
+    enumerate_ratios()
+```

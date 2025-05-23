@@ -1,0 +1,57 @@
+[write_program]
+This problem involves finding real quadruples (x,y,z,w) where each variable is non-zero and satisfies a cyclic system of equations. We'll enumerate possible solutions by:
+1. Looking for fixed points where x=y=z=w
+2. Checking for simple rational solutions
+3. Using numerical approximation when exact solutions aren't obvious
+
+```python
+import math
+
+def find_solutions():
+    # First check fixed points where x=y=z=w
+    print("Checking fixed points x=y=z=w:")
+    for sign in [1, -1]:
+        # Solve x + 1/x^3 = 2x => 1/x^3 = x => x^4 = 1
+        x = sign * 1.0
+        print(f"Fixed point solution: ({x}, {x}, {x}, {x})")
+    
+    # Check for cycles of length 2 (x=z, y=w)
+    print("\nChecking cycles of length 2:")
+    for sign1 in [1, -1]:
+        for sign2 in [1, -1]:
+            # We need to solve:
+            # x + 1/x^3 = 2y
+            # y + 1/y^3 = 2x
+            # Let's try x=1, y=1 (already covered)
+            # Try x=2^(1/4), y=2^(-1/4)
+            x = sign1 * (2 ** 0.25)
+            y = sign2 * (2 ** -0.25)
+            z = x
+            w = y
+            print(f"Cycle solution: ({x:.5f}, {y:.5f}, {z:.5f}, {w:.5f})")
+    
+    # Check for cycles of length 4
+    print("\nChecking for cycles of length 4 (numerical approximation):")
+    # We'll use fixed point iteration
+    def next_val(v):
+        return (v + v**-3)/2
+    
+    # Try different starting points
+    for start in [0.5, 1.5, -0.5, -1.5]:
+        x = start
+        for _ in range(20):
+            y = next_val(x)
+            z = next_val(y)
+            w = next_val(z)
+            x_new = next_val(w)
+            if abs(x_new - x) < 1e-8:
+                break
+            x = x_new
+        y = next_val(x)
+        z = next_val(y)
+        w = next_val(z)
+        if abs(next_val(w) - x) < 1e-6:
+            print(f"Approximate 4-cycle: ({x:.5f}, {y:.5f}, {z:.5f}, {w:.5f})")
+
+find_solutions()
+```

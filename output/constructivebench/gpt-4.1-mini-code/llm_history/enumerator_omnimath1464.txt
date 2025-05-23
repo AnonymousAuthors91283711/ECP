@@ -1,0 +1,70 @@
+[write_program]
+The problem involves a sequence \(a: \mathbb{N} \to \mathbb{R}\) with \(a_0 = a_0 > 0\) integer, and for each \(i\),
+\[
+a_{i+1} = 2 a_i + 1 \quad \text{or} \quad a_{i+1} = \frac{a_i}{a_i + 2},
+\]
+and there exists some \(k > 0\) with \(a_k = 2014\). We seek the least positive integer \(n\) for which there exists such a sequence with \(a_n = 2014\).
+
+We can enumerate small starting integers \(a_0\), build sequences applying both operations at each step, and record the smallest \(n\) such that \(a_n=2014\). We will print all occurrences of \(n\) with the corresponding \(a_0\), and eventually the minimal \(n\).
+
+Since \(2014\) is large, the division operation on large integers will usually produce fractions less than 1, and the sequence might not reach 2014 again except by the multiplication step. So, we proceed carefully and limit depth and states to keep enumeration practical.
+
+```python
+# Enumerate sequences starting from positive integers a0 up to 10
+# for steps up to 20, applying two possible operations each step,
+# searching for sequences reaching 2014 at some step n>0.
+# Print each found n with corresponding a0 and finally the minimal n.
+
+from fractions import Fraction
+from collections import deque
+
+TARGET = Fraction(2014)
+MAX_A0 = 10
+MAX_STEPS = 20
+
+print(f"Searching sequences with a0 in 1..{MAX_A0} and up to {MAX_STEPS} steps...")
+
+results = []
+min_n = None
+
+for a0 in range(1, MAX_A0+1):
+    start = Fraction(a0)
+    # queue items: (index n, current value a_n)
+    # store states to avoid revisiting
+    queue = deque()
+    queue.append( (0, start) )
+    visited = dict()
+    visited[(0, start)] = True
+
+    while queue:
+        n, val = queue.popleft()
+        if n > 0 and val == TARGET:
+            print(f"Found n={n} with a0={a0}")
+            results.append((n,a0))
+            if min_n is None or n < min_n:
+                min_n = n
+            # No break, continue for all possibilities
+
+        if n == MAX_STEPS:
+            continue
+
+        # Next step candidates
+        # Operation 1: a_{n+1} = 2*a_n + 1
+        val1 = 2*val + 1
+        key1 = (n+1, val1)
+        if key1 not in visited:
+            visited[key1] = True
+            queue.append(key1)
+
+        # Operation 2: a_{n+1} = a_n / (a_n + 2), note denominator is val+2 !=0
+        val2 = val / (val + 2)
+        key2 = (n+1, val2)
+        if key2 not in visited:
+            visited[key2] = True
+            queue.append(key2)
+
+if results:
+    print(f"Minimal n with a_n=2014 is {min_n}")
+else:
+    print("No sequences found reaching 2014 in given bounds.")
+```

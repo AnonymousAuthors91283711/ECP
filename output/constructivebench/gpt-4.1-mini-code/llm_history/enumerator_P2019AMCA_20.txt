@@ -1,0 +1,62 @@
+[write_program]
+The given problem appears to relate to probabilities involving discrete or uniform random variables and events where the absolute difference exceeds 1/2. To assist in conjecturing and proving the true answer, we'll enumerate probabilities for these events using sampled parameters. We consider the case where variables can be 0, 1, or uniform on [0,1], and compute the probability that |x-y| > 1/2 for various combinations approximated numerically where needed.
+
+```python
+import math
+
+# Define probabilities as in the problem
+p_heads = 0.5
+p_tails = 0.5
+p_0 = p_heads * 0.5    # Probability x=0
+p_1 = p_heads * 0.5    # Probability x=1
+p_uniform = p_tails    # Probability x uniform[0,1]
+p_xy_uniform = p_uniform * p_uniform
+
+def prob_abs_diff_gt_half_uniform_uniform():
+    # Probability |X - Y| > 1/2 for X,Y ~ Unif(0,1), independent
+    # Exact formula: P(|X-Y| > 1/2) = 1 - P(|X-Y| <= 1/2)
+    # P(|X-Y| <= 1/2) = 3/4, so P(|X-Y| > 1/2) = 1/4
+    return 0.25
+
+def prob_abs_diff_gt_half_uniform_value(val):
+    # P(|U - val| > 1/2) for U~Unif(0,1)
+    # = length of interval where |u - val| > 1/2 divided by 1
+    low = max(0, val - 0.5)
+    high = min(1, val + 0.5)
+    interval_length = high - low
+    return 1 - interval_length   # complement
+
+def main():
+    print(f"Parameters:")
+    print(f"p_heads = {p_heads}, p_tails = {p_tails}")
+    print(f"p_0 = {p_0}, p_1 = {p_1}, p_uniform = {p_uniform}, p_xy_uniform = {p_xy_uniform}")
+
+    # Compute each term in probability sum
+    term_0_1 = p_0 * p_1
+    print(f"p_0 * p_1 = {term_0_1:.6f}")
+
+    term_1_0 = p_1 * p_0
+    print(f"p_1 * p_0 = {term_1_0:.6f}")
+
+    term_0_uniform = p_0 * p_uniform * prob_abs_diff_gt_half_uniform_value(0)
+    print(f"p_0 * p_uniform * P(|uniform - 0| > 1/2) = {term_0_uniform:.6f}")
+
+    term_1_uniform = p_1 * p_uniform * prob_abs_diff_gt_half_uniform_value(1)
+    print(f"p_1 * p_uniform * P(|uniform - 1| > 1/2) = {term_1_uniform:.6f}")
+
+    term_uniform_0 = p_uniform * p_0 * prob_abs_diff_gt_half_uniform_value(0)
+    print(f"p_uniform * p_0 * P(|uniform - 0| > 1/2) = {term_uniform_0:.6f}")
+
+    term_uniform_1 = p_uniform * p_1 * prob_abs_diff_gt_half_uniform_value(1)
+    print(f"p_uniform * p_1 * P(|uniform - 1| > 1/2) = {term_uniform_1:.6f}")
+
+    term_uniform_uniform = p_xy_uniform * prob_abs_diff_gt_half_uniform_uniform()
+    print(f"p_xy_uniform * P(|uniform - uniform| > 1/2) = {term_uniform_uniform:.6f}")
+
+    total_prob = (term_0_1 + term_1_0 + term_0_uniform + term_1_uniform +
+                  term_uniform_0 + term_uniform_1 + term_uniform_uniform)
+    print(f"Total probability that |X - Y| > 1/2 is approx {total_prob:.6f}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,81 @@
+[write_program]
+This problem involves finding the sum of y-coordinates from two distinct triples (x₁,y₁,z₁) and (x₂,y₂,z₂) that satisfy given power sum conditions. We'll approach this by:
+
+1. Using Newton's identities to find the elementary symmetric polynomials
+2. Constructing the characteristic polynomial whose roots are x,y,z
+3. Solving for possible triples
+4. Finding distinct pairs of triples and computing y₁ + y₂
+
+```python
+import itertools
+from math import isclose
+
+def solve():
+    # Given conditions:
+    s1 = 6  # x+y+z
+    s2 = 8  # x²+y²+z²
+    s3 = 5  # x³+y³+z³
+    
+    # Calculate elementary symmetric polynomials using Newton's identities
+    # σ1 = x+y+z = s1
+    # σ2 = xy+yz+zx = (s1² - s2)/2
+    # σ3 = xyz = (s1³ - 3s1s2 + 2s3)/6
+    sigma1 = s1
+    sigma2 = (s1**2 - s2)/2
+    sigma3 = (s1**3 - 3*s1*s2 + 2*s3)/6
+    
+    # The roots satisfy t³ - σ1 t² + σ2 t - σ3 = 0
+    # We'll find all real roots (there may be multiple real roots)
+    
+    # Coefficients for cubic equation: t³ - 6t² + 14t - 11/2 = 0
+    a = 1
+    b = -6
+    c = 14
+    d = -11/2
+    
+    # Find roots numerically (since exact form is messy)
+    # We'll sample points and look for sign changes
+    def f(t):
+        return a*t**3 + b*t**2 + c*t + d
+    
+    # Search for roots between -10 and 10
+    roots = set()
+    for i in range(-1000, 1000):
+        x1 = i/100
+        x2 = (i+1)/100
+        if f(x1)*f(x2) <= 0:
+            # Refine using binary search
+            left, right = x1, x2
+            for _ in range(20):
+                mid = (left + right)/2
+                if f(mid)*f(left) <= 0:
+                    right = mid
+                else:
+                    left = mid
+            root = (left + right)/2
+            roots.add(round(root, 6))
+    
+    roots = sorted(roots)
+    print(f"Found roots: {roots}")
+    
+    # Generate all possible triples (permutations with possible duplicates)
+    possible_triples = set()
+    for combo in itertools.combinations_with_replacement(roots, 3):
+        for perm in itertools.permutations(combo):
+            x, y, z = perm
+            if (isclose(x+y+z, s1) and 
+                isclose(x**2+y**2+z**2, s2) and 
+                isclose(x**3+y**3+z**3, s3)):
+                possible_triples.add((round(x,6), round(y,6), round(z,6)))
+    
+    print(f"Valid triples: {possible_triples}")
+    
+    # Find two distinct triples and compute y1 + y2
+    triples = list(possible_triples)
+    if len(triples) >= 2:
+        t1, t2 = triples[0], triples[1]
+        y_sum = t1[1] + t2[1]
+        print(f"y1 + y2 = {y_sum}")
+
+solve()
+```

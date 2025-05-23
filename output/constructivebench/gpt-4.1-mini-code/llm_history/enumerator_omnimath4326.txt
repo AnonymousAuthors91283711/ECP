@@ -1,0 +1,40 @@
+[write_program]
+The problem concerns finding a polynomial \( P \) with natural number coefficients (each positive) up to degree \( n-1 \) (where \( n \geq 2 \)), such that for all positive integers \( k \), the parity of the sum of the decimal digits of \( k \) matches that of \( P(k) \).
+
+To explore this, we can try small degrees \( n \) and enumerate polynomials with small positive coefficients. For each polynomial, we check \( k = 1 \) to some upper bound (e.g., 20) to see if the parity condition holds. Since the problem demands partial streaming output and does not require proving the property exhaustively, we'll enumerate possible \( n \), polynomials \( P \), and print those that satisfy the parity condition up to the checked \( k \).
+
+This program prints candidate polynomials and the parameters used. It uses exact arithmetic and prints as soon as a candidate matching the parity on the range is found.
+
+```python
+def digit_sum_parity(x: int) -> int:
+    return sum(int(d) for d in str(x)) % 2
+
+def polynomial_eval(coeffs, x):
+    return sum(c * (x ** i) for i, c in enumerate(coeffs))
+
+def main():
+    max_degree = 4  # n-1 max index
+    max_coeff = 3   # small positive coefficients
+    max_k = 20      # check first 20 positive integers
+
+    print("Enumerating polynomials P with degree <=", max_degree, 
+          "with coeffs in [1..", max_coeff, "]")
+    for n in range(2, max_degree + 2):  # n >= 2
+        print(f"n = {n}")
+        # We consider polynomials of degree n-1 with positive coeffs
+        from itertools import product
+        for coeffs in product(range(1, max_coeff+1), repeat=n):
+            good = True
+            for k in range(1, max_k+1):
+                parity_k = digit_sum_parity(k)
+                p_val = polynomial_eval(coeffs, k)
+                parity_p = digit_sum_parity(p_val)
+                if parity_k != parity_p:
+                    good = False
+                    break
+            if good:
+                print(f"  P coeffs = {coeffs} satisfy parity condition for k=1..{max_k}")
+
+if __name__ == "__main__":
+    main()
+```

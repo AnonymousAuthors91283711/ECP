@@ -1,0 +1,66 @@
+[write_program]
+The problem considers permutations (derangements) of size n=101 with no fixed points, then counts those derangements f with additional constraints on values of f(0), f(0) ≠ 1,2 and on the inverse permutation at 1,2, f⁻¹(1) ≠ 0, f⁻¹(2) ≠ 0. We want the ratio of the count of valid_assignments to the count of all derangements.
+
+Enumerating all derangements for n=101 directly is impossible. Instead, we can test for small n (e.g., n=4,5) and enumerate derangements satisfying the constraints on 0, 1, 2 to conjecture the ratio or formula for larger n.
+
+We will:
+- Enumerate all permutations for small n=4,5
+- Filter derangements (no fixed points)
+- Apply the constraints on f(0) and f⁻¹(1), f⁻¹(2)
+- Print the ratio count_valid/count_derangements for these small ns to identify a pattern.
+
+This follows the instruction to experiment on small parameter values, print results streaming, without hardcoded answers.
+
+```python
+from itertools import permutations
+
+def is_derangement(p):
+    # p is a tuple representing a permutation of [0,...,n-1]
+    return all(p[i] != i for i in range(len(p)))
+
+def satisfies_constraints(p):
+    # p is a tuple representing the permutation
+    n = len(p)
+    # condition f(0) != 1 and f(0) != 2
+    if p[0] == 1 or p[0] == 2:
+        return False
+    # To check f⁻¹(1) != 0 and f⁻¹(2) != 0:
+    # find index of 1 and 2 in p
+    try:
+        inv1 = p.index(1)
+        inv2 = p.index(2)
+    except ValueError:
+        # 1 or 2 not in permutation (impossible), but safe to handle
+        return False
+    if inv1 == 0 or inv2 == 0:
+        return False
+    return True
+
+def enumerate_for_n(n):
+    count_derangements = 0
+    count_valid = 0
+    # To avoid too long output, limit to n<=5
+    print(f"n = {n}")
+    for p in permutations(range(n)):
+        if is_derangement(p):
+            count_derangements += 1
+            if satisfies_constraints(p):
+                count_valid += 1
+                print(f"Valid derangement: {p}")
+    if count_derangements == 0:
+        ratio = 0
+    else:
+        ratio = count_valid / count_derangements
+    print(f"Derangements count: {count_derangements}")
+    print(f"Valid assignments count: {count_valid}")
+    print(f"Ratio valid/derangements: {ratio:.6f}")
+    print()
+
+def main():
+    # small sample n values to glean pattern
+    for n in [4,5]:
+        enumerate_for_n(n)
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,49 @@
+[write_program]
+This problem involves finding the minimal positive value of a₂ in a recursive sequence defined by a₀=0, a₁=1, and a recurrence relation. The sequence must satisfy certain conditions and cannot be extended beyond a₉. We'll write a Python program to enumerate possible values of a₂ and compute the sequence to find the minimal valid a₂.
+
+The approach:
+1. Start with small positive values for a₂
+2. Compute the sequence up to a₉ using the recurrence relation
+3. Check if the sequence cannot be extended to a₁₀
+4. Find the minimal a₂ that satisfies all conditions
+
+```python
+def compute_sequence(a2, max_n=10):
+    """Compute the sequence up to a9 given a2, return None if invalid"""
+    a = [0.0, 1.0, a2]
+    for n in range(8):  # Compute up to a10 (index 10)
+        # Recurrence relation: a_{n+2} = (a_n + a_{n+1})/(a_n * a_{n+1} - 1)
+        if n + 2 > 9:  # We only need up to a9 to check extendability
+            break
+        denominator = a[n] * a[n+1] - 1
+        if abs(denominator) < 1e-10:  # Prevent division by zero
+            return None
+        next_term = (a[n] + a[n+1]) / denominator
+        a.append(next_term)
+    return a
+
+def is_valid(a2):
+    """Check if a2 leads to a sequence that can't be extended to a10"""
+    a = compute_sequence(a2)
+    if a is None or len(a) < 10:
+        return False
+    # Check if a10 would be undefined (denominator zero)
+    denominator = a[8] * a[9] - 1
+    return abs(denominator) < 1e-10
+
+def find_min_a2():
+    """Find minimal positive a2 that satisfies the conditions"""
+    min_valid = None
+    # Search in small steps (can be refined near the solution)
+    for a2 in [x * 0.0001 for x in range(1, 100000)]:
+        if is_valid(a2):
+            if min_valid is None or a2 < min_valid:
+                min_valid = a2
+                print(f"Found candidate: {a2}")
+    if min_valid is not None:
+        print(f"Minimal valid a2: {min_valid}")
+    else:
+        print("No valid a2 found in search range")
+
+find_min_a2()
+```

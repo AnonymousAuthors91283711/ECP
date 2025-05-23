@@ -1,0 +1,49 @@
+[write_program]
+The problem is to enumerate injective functions from a 2×6 grid to {0,...,11} such that adjacent cells don't differ by a multiple of 3. We'll enumerate these functions and count how many satisfy the condition, then print the count and some divisors to guess the cardinality's behavior.
+
+```python
+from itertools import permutations
+
+# Domain grid size: 2 rows × 6 columns = 12 cells
+rows, cols = 2, 6
+cells = [(r, c) for r in range(rows) for c in range(cols)]
+
+def adjacent(a, b):
+    r1, c1 = a
+    r2, c2 = b
+    # Adjacent if same row and columns differ by 1 or
+    # same column and rows differ by 1
+    return (r1 == r2 and abs(c1 - c2) == 1) or (c1 == c2 and abs(r1 - r2) == 1)
+
+# Precompute adjacency pairs (as unordered pairs)
+adj_pairs = []
+for i in range(len(cells)):
+    for j in range(i+1, len(cells)):
+        if adjacent(cells[i], cells[j]):
+            adj_pairs.append((i, j))
+
+values = list(range(12))
+
+count = 0
+for perm in permutations(values, 12):
+    # perm[i] is value assigned to cells[i]
+    # Check all adjacency pairs for difference divisible by 3
+    if any((abs(perm[i] - perm[j]) % 3 == 0) for i, j in adj_pairs):
+        continue
+    count += 1
+    if count <= 10:  # print first 10 as they are found
+        print(f"Valid #{count} assignment: {perm}")
+print(f"Total valid assignments: {count}")
+
+# Print divisors of count as candidates
+def divisors(n):
+    divs = []
+    for d in range(1, int(n**0.5)+1):
+        if n % d == 0:
+            divs.append(d)
+            if d*d != n:
+                divs.append(n//d)
+    return sorted(divs)
+
+print("Divisors of total count:", divisors(count))
+```

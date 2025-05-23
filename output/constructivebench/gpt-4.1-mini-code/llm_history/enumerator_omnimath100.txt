@@ -1,0 +1,68 @@
+[write_program]
+The problem involves finding all triples \((x,y,z) \in \mathbb{R}^3\) satisfying the system of cubic equations:
+
+\[
+\begin{cases}
+x^3 = 3x - 12y + 50, \\
+y^3 = 12y + 3z - 2, \\
+z^3 = 27z + 27x.
+\end{cases}
+\]
+
+To assist in conjecturing what these solutions might be, we will write a Python program that attempts to find real solutions near integers in a small range.
+
+- We'll check integer triples \((x,y,z)\) in a reasonable range (say \(-5\) to \(5\)).
+- For each triple, we check if the system is almost satisfied.
+- Since it's numerical, we'll allow a small tolerance.
+- We'll print out the integer triples that nearly satisfy the system exactly, then attempt some float approximations using small grids.
+- This may help conjecture exact algebraic values.
+
+```python
+# enumerator.py
+# Enumerates approximate solutions to the system:
+# x^3 = 3x -12y + 50
+# y^3 = 12y + 3z - 2
+# z^3 = 27z + 27x
+
+def near_zero(val, tol=1e-6):
+    return abs(val) < tol
+
+def check_system(x,y,z):
+    eq1 = x**3 - (3*x -12*y +50)
+    eq2 = y**3 - (12*y +3*z -2)
+    eq3 = z**3 - (27*z +27*x)
+    return eq1, eq2, eq3
+
+def main():
+    print("Searching integer triples (x,y,z) in range -5..5")
+    tol = 1e-6
+    candidates = []
+    for x in range(-5,6):
+        for y in range(-5,6):
+            for z in range(-5,6):
+                eq1, eq2, eq3 = check_system(x,y,z)
+                max_err = max(abs(eq1), abs(eq2), abs(eq3))
+                if max_err < tol:
+                    print(f"Integer solution candidate: x={x}, y={y}, z={z} with residuals {eq1:.2e}, {eq2:.2e}, {eq3:.2e}")
+                    candidates.append((x,y,z))
+    if not candidates:
+        print("No exact integer solutions found, trying finer floating grid...")
+
+        # Search float grid around -5 to 5 with step 0.5 (41**3 ~ 68,921 points)
+        step = 0.5
+        x_vals = [i*step for i in range(-10,11)]
+        y_vals = [i*step for i in range(-10,11)]
+        z_vals = [i*step for i in range(-10,11)]
+        tol_float = 1e-2
+        for x in x_vals:
+            for y in y_vals:
+                for z in z_vals:
+                    eq1, eq2, eq3 = check_system(x,y,z)
+                    max_err = max(abs(eq1), abs(eq2), abs(eq3))
+                    if max_err < tol_float:
+                        print(f"Float approx: x={x:.2f}, y={y:.2f}, z={z:.2f} residuals: {eq1:.2e}, {eq2:.2e}, {eq3:.2e}")
+
+if __name__ == "__main__":
+    main()
+```
+This program will systematically enumerate integer triples and print exact matches if any, else tries a coarse floating grid for approximate roots. This can highlight candidates for conjectured exact solutions.

@@ -1,0 +1,67 @@
+[write_program]
+The problem is about finding the smallest positive integer \( p \) such that there exist two distinct pairs \((a_1,b_1)\) and \((a_2,b_2)\) of nonnegative integers satisfying:
+- \( 2a_1 + b_1 = p \) and \( 2a_2 + b_2 = p \),
+- \( a_i > b_i \),
+- \( b_1 b_2 = 56 \),
+- \( b_1 \sqrt{4 a_1^2 - b_1^2} = b_2 \sqrt{4 a_2^2 - b_2^2} \),
+- and the pairs are distinct.
+
+I will enumerate factorizations of 56 into positive integers \(b_1,b_2\), then for each pair try to find integer \(a_1,a_2\) satisfying the equalities and inequalities, computing \( p = 2a_i+b_i \), and printing all candidate \(p\). I'll restrict the search space to small \(a_i,b_i \leq 50\) for feasibility and print results as found.
+
+```python
+import math
+
+# Enumerate factor pairs (b1,b2) with b1*b2=56, b1,b2>0, b1!=b2
+factor_pairs = [(b1,b2) for b1 in range(1,57) if 56 % b1 == 0 for b2 in [56//b1] if b1 != b2]
+
+found = []
+# To keep track of minimal p (2a+b)
+min_p = None
+
+print("Enumerating solutions with b1*b2=56, b1!=b2:")
+
+for b1, b2 in factor_pairs:
+    for a1 in range(b1+1, 51):  # a1 > b1
+        val1_sq = 4*a1*a1 - b1*b1
+        if val1_sq <=0: 
+            continue
+        sqrt_val1 = math.isqrt(val1_sq)
+        if sqrt_val1*sqrt_val1 != val1_sq:
+            continue
+        # From equality: b1*sqrt_val1 = b2*sqrt_val2 => sqrt_val2 = (b1/b2)*sqrt_val1
+        # sqrt_val2 = sqrt(4 a2^2 - b2^2)
+        # Let rhs = (b1/b2)*sqrt_val1
+        rhs_num = b1*sqrt_val1
+        if rhs_num % b2 != 0:
+            continue
+        rhs = rhs_num // b2
+        val2_sq = rhs*rhs
+        # val2_sq = 4 a2^2 - b2^2 => 4 a2^2 = val2_sq + b2^2
+        # Check if val2_sq + b2^2 divisible by 4
+        if (val2_sq + b2*b2) % 4 != 0:
+            continue
+        four_a2_sq = val2_sq + b2*b2
+        a2_sq = four_a2_sq // 4
+        a2 = math.isqrt(a2_sq)
+        if a2*a2 != a2_sq:
+            continue
+        if a2 <= b2:
+            continue
+        # Check distinctness
+        if a1 == a2 and b1 == b2:
+            continue
+        p1 = 2*a1 + b1
+        p2 = 2*a2 + b2
+        if p1 != p2:
+            continue
+        p = p1
+        print(f"p={p}, (a1,b1)=({a1},{b1}), (a2,b2)=({a2},{b2})")
+        found.append(p)
+        if min_p is None or p < min_p:
+            min_p = p
+
+if min_p is not None:
+    print(f"Minimal p found: {min_p}")
+else:
+    print("No solutions found with given bounds.")
+```

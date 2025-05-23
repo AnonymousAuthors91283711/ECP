@@ -1,0 +1,51 @@
+[write_program]
+This problem involves finding the number of subsets of the first 15 Fibonacci numbers (starting from F₂) where the sum of the selected numbers equals the sum of the non-selected numbers. We'll write a Python program to enumerate all such subsets for small Fibonacci sequences first, then extend to 15 elements.
+
+The approach:
+1. Generate the first 17 Fibonacci numbers (F₀ to F₁₆)
+2. Take the slice from F₂ to F₁₆ (15 elements)
+3. Use dynamic programming to count subsets with sum equal to half the total sum
+4. Only proceed if total sum is even (otherwise no solution exists)
+
+```python
+def main():
+    # Generate Fibonacci numbers F0 to F16
+    fib = [0, 1]
+    for i in range(2, 17):
+        fib.append(fib[i-1] + fib[i-2])
+    
+    # Take w = [F2, F3, ..., F16] (15 elements)
+    w = fib[2:17]
+    total = sum(w)
+    
+    if total % 2 != 0:
+        print("No solutions exist (total sum is odd)")
+        return
+    
+    target = total // 2
+    n = len(w)
+    
+    # DP table: dp[i][s] = number of ways to sum s using first i elements
+    dp = [{} for _ in range(n+1)]
+    dp[0][0] = 1
+    
+    for i in range(1, n+1):
+        num = w[i-1]
+        for s in dp[i-1]:
+            # Option 1: don't take w[i-1]
+            if s in dp[i]:
+                dp[i][s] += dp[i-1][s]
+            else:
+                dp[i][s] = dp[i-1][s]
+            # Option 2: take w[i-1]
+            new_s = s + num
+            if new_s in dp[i]:
+                dp[i][new_s] += dp[i-1][s]
+            else:
+                dp[i][new_s] = dp[i-1][s]
+    
+    print(f"Number of valid subsets: {dp[n].get(target, 0)}")
+
+if __name__ == "__main__":
+    main()
+```

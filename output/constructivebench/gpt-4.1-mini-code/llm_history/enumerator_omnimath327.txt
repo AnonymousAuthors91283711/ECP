@@ -1,0 +1,65 @@
+[write_program]
+The problem revolves around enumerating certain graphs on \(n=1982\) vertices with a specific adjacency property: every 4-subset contains a vertex connected to all others in the subset. We want to find smallest cardinality \(k\) of the set of vertices connected to all others. Due to large \(n\), we test smaller versions and print \(k\) for each to conjecture formula or pattern.
+
+```python
+from itertools import combinations
+
+def is_vertex_adjacent_to_all(graph_adj, v, subset):
+    return all((w != v and (w in graph_adj[v])) for w in subset)
+
+def check_property(n, edges):
+    # Build adjacency dict
+    graph_adj = {i: set() for i in range(n)}
+    for u,v in edges:
+        graph_adj[u].add(v)
+        graph_adj[v].add(u)
+    # Check every 4-subset has a dominating vertex
+    for quad in combinations(range(n),4):
+        if not any(is_vertex_adjacent_to_all(graph_adj, v, quad) for v in quad):
+            return False
+    return True
+
+def count_universal_vertices(n, edges):
+    graph_adj = {i: set() for i in range(n)}
+    for u,v in edges:
+        graph_adj[u].add(v)
+        graph_adj[v].add(u)
+    count = 0
+    for v in range(n):
+        if all((w == v or w in graph_adj[v]) for w in range(n)):
+            count += 1
+    return count
+
+def enum_graphs_small(n):
+    # Enumerate graphs on n vertices and find those satisfying property
+    from itertools import combinations
+    vertices = list(range(n))
+    edges_all = list(combinations(vertices,2))
+    best_k = n+1
+    # Only test graphs with few edges (for feasibility)
+    # Limit to graphs with up to n edges to reduce runtime
+    max_edges = min(n, len(edges_all))
+    # Enumerate all edge subsets of size max_edges (1 graph only)
+    import random
+    for _ in range(5): # sample few random graphs
+        chosen_edges = set()
+        while len(chosen_edges) < max_edges:
+            e = edges_all[int(len(edges_all)*random.random())]
+            chosen_edges.add(e)
+        edges = list(chosen_edges)
+        if check_property(n, edges):
+            k = count_universal_vertices(n, edges)
+            print(f"n={n}, edges={len(edges)}, universal_count={k}")
+            if k < best_k:
+                best_k = k
+    print(f"Prime candidate minimal k for n={n}: {best_k}")
+
+def main():
+    for n in [4,5,6]:
+        print(f"Enumerating for n={n}")
+        enum_graphs_small(n)
+
+if __name__ == "__main__":
+    main()
+```
+

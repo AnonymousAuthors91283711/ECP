@@ -1,0 +1,61 @@
+[write_program]
+The given problem appears to involve a possibly algebraic functional equation with integer functions. It asks to find all functions \(f: \mathbb{Z} \to \mathbb{Z}\) satisfying
+\[
+\forall a, b, \exists k \text{ such that } f(f(a) - b) + b \cdot f(2a) = k^2.
+\]
+The goal is to identify or at least enumerate possible functions \(f\).
+
+Since the description involves quantifiers and an equation that must hold for all \(a, b\), we can attempt a constructive approach by testing simple functions and specific parameters, especially constant functions or linear functions, as starting points.
+
+We will:
+
+- Start with small, simple families of functions
+- For each candidate function \(f\), verify whether the property holds for several small samples of \(a, b\)
+- Stream output immediately for each promising candidate
+- Limit the search space by testing small integer functions
+
+Note: To keep code concise and efficient, we'll test constant and linear functions \(f(a) = c\) or \(f(a) = m a + n\) with small \(c, m, n\).
+
+```python
+# Enumerate simple functions: constant and linear, checking the property for small samples
+def test_constant(c):
+    # For constant f(a)=c, the expression becomes f(c - b) + b f(2a)
+    # which simplifies to c + b * c = c + b c = c(1 + b)
+    # We check if for all small a, b, the expression is a perfect square
+    for a in range(-2,3):
+        for b in range(-2,3):
+            val = c + b * c
+            # Check if val is a perfect square
+            if val < 0:
+                continue
+            k = int(val**0.5)
+            if k * k != val:
+                return False
+    print(f"Constant function f(a) = {c} satisfies the property for small samples.")
+    yield ('const', c)
+
+def test_linear(m, n):
+    # f(a)= m*a + n
+    for a in range(-2,3):
+        f2a = m * 2 * a + n
+        for b in range(-2,3):
+            val = (m * (m * a + n) - b) + b * f2a
+            # Check if val is a perfect square
+            if val < 0:
+                continue
+            k = int(val**0.5)
+            if k * k != val:
+                return False
+    print(f"Linear function f(a) = {m}*a + {n} satisfies property for small samples.")
+    yield ('linear', m, n)
+
+# Enumerate small coefficients
+for c in range(-3,4):
+    for _ in test_constant(c):
+        pass
+
+for m in range(-2,3):
+    for n in range(-2,3):
+        for _ in test_linear(m, n):
+            pass
+```

@@ -1,0 +1,100 @@
+[write_program]
+The problem involves finding finite, nonempty subsets B of ℤ × ℤ such that for every line defined by fixed second coordinate, fixed first coordinate, fixed sum, or fixed difference, the intersection with B is either empty or contains exactly k points. We want to explore which values of k admit such sets B.
+
+We'll try small values of k and construct candidate finite sets B with integer coordinates, checking if the conditions hold. We will print k and candidate B's size and details if the condition is potentially satisfied.
+
+```python
+# Enumerate candidate sets B for small k and verify the line intersection property
+
+from itertools import product
+from collections import defaultdict
+
+def check_B(B, k):
+    # For a set B of points, check the conditions:
+    # For every x (vertical line), count points with p[1]=x
+    # For every y (horizontal line), count points with p[0]=y
+    # For every m (lines p[0]+p[1]=m), count points
+    # For every m (lines p[0]-p[1]=m), count points
+    # Each line is either empty or has exactly k points
+    
+    if not B:
+        return False
+    # Group points by line categories
+    vert = defaultdict(int)
+    horiz = defaultdict(int)
+    sum_diag = defaultdict(int)
+    diff_diag = defaultdict(int)
+    for x,y in B:
+        vert[y] += 1
+        horiz[x] += 1
+        sum_diag[x+y] += 1
+        diff_diag[x - y] += 1
+    # Check all counting values
+    for counts in [vert, horiz, sum_diag, diff_diag]:
+        for v in counts.values():
+            if v != 0 and v != k:
+                return False
+    # Also check for lines missing from keys: is empty count allowed (line not present)? Yes.
+    return True
+
+def enumerate_candidates(k, max_coord=5):
+    # Try to construct finite B satisfying conditions for given k
+    # We'll try subsets of grid points with x,y in [-max_coord,max_coord]
+    # Optimization: pick points so that vertical, horizontal, sum and diff lines with points are consistent
+    
+    points = list(product(range(-max_coord, max_coord+1), repeat=2))
+    # Naive approach: try all sets of size k^2 or k*(some small number)
+    # But too expensive, so try specially structured candidates:
+    # For k=1, try points with no repeats in lines. E.g., singleton sets
+    # For k>1, try unions of k points on each line type
+    
+    # Here, we try to find B of size k*n for some n, with points chosen so that line counts = k or 0
+    
+    # For demonstration, try product of two sets with length k, so |B|=k^2
+    # Example candidate: points with x in X_set, y in Y_set, |X_set|=|Y_set|=k
+    
+    # Try several X_sets, Y_sets, with k distinct elements each
+    from itertools import combinations
+    
+    domain = range(-max_coord, max_coord+1)
+    for X_set in combinations(domain, k):
+        for Y_set in combinations(domain, k):
+            B = [(x,y) for x in X_set for y in Y_set]
+            if check_B(B, k):
+                print(f"k={k}, candidate B size={len(B)} (product grid), points={B}")
+                
+    # Also try diagonal sets for sum and diff conditions:
+    # For m in some integer set, choose points (x,y) with x+y=m, picking k points on the line
+    # or (x,y) with x-y=m
+    # Try constructing B as union of such lines with k points each
+    
+    # For simplicity, try lines x+y = m for m in M_set of size k
+    # On line x+y=m, integer solutions: x in [−max_coord,max_coord], y=m−x
+    # choose first k points possible per line
+    for M_set in combinations(range(-2*max_coord, 2*max_coord+1), k):
+        B = []
+        for m in M_set:
+            line_points = []
+            for x in domain:
+                y = m - x
+                if y in domain:
+                    line_points.append((x,y))
+                    if len(line_points) == k:
+                        break
+            if len(line_points) < k:
+                break
+            B.extend(line_points)
+        else:
+            if check_B(B, k):
+                print(f"k={k}, candidate B size={len(B)} (sum lines), points={B}")
+
+def main():
+    print("Exploring possible k values for given conditions...")
+    for k in range(1,4):
+        print(f"Trying k={k}")
+        enumerate_candidates(k)
+    print("Finished exploration.")
+
+if __name__ == "__main__":
+    main()
+```

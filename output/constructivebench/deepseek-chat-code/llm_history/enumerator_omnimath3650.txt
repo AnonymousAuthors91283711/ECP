@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for the number of pairs of positive integers (a,b) where:
+1. gcd(a,b) = 50! (product of first 50 natural numbers)
+2. lcm(a,b) = (50!)^2
+
+We'll write a Python program to count such pairs for smaller factorials (like 5! instead of 50!) to identify the pattern. The key insight is that for each prime in the factorization, we can independently count the exponent configurations.
+
+```python
+import math
+from collections import defaultdict
+from functools import reduce
+
+def prime_factors(n):
+    factors = defaultdict(int)
+    while n % 2 == 0:
+        factors[2] += 1
+        n = n // 2
+    i = 3
+    while i*i <= n:
+        while n % i == 0:
+            factors[i] += 1
+            n = n // i
+        i += 2
+    if n > 2:
+        factors[n] += 1
+    return factors
+
+def count_pairs_for_factorial(n):
+    # Compute n!
+    fact = math.factorial(n)
+    # Get prime factorization of n!
+    factors = prime_factors(fact)
+    
+    # For each prime p in factorization, the exponents (a,b) must satisfy:
+    # min(a,b) = exponent in n!
+    # max(a,b) = 2 * exponent in n!
+    # So for each prime, there are 3 choices:
+    # (k,2k), (2k,k), or (2k,2k)
+    total = 1
+    for p, exp in factors.items():
+        total *= 3
+    
+    return total
+
+# Test for small factorials to see the pattern
+for n in range(1, 11):
+    print(f"n={n}: {count_pairs_for_factorial(n)} pairs")
+```

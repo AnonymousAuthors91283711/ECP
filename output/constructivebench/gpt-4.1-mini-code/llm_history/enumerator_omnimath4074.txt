@@ -1,0 +1,87 @@
+[write_program]
+The problem involves finding the least rational number \( c \geq 0 \) such that for every finite simple graph \( G \), the inequality
+
+\[
+(\text{number of 3-cliques})^3 \leq c \cdot (\text{number of 2-cliques})^4
+\]
+
+holds. Here, 3-cliques are triangles, and 2-cliques are edges.
+
+To assist in conjecturing the value of \( c \), we enumerate all simple graphs with a small number of vertices, count triangles and edges, and compute the ratio
+
+\[
+\frac{(\text{number of triangles})^3}{(\text{number of edges})^4}
+\]
+
+for each graph with at least one edge and at least one triangle, since zero edges or triangles trivially produce zero or undefined ratios. Among all those ratios, we aim to find the maximum value as a candidate for the constant \( c \).
+
+We will:
+
+- Consider graphs with \( n = 4 \) or \( 5 \) vertices (to keep enumeration manageable).
+- Enumerate all graphs by their adjacency matrix (or rather upper-triangular adjacency).
+- For each graph, count edges and triangles exactly.
+- Skip graphs with zero edges.
+- Compute the ratio only when triangles > 0 and edges > 0.
+- Print each found ratio with numerator and denominator factored to avoid floating approximations.
+- Print the maximum ratio at the end as a candidate.
+
+```python
+from itertools import combinations, product
+from math import comb
+
+def edge_count(adj):
+    # Count edges in adjacency bit representation
+    return sum(adj)
+
+def triangle_count(n, adj_edges):
+    # We'll use adjacency set and check triples for triangles
+    # n vertices labeled 0..n-1
+    # adj_edges is list of edges (u,v) with u<v
+    adj = [set() for _ in range(n)]
+    for (u,v) in adj_edges:
+        adj[u].add(v)
+        adj[v].add(u)
+    count = 0
+    for a,b,c in combinations(range(n),3):
+        if b in adj[a] and c in adj[a] and c in adj[b]:
+            count += 1
+    return count
+
+def enumerate_graphs(n):
+    # There are m = n*(n-1)//2 edges in complete graph, subsets correspond to graphs
+    m = n*(n-1)//2
+    vertices = list(range(n))
+    edges_list = list(combinations(vertices, 2))
+    max_ratio = 0
+    max_graph = None
+    print(f"Enumerating graphs on {n} vertices...")
+    for bits in range(1, 1 << m):
+        # select edges where bit is 1
+        present = [edges_list[i] for i in range(m) if (bits >> i) & 1]
+        e_c = len(present)
+        if e_c == 0:
+            continue
+        t_c = triangle_count(n, present)
+        if t_c == 0:
+            continue
+        # Compute ratio = (t_c^3) / (e_c^4)
+        # To keep rational exact, print as fraction numerator/denominator
+        numerator = t_c**3
+        denominator = e_c**4
+        ratio = numerator / denominator
+        print(f"Triangles: {t_c}, Edges: {e_c}, Ratio: {numerator}/{denominator} = {ratio:.6f}")
+        if ratio > max_ratio:
+            max_ratio = ratio
+            max_graph = (n, present, numerator, denominator)
+    if max_graph:
+        n, present, numerator, denominator = max_graph
+        print(f"\nMaximum ratio for n={n}: {numerator}/{denominator} = {max_ratio:.6f}")
+    else:
+        print("No graphs with triangles found.")
+
+if __name__ == "__main__":
+    # Enumerate for n=4 and n=5 to keep output reasonable and informative
+    enumerate_graphs(4)
+    enumerate_graphs(5)
+```
+

@@ -1,0 +1,57 @@
+[write_program]
+The problem appears to involve finding the greatest prime \( p \) that satisfies the condition: there exists a set \( s \) of primes such that the average of the primes in \( s \) is 27, and \( p \) is a member of \( s \). The goal is to find the largest such prime.
+
+**Key points:**
+- \( s \) is a finite set of primes
+- The average of all primes in \( s \) is 27, i.e., \(\frac{\sum_{q \in s} q}{|s|} = 27\)
+- \( p \) is a prime in \( s \)
+- The theorem asks for the greatest such \( p \)
+
+We will:
+- Iterate over small sizes of \( s \) (since large sizes are impractical to brute-force)
+- For each size, generate combinations of primes whose sum divided by size equals 27
+- Collect all primes in those sets and find the maximum \( p \)
+
+Below is a Python script that performs this enumeration efficiently over a range of sizes and small primes, and outputs candidate primes immediately as they are found.
+
+```python
+from itertools import combinations
+from math import sqrt
+
+# Generate small primes up to a certain limit for candidate sets
+def generate_primes(n):
+    sieve = [True]*(n+1)
+    sieve[0:2] = [False, False]
+    for i in range(2, int(sqrt(n))+1):
+        if sieve[i]:
+            for j in range(i*i, n+1, i):
+                sieve[j] = False
+    return [p for p in range(2, n+1) if sieve[p]]
+
+# We choose an upper limit for prime generation
+primes = generate_primes(200)
+
+# To handle the average = 27, the sum depends on the size of s.
+# For each size s_size, the sum should be 27 * s_size
+# We'll search over s sizes from 2 up to, say, 15
+max_p = 0
+
+for size in range(2, 16):
+    target_sum = 27 * size
+    # Generate all combinations of the given size
+    for combo in combinations(primes, size):
+        s_sum = sum(combo)
+        if s_sum == target_sum:
+            # For each prime in the combo, check if it's greater than current max
+            for p in combo:
+                if p > max_p:
+                    max_p = p
+                    print(f"Found candidate p={p} in set={combo}")
+```
+
+This code:
+- Generates primes up to 200 for candidate sets
+- For each size between 2 and 15, checks all prime combinations
+- When sum matches the required total, it prints each prime in the set immediately for conjecture
+
+This approach finds all candidate primes and highlights the largest \( p \) satisfying the condition, streamlining the process of inferring the correct or maximal prime.

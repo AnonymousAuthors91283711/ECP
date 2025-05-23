@@ -1,0 +1,129 @@
+[write_program]
+The problem involves a polynomial \( P \) whose coefficients are themselves polynomials with integer coefficients, i.e. \( P \in \text{Polynomial}(\text{Polynomial}(\mathbb{Z})) \). The condition given is that for every real \( a \), evaluating \( P \) at \( \lfloor a \rfloor \) (which gives a polynomial in one variable with integer coefficients), then evaluating this resulting polynomial at \( \lfloor 2a \rfloor \), is zero:
+
+\[
+\forall a \in \mathbb{R}, \quad \text{eval}(\text{eval}(P, \lfloor a \rfloor), \lfloor 2a \rfloor) = 0.
+\]
+
+The goal is to determine all such \( P \) with this property and especially conjecture explicit forms for them.
+
+I will write a Python program that enumerates candidate polynomials \( P \in \text{Polynomial}(\text{Polynomial}(\mathbb{Z})) \) of small degree and small integer coefficients. For computational feasibility, I will represent \( P \) as a polynomial in \( x \) whose coefficients are polynomials in \( y \):
+
+\[
+P(x) = \sum_{i=0}^d Q_i(y) x^i,
+\]
+
+where each \( Q_i(y) \) is a polynomial with integer coefficients.
+
+Given \( a \), the evaluation reduces to
+
+\[
+\text{eval}(\text{eval}(P, \lfloor a \rfloor), \lfloor 2a \rfloor) = \sum_{i=0}^d Q_i(\lfloor 2a \rfloor) \cdot (\lfloor a \rfloor)^i.
+\]
+
+We must have this zero for all integers \( m = \lfloor a \rfloor \) and all integers \( n = \lfloor 2a \rfloor \) satisfying \( n \in \{2m, 2m+1\} \). (Because if \( m = \lfloor a \rfloor \), then \( 2a \in [2m, 2(m+1)) \), so \( \lfloor 2a \rfloor \) is either \( 2m \) or \( 2m + 1 \).)
+
+Therefore the condition reduces to: for all integers \( m \) and for \( n \in \{2m, 2m+1\} \),
+
+\[
+\sum_{i=0}^d Q_i(n) m^i = 0.
+\]
+
+I will let degrees be 1 for both \( x \) and \( y \) polynomials initially to see if any nontrivial \( P \) satisfies the condition, then increment degree or coefficient bounds.
+
+The program will enumerate small-degree polynomials \( P \), test over a sample of integer pairs \( (m, n) \) with \( n \in \{2m, 2m+1\} \) and print candidates \( P \) that satisfy the condition exactly over these samples as strong evidence for the problem statement.
+
+```python
+# Enumerate polynomials P(x) = Q0(y) + Q1(y)*x + Q2(y)*x^2 + ...,
+# where each Q_i(y) = a_{i,0} + a_{i,1} y + a_{i,2} y^2 + ...,
+# all coefficients integers in a small range.
+# For each candidate P, check for all integer pairs (m,n) with n in {2m, 2m+1}
+# for m in a small range.
+#
+# Print all P passing the test on the sample grid.
+# The output can be used to conjecture the explicit form of such P.
+
+MAX_DEG_X = 2    # max x-degree of P
+MAX_DEG_Y = 1    # max y-degree of each Q_i
+COEF_RANGE = range(-1,2)  # integer coefficients from -1 to 1
+
+def poly_eval(coeffs, val):
+    # coeffs: list of coefficients for y^0, y^1,... evaluate at val
+    s = 0
+    p = 1
+    for c in coeffs:
+        s += c * p
+        p *= val
+    return s
+
+def print_poly_in_y(coeffs):
+    terms = []
+    for i,c in enumerate(coeffs):
+        if c == 0:
+            continue
+        term = ""
+        if c == -1:
+            term += "-"
+        elif c != 1:
+            term += str(c)
+        if i >= 1:
+            term += "y"
+            if i > 1:
+                term += "^" + str(i)
+        terms.append(term)
+    if not terms:
+        return "0"
+    return " + ".join(terms).replace("+-","- ")
+
+def print_poly_in_x(coeffs_list):
+    # coeffs_list: list of Q_i(y) coeff lists
+    terms = []
+    for i, coeffs in enumerate(coeffs_list):
+        poly_str = print_poly_in_y(coeffs)
+        if poly_str == "0":
+            continue
+        term = ""
+        if i == 0:
+            term = poly_str
+        else:
+            if poly_str == "1":
+                term = "x" if i == 1 else f"x^{i}"
+            elif poly_str == "-1":
+                term = "-x" if i == 1 else f"-x^{i}"
+            else:
+                term = f"({poly_str})*x" if i == 1 else f"({poly_str})*x^{i}"
+        terms.append(term)
+    if not terms:
+        return "0"
+    return " + ".join(terms).replace("+-","- ")
+
+def test_candidate(coeffs_list, M=3):
+    # Test over m in [-M,M], n in {2m,2m+1}
+    for m in range(-M,M+1):
+        for n in (2*m, 2*m+1):
+            s = 0
+            for i, coeffs in enumerate(coeffs_list):
+                Qi_n = poly_eval(coeffs, n)
+                s += Qi_n * (m**i)
+            if s != 0:
+                return False
+    return True
+
+def main():
+    import itertools
+    # Enumerate coefficient vectors:
+    # Each Q_i has MAX_DEG_Y+1 coefficients
+    total_coeffs = (MAX_DEG_X+1)*(MAX_DEG_Y+1)
+    # For simplicity, generate all possible coeff lists for each Q_i
+    possible_Qi = list(itertools.product(COEF_RANGE, repeat=MAX_DEG_Y+1))
+    count_checked = 0
+    for coeffs_list in itertools.product(possible_Qi, repeat=MAX_DEG_X+1):
+        count_checked += 1
+        if test_candidate(coeffs_list):
+            # Print polynomial structure
+            poly_str = print_poly_in_x(coeffs_list)
+            print(f"P = {poly_str}")
+
+if __name__ == "__main__":
+    main()
+```

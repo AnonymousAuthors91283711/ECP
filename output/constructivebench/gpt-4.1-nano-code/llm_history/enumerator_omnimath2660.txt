@@ -1,0 +1,58 @@
+[write_program]
+The problem involves finding the greatest possible sum `s` of a list `l` of pairwise distinct primes under certain conditions:
+- Each prime `p` in `l` is less than 50.
+- Each `p` can be written as `a^k - 1` with `a, k ∈ ℕ`, `k ≥ 2`.
+- The list `l` is pairwise increasing, i.e., `p_i < p_j` for `i < j`.
+
+Our task is to enumerate all such primes and sum their values, then identify the greatest possible sum.
+
+Because the prime numbers less than 50 are small, and the primes of the form `a^k - 1` (with `k ≥ 2`) are limited, the program will:
+- Generate all primes less than 50.
+- Check which satisfy `p+1 = a^k` for some `a, k ≥ 2`.
+- Find all subsets of these primes that are pairwise increasing (which reduces to sorting).
+- Compute sums for these subsets and identify the maximum.
+
+Here's the implementation:
+
+```python
+# Find primes less than 50
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+primes_under_50 = [p for p in range(2, 50) if is_prime(p)]
+
+# Check if p + 1 is a perfect power a^k with k ≥ 2
+def is_power_plus_one(p):
+    target = p + 1
+    # For each k ≥ 2, check if there's an integer a such that a^k = p+1
+    for k in range(2, int(target.bit_length()*0.5) + 2):
+        a = int(round(target ** (1 / k)))
+        for candidate in [a, a + 1, a - 1]:
+            if candidate > 1 and candidate ** k == target:
+                return True
+    return False
+
+# Collect primes satisfying the condition
+valid_primes = [p for p in primes_under_50 if is_power_plus_one(p)]
+
+# Generate all sums of subsets (since pairwise increasing is naturally maintained if we sort)
+max_sum = 0
+max_subset = []
+
+# We generate all non-empty subsets
+from itertools import combinations
+for r in range(1, len(valid_primes) + 1):
+    for subset in combinations(valid_primes, r):
+        total = sum(subset)
+        print(total)  # Stream partial results
+        if total > max_sum:
+            max_sum = total
+            max_subset = subset
+
+print("Maximum sum:", max_sum)
+```

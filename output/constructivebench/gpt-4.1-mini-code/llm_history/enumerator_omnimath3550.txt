@@ -1,0 +1,106 @@
+[write_program]
+The problem asks to find all integers \( m \) such that the polynomial 
+\[ P(m) = x^4 - (2m + 4)x^2 + (m - 2)^2 \]
+is factorable over the integers into nonzero polynomials \( A, B \) with integer coefficients.
+
+We want to enumerate such integer values \( m \) and verify the factorization over \(\mathbb{Z}[x]\). Since factorization over integers for quartics can sometimes be checked by trying quadratic factors (or linear factorization attempts fail if constant term isn't a perfect power), a natural approach is to attempt to factor as a product of two quadratics:
+\[
+x^4 + a x^3 + b x^2 + c x + d = (x^2 + p x + q)(x^2 + r x + s)
+\]
+for integer \( p, q, r, s \).
+
+Since our polynomial has no \(x^3\) or \(x\) terms, \(a = 0, c = 0\) imposes conditions on \(p, q, r, s\).
+
+We will test integer values \(m\) in a reasonable range (e.g., \(-20\) to \(20\)) to find all such \(m\). For each \(m\), check if \(P(m)\) factors as above.
+
+```python
+# Enumerate integer m where P(m) factors into two quadratics over Z
+# P(m) = x^4 - (2m+4) x^2 + (m-2)^2
+# Factor form: (x^2 + p x + q)(x^2 + r x + s) = x^4 + (p+r) x^3 + (pr + q + s) x^2 + (p s + q r) x + q s
+# Given no x^3 and x terms: p + r = 0, p s + q r = 0
+# Coefficients constraints:
+# x^4 term: 1 (ok)
+# x^3 term: p + r = 0 -> r = -p
+# x^2 term: pr + q + s = -(2m+4)
+# x term: p s + q r = 0
+# constant: q s = (m-2)^2
+
+def factor_candidates(m):
+    c2 = -(2*m + 4)
+    c0 = (m - 2)**2
+    # Try integer p in limited range
+    for p in range(-10,11):
+        r = -p
+        # Equation for x term: p s + q r = 0 => p s - p q = p(s - q) = 0
+        # If p != 0, s = q
+        # If p == 0, then x term zero automatically, s, q any with q s = c0 and q + s + pr = c2
+        if p == 0:
+            # Then pr = 0
+            # c2 = 0 + q + s => q + s = c2
+            # c0 = q s
+            # Solve q + s = c2, q s = c0 in integers
+            # q, s integer roots of x^2 - c2 x + c0 = 0
+            # Check integer factor pairs of c0
+            for q in divisors(c0):
+                s = c0 // q
+                if q + s == c2:
+                    yield (p, q, r, s)
+        else:
+            # s = q
+            # pr + q + s = c2 => p r + 2 q = c2
+            # pr = p * (-p) = -p^2
+            # So -p^2 + 2 q = c2 => q = (c2 + p^2) / 2
+            q_nom = c2 + p*p
+            if q_nom % 2 != 0:
+                continue
+            q = q_nom // 2
+            s = q
+            if q * s == c0:
+                yield (p, q, r, s)
+
+def divisors(n):
+    # All integer divisors of n, including negative
+    n = abs(n)
+    divs = []
+    for i in range(1,n+1):
+        if n % i == 0:
+            divs.append(i)
+            divs.append(-i)
+    return divs
+
+def main():
+    print("Enumerating m in [-20,20] with factorizable P(m):")
+    candidates = []
+    for m in range(-20, 21):
+        found = False
+        for p,q,r,s in factor_candidates(m):
+            # verify factorization explicitly
+            # Polynomial: x^4 - (2m+4)x^2 + (m-2)^2
+            # Factor: (x^2 + p x + q)(x^2 + r x + s)
+            # Confirm equality:
+            # x^4 + (p+r)x^3 + (pr + q + s)x^2 + (p s + q r)x + q s
+            # p + r =0, so no x^3 term
+            # x^2 coefficient:
+            x2 = p*r + q + s
+            # x term:
+            x1 = p*s + q*r
+            # constant:
+            c = q*s
+            if x2 == -(2*m+4) and x1 == 0 and c == (m-2)**2:
+                # Condition met: print
+                print(f"m={m}: P(x) factors as (x^2 + {p} x + {q})(x^2 + {r} x + {s})")
+                candidates.append(m)
+                found = True
+                break
+    if candidates:
+        min_m = min(candidates)
+        max_m = max(candidates)
+        print(f"Values of m found: {sorted(candidates)}")
+        print(f"Minimum m = {min_m}")
+        print(f"Maximum m = {max_m}")
+    else:
+        print("No integer m in [-20,20] yield integer factorizations.")
+
+if __name__ == "__main__":
+    main()
+```

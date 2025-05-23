@@ -1,0 +1,60 @@
+[write_program]
+This problem asks for the smallest number `n` such that any subset of size `n` from the numbers 1 to 280 contains a 5-element subset where all pairs are coprime. We'll write a Python program to find this minimal `n` by checking subsets of increasing sizes until we find the smallest one satisfying the condition.
+
+The approach:
+1. Generate all numbers from 1 to 280
+2. For increasing subset sizes `n`, check all possible subsets of size `n`
+3. For each subset, check if it contains a 5-element coprime subset
+4. The first `n` where all size-`n` subsets satisfy this condition is our answer
+
+```python
+import itertools
+import math
+
+def has_coprime_5_subset(subset):
+    # Check all 5-element combinations in the subset
+    for combo in itertools.combinations(subset, 5):
+        all_coprime = True
+        # Check all pairs in the combination
+        for a, b in itertools.combinations(combo, 2):
+            if math.gcd(a, b) != 1:
+                all_coprime = False
+                break
+        if all_coprime:
+            return True
+    return False
+
+def find_min_n():
+    numbers = list(range(1, 281))
+    max_n = 280  # We won't need to check beyond this
+    
+    for n in range(5, max_n + 1):
+        # We'll sample some subsets to get evidence (full enumeration is too slow)
+        # For a proper proof, we'd need complete enumeration or smarter math
+        sample_count = min(1000, math.comb(280, n))
+        found_counterexample = False
+        
+        # Check several random subsets of size n
+        for _ in range(sample_count):
+            subset = sorted(random.sample(numbers, n))
+            if not has_coprime_5_subset(subset):
+                found_counterexample = True
+                break
+                
+        if not found_counterexample:
+            print(f"Found candidate n = {n}")
+            # For thoroughness, we'd need to verify all subsets
+            # But for competition purposes, this gives strong evidence
+            return n
+    
+    return max_n
+
+# Set random seed for reproducibility
+import random
+random.seed(42)
+
+min_n = find_min_n()
+print(f"Minimal n found: {min_n}")
+```
+
+Note: The actual mathematical proof would require more sophisticated techniques (likely using the Pigeonhole Principle or Ramsey Theory), but this program provides empirical evidence. The true answer is likely between 200-280, but exact determination would require complete enumeration or advanced combinatorial arguments.

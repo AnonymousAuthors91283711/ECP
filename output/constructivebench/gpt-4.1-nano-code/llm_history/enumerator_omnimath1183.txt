@@ -1,0 +1,62 @@
+[write_program]
+This problem asks for the greatest integer \( n \) such that there exists a subset \( s \) of \( \text{Fin} 8 \times \text{Fin} 8 \) with exactly \( n \) elements, satisfying the constraints:
+
+- For all integers \( d \), the number of points in \( s \) with difference \( p.1.1 - p.2.1 = d \) is at most 3.
+- Similarly, for all \( d \), the number of points in \( s \) with sum \( p.1.1 + p.2.1 = d \) is at most 3.
+
+This is equivalent to constructing the largest possible subset \( s \subseteq [0,7] \times [0,7] \) such that no difference or sum line contains more than 3 points.
+
+We can set \( s \) as large as possible by filling the grid with points respecting these constraints, prioritizing maximizing the total size \( n \).
+
+Approach:
+- Enumerate all difference lines and limit each to at most 3 points.
+- Enumerate all sum lines and limit each to at most 3 points.
+- Use small parameter values (the 8x8 grid), and greedily fill points respecting both constraints.
+- Because of constraints, a maximal solution will fill most of the grid, but not necessarily all.
+- Generate candidate solutions systematically, then identify the maximum size.
+
+Here's a Python program to approximate the maximal possible size. The program attempts to fill the grid, respecting the constraints, and finds the largest such subset.
+
+```python
+# Enumerate all points in the 8x8 grid
+points = [(i, j) for i in range(8) for j in range(8)]
+
+max_size = 0
+best_set = set()
+
+# For all possible subsets, but to avoid exponential explosion, greedily build the largest set
+# We'll do a greedy approach: iterate through points, add if constraints are not violated
+
+# Initialize counters for difference and sum lines
+def line_counts(s):
+    diff_counter = {}
+    sum_counter = {}
+    for (x, y) in s:
+        diff = x - y
+        ssum = x + y
+        diff_counter[diff] = diff_counter.get(diff, 0) + 1
+        sum_counter[ssum] = sum_counter.get(ssum, 0) + 1
+    return diff_counter, sum_counter
+
+# We will build the set iteratively
+candidate_points = points[:]
+candidate_points.sort()  # optional, to have a deterministic order
+
+s = set()
+for p in candidate_points:
+    # Check if adding p violates the constraints
+    temp_s = s.union({p})
+    diff_counter, sum_counter = line_counts(temp_s)
+    if all(count <= 3 for count in diff_counter.values()) and all(count <= 3 for count in sum_counter.values()):
+        s = temp_s  # add point if constraints hold
+        if len(s) > max_size:
+            max_size = len(s)
+            best_set = s
+
+# Output all points of the best set
+for (x, y) in sorted(best_set):
+    print(f"Point: ({x}, {y})")
+print(f"Maximum size: {max_size}")
+```
+
+This code greedily constructs a large set respecting the constraints and outputs the points and their total count. It aims for maximal size, matching the problem's goal to find the greatest \( n \).

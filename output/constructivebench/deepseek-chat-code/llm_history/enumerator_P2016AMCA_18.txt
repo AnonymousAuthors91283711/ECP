@@ -1,0 +1,53 @@
+[write_program]
+The problem involves finding the value of σ₀(81n⁴) given that σ₀(110n³) = 110, where σ₀ is the divisor count function. We need to find all positive integers n satisfying σ₀(110n³) = 110, then compute σ₀(81n⁴) for each solution.
+
+Approach:
+1. Factorize 110 = 2 × 5 × 11
+2. The divisor function σ₀(N) is multiplicative, so σ₀(110n³) = σ₀(2×5×11×n³) = σ₀(2)×σ₀(5)×σ₀(11)×σ₀(n³) = 2×2×2×σ₀(n³) = 8×σ₀(n³)
+3. Given 8×σ₀(n³) = 110 ⇒ σ₀(n³) = 110/8 = 13.75, but σ₀ must be integer ⇒ no solutions exist
+4. However, let's verify computationally for small n
+
+```python
+from math import isqrt
+from collections import defaultdict
+
+def sigma0(n):
+    if n == 0: return 0
+    res = 1
+    # Handle 2 separately
+    count = 0
+    while n % 2 == 0:
+        n //= 2
+        count += 1
+    res *= (count + 1)
+    
+    # Check odd divisors up to sqrt(n)
+    i = 3
+    max_factor = isqrt(n) + 1
+    while i <= max_factor:
+        count = 0
+        while n % i == 0:
+            n //= i
+            count += 1
+            max_factor = isqrt(n) + 1
+        if count > 0:
+            res *= (count + 1)
+        i += 2
+    
+    if n > 1:
+        res *= 2
+    return res
+
+# Search for n where sigma0(110*n^3) == 110
+print("Searching for n where sigma0(110*n^3) = 110:")
+found = False
+for n in range(1, 1000):  # reasonable upper bound
+    if sigma0(110 * n**3) == 110:
+        print(f"n = {n}")
+        s = sigma0(81 * n**4)
+        print(f"sigma0(81*n^4) = {s}")
+        found = True
+
+if not found:
+    print("No solutions found in range 1-1000")
+```

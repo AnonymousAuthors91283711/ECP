@@ -1,0 +1,61 @@
+[write_program]
+This problem involves finding natural numbers n for which there exists a polynomial P in ℤ[X] such that for every positive integer m, the number of distinct remainders modulo n obtained by iterating P m times starting from 1 is exactly ceil(n/(2^m)). We'll write a Python program to enumerate potential candidates for n by checking small values.
+
+The approach will be:
+1. Iterate through small values of n (up to 20)
+2. For each n, try simple polynomials (linear and quadratic)
+3. Check if they satisfy the condition for small m values (up to 3)
+4. Output n if it passes these tests
+
+```python
+import math
+from itertools import product
+
+def check_polynomial(n, P, max_m=3):
+    """Check if polynomial P satisfies the condition for n up to max_m iterations"""
+    for m in range(1, max_m + 1):
+        remainders = set()
+        x = 1
+        # Iterate P m times starting from 1
+        for _ in range(m):
+            x = P(x) % n
+        # Collect all possible remainders after m iterations
+        seen = set()
+        for _ in range(n):
+            seen.add(x)
+            x = P(x) % n
+            if len(seen) == n:
+                break
+        expected = math.ceil(n / (2 ** m))
+        if len(seen) != expected:
+            return False
+    return True
+
+def find_candidates(max_n=20):
+    """Find candidate n values up to max_n"""
+    candidates = []
+    for n in range(1, max_n + 1):
+        # Try simple linear polynomials P(x) = a*x + b
+        for a in range(1, 5):
+            for b in range(0, 5):
+                P = lambda x, a=a, b=b: a * x + b
+                if check_polynomial(n, P):
+                    print(f"Found candidate n={n} with P(x)={a}x+{b}")
+                    candidates.append(n)
+                    break
+            else:
+                continue
+            break
+        else:
+            # Try simple quadratic polynomials P(x) = a*x^2 + b*x + c
+            for a, b, c in product(range(1, 3), repeat=3):
+                P = lambda x, a=a, b=b, c=c: a * x * x + b * x + c
+                if check_polynomial(n, P):
+                    print(f"Found candidate n={n} with P(x)={a}x^2+{b}x+{c}")
+                    candidates.append(n)
+                    break
+    print("Potential candidates:", sorted(set(candidates)))
+
+if __name__ == "__main__":
+    find_candidates()
+```

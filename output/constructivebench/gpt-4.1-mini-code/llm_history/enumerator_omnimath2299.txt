@@ -1,0 +1,78 @@
+[write_program]
+This problem asks to find the greatest sum of a finite subset \( S \subseteq \{1,\ldots,12\} \) such that for every integer \( k \geq 2 \), \( S \) cannot be partitioned into \( k \) nonempty disjoint subsets all with equal sum (specifically, subsets whose sums are all equal to \( \frac{\sum S}{k} \)).
+
+We want to enumerate sums \( s \) of subsets \( S \subseteq \{1,\ldots,12\} \) that **cannot** be partitioned into \( k \geq 2 \) equal-sum parts, and find the maximum such \( s \).
+
+The key steps:
+- Enumerate subsets \( S \subseteq \{1,\ldots,12\} \).
+- For each \( S \), check sums and for each \( k \geq 2 \), check if \( S \) can be partitioned into \( k \) equal-sum parts.
+- If no such \( k \geq 2 \) works, print \( s = \sum S \).
+- Track the maximum \( s \) found this way.
+
+To be efficient:
+- We can precompute all subsets and their sums.
+- For each subset and \( k \), test partition feasibility using a subset-sum partition approach.
+- Limit ourselves to small \( k \leq |S| \) because more parts than elements is invalid.
+- Stop early if a partition is found.
+- Print results immediately when found, and at the end print the maximum such sum.
+
+```python
+# Enumerate subsets of {1..12}, print sums of those which can't be partitioned into k≥2 equal sum parts.
+# At end, print max sum found.
+from itertools import combinations
+from collections import defaultdict
+
+N = 12
+nums = list(range(1, N+1))
+max_sum_found = 0
+
+def can_partition_k_equal_parts(arr, k):
+    target, rem = divmod(sum(arr), k)
+    if rem != 0:
+        return False
+    arr = sorted(arr, reverse=True)
+    used = [False] * len(arr)
+    def backtrack(i, current_sum, parts_formed):
+        if parts_formed == k:
+            return True
+        if current_sum == target:
+            return backtrack(0, 0, parts_formed+1)
+        for j in range(i, len(arr)):
+            if not used[j] and current_sum + arr[j] <= target:
+                used[j] = True
+                if backtrack(j+1, current_sum+arr[j], parts_formed):
+                    return True
+                used[j] = False
+                # Prune duplicates and empty increments
+                if current_sum == 0 or current_sum+arr[j] == target:
+                    break
+        return False
+    return backtrack(0,0,0)
+
+max_sum = 0
+printed = set()
+
+for r in range(1, N+1):
+    for subset in combinations(nums, r):
+        s = sum(subset)
+        # Avoid repeated sums printing for different subsets with same sum
+        if s in printed:
+            continue
+        # Check if partitionable for any k≥2
+        can_partition = False
+        for k in range(2, r+1):
+            # sum must be divisible by k
+            if s % k != 0:
+                continue
+            if can_partition_k_equal_parts(subset, k):
+                can_partition = True
+                break
+        if not can_partition:
+            print(f"Sum {s} from subset {subset} cannot be partitioned into equal parts for any k≥2")
+            if s > max_sum:
+                max_sum = s
+        printed.add(s)
+
+print(f"Maximum such sum = {max_sum}")
+```
+

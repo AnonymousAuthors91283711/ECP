@@ -1,0 +1,62 @@
+[write_program]
+This problem involves transforming a multiset of numbers {51, 49, 5} into 105 ones using two operations: combining two numbers (a+b) or splitting even numbers into two halves. We need to determine if this transformation is impossible (¬∃ steps).
+
+To approach this, we'll write a Python program that:
+1. Models the operations
+2. Performs breadth-first search to explore all reachable states
+3. Checks if the target state (105 ones) is reachable
+
+We'll use memoization and pruning to optimize the search.
+
+```python
+from collections import deque
+
+def main():
+    initial = (51, 49, 5)
+    target = tuple([1]*105)
+    
+    visited = set()
+    queue = deque()
+    queue.append(initial)
+    visited.add(initial)
+    
+    while queue:
+        current = queue.popleft()
+        current_list = list(current)
+        
+        # Print intermediate states of interest
+        if len(current) <= 5:
+            print(f"Current state: {sorted(current)}")
+        
+        if current == target:
+            print("Target reached!")
+            return
+        
+        # Operation 1: Combine any two numbers
+        for i in range(len(current_list)):
+            for j in range(i+1, len(current_list)):
+                new_list = current_list.copy()
+                a, b = new_list.pop(j), new_list.pop(i)
+                new_list.append(a + b)
+                new_state = tuple(sorted(new_list))
+                if new_state not in visited:
+                    visited.add(new_state)
+                    queue.append(new_state)
+        
+        # Operation 2: Split even numbers
+        for i in range(len(current_list)):
+            a = current_list[i]
+            if a % 2 == 0:
+                new_list = current_list.copy()
+                new_list.pop(i)
+                new_list.extend([a//2, a//2])
+                new_state = tuple(sorted(new_list))
+                if new_state not in visited:
+                    visited.add(new_state)
+                    queue.append(new_state)
+    
+    print("Target not reachable after exploring all possibilities")
+
+if __name__ == "__main__":
+    main()
+```

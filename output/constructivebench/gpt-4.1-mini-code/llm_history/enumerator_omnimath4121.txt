@@ -1,0 +1,62 @@
+[write_program]
+The problem is to find all functions \( f : \mathbb{Q} \to \mathbb{Q} \) satisfying
+\[
+\forall x,y > 0, \quad f(f(x^2) \cdot y) = x^3 \cdot f(xy).
+\]
+
+We want to enumerate candidate functions \( f \) on rationals and check this functional equation for some positive rational inputs \( x, y \). For simplicity, we will restrict ourselves to rational values with small numerators and denominators.
+
+We can guess some candidate functions based on the form:
+
+- Constant functions \( f(q) = c \).
+- Monomial-like functions \( f(q) = a q^n \) for rational \( a \) and integer \( n \).
+- Possibly piecewise or other functions, but harder to enumerate.
+
+The equation suggests some power-like behavior. So I'll enumerate simple integer powers \( f(q) = a q^n \) for \( a \in \{1,-1\} \) and \( n \in \{-2,-1,0,1,2,3,4\} \).
+
+Check the equation on samples \( x,y \in \{1/2,1,2\} \) with all positive.
+
+Print each candidate function of this form that satisfies the equation on all test points.
+
+```python
+from fractions import Fraction
+
+# Test candidate functions f(q) = a * q**n on given test values
+def check_candidate(a, n):
+    # Test over sample x, y with positive rationals
+    test_values = [Fraction(1,2), Fraction(1), Fraction(2)]
+    for x in test_values:
+        if x <= 0:
+            continue
+        for y in test_values:
+            if y <= 0:
+                continue
+            lhs_argument = a * (x**2)**n  # f(x^2) = a * (x^2)^n = a * x^{2n}
+            # lhs = f(f(x^2)*y) = f(lhs_argument * y)
+            arg = lhs_argument * y       # argument inside f
+            # Evaluate f(arg)
+            lhs = a * (arg**n)
+            # rhs = x^3 * f(xy) = x^3 * a * (xy)^n
+            rhs = (x**3) * a * ((x * y)**n)
+            if lhs != rhs:
+                return False
+    return True
+
+def main():
+    from math import gcd
+    candidates = []
+    for a in [1, -1]:
+        for n in range(-2,5):  # powers from -2 to 4
+            if check_candidate(a, n):
+                candidates.append((a,n))
+                print(f"f(q) = {a} * q^{n} satisfies the equation.")
+    if candidates:
+        print("\nCandidate functions found:")
+        for a,n in candidates:
+            print(f"f(q) = {a} * q^{n}")
+    else:
+        print("No candidate functions found among tested powers.")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,60 @@
+[write_program]
+The problem involves finding all real numbers \( x \) in \( (0, \pi) \) satisfying the equation
+\[
+1 + \frac{\sin x}{\sin 4x} = \frac{\sin 3x}{\sin 2x}.
+\]
+We want to enumerate these solutions and their sum.
+
+We will:
+
+- Search for \( x \in (0, \pi) \) with a fine mesh.
+- Use `math` module to compute the left and right sides.
+- Print all approximate roots where the equation holds nearly exactly (tolerance).
+- Then sum these approximate roots and print the result.
+
+```python
+import math
+
+def near_eq(a, b, tol=1e-10):
+    return abs(a - b) < tol
+
+# Sample points in (0, pi) to detect roots by sign change
+N = 10000
+xs = [math.pi * i / N for i in range(1, N)]
+candidates = []
+
+for i in range(len(xs)-1):
+    x0, x1 = xs[i], xs[i+1]
+    try:
+        f0 = 1 + math.sin(x0) / math.sin(4*x0) - math.sin(3*x0) / math.sin(2*x0)
+        f1 = 1 + math.sin(x1) / math.sin(4*x1) - math.sin(3*x1) / math.sin(2*x1)
+    except ZeroDivisionError:
+        continue
+    if f0 * f1 <= 0:
+        # Bisection to refine root
+        a, b = x0, x1
+        for _ in range(30):
+            m = (a+b)/2
+            try:
+                fm = 1 + math.sin(m)/math.sin(4*m) - math.sin(3*m)/math.sin(2*m)
+            except ZeroDivisionError:
+                break
+            if abs(fm) < 1e-14:
+                a = b = m
+                break
+            if f0*fm <= 0:
+                b = m
+                f1 = fm
+            else:
+                a = m
+                f0 = fm
+        root = a
+        # Avoid duplicates within 1e-14
+        if all(abs(root - r) > 1e-12 for r in candidates):
+            candidates.append(root)
+            print(f"x = {root:.15f}")
+
+# Sum answers
+answer = sum(candidates)
+print(f"Sum of solutions ≈ {answer:.15f}")
+```

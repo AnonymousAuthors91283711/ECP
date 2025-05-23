@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for the smallest natural number `n` such that there exists a set of `n` polynomials over ℚ where the sum of their squares evaluated at any rational `x` equals `x² + 7`. We'll write a Python program to search for the minimal `n` by testing small values and checking possible polynomial combinations.
+
+The approach:
+1. For small n (starting from 1), generate possible polynomial combinations
+2. Check if their squares sum to x² + 7
+3. Since the problem is over ℚ, we'll consider linear polynomials (higher degrees would make the sum too large)
+4. We'll limit coefficients to small integers for practicality
+
+```python
+from sympy import symbols, Poly, expand
+
+x = symbols('x')
+
+def check_polynomials(polys):
+    """Check if sum of squares equals x^2 + 7"""
+    total = sum(p**2 for p in polys)
+    return expand(total) == x**2 + 7
+
+def find_min_n(max_n=5):
+    """Search for minimal n where solution exists"""
+    for n in range(1, max_n + 1):
+        print(f"Testing n = {n}")
+        
+        # Try combinations of linear polynomials a*x + b
+        # Limit coefficient range for practical search
+        coeff_range = range(-3, 4)
+        
+        # Generate all possible n-length tuples of (a,b) pairs
+        from itertools import product
+        for coeffs in product(product(coeff_range, repeat=2), repeat=n):
+            polys = [Poly(a*x + b, x) for a, b in coeffs]
+            if check_polynomials(polys):
+                print(f"Found solution for n={n}:")
+                for i, p in enumerate(polys):
+                    print(f"  f_{i} = {p}")
+                return n
+    return None
+
+if __name__ == "__main__":
+    min_n = find_min_n()
+    if min_n is not None:
+        print(f"\nThe minimal n is: {min_n}")
+    else:
+        print("No solution found in the search range")
+```
+
+The program searches for the minimal `n` by testing combinations of linear polynomials with small integer coefficients. It stops at the first valid solution found. The output shows each tested `n` and any found solutions. The minimal `n` is printed at the end if found within the search range.

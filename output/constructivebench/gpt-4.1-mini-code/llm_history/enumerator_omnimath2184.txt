@@ -1,0 +1,73 @@
+[write_program]
+The problem is about counting functions x: Fin 2012 → ℤ where each x(i) is between 0 and 2011 inclusive, and the sum ∑ (i+1)*x(i) is divisible by 2012. We want to enumerate the number of such functions.
+
+We will:
+- Let n=2012.
+- Observe x(i) ∈ [0, n-1].
+- The sum mod n must be 0.
+- We want to count the number of vectors (x_0,...,x_{n-1}) with each x_i ∈ {0,...,n-1} s.t.
+  sum_{i=0}^{n-1} (i+1)*x_i ≡ 0 mod n.
+
+Since all ranges are length n, this is a counting problem in modular arithmetic. The number of all such vectors is n^n, but only those that satisfy the modular sum condition count.
+
+Because n=2012 is large, we'll try a smaller sample n to look for a pattern.
+
+Use the program to count the number of functions x from Fin n to [0,n-1] with ∑ (i+1)*x(i) ≡ 0 mod n.
+
+Direct enumeration for large n is impossible, so we pick smaller n to calculate and print counts.
+
+This needs efficient approaches, for example dynamic programming using convolution modulo n.
+
+We do DP over positions, with the state being the distribution of remainder mod n.
+
+At each step, for each possible value of x_i, we add (i+1)*x_i mod n.
+
+Thus, the transitions at step i:
+
+
+dp[i+1][(r + (i+1)*v) % n] += dp[i][r]
+
+
+with v = 0..n-1
+
+Since each position can contribute n possible values, total complexity is O(n^2), acceptable for small n.
+
+We will implement this code for sample small n values, say n=2,3,4,5, and print the counts.
+
+At the end, print the counts and conjecture the value for n=2012.
+
+```python
+# Enumerate number of functions x: Fin n -> [0..n-1] with sum (i+1)*x(i) ≡ 0 mod n
+# Print exact counts for small n and speculate on n=2012
+
+def count_good_vectors(n):
+    dp = [0]*n
+    dp[0] = 1
+    for i in range(n):
+        ndp = [0]*n
+        coeff = i+1
+        for r in range(n):
+            ways = dp[r]
+            if ways==0:
+                continue
+            # Add contributions for x_i in 0..n-1
+            # For each v, new remainder is (r + coeff*v)%n
+            # Since dp is large, use arithmetic series trick:
+            # For fixed r, counts added to ndp[(r + coeff*v)%n] += ways
+            # counts are 1 for each v -> cumulative dp update
+            # But since n is small, do direct loop
+            for v in range(n):
+                nr = (r + coeff*v)%n
+                ndp[nr] += ways
+        dp = ndp
+    return dp[0]
+
+print("n count")
+for n in range(2,6):
+    c = count_good_vectors(n)
+    print(n,c)
+
+# For n=2012 printing count is impossible, only print n=2012 and indicate count unknown
+print("n=2012 count = unknown (too large to compute here)")
+```
+

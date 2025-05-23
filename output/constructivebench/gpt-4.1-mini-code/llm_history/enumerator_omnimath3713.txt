@@ -1,0 +1,68 @@
+[write_program]
+The problem involves three two-digit numbers \(p, q, r\) with distinct digits across all three numbers and some multiplicative and summation equalities involving their digits. We want to find all such triples \((p,q,r)\) of two-digit numbers (10 to 99) satisfying these conditions.
+
+The program will:
+- Enumerate all \(p, q, r\) in 10 to 99
+- Check digit uniqueness within each number (no duplicates in digits)
+- Check that combined digits of p, q, r have 6 distinct digits (all distinct across the three numbers)
+- Check the equality \(p \times q \times \text{sumDigits}(r) = p \times \text{sumDigits}(q) \times r\)
+- Check the iff condition involving \(p \times \text{sumDigits}(q) \times r = \text{sumDigits}(p) \times q \times r\)
+- Print all solutions immediately when found
+
+To expedite, we will precompute digit sets and sums for 2-digit numbers with no repeated digits. The program will print each valid triple immediately.
+
+```python
+def digits(n):
+    return [n // 10, n % 10]
+
+def nodup_digits(n):
+    d = digits(n)
+    return d[0] != d[1]
+
+def sum_digits(n):
+    return sum(digits(n))
+
+def all_distinct(p, q, r):
+    ps = set(digits(p))
+    qs = set(digits(q))
+    rs = set(digits(r))
+    return len(ps) == 2 and len(qs) == 2 and len(rs) == 2 and \
+           len(ps | qs | rs) == 6
+
+def main():
+    # Precompute two-digit numbers with distinct digits
+    valid_nums = [x for x in range(10, 100) if nodup_digits(x)]
+    solutions = []
+    for p in valid_nums:
+        sum_p = sum_digits(p)
+        digits_p = set(digits(p))
+        for q in valid_nums:
+            sum_q = sum_digits(q)
+            digits_q = set(digits(q))
+            if digits_p & digits_q:
+                continue  # digits overlap
+            for r in valid_nums:
+                digits_r = set(digits(r))
+                if digits_p & digits_r or digits_q & digits_r:
+                    continue
+                # combined digits are unique
+                if len(digits_p | digits_q | digits_r) != 6:
+                    continue
+                sum_r = sum_digits(r)
+                lhs = p * q * sum_r
+                mid = p * sum_q * r
+                rhs = sum_p * q * r
+                if lhs == mid and (mid == rhs) == (True):  # the iff means equality of lhs and rhs must coincide
+                    # We also verify iff condition:
+                    # p * sum_q * r == sum_p * q * r iff equal means True
+                    # If mid == rhs then iff is True, if not then False, 
+                    # but since lhs == mid, we check if lhs == rhs exactly
+                    cond_iff = (mid == rhs)
+                    if cond_iff:
+                        print(f"Found: p={p}, q={q}, r={r}")
+                        solutions.append((p,q,r))
+    print("Total solutions:", len(solutions))
+
+if __name__ == "__main__":
+    main()
+```

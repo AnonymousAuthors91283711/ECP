@@ -1,0 +1,82 @@
+[write_program]
+To solve this problem, we need to find the smallest possible value of \( n \) such that there exist natural numbers \( a, b, c, d \) with the given conditions:
+
+- \( \gcd(\gcd(\gcd(a, b), c), d) = 77 \)
+- \( \operatorname{lcm}(\operatorname{lcm}(\operatorname{lcm}(a, b), c), d) = n \)
+- The total number of such tuples \( (a, b, c, d) \) with these properties is 77,000, and we want the least such \( n \).
+
+---
+
+**Analysis:**
+
+- The gcd condition being 77 means all four numbers have at least prime factors 7 and 11 in common, with no higher power that would increase the gcd.
+- The LCM condition being \( n \) depends on the maximum powers of prime factors in any of \( a, b, c, d \).
+
+Given the prime factorization considerations, and that gcd is fixed at 77, for each \( a, b, c, d \):
+
+- Each must be divisible by at least \( 7 \times 11 = 77 \).
+- Their prime powers can vary but must produce exactly gcd 77 and the specified LCM.
+
+**Approach:**
+
+- Choose small divisors of 77 for \( a, b, c, d \), ensuring gcd conditions.
+- Generate tuples \( (a, b, c, d) \) fulfilling gcd and lcm conditions.
+- Count total such tuples; keep those with total count 77,000.
+- For those, evaluate the LCM \( n \).
+
+To efficiently check, we pick minimal divisors with gcd 77, varying powers of 7 and 11, and then enumerate.
+
+---
+
+```python
+import math
+from collections import defaultdict
+
+# Prime base factors for 77 = 7 * 11
+prime_factors = [7, 11]
+
+# Generate possible divisors with minimum prime factors (divisible by 77)
+divisors = []
+for p7_pow in range(1, 3):  # powers of 7 (1 or 2)
+    for p11_pow in range(1, 3):  # powers of 11 (1 or 2)
+        divisor = (7 ** p7_pow) * (11 ** p11_pow)
+        divisors.append(divisor)
+
+# To achieve the total count of tuples as 77,000, heuristically select divisor combinations
+# For simplicity, consider small divisors and counts
+results = []
+
+# Store counts of tuples for each candidate n
+n_counts = defaultdict(int)
+
+# Generate all 4-tuples with divisors where gcd is exactly 77
+for a in divisors:
+    for b in divisors:
+        for c in divisors:
+            for d in divisors:
+                # Check gcd
+                current_gcd = math.gcd(a, b)
+                current_gcd = math.gcd(current_gcd, c)
+                current_gcd = math.gcd(current_gcd, d)
+                if current_gcd == 77:
+                    # Calculate LCM
+                    def lcm(x, y):
+                        return x * y // math.gcd(x, y)
+
+                    total_lcm = lcm(lcm(lcm(a, b), c), d)
+                    
+                    # Count how many tuples produce this total_lcm
+                    key = total_lcm
+                    n_counts[key] += 1
+
+# Find the total count closest to 77,000 and get its n
+for n_value, count in n_counts.items():
+    if count == 77000:
+        print(f"Found n = {n_value} with count = {count}")
+        break
+else:
+    # No exact match found, pick the closest
+    target = 77000
+    closest_n, closest_count = min(n_counts.items(), key=lambda item: abs(item[1] - target))
+    print(f"Closest n = {closest_n} with count = {closest_count}")
+```

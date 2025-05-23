@@ -1,0 +1,55 @@
+[write_program]
+The problem is to find all real numbers \(x\) such that:
+
+\[
+x^4 + (2 - x)^4 = 34.
+\]
+
+We want to enumerate all real \(x\) satisfying this equation, preferably producing exact solutions if possible or good numeric approximations. Since this quartic in \(x\) is symmetric around \(x=1\) and the values involved are not trivial, we'll try scanning rational candidates with small denominators, plus numeric root finding via Python.
+
+We'll output solutions as found, use exact fractions when possible and approximate decimals with reasonable precision otherwise.
+
+```python
+from fractions import Fraction
+from math import isclose
+
+def f(x):
+    return x**4 + (2 - x)**4
+
+def approx_eq(a, b, tol=1e-10):
+    return abs(a - b) < tol
+
+def rational_candidates(numer_max=10, denom_max=10):
+    seen = set()
+    for denom in range(1, denom_max + 1):
+        for numer in range(-numer_max, numer_max + 1):
+            frac = Fraction(numer, denom)
+            if frac in seen:
+                continue
+            seen.add(frac)
+            yield frac
+
+# Check rational candidates first
+print("Checking rational candidates for solutions to x^4 + (2 - x)^4 = 34:")
+for x in rational_candidates():
+    val = f(float(x))
+    if approx_eq(val, 34):
+        print(f"x = {x} (exact fraction) => {val}")
+
+# Since no obvious rationals satisfy, approximate with numeric methods
+# We'll scan float values from -2 to 4 stepping 0.01 and print roots with f(x) close to 34
+
+print("\nApproximate real solutions found by scanning from -2 to 4 with step 0.01:")
+last_printed = None
+x = -2.0
+step = 0.01
+while x <= 4.0:
+    val = f(x)
+    if abs(val - 34) < 0.01:
+        # Avoid printing too many close points (only print if sufficiently spaced)
+        if last_printed is None or abs(x - last_printed) > 0.1:
+            print(f"x ≈ {x:.4f}, x^4+(2-x)^4 ≈ {val:.5f}")
+            last_printed = x
+    x += step
+```
+

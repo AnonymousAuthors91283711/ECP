@@ -1,0 +1,65 @@
+[write_program]
+This problem asks to find the smallest positive integer n such that n^n has exactly 861 divisors. We'll write a Python program to enumerate possible values of n and count their divisors.
+
+The approach:
+1. For each n starting from 1, compute n^n
+2. Factorize n^n and use the divisor count formula
+3. Stop when we find the first n where divisor count equals 861
+
+```python
+import math
+
+def factorize(n):
+    """Return prime factorization of n as a dictionary {prime: exponent}"""
+    factors = {}
+    # Handle 2 separately
+    while n % 2 == 0:
+        factors[2] = factors.get(2, 0) + 1
+        n = n // 2
+    # Check odd divisors up to sqrt(n)
+    i = 3
+    max_factor = math.sqrt(n) + 1
+    while i <= max_factor:
+        while n % i == 0:
+            factors[i] = factors.get(i, 0) + 1
+            n = n // i
+            max_factor = math.sqrt(n) + 1
+        i += 2
+    if n > 1:
+        factors[n] = factors.get(n, 0) + 1
+    return factors
+
+def count_divisors(n):
+    """Count number of divisors of n using prime factorization"""
+    if n == 1:
+        return 1
+    factors = factorize(n)
+    count = 1
+    for exp in factors.values():
+        count *= (exp + 1)
+    return count
+
+def count_divisors_n_pow_n(n):
+    """Count divisors of n^n by scaling each exponent in n's factorization by n"""
+    if n == 1:
+        return 1
+    factors = factorize(n)
+    count = 1
+    for exp in factors.values():
+        count *= (exp * n + 1)
+    return count
+
+def find_min_n(target=861):
+    """Find smallest n where n^n has exactly target divisors"""
+    n = 1
+    while True:
+        d = count_divisors_n_pow_n(n)
+        print(f"Testing n={n}, divisors={d}")  # Stream partial results
+        if d == target:
+            print(f"\nFound minimal n: {n}")
+            return n
+        n += 1
+
+if __name__ == "__main__":
+    find_min_n()
+```

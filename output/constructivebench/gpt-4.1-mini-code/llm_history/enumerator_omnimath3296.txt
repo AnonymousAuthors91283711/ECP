@@ -1,0 +1,82 @@
+[write_program]
+The problem involves checking a property for matrices \( M \) indexed by \(\mathrm{Fin}(n)\times \mathrm{Fin}(n)\), where each row forms an arithmetic progression (AP) of natural numbers, and we want to know if there exists a permutation \(\sigma\) on the rows such that each column also forms an AP. We will enumerate small values of \( n \geq 3 \) and sample some matrices \( M \) to test the condition experimentally.
+
+The Python program will:
+- Consider \( n = 3,4 \) (small sizes).
+- For each \( n \), enumerate possible rows as APs with small differences and starts.
+- For each \( M \), try to find a permutation of rows \(\sigma\) making columns APs.
+- Print each candidate \( n \) and for that \( n \), each \( M \) tested.
+- Print all permutations \( \sigma \) found that satisfy the column AP condition.
+- In this way, we gather evidence towards the statement's truth or falsehood.
+
+This enumerator serves to conjecture or refute the theorem by searching for counterexamples or verifying for small values.
+
+```python
+from itertools import permutations, product
+
+def is_arithmetic(seq):
+    # seq is a tuple or list of numbers
+    if len(seq) < 2:
+        return True
+    d = seq[1] - seq[0]
+    return all(seq[i+1] - seq[i] == d for i in range(len(seq)-1))
+
+def rows_are_aps(M):
+    return all(is_arithmetic(row) for row in M)
+
+def columns_are_aps(M):
+    n = len(M)
+    for j in range(n):
+        col = tuple(M[i][j] for i in range(n))
+        if not is_arithmetic(col):
+            return False
+    return True
+
+def generate_aps(n, start_range, diff_range):
+    # generate all AP sequences of length n within start,diff ranges
+    for a in start_range:
+        for d in diff_range:
+            yield tuple(a + i*d for i in range(n))
+
+def main():
+    # We consider n in {3,4} to keep output short.
+    ns = [3, 4]
+    start_range = range(1,4)  # small starts 1..3
+    diff_range = range(0,3)   # differences 0,1,2
+    
+    for n in ns:
+        print(f"n = {n}")
+        # generate candidate matrices M with each row an AP
+        # limit rows to distinct APs to reduce redundancy
+        aps = list(generate_aps(n, start_range, diff_range))
+        # enumerate all M with rows from aps
+        # to keep output manageable take first 10x10 matrices
+        matrices = []
+        for rows in product(aps, repeat=n):
+            # check all distinct rows (optional but not required)
+            # rows_are_aps guaranteed by construction
+            matrices.append(rows)
+            if len(matrices) >= 10:
+                break
+        for idx, M in enumerate(matrices):
+            print(f"Matrix #{idx+1}:")
+            for r in M:
+                print(r)
+            # Try all permutations sigma of rows to see if columns are APs after permuting rows:
+            # The permutation acts on the row indices, but the problem applies sigma to row indices i for each fixed j.
+            # Here we interpret sigma as a permutation of rows for columns.
+            found_sigma = False
+            for sigma in permutations(range(n)):
+                # Construct matrix M_sigma: M_sigma[i][j] = M[sigma[i]][j]
+                M_sigma = [M[sigma[i]] for i in range(n)]
+                if columns_are_aps(M_sigma):
+                    print("Permutation sigma making columns APs:", sigma)
+                    found_sigma = True
+                    break
+            if not found_sigma:
+                print("No permutation sigma found making columns APs")
+        print("-" * 30)
+
+if __name__ == "__main__":
+    main()
+```

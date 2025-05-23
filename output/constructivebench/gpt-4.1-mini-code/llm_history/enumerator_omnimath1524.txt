@@ -1,0 +1,66 @@
+[write_program]
+The problem is to count natural numbers n such that 0 < n < 1998 and gcd(n,1547) = 1. We want the size of the set {n : 0 < n < 1998, gcd(n,1547)=1}.
+
+Since 1547 is fixed, let's factor it to find its prime factors. Then use inclusion-exclusion to count numbers up to 1997 coprime with 1547.
+
+The program will:
+- Factor 1547 (small number).
+- Enumerate values n from 1 to 1997.
+- Check gcd(n,1547) = 1 and print each such n.
+- Finally, print the count.
+
+Output is limited to 400 tokens, so limit printing—just print counts and sample coprime values.
+
+```python
+from math import gcd
+
+def factor(n):
+    # Trial division for factorization
+    factors = []
+    d = 2
+    while d*d <= n:
+        cnt = 0
+        while n % d == 0:
+            n //= d
+            cnt += 1
+        if cnt > 0:
+            factors.append((d,cnt))
+        d += 1
+    if n > 1:
+        factors.append((n,1))
+    return factors
+
+def main():
+    N = 1998
+    m = 1547
+    print(f"Parameters: N={N}, m={m}")
+    fs = factor(m)
+    ps = [p for p,_ in fs]
+    
+    count = 0
+    # Enumerate numbers coprime to m below N
+    for n in range(1, N):
+        if gcd(n,m) == 1:
+            print(f"Coprime: {n}")
+            count += 1
+            if count >= 20:
+                print("... (only first 20 coprimes shown)")
+                break
+    # To ensure correctness: use Euler's totient function formula
+    phi = m
+    for p in ps:
+        phi -= phi // p
+    # Count coprime numbers < 1998 = from 1 to 1997
+    # Total cycles: floor((1997)//m) * phi + remainder coprime count in last partial cycle
+    div, mod = divmod(N-1,m)
+    # Count coprime numbers in partial cycle [1, mod]
+    partial_count = 0
+    for r in range(1,mod+1):
+        if gcd(r,m) == 1:
+            partial_count += 1
+    total_count = div * phi + partial_count
+    print(f"Count of n with 0<n<{N} and gcd(n,{m})=1: {total_count}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,73 @@
+[write_program]
+The problem concerns integer polynomials \( P \) satisfying two conditions for all \( n \geq 2016 \):
+1. \( P(n) > 0 \)
+2. the sum of the digits of \( P(n) \) equals \( P(\text{sum of digits of } n) \),
+
+where \( S(m) \) is the sum of decimal digits of \( m \).
+
+To investigate, I'll enumerate candidate polynomials \( P \) with small degree (0,1,2) and integer coefficients between e.g. -10 and 10. For each \( P \) and sample \( n \), check if the digit sum equation approximately holds. Print candidates satisfying the relation for the samples. This can guide conjectures about the possible form of \( P \).
+
+The code will:
+- Define digit sum function \( S \)
+- For polynomials \( a_0 + a_1 x + a_2 x^2 \) with \( a_i \in [-2..2] \) to limit enumeration (due to output constraint)
+- For \( n \) in [2016..2026] (a small test range)
+- Check positivity and digit sum condition
+- Print candidate polynomials that satisfy the condition for all sample \( n \)
+
+```python
+# Enumerate low-degree integer polynomials P with small coeffs and test the problem conditions
+
+def digit_sum(x: int) -> int:
+    return sum(int(d) for d in str(abs(x)))
+
+def eval_poly(poly, x):
+    return sum(c * x**i for i,c in enumerate(poly))
+
+def poly_str(poly):
+    terms = []
+    for i,c in enumerate(poly):
+        if c == 0:
+            continue
+        term = ""
+        if c < 0:
+            term += "-"
+        elif terms:
+            term += "+"
+        c_abs = abs(c)
+        if c_abs != 1 or i == 0:
+            term += str(c_abs)
+        if i >= 1:
+            term += "x"
+        if i >= 2:
+            term += f"^{i}"
+        terms.append(term)
+    return " ".join(terms) if terms else "0"
+
+# Coefficients range small to keep output brief
+coef_range = range(-2, 3)
+sample_ns = range(2016, 2027)
+
+# We'll store candidates passing all tests
+candidates = []
+
+for a0 in coef_range:
+    for a1 in coef_range:
+        for a2 in coef_range:
+            poly = [a0,a1,a2]
+            # check positivity and digit sum condition for all sample n
+            valid = True
+            for n in sample_ns:
+                val = eval_poly(poly, n)
+                if val <= 0:
+                    valid = False
+                    break
+                if digit_sum(val) != eval_poly(poly, digit_sum(n)):
+                    valid = False
+                    break
+            if valid:
+                print("Candidate polynomial:", poly_str(poly))
+                candidates.append(poly)
+
+print(f"Total candidates found: {len(candidates)}")
+```
+This enumerates simple polynomials checking the conditions on a small range of \( n \), printing those that match.

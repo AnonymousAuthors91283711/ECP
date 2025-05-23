@@ -1,0 +1,88 @@
+[write_program]
+The problem involves understanding polynomials \( P \) over integers such that for all natural numbers \( n > 0 \) with a large number of prime factors (more than \(2023^{2023}\)), the value \( P(n) \) is positive and the number of prime factors of \( |P(n)| \) is at most the number of prime factors of \( n \).
+
+A plausible conjecture (common in number theory and polynomial factorization problems) is that such polynomials are products of linear polynomials with positive leading coefficients, potentially powers of \( x \) times units, or constant positive integers. The program below will enumerate some small integer polynomials \( P \) (degree 0 or 1 with small coefficients), and test the property for increasing \( n \) (with specified prime factors), printing those that seem to satisfy the condition for all tested \( n \).
+
+We sample \( n \) as product of small primes to produce \( n \) with varying prime factor counts, and check the condition.
+
+```python
+# Enumerate integer polynomials P(x) = a*x + b with small integer coefficients a,b
+# For each P, test for several n with sizable prime factor counts, whether:
+#   1) P(n) > 0
+#   2) number of prime factors of |P(n)| ≤ number of prime factors of n
+# We print polynomials passing all tests.
+
+from math import gcd
+from sympy import factorint
+
+def prime_factor_count(x):
+    if x <= 0:
+        return 0
+    f = factorint(x)
+    return sum(f.values())
+
+def prime_factors_mult(n):
+    # Return cardinality of prime factors with multiplicity
+    return prime_factor_count(n)
+
+def generate_n(primes, target_count):
+    # Sequentially multiply primes until count reached or surpassed
+    n = 1
+    count = 0
+    idx = 0
+    while count < target_count:
+        n *= primes[idx % len(primes)]
+        count += 1
+        idx += 1
+    return n
+
+def test_poly(a, b, primes):
+    # Test polynomial P(x) = a x + b
+    # For n with prime factor counts from 2 to 7, test the condition
+    for k in range(2, 8):
+        n = generate_n(primes, k)
+        val = a*n + b
+        if val <= 0:
+            return False
+        if prime_factors_mult(abs(val)) > k:
+            return False
+    return True
+
+def main():
+    primes = [2,3,5,7,11]  # small primes to construct n
+    candidates = []
+    # Enumerate polynomials a*x + b for a,b in [-3..3], avoid a=0 except b>0
+    for a in range(-3,4):
+        for b in range(-3,4):
+            # skip zero polynomial
+            if a == 0 and b == 0:
+                continue
+            # For simplicity and positivity, also test constant polynomials
+            if a == 0:
+                if b <= 0:
+                    continue
+                # Check condition for constants
+                # number of prime factors of P(n)=b <= number of prime factors of n for large n?
+                # If b is prime or 1, condition holds for large prime-factored n, so print
+                if prime_factor_count(b) <= 2**30:
+                    # trivial but print anyway
+                    print(f"P(x) = {b}")
+                    candidates.append((a,b))
+                continue
+            if test_poly(a,b,primes):
+                print(f"P(x) = {a}*x + {b}")
+                candidates.append((a,b))
+    # Print summary
+    if candidates:
+        print("Polynomials that pass tests:")
+        for (a,b) in candidates:
+            if a == 0:
+                print(f"Constant polynomial: {b}")
+            else:
+                print(f"{a}*x + {b}")
+    else:
+        print("No candidates found.")
+
+if __name__ == "__main__":
+    main()
+```

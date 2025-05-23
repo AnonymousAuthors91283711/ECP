@@ -1,0 +1,47 @@
+[write_program]
+The problem asks to characterize all real functions \( f:\mathbb{R} \to \mathbb{R} \) satisfying the functional equation
+
+\[
+f(x^2 + f(y)) = f(f(x)) + f(y^2) + 2 f(x y)
+\]
+
+for all real \( x,y \).
+
+A standard approach is to try candidate functions, especially polynomials of low degree, such as constants, linear, quadratic, etc. The equation has quadratic terms and nested \( f \), so quadratic candidates are natural.
+
+This program will test all polynomials of degree up to 2 with integer coefficients in a small range and check if the equation holds for several sample points (because infinite verification is impossible). If it holds on these points, print the polynomial as a candidate solution.
+
+This enumeration can help conjecture the true solution set.
+
+```python
+import itertools
+
+def poly(x, coeffs):
+    # coeffs = (a0, a1, a2) for a0 + a1*x + a2*x^2
+    return coeffs[0] + coeffs[1]*x + coeffs[2]*x*x
+
+# Check the functional equation for a candidate polynomial f with given coeffs
+def check_eq(coeffs):
+    # test on selected sample points
+    xs = [-2, -1, 0, 1, 2]
+    ys = [-2, -1, 0, 1, 2]
+    for x in xs:
+        fx = poly(x, coeffs)
+        ffx = poly(fx, coeffs)
+        for y in ys:
+            fy = poly(y, coeffs)
+            lhs = poly(x*x + fy, coeffs)
+            rhs = ffx + poly(y*y, coeffs) + 2*poly(x*y, coeffs)
+            if lhs != rhs:
+                return False
+    return True
+
+print("Testing quadratic polynomials f(x)=a0 + a1 x + a2 x^2 with coefficients in [-3,3]")
+for a0, a1, a2 in itertools.product(range(-3,4), repeat=3):
+    # skip trivial (0,0,0) as always zero function
+    # will be printed anyway
+    if check_eq((a0,a1,a2)):
+        print(f"Candidate solution: f(x) = {a2} x^2 + {a1} x + {a0}")
+
+# To help conjecture, key known solutions may appear among candidates.
+```

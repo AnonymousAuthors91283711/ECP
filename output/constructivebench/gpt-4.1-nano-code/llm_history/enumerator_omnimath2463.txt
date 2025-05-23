@@ -1,0 +1,49 @@
+[write_program]
+Let's analyze the problem:
+
+We are counting functions `s : Fin 10 → Fin 2` with certain restrictions:
+
+- For all `i` in `Fin 9` (i.e., from 0 to 8), the following must hold:
+  - If `s i = 0` and `s (i+1) = 0`, it's forbidden (no two consecutive zeros).
+  - If `s i = 1` and `s (i+1) = 1`, and `s (i+2) = 1`, it's forbidden (no three consecutive ones).
+
+In other words:
+- No consecutive zeros.
+- No three consecutive ones.
+
+We need to count the total number of valid functions `s` satisfying these constraints, i.e., total numbers of binary sequences of length 10 with these properties.
+
+Let's implement a backtracking enumeration approach with memoization for efficiency.
+
+```python
+# Enumerates all sequences of length 10 over {0,1} with:
+# - No two consecutive zeros
+# - No three consecutive ones
+# Counts and prints total valid sequences
+
+def count_sequences(length, last_bit, run_length, memo):
+    if length == 0:
+        return 1
+    key = (length, last_bit, run_length)
+    if key in memo:
+        return memo[key]
+    total = 0
+    # Try adding 0
+    if last_bit != 0:  # no two consecutive zeros
+        total += count_sequences(length - 1, 0, 1, memo)
+    # Try adding 1
+    if last_bit != 1 or run_length < 2:  # no three consecutive ones
+        total += count_sequences(length - 1, 1, run_length + 1 if last_bit ==1 else 1, memo)
+    memo[key] = total
+    return total
+
+memo = {}
+answer = count_sequences(10, -1, 0, memo)
+print(answer)
+```
+
+This code:
+- Uses recursion with memoization to count sequences.
+- Starts with no previous bit (represented by `-1`).
+- Enforces rules about zeros and ones.
+- Prints the total number of valid sequences.

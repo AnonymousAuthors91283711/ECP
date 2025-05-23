@@ -1,0 +1,64 @@
+[write_program]
+The problem describes a set of triples (x,y,z) in ℝ^3 under certain inequalities and equalities, and defines t = |x-y| + |y-z|. We want to find the minimal value of t over all such triples. The conditions are:
+
+- 0 ≤ x ≤ y ≤ z ≤ 4
+- x² + 2 = y²
+- y² + 2 = z²
+
+We can enumerate all real triples satisfying these equalities and inequalities (or close approximations) and compute t. Since the problem is real-valued with nested square equations, solutions are limited and can be directly computed symbolically: for example, from x²+2=y², and y²+2=z², we can write y²=x²+2 and z²=y²+2 = x²+4, so (x,y,z) = (x, sqrt(x²+2), sqrt(x²+4)) with 0 ≤ x ≤ y ≤ z ≤ 4.
+
+We can vary x from 0 up to a max to ensure y,z ≤ 4, then compute t = (y-x)+(z - y) = z - x since x ≤ y ≤ z, so |x-y| + |y-z| = (y-x)+(z-y) or total difference z - x. So t = z - x = sqrt(x²+4) - x.
+
+We want to minimize t = sqrt(x²+4) - x over x in [0, sqrt(16)] s.t y,z ≤ 4, but let's check the domain more carefully to ensure z ≤ 4.
+
+Since z = sqrt(x²+4) ≤ 4 => x² + 4 ≤ 16 => x² ≤ 12 => x ≤ sqrt(12) ≈ 3.464.
+
+Also, x ≥ 0.
+
+So x ∈ [0, 3.464].
+
+We can enumerate x over some grid points in this interval, compute t and print minimal value candidates.
+
+We should print each candidate as found.
+
+```python
+import math
+
+# We enumerate x in [0, sqrt(12)] with small steps.
+# For each x, compute y = sqrt(x^2 + 2), z = sqrt(x^2 + 4)
+# then check if y, z are <= 4 and if inequalities hold (they do by construction)
+# Compute t = |x-y| + |y-z| = (y - x) + (z - y) = z - x
+# Find the minimal t.
+
+def approx_equal(a, b, eps=1e-12):
+    return abs(a - b) < eps
+
+def main():
+    max_x = math.sqrt(12)  # max x s.t z <= 4
+    step = 0.01
+    min_t = None
+    min_x = None
+    print("Enumerating candidates (x, y, z, t=|x-y|+|y-z|):")
+    x = 0.0
+    while x <= max_x + 1e-12:
+        y = math.sqrt(x*x + 2)
+        z = math.sqrt(x*x + 4)
+        if y < x or z < y or z > 4:
+            x += step
+            continue
+        t = abs(x - y) + abs(y - z)
+        # t should equal z - x
+        # print the values if t is "interesting" or near known min
+        # we print all; if you want less printout, you can filter
+        print(f"x={x:.5f}, y={y:.5f}, z={z:.5f}, t={t:.10f}")
+        if (min_t is None) or (t < min_t):
+            min_t = t
+            min_x = x
+        x += step
+
+    print(f"\nMinimal t found: {min_t:.10f} at x = {min_x:.10f}")
+    print(f"Corresponding y = {math.sqrt(min_x*min_x + 2):.10f}, z = {math.sqrt(min_x*min_x + 4):.10f}")
+
+if __name__ == "__main__":
+    main()
+```

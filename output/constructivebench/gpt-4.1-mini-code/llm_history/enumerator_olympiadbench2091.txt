@@ -1,0 +1,57 @@
+[write_program]
+The problem asks us to find the maximum size \( N \) of a collection of triples \((a,b,c)\) of natural numbers summing to \( n \), where all \( a \)'s are distinct, all \( b \)'s are distinct, and all \( c \)'s are distinct.
+
+We want to enumerate such sets for small \( n \) to guess the maximum \( N \) for each \( n \geq 2 \).
+
+The Python program below:
+- Tries all triples \((a,b,c)\) with \(a+b+c=n\), \(a,b,c \geq 0\),
+- Enumerates subsets with distinct \(a\), distinct \(b\), distinct \(c\),
+- Finds the maximum subset size,
+- Prints intermediate maximal sizes for each \(n\) from 2 to 6.
+
+The search space is small for these values, so the program will run quickly and show examples to conjecture the formula for max \(N\).
+
+```python
+from itertools import combinations
+
+def triples_summing_to(n):
+    # Generate all triples (a,b,c) with a+b+c=n, a,b,c>=0
+    return [(a,b,c) for a in range(n+1) for b in range(n+1) 
+            for c in range(n+1) if a + b + c == n]
+
+def has_distinct_coords(triples):
+    # Check distinctness in each coordinate
+    a_set = set()
+    b_set = set()
+    c_set = set()
+    for (a,b,c) in triples:
+        if a in a_set or b in b_set or c in c_set:
+            return False
+        a_set.add(a)
+        b_set.add(b)
+        c_set.add(c)
+    return True
+
+def max_distinct_triples(n):
+    triples = triples_summing_to(n)
+    max_size = 0
+    # Check subsets from biggest to smallest for early stopping
+    for size in range(len(triples), 0, -1):
+        found = False
+        for comb in combinations(triples, size):
+            if has_distinct_coords(comb):
+                print(f"n={n}, max subset of size {size}: {sorted(comb)}")
+                max_size = size
+                found = True
+                break
+        if found:
+            break
+    return max_size
+
+if __name__ == "__main__":
+    for n in range(2, 7):  # small n to keep output limited
+        print(f"=== n={n} ===")
+        maxN = max_distinct_triples(n)
+        print(f"Maximum N for n={n} is {maxN}")
+```
+This program enumerates all solutions, prints each largest found subset with distinct coordinates for several small values of \( n \), and reports the maximum size, helping to conjecture the answer function olympiadbench2091_answer(n).

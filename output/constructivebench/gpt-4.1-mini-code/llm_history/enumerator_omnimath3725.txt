@@ -1,0 +1,54 @@
+[write_program]
+The problem considers a set \( s \) of 2009 points in the plane, split into blue and red subsets with sizes \( k \) and \( 2009-k \) respectively. Each blue point must have exactly two red points exactly distance 1 away. We want the largest possible \( k \).
+
+We will try small \( |s| \) and enumerate possible values of \( k \) satisfying the conditions. We focus on constructing small examples to guess the maximal \( k \) and print all allowed \( k \).
+
+```python
+from itertools import combinations
+import math
+
+def dist(p, q):
+    return math.dist(p, q)
+
+def unit_circle_points_around(p, reds):
+    # count red points distance exactly 1 from p
+    return sum(abs(dist(p, r)-1) < 1e-9 for r in reds)
+
+def check(k, s):
+    # s is points set; enumerate all red subsets with size len(s)-k
+    n = len(s)
+    for red_indices in combinations(range(n), n - k):
+        red = [s[i] for i in red_indices]
+        blue = [s[i] for i in range(n) if i not in red_indices]
+        if len(blue) != k:
+            continue
+        # check condition: each blue point has exactly 2 red points at distance 1
+        if all(unit_circle_points_around(bp, red) == 2 for bp in blue):
+            print(f"k={k}, red={red}, blue={blue}")
+            return True
+    return False
+
+# We test small sets s with distinct rational coordinates on a grid,
+# to keep code and output small.
+
+print("Testing small samples to conjecture k for |s|=4")
+s4 = [(0,0),(1,0),(0,1),(1,1)]  # square size 1 edges
+
+for k in range(1,5):
+    found = check(k, s4)
+    if found:
+        print(f"Possible k={k} for set {s4}")
+
+print("Testing small samples to conjecture k for |s|=6")
+s6 = [(0,0),(2,0),(1,math.sqrt(3)),(1,0.5),(0.5,math.sqrt(3)/2),(1.5,math.sqrt(3)/2)]
+# roughly two equilateral triangles and midpoints
+for k in range(1,7):
+    found = check(k, s6)
+    if found:
+        print(f"Possible k={k} for set {s6}")
+
+# Output conjecture for |s|=2009: guess maximum k might not exceed 2 * 2009 since each blue needs 2 red neighbors
+
+print("Conjecture: For large |s|=2009, maximal k seems bounded by half of |s| or less.")
+```
+

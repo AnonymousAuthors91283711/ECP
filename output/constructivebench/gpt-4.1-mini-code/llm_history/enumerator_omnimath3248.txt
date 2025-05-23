@@ -1,0 +1,53 @@
+[write_program]
+The problem involves finding all dimensions \( n \) such that there exists a set \( S \) of integer lattice points in \( \mathbb{Z}^n \) with certain neighbor-exclusion and uniqueness conditions. To explore this, I will enumerate small values of \( n \) and try to construct such sets \( S \) on small finite segments of \(\mathbb{Z}^n\). I will print candidates and note when the conditions are satisfied on these segments, aiming to understand the pattern.
+
+```python
+# We explore for small n=1..4 subsets S of points in {0,1}^n fulfilling:
+# 1) If p ∈ S, none of its neighbors are in S
+# 2) If p ∉ S, there's a unique neighbor q ∈ S
+
+from itertools import product
+
+def neighbors(p):
+    n = len(p)
+    neighs = []
+    for i in range(n):
+        for delta in [-1,1]:
+            q = list(p)
+            q[i] += delta
+            # restrict to {0,1}^n domain
+            if all(x in (0,1) for x in q):
+                neighs.append(tuple(q))
+    return neighs
+
+def check_conditions(n):
+    points = list(product([0,1], repeat=n))
+    # enumerate subsets of points
+    # to keep complexity manageable, test only some subsets with ~half points
+    # candidates: the sets of points with p's having sum of coordinates even (like a checkerboard)
+    S = set(p for p in points if sum(p) % 2 == 0)
+    # Condition 1: no two neighbors both in S
+    cond1 = True
+    for p in S:
+        for q in neighbors(p):
+            if q in S:
+                cond1 = False
+                break
+        if not cond1:
+            break
+    # Condition 2: every p not in S has exactly one neighbor in S
+    cond2 = True
+    not_in_S = [p for p in points if p not in S]
+    for p in not_in_S:
+        neigh_in_S = [q for q in neighbors(p) if q in S]
+        if len(neigh_in_S) != 1:
+            cond2 = False
+            break
+    print(f"n={n}, subset S with parity-even points: cond1={cond1}, cond2={cond2}")
+    return cond1 and cond2
+
+# Test for n = 1 to 4
+for n in range(1,5):
+    check_conditions(n)
+```
+

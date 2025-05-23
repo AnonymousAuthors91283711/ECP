@@ -1,0 +1,66 @@
+[write_program]
+This problem asks for the minimal n such that there exist functions a,b,c from {1,...,n} to [0,1] where:
+1. At least 2018 triples (i,j,k) satisfy a_i + b_j + c_k < 1
+2. At least 2018 triples (i,j,k) satisfy a_i + b_j + c_k > 2
+
+We'll write a Python program to find the smallest n satisfying these conditions by testing increasing values of n and checking possible threshold configurations.
+
+```python
+def find_min_n():
+    # We'll test n starting from 1 upwards
+    for n in range(1, 100):
+        # Try simple threshold configurations where:
+        # - a has k values at 0, rest at 1
+        # - b has l values at 0, rest at 1
+        # - c has m values at 0, rest at 1
+        # Then count triples satisfying conditions
+        
+        found = False
+        # Try all possible k,l,m combinations (0 to n)
+        for k in range(0, n+1):
+            for l in range(0, n+1):
+                for m in range(0, n+1):
+                    # Count triples with sum < 1 (all three must be 0)
+                    count_less = k * l * m
+                    # Count triples with sum > 2 (at least two must be 1)
+                    count_more = (n**3 - (n-k)*(n-l)*(n-m) 
+                                - k*(n-l)*(n-m) - (n-k)*l*(n-m) - (n-k)*(n-l)*m)
+                    
+                    if count_less >= 2018 and count_more >= 2018:
+                        print(f"Found solution for n={n} with (k,l,m)=({k},{l},{m})")
+                        print(f"Counts: <1: {count_less}, >2: {count_more}")
+                        return n
+        
+        # Also check other configurations where some values are between 0 and 1
+        # This is more complex but might give better results
+        # We'll try dividing into two groups: low (0) and high (1)
+        # But with more granular thresholds
+        for parts in [2,3]:  # Try dividing into 2 or 3 parts
+            step = 1.0/parts
+            for a_low in range(0, parts+1):
+                for b_low in range(0, parts+1):
+                    for c_low in range(0, parts+1):
+                        a_vals = [0]*a_low + [1]*(n-a_low)
+                        b_vals = [0]*b_low + [1]*(n-b_low)
+                        c_vals = [0]*c_low + [1]*(n-c_low)
+                        
+                        count_less = 0
+                        count_more = 0
+                        for ai in a_vals:
+                            for bi in b_vals:
+                                for ci in c_vals:
+                                    s = ai + bi + ci
+                                    if s < 1: count_less += 1
+                                    if s > 2: count_more += 1
+                        
+                        if count_less >= 2018 and count_more >= 2018:
+                            print(f"Found solution for n={n} with thresholds")
+                            print(f"Counts: <1: {count_less}, >2: {count_more}")
+                            return n
+
+    return "No solution found for n < 100"
+
+if __name__ == "__main__":
+    min_n = find_min_n()
+    print(f"\nThe minimal n is: {min_n}")
+```

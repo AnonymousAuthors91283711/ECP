@@ -1,0 +1,37 @@
+[write_program]
+This problem asks for a cubic polynomial f and a non-zero polynomial g with 3 distinct non-zero roots that are also roots of f, such that f evaluated at 1 gives the answer. We'll enumerate small integer coefficients for f and g to find valid pairs.
+
+The approach:
+1. Generate monic cubic polynomials g with small integer coefficients and 3 distinct non-zero roots
+2. For each g, find f that shares all roots of g (so f = (x-r1)(x-r2)(x-r3)(x-k) but since f is cubic, k must be 0)
+3. Check if f(1) matches any simple pattern
+4. Output valid pairs and f(1) values
+
+```python
+from itertools import product
+from sympy import symbols, Poly, roots
+
+x = symbols('x')
+
+# Generate monic cubic polynomials with small integer coefficients and 3 distinct non-zero roots
+for a, b, c in product(range(-3, 4), repeat=3):
+    if a == b == c == 0:
+        continue  # skip zero polynomial
+    g = Poly(x**3 + a*x**2 + b*x + c, x)
+    root_dict = roots(g)
+    if len(root_dict) != 3:
+        continue  # needs 3 distinct roots
+    if any(r == 0 for r in root_dict):
+        continue  # roots must be non-zero
+    
+    # f must be (x-r1)(x-r2)(x-r3) since it's cubic and shares all roots
+    r1, r2, r3 = root_dict.keys()
+    f = Poly((x - r1)*(x - r2)*(x - r3), x)
+    
+    # Compute f(1)
+    f_at_1 = f.eval(1)
+    
+    # Print the pair and f(1) if coefficients are simple
+    if all(coef.is_integer for coef in f.all_coeffs()):
+        print(f"g = {g.as_expr()}, f = {f.as_expr()}, f(1) = {f_at_1}")
+```

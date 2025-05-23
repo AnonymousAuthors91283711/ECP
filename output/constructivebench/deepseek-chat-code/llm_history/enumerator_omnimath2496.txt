@@ -1,0 +1,63 @@
+[write_program]
+This problem asks to find primes p, q, r such that 2p + 3q = 6r and p + q + r is minimized. We'll write a Python program to search for such triples (p, q, r) with small primes.
+
+The approach:
+1. Generate small primes up to a reasonable limit
+2. Iterate through all combinations of p, q, r
+3. Check if they satisfy 2p + 3q = 6r
+4. Track the minimal sum p + q + r found
+
+```python
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def find_minimal_sum():
+    primes = [p for p in range(2, 200) if is_prime(p)]
+    min_sum = float('inf')
+    best_triple = None
+    
+    for p in primes:
+        for q in primes:
+            # Solve 2p + 3q = 6r => r = (2p + 3q)/6
+            numerator = 2*p + 3*q
+            if numerator % 6 != 0:
+                continue
+            r = numerator // 6
+            if not is_prime(r):
+                continue
+            current_sum = p + q + r
+            print(f"Found solution: p={p}, q={q}, r={r}, sum={current_sum}")
+            if current_sum < min_sum:
+                min_sum = current_sum
+                best_triple = (p, q, r)
+    
+    if best_triple:
+        p, q, r = best_triple
+        print(f"\nMinimal sum found: p={p}, q={q}, r={r}, sum={min_sum}")
+    else:
+        print("No solution found in the search range")
+
+find_minimal_sum()
+```

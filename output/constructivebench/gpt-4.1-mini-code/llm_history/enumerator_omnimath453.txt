@@ -1,0 +1,54 @@
+[write_program]
+The problem involves placing 51 quaggas (a fairy chess piece moving like a (6,5)- or (5,6)-leaper) on an 8×8 board so that none attack each other. We want to enumerate candidate subsets of squares of size 51 with no attacking pairs.
+
+Since 51 is large and the total squares are 64, a brute force is impossible. We sample smaller sizes and output partial results to conjecture the maximum non-attacking set size.
+
+We will:
+- Define the quagga move function.
+- For each subset size k <= 10 (small for demonstration), enumerate subsets (sampling for performance).
+- Check non-attacking condition and print sets found.
+- Note: subsets output as lists of coordinates.
+
+```python
+from itertools import combinations
+from math import sqrt
+
+# Board size
+N = 8
+
+# Generate all squares
+board = [(x, y) for x in range(N) for y in range(N)]
+
+# Quagga moves: moves with (dx, dy) in (±6, ±5) or (±5, ±6)
+quagga_moves = []
+for dx, dy in [(6,5),(6,-5),(-6,5),(-6,-5),(5,6),(5,-6),(-5,6),(-5,-6)]:
+    quagga_moves.append((dx,dy))
+
+# Check if two squares attack each other by quagga move
+def is_quagga_attack(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    return any((x1 + dx == x2 and y1 + dy == y2) for dx, dy in quagga_moves)
+
+# Check if set of squares is mutually non-attacking
+def non_attacking(squares):
+    sq = list(squares)
+    for i in range(len(sq)):
+        for j in range(i+1, len(sq)):
+            if is_quagga_attack(sq[i], sq[j]):
+                return False
+    return True
+
+# Since full enumeration is huge, sample subsets of size k up to 6 (small demonstration)
+print("Enumerating non-attacking quagga sets up to size 6 (sample):")
+for k in range(1,7):
+    count = 0
+    # Limit total checked subsets per k to 1000 for speed
+    for combo in combinations(board, k):
+        if non_attacking(combo):
+            print(f"Non-attacking set of size {k}: {combo}")
+            count += 1
+            if count >= 5:  # print only up to 5 per size to keep output short
+                break
+```
+This enumerates small non-attacking sets and prints them, aiding conjecture about max size.

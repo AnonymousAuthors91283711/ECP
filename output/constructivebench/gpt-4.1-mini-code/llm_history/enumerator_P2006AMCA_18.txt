@@ -1,0 +1,98 @@
+[write_program]
+The problem seems to characterize a set \( D \subseteq \mathbb{R} \) and a function \( f: \mathbb{R} \to \mathbb{R} \) such that for every \( x \in D \), the reciprocal \( 1/x \) is also in \( D \), and \( f(x) + f(1/x) = x \). Additionally, the problem states \( D \) is the maximal set satisfying the property, i.e., any other set \( s \subseteq \mathbb{R} \) having the same property is contained in \( D \).
+
+To assist in conjecturing the nature of \( D \) and \( f \), I will enumerate candidate sets \( D \) and functions \( f \) for some sample values. Because the core property relates \( x \) and \( 1/x \), I will explore sets that include pairs \( \{x, 1/x\} \) and test corresponding linear functions \( f \) (say \( f(x) = a x + b \)) satisfying \( f(x) + f(1/x) = x \). 
+
+The program below:
+- Selects sample finite subsets of positive reals \( S \) closed under reciprocal (i.e., if \( x \in S \), \( 1/x \in S \)).
+- For each such \( S \), attempts to find parameters \( a,b \) for \( f(x) = a x + b \) satisfying \( f(x) + f(1/x) = x \) for all \( x \in S \).
+- Prints the candidate sets \( S \) and the parameters \( a,b \).
+- Attempts to identify the maximal such \( S \) for the chosen \( f \).
+
+The output is streamed immediately upon finding a candidate, to help conjecture the answer.
+
+```python
+# Enumerate candidate sets D closed under reciprocal with small positive rationals,
+# and linear functions f(x) = a x + b satisfying f(x)+f(1/x) = x on D.
+
+def reciprocal(x):
+    return 1/x
+
+def test_linear(a, b, x):
+    # Check if f(x)+f(1/x) = x with f(x)= a x + b
+    return abs((a*x + b) + (a*(1/x) + b) - x) < 1e-12
+
+def find_ab_for_points(points):
+    # Solve for a,b using two distinct points x1 and x2:
+    # From f(x)+f(1/x) = x:
+    # (a x1 + b) + (a / x1 + b) = x1  => a(x1 + 1/x1) + 2b = x1
+    # (similarly for x2)
+    if len(points) < 2:
+        return None
+    x1, x2 = points[0], points[1]
+    A = [[x1 + 1/x1, 2],
+         [x2 + 1/x2, 2]]
+    B = [x1, x2]
+    det = A[0][0]*A[1][1] - A[0][1]*A[1][0]
+    if abs(det) < 1e-14:
+        return None
+    a = (B[0]*A[1][1] - B[1]*A[0][1])/det
+    b = (A[0][0]*B[1] - A[1][0]*B[0])/det
+    return a, b
+
+def check_all(points, a, b):
+    for x in points:
+        if not test_linear(a, b, x):
+            return False
+    return True
+
+def gen_reciprocal_closed_sets(max_den=5):
+    # Generate sets of positive rationals <= max_den, closed under reciprocal, small size
+    from fractions import Fraction
+    candidates = []
+    nums = [Fraction(n, d) for n in range(1, max_den+1) for d in range(1, max_den+1)]
+    nums = [x for x in nums if x >= 1]  # to avoid duplicates by symmetry, start with x>=1
+
+    # For small subsets of size 2 or 3
+    import itertools
+    for size in [2,3]:
+        for combo in itertools.combinations(nums, size):
+            s = set(combo)
+            # Close under reciprocal
+            s_rcp = s.copy()
+            for x in s:
+                s_rcp.add(1/x)
+            s_rcp = set(sorted(s_rcp))
+            if len(s_rcp) > 5:  # limit size to keep output small
+                continue
+            candidates.append(s_rcp)
+    # Deduplicate sets
+    unique = []
+    for c in candidates:
+        if c not in unique:
+            unique.append(c)
+    return unique
+
+def main():
+    sets = gen_reciprocal_closed_sets()
+    print("# Enumerating candidate sets D and linear f(x) = a x + b satisfying f(x)+f(1/x)=x")
+    for S in sets:
+        points = list(S)
+        if len(points) < 2:
+            continue
+        ab = find_ab_for_points(points[:2])
+        if ab is None:
+            continue
+        a, b = ab
+        if check_all(points, a, b):
+            print(f"D = {sorted(float(x) for x in S)}, f(x) = {a:.4f} * x + {b:.4f}")
+    # Now conjecture maximal set for the found a,b, e.g., a=1/2,b=-1/2 from algebraic manipulation
+    print("# Sample check on large domain for f(x) = 0.5*x - 0.5")
+    a, b = 0.5, -0.5
+    for x in [0.5, 1, 2, 4, 10]:
+        val = a*x + b + a*(1/x) + b
+        print(f"x={x}, f(x)+f(1/x) = {val:.4f} (should be x={x})")
+
+if __name__ == "__main__":
+    main()
+```

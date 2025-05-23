@@ -1,0 +1,59 @@
+[write_program]
+# The problem roughly translates as follows:
+# For n in (1, 99), we seek a natural number a ≤ n such that:
+# 1) For every m ≤ n, if gcd(n+a, m) = 1 then m = 1 (i.e., n+a is "coprime only with 1" among [1..n] -- so all other m >1 share a factor with n+a).
+# 2) For every b < a, there exist distinct m1,m2 ≤ n, both ≠1, such that gcd(n+b, m1) = gcd(n+b, m2) = 1.
+# 
+# The set is {k = n - a | such a,n satisfy above, 0 < n < 100}.
+# The problem states there's a greatest such k and wants to find it.
+#
+# The code enumerates (n,a) and prints candidates k=n-a whenever conditions hold.
+# To keep output short, only prints k and (n,a) that yield the property.
+#
+# Coprimality is checked via gcd.
+#
+# Note: m=1 is the trivial gcd=1 case. Condition 1 means among m ≤ n, only m=1 is coprime with n+a.
+# Condition 2 means for all smaller b < a, there exist two distinct m1,m2 >1, with gcd(n+b,m1)=gcd(n+b,m2)=1.
+# So "a" is minimal such that n+a has only 1 coprime with it in [1..n], but all smaller shifts n+b have at least two coprimes >1.
+#
+# We'll scan n=2..99, a=1..n, check conditions, print k=n-a if satisfied.
+# Also remember max k and print it at end.
+
+```python
+from math import gcd
+
+def coprime(x,m): return gcd(x,m)==1
+
+max_k = -1
+print("Enumerating candidates for n in [2..99]:")
+for n in range(2,100):
+    # Precompute sets of m coprime with n+b for b in [1..n]
+    coprime_list = []
+    for b in range(1,n+1):
+        coprimes = [m for m in range(1,n+1) if coprime(n+b,m)]
+        coprime_list.append(coprimes)
+    for a in range(1,n+1):
+        # Condition 1: for n+a, coprimes must be only [1]
+        cop_a = coprime_list[a-1]
+        if cop_a != [1]:
+            continue
+        # Condition 2: for all b < a, coprime(n+b) includes at least two distinct m1,m2>1
+        valid = True
+        for b in range(1,a):
+            cop_b = coprime_list[b-1]
+            # count how many >1
+            more_than_one = [m for m in cop_b if m > 1]
+            if len(more_than_one) < 2:
+                valid = False
+                break
+        if valid:
+            k = n - a
+            print(f"Found k={k} with n={n}, a={a}")
+            if k > max_k:
+                max_k = k
+
+if max_k >= 0:
+    print(f"Maximum k found: {max_k}")
+else:
+    print("No valid k found.")
+```

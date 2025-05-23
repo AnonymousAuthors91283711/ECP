@@ -1,0 +1,67 @@
+[write_program]
+The problem involves determining whether there exists a function \( f: \mathbb{N} \to \mathbb{N} \) satisfying certain multiplicative conditions given constraints on its domain and range. Specifically, for \( n \geq 2 \), \( f(n) \geq 2 \) and for distinct \( a,b \geq 2 \):
+\[
+f(a) \cdot f(b) = f(a^{2} b^{2})
+\]
+
+We'll attempt to find functions \( f \) that satisfy this equation for small values of \( a,b \), and print all such candidates to detect any possible patterns or contradictions. This enumeration can help conjecture whether such a function exists.
+
+```python
+# Enumerate possible functions f: {2,...,M} -> {2,...,K} that satisfy 
+# f(a)*f(b) = f(a^2 * b^2) for distinct a,b >= 2.
+# We'll check small ranges due to combinatorial explosion.
+# Print all functions found.
+
+def check_function(f_vals, domain):
+    # Check condition for all distinct a,b in domain
+    for i, a in enumerate(domain):
+        for b in domain[i+1:]:
+            left = f_vals[a]
+            right_key = (a**2)*(b**2)
+            if right_key not in domain:
+                # To keep domain small, restrict to domain only:
+                return False
+            if left * f_vals[b] != f_vals[right_key]:
+                return False
+    return True
+
+def main():
+    M = 8  # maximum input value to check f on
+    domain = [n for n in range(2, M+1) if (n in range(2, M+1))]
+    import itertools
+
+    # We'll only enumerate f on domain
+    # f(n) >= 2, so codomain from 2 up to 10 for feasibility
+    codomain = range(2, 11)
+
+    # We'll map from n to f(n)
+    # For domain values that appear as a^2*b^2, we need to ensure they are inside domain as well.
+    # So only keep domain up to M so that a^2*b^2 <= M for distinct a,b in domain.
+    # Alternatively, restrict domain to small numbers, e.g. {2,3}
+    domain = [2,3]
+    # Values of a^2 * b^2 are {2^2*3^2=4*9=36}, must include 36 in domain
+    domain = [2,3,36]
+
+    # So f is defined on {2,3,36}
+    # Enumerate possible f(2), f(3), f(36) in codomain
+    count = 0
+    for f2 in codomain:
+        for f3 in codomain:
+            for f36 in codomain:
+                f_vals = {2:f2,3:f3,36:f36}
+                # Check equation for distinct pairs (2,3),(2,36),(3,36)
+                valid = True
+                # (2,3): f(2)*f(3) = f(36)
+                if f_vals[2]*f_vals[3] != f_vals[36]:
+                    continue
+                # (2,36): f(2)*f(36) = f(2^2 * 36^2)
+                # 2^2=4, 36^2=1296, 4*1296=5184 outside domain -> skip this condition
+                # (3,36): 3^2=9, 36^2=1296, 9*1296=11664 outside domain
+                # So only condition for distinct elements in domain that have their squares product inside domain is (2,3)
+                print(f"f(2)={f2}, f(3)={f3}, f(36)={f36} satisfies f(2)*f(3)=f(36)")
+                count += 1
+    print(f"Total candidates: {count}")
+
+if __name__ == "__main__":
+    main()
+```

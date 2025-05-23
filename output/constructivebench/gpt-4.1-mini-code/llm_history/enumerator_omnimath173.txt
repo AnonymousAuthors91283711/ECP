@@ -1,0 +1,101 @@
+[write_program]
+The problem involves a quartic polynomial with integer coefficients depending on a parameter \( k \). The polynomial is
+
+\[ p(x) = x^4 - 18x^3 + k x^2 + 200 x - 1984, \]
+
+and it factors over \(\mathbb{C}\) into linear factors \((x - r_1)(x - r_2)(x - r_3)(x - r_4)\) with the property that at least one pair-product of roots equals \(-32\).
+
+We want to find all integer values \(k\) such that the equation holds, i.e., the polynomial factors with roots \(r_i\) where some pair multiplies to \(-32\).
+
+By Viète's formulas,
+
+\[
+r_1 + r_2 + r_3 + r_4 = 18, \\
+r_1 r_2 + r_1 r_3 + r_1 r_4 + r_2 r_3 + r_2 r_4 + r_3 r_4 = k, \\
+r_1 r_2 r_3 + r_1 r_2 r_4 + r_1 r_3 r_4 + r_2 r_3 r_4 = -200, \\
+r_1 r_2 r_3 r_4 = -1984.
+\]
+
+Given there is a pair of roots with product \(-32\), say \(r_i r_j = -32\), and we can set \(a = r_i\), \(b = r_j\) with \(ab = -32\).
+
+Representing \(p\) as \((x - a)(x - b)(x - c)(x - d)\), and denoting \(s = c + d\), \(t = cd\), there are relations between \(k, a, b, s, t\) achievable by the coefficients.
+
+We can enumerate integer factor pairs \((a, b)\) with product \(-32\), then for each, attempt to find \(s, t\) satisfying the equations, compute \(k\), and print matching candidates.
+
+Below is a Python program that enumerates such pairs and prints candidate \(k\) values satisfying the conditions. It prioritizes exact integer computations and prints immediate results.
+
+```python
+# Enumerate integer k such that there exist roots r1,r2,r3,r4 of
+# p(x)=x^4 -18 x^3 + k x^2 + 200 x -1984 with a pair product -32.
+
+# Strategy:
+# For each integer pair (a,b) with a*b = -32,
+# set (x - a)(x - b)(x^2 - s x + t) = p(x).
+# Vieta relations give s,t,k in terms of a,b.
+# We solve for s,t so coefficients match,
+# and we check if k is integer.
+
+def divisors(n):
+    # returns list of integer divisors of n (positive and negative)
+    divs = []
+    for i in range(1, abs(n)+1):
+        if n % i == 0:
+            divs.extend([i, -i])
+    return divs
+
+def find_k_candidates():
+    target_product = -32
+    c0 = -1984
+    c1 = 200
+    c2_coef = None # k unknown
+    c3 = -18
+    candidates = set()
+    divs = divisors(abs(target_product))
+    # generate pairs (a,b) with a*b = target_product
+    pairs = []
+    for d in divs:
+        e = target_product // d
+        if d * e == target_product:
+            pairs.append((d,e))
+    # unique pairs (a,b) with a*b=-32
+    pairs = list(set(pairs))
+    # For each pair, solve for s,t and find k
+    for (a,b) in pairs:
+        # Coefficients from expansion:
+        # x^4 - (a+b + s) x^3 + (ab + s(a+b) + t) x^2 - (t(a+b) + s ab) x + t ab
+        # Should match:
+        # x^4 -18 x^3 + k x^2 + 200 x -1984
+        #
+        # Match coefficients:
+        # - (a + b + s) = -18 => a + b + s =18 => s = 18 - (a + b)
+        s = 18 - (a + b)
+        # - (t(a + b) + s ab) = c1 = 200
+        # => t (a+b) + s*(a b) = -200
+        # Solve for t:
+        # t*(a+b) = -200 - s*a*b => t = (-200 - s*a*b)/(a+b), if a+b !=0
+        denom = a + b
+        if denom == 0:
+            # avoid division by zero
+            continue
+        numerator = -200 - s * (a * b)
+        if numerator % denom != 0:
+            # t not integer, skip
+            continue
+        t = numerator // denom
+        # Constant term: t * a * b = -1984
+        if t * a * b != -1984:
+            continue
+        # k = ab + s(a + b) + t
+        k = (a * b) + s * (a + b) + t
+        # print candidate k and parameters
+        print(f"a={a}, b={b}, s={s}, t={t}, k={k}")
+        candidates.add(k)
+    candidates = sorted(candidates)
+    print("Candidate ks:", candidates)
+    if candidates:
+        print("Minimum k satisfying condition:", candidates[0])
+        print("Maximum k satisfying condition:", candidates[-1])
+
+if __name__ == "__main__":
+    find_k_candidates()
+```

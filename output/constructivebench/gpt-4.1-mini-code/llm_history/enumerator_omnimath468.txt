@@ -1,0 +1,68 @@
+[write_program]
+The problem essentially asks to solve the equation:
+
+\[ x^3 - 8 = 16 (x + 1)^{1/3} \]
+
+over the real numbers.
+
+To investigate solutions numerically, we'll try values of \( x \) in some range, compute both sides, and check equality (or near equality) by comparing exact cubes to cube roots.
+
+Because the equation involves cube roots, negative values of \( x+1 \) are valid.
+
+We will:
+
+- Enumerate \( x \) from -10 to 10 in steps 0.1 to find approximate solutions.
+
+- For any approximate root found (equality within a tolerance), print \( x \) and the cube root value exactly when possible.
+
+- Also test some likely candidates, e.g., \( x=1 \), \( x=3 \), etc.
+
+Use sympy for exact cube roots (rationals) where possible.
+
+```python
+# Enumerate real x values to find solutions to: x^3 - 8 = 16 * (x+1)^{1/3}
+# We print x and the value of left and right sides when close enough.
+
+from sympy import symbols, Rational, cbrt, Eq, N, simplify
+
+x = symbols('x')
+
+def approx_equal(a, b, tol=1e-6):
+    return abs(a - b) < tol
+
+print("Enumerating approximate solutions for x in [-10,10]:")
+
+found = set()
+step = 0.1
+for i in range(-100, 101):
+    xv = i * step
+    try:
+        lhs = xv**3 - 8
+        rhs = 16 * (xv + 1)**(1/3)
+        if approx_equal(lhs, rhs):
+            # Try to find exact cube roots for rational xv+1
+            val = Rational(xv).limit_denominator(100)
+            cbrt_val = cbrt(val + 1)
+            # Only print if not duplicate
+            if xv not in found:
+                print(f"x ≈ {xv:.2f}: x^3-8 = {lhs:.6f}, 16*(x+1)^(1/3) = {rhs:.6f}")
+                found.add(xv)
+    except Exception:
+        pass
+
+# Test some integer candidates exactly
+print("Testing integer candidates:")
+
+for xv in range(-3,5):
+    lhs = xv**3 - 8
+    # exact cube root using sympy
+    rhs = 16 * cbrt(xv + 1)
+    if simplify(lhs - rhs) == 0:
+        print(f"Exact solution: x = {xv}, both sides = {lhs}")
+    else:
+        # Also print if approx equal
+        lhs_val = float(lhs)
+        rhs_val = float(rhs)
+        if approx_equal(lhs_val, rhs_val):
+            print(f"Near exact at x={xv}: lhs={lhs_val}, rhs={rhs_val}")
+```

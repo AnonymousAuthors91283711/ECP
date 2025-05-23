@@ -1,0 +1,66 @@
+[write_program]
+The problem is to find the smallest nonnegative integer \( t \) such that there exist positive rational painting rates \( p, h_1, h_2 \) with \( h_1 \neq h_2 \) satisfying the given coverage equations for three days' work durations adjusted by \( t \). We will enumerate candidates for \( t \) starting from 0 upwards, then for each \( t \), try simple rational values for \( p, h_1, h_2 \) (with small denominators), and check if the three equations are simultaneously satisfied exactly.
+
+Since the problem involves fractions and equations, we'll optimize by expressing the system algebraically:
+
+The given conditions are:
+- \( (p + h_1 + h_2)(480 - t) = \frac{1}{2} \)
+- \( (h_1 + h_2)(372 - t) = \frac{24}{100} = \frac{6}{25} \)
+- \( p (672 - t) = \frac{1}{2} \)
+
+From the last, \( p = \frac{1/2}{672 - t} \).
+
+From the second, \( h_1 + h_2 = \frac{6/25}{372 - t} = \frac{6}{25 (372 - t)} \).
+
+Then the first becomes:
+
+\[
+\left(\frac{1/2}{672 - t} + h_1 + h_2 \right)(480 - t) = \frac{1}{2}
+\]
+
+Substitute \( h_1 + h_2 \):
+
+\[
+\left(\frac{1/2}{672 - t} + \frac{6}{25 (372 - t)} \right)(480 - t) = \frac{1}{2}
+\]
+
+We check for integer \( t \) if this equation holds exactly (as a rational equality). If so, then for that \( t \), find \( h_1, h_2 \) positive rationals with \( h_1 \neq h_2 \) and sum equal to the value above, so any differing splitting works.
+
+Therefore, the main constraint is the above equation. We'll enumerate \( t = 0,1,\ldots,100 \) and check the equality exactly with fractions. For each \( t \) making the equation true, we print it with sample values of \( p, h_1, h_2 \). We'll show \( h_1, h_2 \) splitting the sum with a small difference.
+
+```python
+from fractions import Fraction
+
+def check_t(t):
+    # Compute p, hsum
+    den_p = 672 - t
+    den_h = 372 - t
+    den_m = 480 - t
+    if den_p <= 0 or den_h <= 0 or den_m <= 0:
+        return None
+    p = Fraction(1,2) / den_p
+    hsum = Fraction(6,25) / den_h
+    lhs = (p + hsum) * den_m
+    if lhs == Fraction(1,2):
+        # Find h1, h2 different positive rationals summing to hsum
+        # Try h1 = hsum * 1/3, h2 = hsum * 2/3 (different positive)
+        h1 = hsum * Fraction(1,3)
+        h2 = hsum - h1
+        # Check positivity and difference
+        if h1 > 0 and h2 > 0 and h1 != h2:
+            return (t, p, h1, h2)
+    return None
+
+print("t | p (rate p) | h1       | h2       | Check sums")
+for t in range(0,101):
+    res = check_t(t)
+    if res:
+        t, p, h1, h2 = res
+        # Verify all conditions numerically for safety
+        cond1 = (p + h1 + h2)*(480 - t) == Fraction(1,2)
+        cond2 = (h1 + h2)*(372 - t) == Fraction(6,25)
+        cond3 = p*(672 - t) == Fraction(1,2)
+        print(f"{t} | {p} | {h1} | {h2} | {cond1}, {cond2}, {cond3}")
+# From above output, smallest feasible t is minimal solution.
+```
+This script enumerates \( t \) and checks exact fraction equality, printing all valid solutions to conjecture the minimal \( t \).

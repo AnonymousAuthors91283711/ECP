@@ -1,0 +1,71 @@
+[write_program]
+This problem asks for all triples of primes (p,q,r) where each prime divides a cyclically symmetric expression involving the other two primes. We'll write a Python program to search for such triples by checking small prime combinations.
+
+The approach:
+1. Generate small primes up to a reasonable limit (we'll use 100)
+2. Check all ordered triples (p,q,r) of these primes
+3. Verify the three divisibility conditions p|(q^r+1), q|(r^p+1), and r|(p^q+1)
+4. Output valid triples as they're found
+
+We'll optimize by:
+- Precomputing primes
+- Using modular exponentiation to avoid large numbers
+- Stopping early when conditions fail
+
+```python
+import itertools
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def generate_primes(limit):
+    return [p for p in range(2, limit+1) if is_prime(p)]
+
+def check_condition(p, q, r):
+    # Check p divides q^r + 1
+    if pow(q, r, p) != p - 1:
+        return False
+    # Check q divides r^p + 1
+    if pow(r, p, q) != q - 1:
+        return False
+    # Check r divides p^q + 1
+    if pow(p, q, r) != r - 1:
+        return False
+    return True
+
+def main():
+    primes = generate_primes(100)
+    print(f"Checking primes up to {max(primes)}")
+    
+    for p, q, r in itertools.product(primes, repeat=3):
+        if check_condition(p, q, r):
+            print(f"Found triple: ({p}, {q}, {r})")
+    
+    print("Search complete")
+
+if __name__ == "__main__":
+    main()
+```

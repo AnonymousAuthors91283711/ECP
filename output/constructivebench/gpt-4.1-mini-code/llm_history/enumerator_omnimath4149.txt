@@ -1,0 +1,50 @@
+[write_program]
+The problem is about finding the minimal number \( n \) of guesses needed to distinguish every secret triple in \( T \) using the given response function. To explore this, we will enumerate strategies (sets of guesses) with increasing size \( n \), then check if these guesses separate all distinct pairs in \( T \).
+
+Due to complexity, we sample only a few guesses, and output partial results as soon as found. We print candidate \( n \) and example strategies that work, then increase \( n \). This helps conjecture a minimal \( n \).
+
+```python
+# Enumerate and print sets of guesses distinguishing all pairs in T = {0..9}^3.
+# For guess sets of size n, test if for every pair of distinct secrets the responses disagree on some guess.
+# Due to combinational explosion, we limit guess sets to random samples for demonstration.
+
+from itertools import product, combinations
+import sys
+import random
+
+T = list(product(range(10), repeat=3))
+
+def response(secret, guess):
+    x,y,z = secret
+    a,b,c = guess
+    return abs(x+y - (a+b)) + abs(y+z - (b+c)) + abs(z+x - (c+a))
+
+def distinguish(guesses):
+    # Checks if guesses distinguish every pair of distinct secrets in T
+    # For efficiency, stop early if any pair is not distinguished
+    for i, s1 in enumerate(T):
+        for j in range(i+1, len(T)):
+            s2 = T[j]
+            if all(response(s1,g) == response(s2,g) for g in guesses):
+                return False
+    return True
+
+print("Enumerating guess sets starting from size 1...")
+max_n = 4  # limit maximum guesses for output length reasons
+
+for n in range(1, max_n+1):
+    # Generate random subsets of size n from T (up to some attempts)
+    attempts = 1000
+    found = False
+    for _ in range(attempts):
+        guesses = random.sample(T, n)
+        if distinguish(guesses):
+            print(f"Found distinguishing strategy with n={n}: guesses={guesses}")
+            found = True
+            break
+    if found:
+        print(f"Minimum number of guesses found: {n}")
+        break
+else:
+    print(f"No distinguishing strategy found with up to n={max_n}.")
+```

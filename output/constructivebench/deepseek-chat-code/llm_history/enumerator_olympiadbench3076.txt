@@ -1,0 +1,50 @@
+[write_program]
+This problem involves finding the coefficient of X^10 in the composition of two polynomials. The polynomials are P(X) = X + X^2 + X^4 + X^8 + X^16 + X^32 and we need to compute P(P(X)) and find the coefficient of X^10.
+
+We'll approach this by:
+1. Expanding P(P(X)) symbolically would be too complex, so we'll compute it numerically
+2. We only need terms up to X^10, so higher exponents can be ignored
+3. We'll track all combinations of exponents that sum to 10 when composing the polynomials
+
+```python
+def solve():
+    # The polynomial P(X) = X + X^2 + X^4 + X^8 + X^16 + X^32
+    # We need to compute P(P(X)) and find coefficient of X^10
+    # Since higher exponents contribute nothing to X^10, we can ignore X^16 and X^32 terms
+    exponents = [1, 2, 4, 8]
+    
+    # We need to find all combinations of exponents that sum to 10 when composed
+    # This is equivalent to finding all tuples (a1,a2,...,ak) where:
+    # a1 + a2 + ... + ak = 10 and each ai is in exponents
+    
+    # We'll use dynamic programming to count the number of combinations
+    dp = [0] * (10 + 1)
+    dp[0] = 1  # Base case: empty combination
+    
+    for exp in exponents:
+        for i in range(exp, 10 + 1):
+            dp[i] += dp[i - exp]
+    
+    # Now we need to consider the composition P(P(X))
+    # Each term in P(P(X)) is (P(X))^k where k is in exponents
+    # The coefficient comes from choosing how to distribute the exponents
+    # We need to find all ways to choose exponents that multiply to sum to 10
+    
+    # We'll use a recursive approach to find all combinations
+    from functools import lru_cache
+    
+    @lru_cache(maxsize=None)
+    def count_compositions(target, max_exp):
+        if target == 0:
+            return 1
+        if target < 0 or max_exp < 1:
+            return 0
+        # Either use max_exp or don't
+        return (count_compositions(target - max_exp, max_exp) +
+                count_compositions(target, max_exp // 2))
+    
+    result = count_compositions(10, 8)
+    print(result)
+
+solve()
+```

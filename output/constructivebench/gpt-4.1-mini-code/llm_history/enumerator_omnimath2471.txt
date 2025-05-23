@@ -1,0 +1,48 @@
+[write_program]
+The problem is counting 3x3 boards filled by 3 players (0,1,2) with no empty cells, with exactly one winner, and that winner must be player 2 (the third player). A player wins by completing a full row, column or diagonal of their marks.
+
+Strategy:
+- Enumerate all 3^(9) boards (almost 20k) efficiently.
+- For each board, check all cells filled, that there is exactly one winner, and that winner=2.
+- For each player, check if they have a winning line.
+- Print all boards satisfying conditions to conjecture count.
+- Print total count after enumeration.
+
+We will represent boards as lists of length 9 with entries in {0,1,2}.
+Checking each board systematically.
+
+```python
+from itertools import product
+
+def winning(board, player):
+    lines = [
+        [0,1,2], [3,4,5], [6,7,8],  # rows
+        [0,3,6], [1,4,7], [2,5,8],  # columns
+        [0,4,8], [2,4,6]            # diagonals
+    ]
+    for line in lines:
+        if all(board[i] == player for i in line):
+            return True
+    return False
+
+def is_valid(board):
+    # No empty cell
+    if any(cell not in (0,1,2) for cell in board):
+        return False
+    # Count winners
+    winners = [p for p in (0,1,2) if winning(board,p)]
+    # Exactly one winner
+    if len(winners) != 1:
+        return False
+    # Winner is player 2
+    if winners[0] != 2:
+        return False
+    return True
+
+count = 0
+for board in product((0,1,2), repeat=9):
+    if is_valid(board):
+        count += 1
+        print("Valid board #{}: {}".format(count, board))
+print("Total valid boards with winner=2:", count)
+```

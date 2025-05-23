@@ -1,0 +1,52 @@
+[write_program]
+The problem is: For complex numbers \(w,z\), with \(|w+z|=1\) and \(|w^2 + z^2|=14\), find the minimum possible value of \(|w^3 + z^3|\).
+
+We want to enumerate possible pairs \((w,z)\) to find candidates for \(|w^3 + z^3|\), given the constraints on \(|w+z|\) and \(|w^2 + z^2|\).
+
+Using the symmetric sums \(S_1 = w+z\), \(S_2 = wz\), we have:
+- \(|S_1|=1\)
+- \(|S_1^2 - 2S_2| = 14\) (since \(w^2 + z^2 = (w+z)^2 - 2 wz\))
+- \(|w^3 + z^3| = |S_1^3 - 3 S_1 S_2|\).
+
+We'll sample values for \(S_1\) on the unit circle and real \(S_2\) values to match \(|S_1^2 - 2 S_2|=14\), then calculate \(|w^3+z^3|\).
+
+```python
+import math
+import cmath
+
+def approx_eq(a,b,eps=1e-9):
+    return abs(a-b)<eps
+
+print("Enumerating candidates for |w^3+z^3| given |w+z|=1 and |w^2+z^2|=14")
+
+min_val = None
+min_triplet = None
+
+# S1 = w+z lies on unit circle: try angles theta
+steps = 36
+for i in range(steps):
+    theta = 2*math.pi*i/steps
+    S1 = cmath.rect(1, theta)  # unit complex number
+    # |S1^2 - 2 S2| = 14 means |2 S2 - S1^2|=14
+    # Let S2 be real for simplicity: try S2 in increments to find suitable S2
+    # since |2*S2 - S1^2|=14 => 2*S2 - S1^2 has magnitude 14
+    # S1^2 is a complex number, write s = S1^2, then 2 S2 = s + z with |z|=14
+    s = S1*S1
+    # Let 2*S2 = s + 14 * e^{i phi}, phi free
+    # To enumerate, pick phi with 4 steps
+    for j in range(4):
+        phi = 2*math.pi*j/4
+        z = 14*cmath.rect(1, phi)
+        twoS2 = s + z
+        S2 = twoS2/2
+        # Compute |S1^3 -3 S1 S2|
+        val = abs(S1**3 - 3*S1*S2)
+        print(f"S1=exp(i*{theta:.2f}), S2={S2.real:.2f}+{S2.imag:.2f}j |w^3+z^3|={val:.5f}")
+        if (min_val is None) or (val < min_val):
+            min_val = val
+            min_triplet = (theta, S2)
+
+print("\nMinimum |w^3+z^3| found:")
+print(f"theta = {min_triplet[0]:.5f}, S2 = {min_triplet[1].real:.5f}+{min_triplet[1].imag:.5f}j")
+print(f"Minimum value ≈ {min_val:.5f}")
+```

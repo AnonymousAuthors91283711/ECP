@@ -1,0 +1,68 @@
+[write_program]
+The given statement resembles a classic problem related to functions from natural numbers to natural numbers, concerning periodicity and eventual periodicity. It effectively models the statement: "If for every function \( a:\mathbb{N} \to \mathbb{N} \), the condition that for each \(k\), there exists a \( t \) such that \( a(k + m t) = a(k) \) for all \( m \), then there exists a \( T \) such that \( a(k + T) = a(k) \) for all \( k \)."
+
+This is reminiscent of a property related to *eventual periodicity*, similar to concepts like the Pigeonhole principle or the notion that eventually, a function must repeat values after some period.
+
+In particular, the theorem appears to state an equivalence: the property holds for all functions if and only if a global period \( T \) exists for all \( a \). Notably, this is related to the *Birkhoff's periodicity theorem* or *eventual periodicity for functions from the natural numbers*.
+
+Given the problem's nature, the non-trivial part is to detect that such a universal \( T \) exists, based on the local periodicity conditions, which resemble the statement of *eventually periodic functions*.
+
+---
+
+### Approach:
+- Since the theorem deals with all functions \( a:\mathbb{N} \to \mathbb{N} \), we can try to test small functions.
+- The program will look for functions \( a \) (represented as finite sequences) that satisfy the local periodicity condition with some \( t \), but do not have a global period \( T \).
+- We search for counterexamples to show the non-triviality of the statement, or verify the simple fact that the properties are equivalent by testing small finite functions.
+
+### Implementation:
+- Define small functions \( a \) over initial natural numbers.
+- For each, try to find \( t \) satisfying the local periodicity pattern.
+- Check if there's a global \( T \), and if not, find counterexamples.
+
+The program will print all candidate functions and checks.
+
+---
+
+```python
+# Enumerate small functions from n=0..10 to test the logical equivalence
+# For simplicity, functions are represented as lists of values over domain [0..10]
+# The property: for each k, exists t such that for all m, a(k + m t) = a(k)
+# The conjecture: if the property holds locally for all k with some t, then globally a has a period T
+
+def has_local_period(a, k, max_t=10, max_m=10):
+    """Check if for a fixed k, there exists t up to max_t such that a(k + m t) = a(k) for all m."""
+    for t in range(1, max_t+1):
+        if all((k + m*t < len(a)) and (a[k + m*t] == a[k]) for m in range(1, max_m+1) if (k + m*t) < len(a)):
+            return t
+    return None
+
+def find_global_period(a, max_T=10):
+    """Check if there exists T such that a(k + T) = a(k) for all k."""
+    for T in range(1, max_T+1):
+        if all((k + T < len(a)) and (a[k + T] == a[k]) for k in range(len(a)-T)):
+            return T
+    return None
+
+# Generate all functions over [0..10] with values in {0,1,2}
+import itertools
+
+values = [0, 1, 2]
+domain_size = 11
+
+for a_tuple in itertools.product(values, repeat=domain_size):
+    a = list(a_tuple)
+    # Check local periodicity conditions
+    local_periods = {}
+    for k in range(domain_size):
+        t = has_local_period(a, k)
+        if t:
+            local_periods[k] = t
+    # If for all k, local period exists, then check for global period
+    if len(local_periods) == domain_size:
+        T = find_global_period(a)
+        print(f"Function: {a}")
+        if T:
+            print(f"Global period T = {T}")
+        else:
+            print("No global period T found, counterexample.")
+```

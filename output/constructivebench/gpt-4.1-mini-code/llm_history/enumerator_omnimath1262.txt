@@ -1,0 +1,93 @@
+[write_program]
+The problem involves real numbers \(a\) for which there exists a unique real \(x\) satisfying the inequality \(|x^2 + 2ax + 3a| \leq 2\). We want to enumerate possible values of \(a\) for which this uniqueness holds.
+
+To analyze this, consider the quadratic function \(f(x) = x^2 + 2ax + 3a\). We want \(\exists!\ x\) with \(|f(x)| \leq 2\), i.e. exactly one \(x\) satisfies this.
+
+Key insight:
+- \(|f(x)| \leq 2\) means \(f(x) \in [-2, 2]\).
+- Usually, quadratic inequality solutions are intervals or unions.
+- Unique \(x\) solution means the set \(\{x : |f(x)| \leq 2\}\) is a single point.
+- This implies \(f(x) = \pm 2\) has exactly one solution, i.e. tangent line scenarios.
+
+We will enumerate sample values of \(a\) over some small range and check the sets where \(|f(x)| \leq 2\) has exactly one solution \(x\).
+
+We can rewrite \(f(x) = (x+a)^2 - a^2 + 3a = y^2 + 3a - a^2\) where \(y = x+a\).
+
+The inequality becomes \(|y^2 + 3a - a^2| \leq 2\).
+
+Solve \(-2 \leq y^2 + 3a - a^2 \leq 2\).
+
+For each fixed \(a\), find the number of \(y\) such that this holds. For uniqueness, the length of \(y\)-interval with the inequality holds must be zero (single \(y\)).
+
+This happens when one boundary equality is tangent, i.e. when the quadratic \(y^2 + 3a - a^2 = \pm 2\) has exactly one solution.
+
+Thus for each \(a\),
+- \(y^2 + 3a - a^2 = 2 \implies y^2 = 2 + a^2 - 3a\).
+- \(y^2 + 3a - a^2 = -2 \implies y^2 = -2 + a^2 - 3a\).
+
+For uniqueness, one of these equals zero (one solution), the other inequality checked.
+
+Now let's write a Python program enumerating values of a over some range, checking this uniqueness, and streaming candidates.
+
+```python
+import math
+
+# Enumerate sample values for a in range [-5,5] step 0.1, check uniqueness
+
+def unique_solution_a_candidates():
+    # For each a, find the number of solutions x for |x^2 + 2ax + 3a| ≤ 2
+    # Equivalently |(x+a)^2 + 3a - a^2| ≤ 2
+    # Check number of solutions to inequalities and uniqueness condition
+
+    step = 0.1
+    low = -5
+    high = 5
+
+    for i in range(int((high - low)/step)+1):
+        a = low + i*step
+        c = 3*a - a**2
+        # Solve y^2 + c = ±2
+        # Equate to 2:
+        val_up = 2 - c
+        # Equate to -2:
+        val_down = -2 - c
+
+        # Number of solutions y^2 ≤ val_up and y^2 ≥ val_down
+        # Inequality |y^2 + c| ≤ 2 means y^2 ∈ [ -2 - c, 2 - c ]
+
+        # For real y, y^2 ≥ 0 so the intersection of [0,∞) with [val_down, val_up]
+        # Number of y values with y^2 in that interval
+
+        # Check that val_down ≤ val_up
+        if val_down > val_up:
+            # Empty set
+            continue
+
+        # Intersection with y^2 ≥ 0 is [max(0,val_down), val_up]
+
+        left = max(0, val_down)
+        right = val_up
+
+        if left > right:
+            # No real solution
+            continue
+
+        # If left == right and left >= 0, single y^2 value -> y = ±sqrt(left)
+        # Corresponding to 1 or 2 solutions in y, but x = y - a (one to one)
+
+        # However, solutions in x correspond to y solutions 1-1
+
+        # So count solutions:
+        if left == right and left >= 0:
+            # exactly 2 solutions if left > 0 (y= ±√left)
+            # exactly 1 solution if left == 0 (single solution y=0)
+            if left == 0:
+                # Exactly one solution for x
+                print(f'a = {a:.2f} yields exactly one solution x for |f(x)| ≤ 2')
+        else:
+            # If left < right:
+            # y^2 in interval of positive length, so infinite solutions x
+            pass
+
+unique_solution_a_candidates()
+```

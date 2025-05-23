@@ -1,0 +1,53 @@
+[write_program]
+This problem involves analyzing a piecewise function `b(p)` for `p` in the range 1 to 2007, which depends on rounding the square root of `p`. Our goal is to compute the sum of `b(p)` over `p` from 1 to 2007 and determine its remainder modulo 1000. To do this, we need to understand the behavior of `b(p)` with respect to perfect squares and their neighboring values.
+
+Key observations:
+- For perfect squares, `b(p)` reduces to the integer square root.
+- For non-perfect squares, `b(p)` can be `floor(√p)` or `ceil(√p)` depending on how close `√p` is to an integer.
+- The critical points are just below, exactly at, or just above integers.
+
+The plan:
+- Find all perfect squares up to 2007, i.e., `k^2` where `k` ranges from 1 to `⌊√2007⌋`.
+- For each interval between perfect squares, enumerate `p`.
+- For each `p`, compute `b(p)` based on the rounded sqrt and the comparison.
+- Sum all contributions directly, then compute the total mod 1000.
+
+Here's the Python code implementing this logic efficiently and correctly:
+
+```python
+import math
+
+# Upper limit
+N = 2007
+
+# Compute the largest integer k such that k^2 <= N
+max_k = int(math.isqrt(N))
+
+total_sum = 0
+
+# Loop over each interval between perfect squares
+for k in range(1, max_k + 1):
+    start = k * k
+    end = min((k + 1) * (k + 1) - 1, N)  # last p in this interval
+    sqrt_k = math.sqrt(k)
+    for p in range(start, end + 1):
+        sqrt_p = math.sqrt(p)
+        k_round = round(sqrt_p)
+        diff = abs(k_round - sqrt_p)
+        if diff < 0.5:
+            b_p = k_round
+        else:
+            if k_round < sqrt_p:
+                b_p = k_round + 1
+            else:
+                b_p = k_round - 1
+        total_sum += b_p
+        # Print each answer immediately (streaming)
+        print(b_p)
+
+# Compute the answer modulo 1000
+answer_mod = total_sum % 1000
+print(f"Answer modulo 1000: {answer_mod}")
+```
+
+This code efficiently enumerates over the critical intervals, computes `b(p)` accurately based on proximity to the nearest integer square root, and outputs each answer as computed. The final modulo result corresponds to the required answer.

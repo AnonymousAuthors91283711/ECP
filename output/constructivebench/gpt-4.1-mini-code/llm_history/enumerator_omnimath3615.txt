@@ -1,0 +1,96 @@
+[write_program]
+The problem involves a function \( f: \mathbb{N} \to \mathbb{N} \) satisfying certain properties related to:
+
+- Perfect numbers \(n\), where \(f(n) = 0\).
+- Numbers ending with digit 4, where \(f(n) = 0\).
+- And a recursive additive property \( f(a*10+b) = f(a) + f(b) \).
+
+We want to find \( f(1998) \).
+
+Since \(f\) is additive in the decimal decomposition and has zero values for perfect numbers and numbers ending in digit 4, the function essentially assigns values to digits in a way coherent with these conditions. We must enumerate possible values of \( f \) on digits \(0,1,...,9\) satisfying \(f(4) = 0\), then check consistency with \(f\) on perfect numbers.
+
+Recall perfect numbers start at 6, 28, 496, ... Small perfect numbers under 2000 we consider: 6,28,496,8128 (too big). For these perfect numbers, \(f(n)=0\).
+
+Since \(f\) is additive over digits, \(f(n) = \sum f(\text{digits of } n)\).
+
+We can try assigning integer values \(f(0), ..., f(9)\), forced \(f(4)=0\), satisfying \(f(n)=0\) for \(n=6,28,496\).
+
+Approach: enumerate integer assignments for digits (e.g. -10 to 10), with \( f(4) = 0 \), test constraints, then compute \( f(1998) \). Print all candidates found and their corresponding \(f(1998)\) values for conjecturing the true answer.
+
+```python
+# Enumerate possible digit assignments for f: 0..9 -> int, with f(4)=0
+# For small ranges to keep output concise.
+# Check f(n) = 0 for perfect n = 6,28,496; f(n) = sum of digits f-values.
+# Then output f(1998).
+
+def digits(x):
+    return list(map(int, str(x)))
+
+perfect_numbers = [6, 28, 496]
+test_value = 1998
+
+# Range for digit function values to explore (to limit total output)
+val_range = range(-5,6)
+
+print("Enumerating f with f(4)=0, integer values in [-5..5]")
+
+count = 0
+for f0 in val_range:
+ for f1 in val_range:
+  for f2 in val_range:
+   for f3 in val_range:
+    f4 = 0  # forced
+    for f5 in val_range:
+     for f6 in val_range:
+      for f7 in val_range:
+       for f8 in val_range:
+        for f9 in val_range:
+            f = [f0,f1,f2,f3,f4,f5,f6,f7,f8,f9]
+            # Check condition f(perfect)=0
+            ok = True
+            for p in perfect_numbers:
+                val = sum(f[d] for d in digits(p))
+                if val != 0:
+                    ok = False
+                    break
+            if not ok:
+                continue
+            # Also check f(n)=0 if last digit is 4 -> f(4)=0 already guaranteed
+            # but check last digit 4 numbers e.g. 4,14,24,... (too many? Just 4 and 14)
+            # Let's check 4,14,24,34,44 to be cautious
+            for n in [4,14,24,34,44]:
+                if sum(f[d] for d in digits(n)) != 0:
+                    ok = False
+                    break
+            if not ok:
+                continue
+            # Passed all tests => compute f(1998)
+            val_1998 = sum(f[d] for d in digits(test_value))
+            print(f"f digits: {f} => f(1998) = {val_1998}")
+            count += 1
+            if count >= 20:  # limit output
+                break
+        if count >= 20:
+            break
+       if count >= 20:
+           break
+      if count >= 20:
+          break
+     if count >= 20:
+         break
+    if count >= 20:
+        break
+   if count >= 20:
+       break
+  if count >= 20:
+      break
+ if count >= 20:
+     break
+
+if count == 0:
+    print("No assignments found")
+else:
+    # Look for min
+    print("Minimum f(1998) found:", min(sum(f[d] for d in digits(test_value)) for f in [[f0,f1,f2,f3,0,f5,f6,f7,f8,f9] for f0 in val_range for f1 in val_range for f2 in val_range for f3 in val_range for f5 in val_range for f6 in val_range for f7 in val_range for f8 in val_range for f9 in val_range if all(sum([f[d] for d in digits(p)])==0 for p in perfect_numbers)]))
+```
+

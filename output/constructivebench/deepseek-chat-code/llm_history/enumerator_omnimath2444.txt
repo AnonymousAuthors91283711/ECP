@@ -1,0 +1,57 @@
+[write_program]
+The problem asks for the smallest natural number n ≥ 2 such that the set {2,3,...,n} cannot be partitioned into two disjoint subsets S and T where neither S nor T contains any triple (a,b,c) with a^b = c. We need to find the minimal such n.
+
+We'll write a Python program to check this property for increasing values of n, stopping when we find the smallest n that satisfies the condition. For each n, we'll try all possible partitions of {2,...,n} into two sets and check if either set violates the condition.
+
+```python
+def main():
+    max_n = 20  # Reasonable upper bound based on problem difficulty
+    
+    for n in range(2, max_n + 1):
+        numbers = list(range(2, n + 1))
+        found_partition = False
+        
+        # We'll represent partitions using bitmask (0=first set, 1=second set)
+        for mask in range(0, 1 << (n - 1)):
+            S = []
+            T = []
+            for i in range(n - 1):
+                if mask & (1 << i):
+                    T.append(numbers[i])
+                else:
+                    S.append(numbers[i])
+            
+            # Check both sets for a^b = c
+            s_ok = True
+            for a in S:
+                for b in S:
+                    c = a ** b
+                    if c in S:
+                        s_ok = False
+                        break
+                if not s_ok:
+                    break
+            
+            t_ok = True
+            for a in T:
+                for b in T:
+                    c = a ** b
+                    if c in T:
+                        t_ok = False
+                        break
+                if not t_ok:
+                    break
+            
+            if s_ok and t_ok:
+                found_partition = True
+                break
+        
+        if not found_partition:
+            print(f"Found minimal n with no valid partition: {n}")
+            return
+    
+    print(f"No such n found up to {max_n}")
+
+if __name__ == "__main__":
+    main()
+```

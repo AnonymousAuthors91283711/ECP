@@ -1,0 +1,64 @@
+[write_program]
+The problem involves characterizing functions \( f: \mathbb{R} \to \mathbb{R} \) that are strictly monotone and satisfy a polynomial-like functional equation \( f(xy) = P(f(x), f(y)) \) for all positive \( x, y \), where \( P \) is a bivariate polynomial. We want to explore candidate functions and polynomials to identify such functions.
+
+We enumerate candidates by testing simple polynomial forms for \( P \), and types of strictly monotone functions: powers and exponentials, which naturally convert products to sums or products after transformation. We check small-degree polynomials \( P \) and simple functions \( f \) on a small grid of \( x, y > 0 \). Immediate outputs are the tuples \((f,P)\) satisfying the relation to help conjecture the solution set.
+
+```python
+import math
+
+# Test functions f and polynomials P on positive points x,y
+# P is given by coefficients for monomials: c00 + c10*f(x) + c01*f(y) + c11*f(x)*f(y)
+# We'll test low-degree forms including constants and bilinear forms
+# We'll consider f(x) = x^a (power functions) and f(x) = b^x (exponentials), both strictly monotone
+
+def is_close(a,b,eps=1e-9): return abs(a-b)<eps
+
+# Define candidate polynomials P as functions of (u,v):
+# We'll test forms: 
+# P(u,v) = c00 + c10*u + c01*v + c11*u*v with c_ij in {-1,0,1}
+coeffs_candidates = [(c00,c10,c01,c11) for c00 in [-1,0,1]
+                                   for c10 in [-1,0,1]
+                                   for c01 in [-1,0,1]
+                                   for c11 in [-1,0,1]]
+
+# Exclude trivial zero polynomial for better guesses
+coeffs_candidates = [c for c in coeffs_candidates if any(abs(x)>0 for x in c)]
+
+def P(c,u,v):
+    return c[0] + c[1]*u + c[2]*v + c[3]*u*v
+
+# Candidate f functions
+# Powers: x^a for a in {-2,-1,-0.5,0.5,1,2}
+# Exponentials: b^x for b in {0.5,2}
+powers = [-2,-1,-0.5,0.5,1,2]
+exps = [0.5,2]
+
+# Test points (x,y) positive and nontrivial
+points = [(1,1.5),(2,3),(0.5,4)]
+
+def test_f_p(fstr,f):
+    # For each polynomial candidate, test the functional eq for all points (x,y)
+    for c in coeffs_candidates:
+        ok = True
+        for (x,y) in points:
+            lhs = f(x*y)
+            rhs = P(c,f(x),f(y))
+            if not is_close(lhs,rhs):
+                ok = False
+                break
+        if ok:
+            # Print exact relationships found
+            print(f"f = {fstr}, P(u,v) = {c[0]} + {c[1]}*u + {c[2]}*v + {c[3]}*u*v")
+
+print("Testing power functions f(x) = x^a:")
+for a in powers:
+    if a == 0: continue
+    def f(x,a=a): return x**a
+    test_f_p(f"f(x)=x^{a}", f)
+
+print("\nTesting exponential functions f(x)=b^x:")
+for b in exps:
+    def f(x,b=b): return b**x
+    test_f_p(f"f(x)={b}^x", f)
+```
+

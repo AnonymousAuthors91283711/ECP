@@ -1,0 +1,123 @@
+[write_program]
+Given the problem involves integer quadratic polynomials \( f(x) = a x^2 + b x + c \) such that the set of values \( \{f(177883), f(348710), f(796921), f(858522)\} \) equals the set \( \{1324754875645, 1782225466694, 1984194627862, 4388794883485\} \), the task is to find possible integer triples \((a,b,c)\) satisfying this, particularly \(a\).
+
+To assist in guessing and proving the answer, I'll write a Python program that:
+
+- Assigns variables to the known input points: \( x_i \)
+- Assigns variables to the known output values: \( y_j \)
+- Enumerates permutations of \(y_j\) to find possible assignments of outputs to points.
+- Attempts to solve the system of equations for \((a,b,c)\) exactly (using integer linear algebra or rational solutions).
+- Prints each valid triple \((a,b,c)\) and the corresponding \(a\).
+
+Because the input numbers are large, instead of brute forcing all integer \(a,b,c\), we solve the linear system exactly treating variables as rational numbers and check if the solution is integer.
+
+We print each valid \(a\) as we find it.
+
+```python
+from itertools import permutations
+from fractions import Fraction
+
+def solve_three_points(x, y):
+    # Solve system:
+    # a x0^2 + b x0 + c = y0
+    # a x1^2 + b x1 + c = y1
+    # a x2^2 + b x2 + c = y2
+    # Using Cramer's rule with rational arithmetic
+    x0, x1, x2 = x
+    y0, y1, y2 = y
+
+    det = (x0**2)*(x1) + (x1**2)*(x2) + (x2**2)*(x0) - (x0**2)*(x2) - (x1**2)*(x0) - (x2**2)*(x1)
+    # But this is complicated, better to use matrix method.
+
+    # Build matrix A:
+    # Rows: [x_i^2, x_i, 1]
+    A = [
+        [x0*x0, x0, 1],
+        [x1*x1, x1, 1],
+        [x2*x2, x2, 1]
+    ]
+    # Build vector Y:
+    Y = [y0, y1, y2]
+
+    # Compute determinant of A
+    def det3(m):
+        return (
+            m[0][0]*m[1][1]*m[2][2]
+            + m[0][1]*m[1][2]*m[2][0]
+            + m[0][2]*m[1][0]*m[2][1]
+            - m[0][2]*m[1][1]*m[2][0]
+            - m[0][1]*m[1][0]*m[2][2]
+            - m[0][0]*m[1][2]*m[2][1]
+        )
+
+    D = det3(A)
+    if D == 0:
+        return None  # No unique solution
+
+    # Compute determinants D_a, D_b, D_c by replacing columns by Y
+    A_a = [[Y[0], A[0][1], A[0][2]],
+           [Y[1], A[1][1], A[1][2]],
+           [Y[2], A[2][1], A[2][2]]]
+    A_b = [[A[0][0], Y[0], A[0][2]],
+           [A[1][0], Y[1], A[1][2]],
+           [A[2][0], Y[2], A[2][2]]]
+    A_c = [[A[0][0], A[0][1], Y[0]],
+           [A[1][0], A[1][1], Y[1]],
+           [A[2][0], A[2][1], Y[2]]]
+
+    D_a = det3(A_a)
+    D_b = det3(A_b)
+    D_c = det3(A_c)
+
+    a = Fraction(D_a, D)
+    b = Fraction(D_b, D)
+    c = Fraction(D_c, D)
+
+    return a, b, c
+
+def test_solution(a, b, c, x_points, y_points):
+    # Check all points for the fourth x,y pair
+    # Here we must verify f(x3) == y3 exactly integer
+    x3 = x_points[3]
+    y3_expected = y_points[3]
+    f_x3 = a * x3**2 + b * x3 + c
+    return f_x3 == y3_expected
+
+def main():
+    xs = [177883, 348710, 796921, 858522]
+    ys_target = [1324754875645, 1782225466694, 1984194627862, 4388794883485]
+
+    printed = set()
+
+    # Enumerate permutations of ys and solve for first three points
+    for y_perm in permutations(ys_target, 4):
+        y_first3 = y_perm[:3]
+        x_first3 = xs[:3]
+
+        sol = solve_three_points(x_first3, y_first3)
+        if sol is None:
+            continue
+        a, b, c = sol
+        # Check if all a,b,c are integers (or fractions with denominator 1)
+        if a.denominator != 1 or b.denominator != 1 or c.denominator != 1:
+            continue
+
+        # Check the 4th point matches
+        if test_solution(a, b, c, xs, y_perm):
+
+            a_i = a.numerator
+            b_i = b.numerator
+            c_i = c.numerator
+
+            # Avoid duplicate prints
+            key = (a_i, b_i, c_i)
+            if key in printed:
+                continue
+            printed.add(key)
+
+            print(f"a = {a_i}, b = {b_i}, c = {c_i}")
+            print(f"Corresponding outputs set: {{{', '.join(str(y) for y in y_perm)}}}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,69 @@
+[write_program]
+The problem involves 240 points on the unit circle with restrictions on how many points can lie in any half-circle and any 60-degree arc on the unit circle. We want to find (or estimate) the maximum absolute value of the sum of these points.
+
+To assist in conjecturing the true maximum, we'll try small subsets (e.g., fewer than 240 points) with similar constraints and enumerate possible sums. We'll prioritize exact sums based on roots of unity (complex exponentials with rational multiples of pi), print partial sums as soon as found, and test these constraints for random or structured configurations. Because the problem space grows large, we'll choose small N like 12 or 24 to illustrate patterns.
+
+```python
+import cmath
+from itertools import combinations
+from math import pi
+
+# Helper: check max points in arcs of length arc_len (in radians)
+def max_in_arc(points, arc_len, max_allowed):
+    n = len(points)
+    # Sort points by angle in [0, 2pi)
+    angles = sorted([cmath.phase(p) % (2*pi) for p in points])
+    for start in angles:
+        count = 0
+        end = (start + arc_len) % (2*pi)
+        if start < end:
+            # Count points with angle in (start, end)
+            count = sum(1 for a in angles if start < a < end)
+        else:
+            # Arc wraps around 2pi
+            count = sum(1 for a in angles if a > start or a < end)
+        if count > max_allowed:
+            return False
+    return True
+
+def enum_sums(N=12):
+    # We generate points as N-th roots of unity
+    roots = [cmath.exp(2j * pi * k / N) for k in range(N)]
+
+    # Constraints:
+    # In any half-circle (pi radians): ≤ 200 for N=240; scale accordingly for smaller N
+    max_in_half_circle = min(N, 200 * N // 240)
+    # In any 60-degree arc (pi/3 radians): ≤ 120 for N=240
+    max_in_60_deg = min(N, 120 * N // 240)
+
+    print(f"Enumerating sums for N={N}")
+    print(f"Max allowed in half-circle: {max_in_half_circle}, in 60-degree arc: {max_in_60_deg}")
+
+    # We'll check sums from subsets of size close to N (to maximize sum magnitude)
+    # Start from large subsets to smaller
+    found_sums = set()
+    for size in range(N, N//2, -1):
+        for subset in combinations(range(N), size):
+            pts = [roots[i] for i in subset]
+            if not max_in_arc(pts, pi, max_in_half_circle):
+                continue
+            if not max_in_arc(pts, pi/3, max_in_60_deg):
+                continue
+            s = sum(pts)
+            mag = abs(s)
+            # Print exact sum if possible:
+            # For roots of unity, sum is exactly a root of unity times something
+            # Print magnitude rounded to 6 decimals
+            if mag not in found_sums:
+                found_sums.add(mag)
+                print(f"Subset size={size}, sum magnitude={mag:.6f}")
+
+    # Print max found magnitude
+    if found_sums:
+        max_mag = max(found_sums)
+        print(f"Max sum magnitude found: {max_mag:.6f}")
+
+if __name__ == "__main__":
+    enum_sums()  # default N=12 to keep output short
+```
+

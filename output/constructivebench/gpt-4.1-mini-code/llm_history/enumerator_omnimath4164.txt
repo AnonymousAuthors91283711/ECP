@@ -1,0 +1,72 @@
+[write_program]
+The problem involves finding all functions \( f: \mathbb{R} \to \mathbb{R} \) positive on positive inputs satisfying a given functional equation. To aid conjecturing the form of such functions, I will test plausible function types such as power functions and exponentials on positive reals and check if the functional equation approximately holds for some sample x,y > 0.
+
+The program enumerates:
+- power functions \( f(x) = x^a \) for rational \( a \) in a small range,
+- exponential functions \( f(x) = c^x \) for some bases \( c > 0 \).
+
+For each candidate and for a small grid of positive (x,y), it checks how close the two sides of the functional equation are. If they match within a tiny tolerance, it prints the candidate function form.
+
+This should highlight plausible candidates for the functional equation, helping conjecture the actual solution.
+
+```python
+# Enumerate plausible candidate functions f:R+->R+ for the functional equation
+# x*f(x^2)*f(f(y)) + f(y*f(x)) == f(x*y)*(f(f(x^2)) + f(f(y^2))) for x,y>0
+import math
+
+def approx_eq(a,b, tol=1e-9):
+    return abs(a-b) < tol
+
+def check_power(a):
+    # f(x) = x^a, f(f(z)) = f(f(z)) = f(z^a) = (z^a)^a = z^{a^2}
+    # check over sample x,y positive
+    for x in [1.0,2.0,0.5]:
+        for y in [1.0,3.0,0.5]:
+            fx2 = (x**2)**a
+            ffy = (y**a)**a
+            f_x_y = (x*y)**a
+            ff_x2 = ((x**2)**a)**a
+            ff_y2 = ((y**2)**a)**a
+            f_x = x**a
+            fy_fx = (y * (x**a))**a
+            lhs = x * fx2 * ffy + fy_fx
+            rhs = f_x_y * (ff_x2 + ff_y2)
+            if not approx_eq(lhs, rhs):
+                return False
+    return True
+
+def check_exp(c):
+    # f(x) = c^x, f(f(y))=f(c^y)=c^{c^y}
+    # f(x^2)=c^{x^2}, f(f(y))=c^{c^y}, etc.
+    for x in [1.0,2.0]:
+        for y in [1.0,3.0]:
+            try:
+                fx2 = c**(x**2)
+                ffy = c**(c**y)
+                f_x_y = c**(x*y)
+                ff_x2 = c**(c**(x**2))
+                ff_y2 = c**(c**(y**2))
+                fy_fx = c**(y * (c**x))
+                lhs = x * fx2 * ffy + fy_fx
+                rhs = f_x_y * (ff_x2 + ff_y2)
+                if not approx_eq(lhs,rhs):
+                    return False
+            except OverflowError:
+                return False
+    return True
+
+print("Checking power function candidates f(x)=x^a for a in range -3..3 (rational approx)")
+for numerator in range(-9,10):
+    a = numerator/3
+    if a == 0:
+        continue  # x^0=1 trivial, but check anyway
+    if check_power(a):
+        print(f"Possible candidate: f(x) = x^{a:.2f}")
+
+print("Checking exponential candidates f(x)=c^x for c in [0.1,0.5,2,3]")
+for c in [0.1, 0.5, 2, 3]:
+    if c <= 0:
+        continue
+    if check_exp(c):
+        print(f"Possible candidate: f(x) = {c}^x")
+```

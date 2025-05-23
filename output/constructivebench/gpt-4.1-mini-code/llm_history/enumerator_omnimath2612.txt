@@ -1,0 +1,81 @@
+[write_program]
+The problem is to count the number of pairs of subsets (S, T) of the set {0,...,9}, such that the union of S and T has exactly 3 elements. We want to enumerate these pairs and count them.
+
+Key idea:
+- The union has exactly 3 elements.
+- So the union set U is any 3-element subset of {0,...,9}.
+- For each such U, count the number of pairs (S,T) with S ⊆ U, T ⊆ U, and S ∪ T = U.
+
+For fixed U of size 3:
+- We want pairs of subsets S,T of U such that union is U.
+- For each element in U, it must be in S or T or both, but at least one of S or T.
+- So for each element, the number of options is 3: in S only, T only, or both.
+- Total pairs per U = 3^3 = 27.
+- Since we want union == U exactly, exclude cases with union smaller than U, but is this possible here? Actually, with this counting, all pairs have union U, because elements are only from U, and for each element you assign it to S or T or both, union is always U.
+- So total for fixed U is 27.
+
+Number of 3-element subsets U of {0,...,9} is C(10,3)=120.
+
+So total pairs = 120 * 27 = 3240.
+
+We produce a program that enumerates and prints all such pairs. But to keep output under 400 tokens, we limit enumeration to only the count and print partial pairs for a single sample union set.
+
+We also show partial enumerations for sample unions of various sizes.
+
+```python
+from itertools import combinations, product
+
+def subsets_of_set(s):
+    """Yield all subsets of the set s represented as sorted tuples."""
+    s_list = list(s)
+    n = len(s_list)
+    for bits in range(1 << n):
+        subset = tuple(s_list[i] for i in range(n) if (bits & (1 << i)))
+        yield subset
+
+def main():
+    base_set = set(range(10))
+    k = 3
+    print(f"Counting pairs (S,T) of subsets of {{0..9}} with |S∪T|={k}")
+    total_count = 0
+    # List all 3-element subsets U
+    us = list(combinations(base_set, k))
+    print(f"Number of {k}-element subsets U: {len(us)}")
+    # We'll enumerate pairs for the first U only (to avoid too much output)
+    U = us[0]
+    print(f"Example union subset U: {U}")
+    U_set = set(U)
+
+    # For each element in U, assign membership to S,T with options: 
+    # 0 -> not in S, not in T (exclude to keep union=U)
+    # But union must be U, so each element must be in at least one of S or T
+    # There are 3 options per element: in S only, in T only, or in both
+    options = [(1,0), (0,1), (1,1)]  # membership indicator for (S,T) per element
+
+    def build_sets(choices):
+        S = set()
+        T = set()
+        for elem, (inS, inT) in zip(U, choices):
+            if inS:
+                S.add(elem)
+            if inT:
+                T.add(elem)
+        return (tuple(sorted(S)), tuple(sorted(T)))
+
+    # Enumerate all such pairs for U
+    count_for_U = 0
+    for choices in product(options, repeat=k):
+        S, T = build_sets(choices)
+        # Union must be U by construction
+        print(f"S={S}, T={T}")
+        count_for_U += 1
+        if count_for_U >= 10:
+            print("... (only first 10 pairs shown)")
+            break
+    # Total count
+    total_count = len(us) * (3 ** k)
+    print(f"Total count = Number of {k}-subsets * 3^{k} = {len(us)} * {3**k} = {total_count}")
+
+if __name__ == "__main__":
+    main()
+```

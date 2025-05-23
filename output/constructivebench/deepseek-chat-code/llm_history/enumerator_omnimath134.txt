@@ -1,0 +1,59 @@
+[write_program]
+This problem involves finding integer values `a` such that the polynomial `X^n + a*X^(n-1) + p*q` can be factored into two non-constant integer polynomials. We'll write a Python program to enumerate possible `a` values for small parameters.
+
+The approach:
+1. Select small prime `p`, squarefree `q` not divisible by `p`, and `n ≥ 3`
+2. For each possible factorization, compute the corresponding `a` value
+3. Collect all valid `a` values
+
+```python
+def enumerate_factorizations():
+    # Sample parameters
+    p = 2
+    q = 3
+    n = 3
+    
+    print(f"Parameters: p={p}, q={q}, n={n}")
+    results = set()
+    pq = p * q
+    
+    # Iterate over possible degrees for g and h
+    for deg_g in range(1, n):
+        deg_h = n - deg_g
+        
+        # Generate possible leading coefficients (must multiply to 1)
+        for lc_g in [1, -1]:
+            for lc_h in [1, -1]:
+                if lc_g * lc_h != 1:
+                    continue
+                
+                # Generate possible constant terms (must multiply to p*q)
+                for const_g in [1, -1, p, -p, q, -q, pq, -pq]:
+                    if pq % const_g != 0:
+                        continue
+                    const_h = pq // const_g
+                    
+                    # For degree 1 factors, we can compute a directly
+                    if deg_g == 1 and deg_h == 2:
+                        # g = lc_g * X + const_g
+                        # h = lc_h * X^2 + b*X + const_h
+                        # Product gives X^3 + (b + lc_h*const_g/lc_g)X^2 + ...
+                        # So a = b + const_g/lc_g (since lc_h/lc_g = 1)
+                        # Also, constant term gives const_g*const_h = pq
+                        # Linear term gives b*const_g + const_h = 0 => b = -const_h/const_g
+                        b = -const_h / const_g
+                        a = b + const_g / lc_g
+                        if a.is_integer():
+                            results.add(int(a))
+                    
+                    elif deg_g == 2 and deg_h == 1:
+                        # Symmetric to above case
+                        b = -const_h / const_g
+                        a = b + const_g / lc_g
+                        if a.is_integer():
+                            results.add(int(a))
+    
+    print("Possible a values:", sorted(results))
+
+enumerate_factorizations()
+```

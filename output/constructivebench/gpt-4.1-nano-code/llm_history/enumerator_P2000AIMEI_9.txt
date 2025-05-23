@@ -1,0 +1,97 @@
+[write_program]
+This problem involves symmetric sums of triples of real numbers under certain constraints, with the goal to find the sum y₁ + y₂ for two different triples satisfying the given conditions. Because the problem seems inspired by the 2000 AIME I, and involves sums of powers, a typical approach is to analyze the symmetric sums and possibly relate the triples via elementary symmetric sums.
+
+Given the constraints:
+- Sum of each triple: x + y + z = 6
+- Sum of squares: x² + y² + z² = 8
+- Sum of cubes: x³ + y³ + z³ = 5
+- Two different triples with these properties.
+
+Since the triples are symmetric and satisfy identical sums, and the key restriction is that the triples are distinct, this hints that the question might be about how these triples relate and whether y₁ + y₂ can be expressed or restricted.
+
+We can approach by choosing specific small sample triples satisfying the conditions and different enough, then check their y-coordinates. First, let's compute the symmetric sums for one such triple:
+
+Given:
+- s₁ = x + y + z = 6
+- s₂ = xy + yz + zx
+- s₃ = xyz
+
+From the identities:
+- sum of squares: (x + y + z)^2 - 2(xy + yz + zx) = 8
+=> 36 - 2*s₂ = 8
+=> 2*s₂ = 36 - 8 = 28
+=> s₂ = 14
+
+Similarly, for the sum of cubes:
+x³ + y³ + z³ = (x + y + z)^3 - 3(x + y + z)(xy + yz + zx) + 3xyz
+=> 5 = 6^3 - 3*6*14 + 3xyz
+=> 5 = 216 - 252 + 3xyz
+=> 3xyz = 5 - 216 + 252 = 41
+=> xyz = 41/3 ≈ 13.666...
+
+Thus, the triple corresponds to roots of the monic cubic:
+t³ - 6t² + 14t - 41/3 = 0
+
+We can attempt to find explicit roots or approximate y-values to understand the possible y-coordinates, then find the second triple satisfying the same sums but with different roots, ensuring the triples are distinct.
+
+Below is a Python script that:
+- Enumerates candidate triples by approximate root finding of the cubic,
+- Checks these triples with the constraints,
+- Finds distinct solutions,
+- Prints possible y-values, especially sums y₁ + y₂.
+
+This approach is approximate but helps conjecture the exact answer thanks to symmetry and constraints.
+
+```python
+import numpy as np
+
+# Define the symmetric sums
+s1 = 6
+s2 = 14
+
+# The cubic roots satisfy: t^3 - s1 * t^2 + s2 * t - xyz = 0
+# For each candidate, we approximate roots to find y
+
+# Given the cubic: t^3 - 6t^2 + 14t - (41/3) = 0
+coeffs = [1, -s1, s2, -41/3]
+roots = np.roots(coeffs)
+
+# Filter real roots within a reasonable approximation
+real_roots = [r.real for r in roots if abs(r.imag) < 1e-6]
+
+# For each root as x, find y and z
+# Since symmetric, pick one root as x and solve for y and z
+# But we need to satisfy sum y + z = s1 - x
+# And y, z are roots of t^2 - (s1 - x) t + (xy + yz + zx)
+# Since xy + yz + zx = s2, for fixed x:
+# The quadratic for y,z: t^2 - (s1 - x)t + (s2 - x*(s1 - x)) = 0
+
+# Find all such triples and record y values
+possible_y_sums = set()
+
+for x in real_roots:
+    a = 1
+    b = -(s1 - x)
+    c = s2 - x*(s1 - x)
+    delta = b**2 - 4*a*c
+    if delta < 0:
+        continue
+    sqrt_delta = np.sqrt(delta)
+    y1 = (b + sqrt_delta)/2
+    y2 = (b - sqrt_delta)/2
+    for y in [y1, y2]:
+        z = s1 - x - y
+        # Verify sum of cubes condition
+        sum_cubes = x**3 + y**3 + z**3
+        if abs(sum_cubes - 5) < 1e-3:
+            # Store sum of y-coordinates for pairs
+            possible_y_sums.add(y + z)
+            print(f"Found triple: x={x:.3f}, y={y:.3f}, z={z:.3f} with y+z={y+z:.3f}")
+
+# Now, find all such sums. The possible pairs give potential y₁ + y₂
+# Since the triples are symmetric, the sum y₁ + y₂ in different pairs can be tested.
+
+print("Possible sums of y-coordinates over different solutions:", possible_y_sums)
+# Try to estimate the answer based on the above exploration
+# The true answer likely revolves around one of these sums.
+```

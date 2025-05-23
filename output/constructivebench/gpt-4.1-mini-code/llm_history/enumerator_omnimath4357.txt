@@ -1,0 +1,66 @@
+[write_program]
+The problem is to find, for a given \( n \geq 4 \), the greatest natural number \( m \) such that there exists a family \( (A_i)_{i=0}^{m-1} \) of subsets of \(\{0,\dots,n-1\}\) where:
+
+- Each \( A_i \) has cardinality \( i+1 \).
+- For \( i \neq j \), \( A_i \not\subseteq A_j \).
+
+I will write a Python script that, for \( n=4,5 \), enumerates possible values of \( m \) by constructing such families, trying to maximize \( m \), and prints candidates for \( m \). This can help conjecture the function `omnimath4357_answer(n)`.
+
+```python
+from itertools import combinations
+
+# For given n, find the maximum m for which there exists a family A_i of subsets of [n]
+# with |A_i|=i+1 and A_i not subset of A_j for i!=j.
+def check_family(n, m):
+    # Generate all subsets of size i+1 for i in [0,..,m-1]
+    sizes = list(range(1, m+1))
+    sets_by_size = [list(combinations(range(n), size)) for size in sizes]
+    
+    # We'll try to pick one subset of size i+1 for each i, and test incomparability
+    # Backtracking approach
+    chosen = [None]*m
+    
+    def is_not_subset(i):
+        # Check if chosen[i] is not subset of any chosen[j] with j != i
+        set_i = set(chosen[i])
+        for j in range(m):
+            if j != i and chosen[j] is not None:
+                set_j = set(chosen[j])
+                if set_i.issubset(set_j):
+                    return False
+        return True
+    
+    def backtrack(pos=0):
+        if pos == m:
+            # Check that for all i!=j, A_i not subset of A_j
+            for i in range(m):
+                if not is_not_subset(i):
+                    return False
+            return True
+        
+        for subset in sets_by_size[pos]:
+            chosen[pos] = subset
+            # As a shortcut, check incomparability of chosen[pos] immediately
+            if all(not set(chosen[pos]).issubset(set(chosen[j])) for j in range(pos)):
+                if backtrack(pos+1):
+                    return True
+        chosen[pos] = None
+        return False
+
+    return backtrack()
+
+def main():
+    for n in [4,5]:
+        print(f"n = {n}")
+        # Max m can be at most n (since max subset size = n)
+        # Check m from n down to 1 (trying max first)
+        for m in range(n, 0, -1):
+            if check_family(n,m):
+                print(f"  Possible m = {m}")
+                break
+
+if __name__ == "__main__":
+    main()
+```
+
+This prints the maximal \( m \) found for \( n=4 \) and \( n=5 \) where such a family exists, helping to conjecture the sequence `omnimath4357_answer(n)`.

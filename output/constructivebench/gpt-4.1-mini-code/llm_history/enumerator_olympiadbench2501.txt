@@ -1,0 +1,114 @@
+[write_program]
+The problem involves analyzing the function 
+\[ f(x) = \sin^6(x) + \cos^6(x) - 0.7(\sin^4(x) + \cos^4(x)) \]
+and finding all real \( x \) such that \( f(x) = 0 \).
+
+The goal is to enumerate solutions for \( x \), leveraging the periodicity of sine and cosine, and the expression's dependency on \(\sin^2(x)\) and \(\cos^2(x)\).
+
+To simplify, rewrite \( f(x) \) using the identity \(\sin^2(x) + \cos^2(x) = 1\), set \( t = \sin^2(x) \), and express \( f(x) \) in terms of \( t \), then solve for \( t \in [0,1] \). Since \( t = \sin^2(x) \), \( x \) has solutions depending on \( t \) within each period.
+
+The program below:
+- Enumerates candidate \( t \) in [0,1] solving \( f(x)=0 \).
+- For each \( t \), computes corresponding \( x \) in [0, \( 2\pi \)) because of periodicity.
+- Prints exact values of \( t \) and corresponding \( x \) (expressed with arccos or arcsin).
+- Prints all values \( x \) mod \( 2\pi \), then more by adding multiples of \( 2\pi \) for a few periods as sample solutions.
+
+```python
+import math
+
+# Given function in terms of t = sin^2(x):
+# f(x) = (sin^6 x + cos^6 x) - 0.7(sin^4 x + cos^4 x)
+# Use sin^2 x = t, cos^2 x = 1 - t
+# sin^6 x = (sin^2 x)^3 = t^3
+# cos^6 x = (1 - t)^3
+# sin^4 x = (sin^2 x)^2 = t^2
+# cos^4 x = (1 - t)^2
+
+# So f(t) = t^3 + (1 - t)^3 - 0.7 (t^2 + (1 - t)^2) = 0
+
+def f_t(t):
+    return t**3 + (1 - t)**3 - 0.7*(t**2 + (1 - t)**2)
+
+# We find roots in [0,1] where f_t(t) = 0
+
+# Use a small epsilon and check sign changes to find intervals
+EPS = 1e-6
+NUM_STEPS = 10000
+ts = [i/NUM_STEPS for i in range(NUM_STEPS+1)]
+
+roots = []
+
+print("Searching roots for t in [0,1] satisfying f(t)=0:")
+
+for i in range(NUM_STEPS):
+    t1, t2 = ts[i], ts[i+1]
+    v1, v2 = f_t(t1), f_t(t2)
+    if v1 == 0.0:
+        print(f"t exact root at {t1}")
+        roots.append(t1)
+    if v1*v2 < 0: # sign change means root inside (t1,t2)
+        # Use binary search to refine root
+        a, b = t1, t2
+        for _ in range(30):
+            mid = (a+b)/2
+            vm = f_t(mid)
+            if vm == 0:
+                a = b = mid
+                break
+            if v1*vm < 0:
+                b = mid
+                v2 = vm
+            else:
+                a = mid
+                v1 = vm
+        root = (a+b)/2
+        print(f"t root approx at {root:.6f}")
+        roots.append(root)
+
+roots = sorted(set(roots))
+
+# For each root t in [0,1], sin^2 x = t
+# Then sin x = ±sqrt(t)
+# x = arcsin(sqrt(t)) or pi - arcsin(sqrt(t)) plus 2k pi
+# Also x = arccos(±sqrt(1 - t)) + 2k pi
+# Because function depends symmetrically on sin and cos powers,
+# verifying multiple forms is consistent.
+# We'll output fundamental solutions x in [0, 2pi)
+
+print("\nCorresponding x in [0, 2pi) for each root t:")
+
+for t in roots:
+    s = math.sqrt(t)
+    # Since arcsin returns in [-pi/2, pi/2],
+    # fundamental solutions are x1 = arcsin(s), x2 = pi - x1
+    try:
+        x1 = math.asin(s)
+    except:
+        # math domain error if s>1 or <0 (should not happen)
+        continue
+    x2 = math.pi - x1
+
+    # Normalize in [0, 2pi)
+    def norm(angle):
+        while angle < 0:
+            angle += 2*math.pi
+        while angle >= 2*math.pi:
+            angle -= 2*math.pi
+        return angle
+
+    x1n, x2n = norm(x1), norm(x2)
+
+    print(f"t={t:.6f}")
+    print(f" sin x = ±{s:.6f}")
+    print(f" x1 = asin(s) ≈ {x1n:.6f}, x2 = pi - asin(s) ≈ {x2n:.6f}")
+
+    # Also print a few periodic values adding 2pi*k, k in -1,0,1
+    print(" Sample solutions x (approx):")
+    for k in [-1,0,1]:
+        print(f"  x1 + 2π*{k} ≈ {x1n + 2*math.pi*k:.6f}")
+        print(f"  x2 + 2π*{k} ≈ {x2n + 2*math.pi*k:.6f}")
+
+    print()
+
+```
+This program enumerates all roots for \( t = \sin^2(x) \in [0,1] \), prints them, and prints corresponding \( x \) approximate values in the fundamental period and nearby periods, aiding to conjecture the zero set.

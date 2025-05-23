@@ -1,0 +1,113 @@
+[write_program]
+This problem involves counting quadratic polynomials \( p(x) = ax^2 + bx + c \) with real coefficients such that:
+- \(\deg p = 2\),
+- The roots of \(p\) are exactly \(\{r, s\}\) for some \(r,s \in \mathbb{R}\),
+- The set of coefficients \(\{a,b,c\}\) equals the set of roots \(\{r,s\}\).
+
+Since degree is 2, \(a \neq 0\). The roots are related to coefficients by Vieta's formulas: \(r+s = -b/a\), \(rs = c/a\).
+
+We want to find all triples \((a,b,c)\) with \(a \neq 0\), real \(r,s\), satisfying:
+- \( \{a,b,c\} = \{r,s\} \) as sets,
+- roots are exactly \(\{r,s\}\),
+- \(r,s\) roots of \(p\).
+
+Because the roots are exactly \(\{r,s\}\), and the polynomial has degree 2, roots are either distinct or equal (a double root).
+
+We can enumerate possible assignments of \(\{a,b,c\}\) equal to \(\{r,s\}\), including multiplicities, and for each, check if roots match \(\{r,s\}\).
+
+I will write a program enumerating possible real triples (r,s), trying to find corresponding (a,b,c) with \(\{a,b,c\} = \{r,s\}\), and the polynomial has roots exactly \(r,s\). Since continuous enumeration impossible, I choose small integers in \([-3,3]\), trying all sets and coefficient permutations.
+
+The program prints all found sets satisfying the conditions, to conjecture the count.
+
+```python
+# Enumerate roots r,s and coefficients a,b,c in small integer range [-3..3] with a != 0
+# Check if roots of p(x)=a x^2 + b x + c are exactly {r,s},
+# and if {a,b,c} as a set equals {r,s} as a set
+
+import math
+from itertools import product, permutations
+
+def roots_of_quadratic(a,b,c):
+    if a == 0:
+        return None
+    D = b*b - 4*a*c
+    if D < 0:
+        return None
+    sqrtD = math.sqrt(D)
+    r1 = (-b + sqrtD)/(2*a)
+    r2 = (-b - sqrtD)/(2*a)
+    return {r1, r2}
+
+def sets_equal_up_to_epsilon(S1,S2,eps=1e-9):
+    # Compare two sets of floats allowing epsilon tolerance
+    if len(S1) != len(S2):
+        return False
+    S2_copy = list(S2)
+    for x1 in S1:
+        found = False
+        for i,v in enumerate(S2_copy):
+            if abs(x1 - v) < eps:
+                found = True
+                del S2_copy[i]
+                break
+        if not found:
+            return False
+    return True
+
+def is_double_root(roots_set):
+    # Check if roots set has one root repeated, i.e. cardinality one
+    return len(roots_set) == 1
+
+found = set()
+ints = range(-3,4)
+
+# Since {a,b,c} = {r,s}, the coefficients set cardinality could be 1 or 2
+# Enumerate r,s from ints (including equal roots)
+for r in ints:
+    for s in ints:
+        roots = {r,s}
+        # enumerate all triples (a,b,c) with entries from roots set (1 or 2 distinct elements)
+        # but cardinality of {a,b,c} = cardinality of roots set = len(roots)
+        # means if r!=s then {a,b,c} = {r,s} (2 elements)
+        # if r=s then {a,b,c} = {r} singleton set
+        coeff_candidates = []
+        if len(roots) == 1:
+            v = r
+            # only one distinct coefficient v, so a=b=c=v but degree=2 => a!=0
+            if v != 0:
+                a,b,c = v,v,v
+                roots_p = roots_of_quadratic(a,b,c)
+                if roots_p is not None:
+                    # roots must be exactly {r}
+                    if is_double_root(roots_p) and sets_equal_up_to_epsilon(roots_p,roots):
+                        trip = (a,b,c)
+                        if trip not in found:
+                            found.add(trip)
+                            print(f"Found coefficients {trip} with roots {roots}")
+        else:
+            # roots are two distinct values
+            # {a,b,c} = {r,s}, so coefficients are 3 values with two distinct numbers, each appears at least once
+            # generate all permutations of length 3 from {r,s} having both elements
+            candidate_coeffs = set()
+            for perm in set(permutations((r,s,r))):
+                candidate_coeffs.add(perm)
+            for perm in set(permutations((r,s,s))):
+                candidate_coeffs.add(perm)
+            for a,b,c in candidate_coeffs:
+                if a == 0:
+                    continue
+                roots_p = roots_of_quadratic(a,b,c)
+                if roots_p is None:
+                    continue
+                # roots_p matches roots {r,s} as set (consider epsilon)
+                if sets_equal_up_to_epsilon(roots_p,roots):
+                    # coefficients' set equals roots set
+                    coeff_set = {a,b,c}
+                    if coeff_set == roots:
+                        trip = (a,b,c)
+                        if trip not in found:
+                            found.add(trip)
+                            print(f"Found coefficients {trip} with roots {roots}")
+
+print(f"Total found: {len(found)}")
+```

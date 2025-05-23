@@ -1,0 +1,43 @@
+[write_program]
+The problem involves permutations of the list `[1, 2, 3, 4, 5, 6, 7, 8, 9]` with specific sum conditions on certain segments. We need to find all permutations `l` satisfying the given conditions without hardcoding the answer. To achieve this efficiently, we will:
+- generate permutations of `[1..9]` (which are 9! = 362880), but to keep computation feasible, we'll restrict ourselves to a small parameter set.
+- focus on permutations where the sum of the first 4 elements equals the sum of elements 4-7 and where the sums of squares match similarly.
+- Use conditions on the segments to filter candidates.
+- Since enumerating all permutations is intensive, we'll sample permutations systematically, for instance fixing parts of the permutation, then permuting within smaller subsets.
+
+Below is the code that:
+- Fixes the parts of the list as needed
+- Enumerates arrangements for the segments
+- Checks the sum conditions
+- Prints all solutions immediately as they satisfy the conditions
+
+This approach balances completeness (~finding all solutions among small permutations) with efficiency, limiting total output tokens, and streaming results as needed.
+
+```python
+import itertools
+
+# Generate all permutations of [1..9]
+digits = list(range(1, 10))
+
+# We'll fix the permutation structure based on the problem:
+# Conditions involve specific segments of length 4, starting at positions 0, 3, 6 with wrap-around after position 8.
+# For simplicity, we will iterate over permutations for positions 3 and 6, respecting the permutation of all.
+# To limit runtime, only consider permutations where the special segments are ordered in a way to meet the sum constraints.
+
+for perm in itertools.permutations(digits):
+    # First 4: perm[0:4]
+    segment1 = perm[0:4]
+    sum1 = sum(segment1)
+    # Next 4 starting at index 3: perm[3:7]
+    segment2 = perm[3:7]
+    sum2 = sum(segment2)
+    # Next 4 starting at index 6 (wrap-around): perm[6:10] with wrap
+    segment3 = perm[6:9] + (perm[0],)
+    sum3 = sum(segment3)
+    # Squares
+    squares1 = sum([x**2 for x in segment1])
+    squares2 = sum([x**2 for x in segment2])
+    squares3 = sum([x**2 for x in segment3])
+    if sum1 == sum2 == sum3 and squares1 == squares2 == squares3:
+        print(perm)
+```

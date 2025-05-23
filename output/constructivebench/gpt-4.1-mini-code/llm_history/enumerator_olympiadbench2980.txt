@@ -1,0 +1,70 @@
+[write_program]
+The problem relates to real numbers \(a, b > 0\) with floor equalities involving expressions \(20 - a\), \(19 - b\), and \(a \cdot b\). We want to investigate values of \(a+b\) satisfying:
+
+\[
+\lfloor 20 - a \rfloor = \lfloor 19 - b \rfloor = \lfloor a b \rfloor
+\]
+
+We enumerate candidates for the floor value \(k = \lfloor 20 - a \rfloor\) and try to find corresponding \(a, b\) that satisfy the relations and print possible \(a + b\) values, to conjecture the supremum (least upper bound) of such sums.
+
+```python
+# Enumerate possible floor values k = floor(20 - a) = floor(19 - b) = floor(a*b)
+# For k in a reasonable range, find intervals for a and b and check the product condition.
+
+from math import floor, ceil
+
+def approx_eq(x, y, eps=1e-9):
+    return abs(x - y) < eps
+
+print("Enumerating candidate sums a+b for given floor values k")
+
+# Since 20 - a > k ≥ 20 - a -1, a in (20 - k -1, 20 - k]
+# Similarly for b: 19 - b in [k, k+1), so b in (19 - k -1, 19 - k]
+
+for k in range(10, 21):  # plausible floor values (observations from the problem)
+    a_low = 20 - (k + 1)
+    a_high = 20 - k
+    b_low = 19 - (k + 1)
+    b_high = 19 - k
+
+    # a,b > 0 restrict intervals further
+    if a_high <= 0 or b_high <= 0:
+        continue
+    a_low = max(a_low, 0)
+    b_low = max(b_low, 0)
+
+    results = set()
+
+    # Sample within intervals (step small enough for precision)
+    step = 0.01
+    a = a_low + 0.001
+    while a < a_high:
+        # For given a, compute possible b from floor(ab) = k
+        # ab in [k, k+1), so b in [k/a, (k+1)/a)
+
+        b_floor_low = k / a
+        b_floor_high = (k + 1) / a
+
+        # Intersect with b interval
+        low_b = max(b_low, b_floor_low)
+        high_b = min(b_high, b_floor_high)
+
+        if low_b < high_b:
+            # a+b candidates in [a+low_b, a+high_b]
+            # To print exact values, just print a+low_b and a+high_b approximations
+            # or simply print a + low_b as a candidate (corresponds to b near low_b)
+            sum_candidate = a + low_b
+            # check floor(20 - a) == k and floor(19 - b) == k and floor(a*b) == k to verify
+            if floor(20 - a) == k and floor(19 - low_b) == k and floor(a * low_b) == k:
+                # Round sum_candidate nicely
+                s = round(sum_candidate, 5)
+                if s not in results:
+                    print(f"For k={k}: a={a:.3f}, b={low_b:.3f}, a+b={s}")
+                    results.add(s)
+        a += step
+
+# The orignal problem asks for IsLUB (least upper bound) of all such sums.
+# By numeric exploration, we might conjecture the supremum.
+print("\nConjectured supremum (largest observed a+b):")
+print(f"Max a+b ≈ {max(results) if results else 'No results found'}")
+```

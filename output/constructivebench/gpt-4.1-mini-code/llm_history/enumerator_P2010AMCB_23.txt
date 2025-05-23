@@ -1,0 +1,116 @@
+[write_program]
+We are given two monic quadratic polynomials \(P\) and \(Q\) with roots and compositions having specified roots. The task involves finding the sum of their minimal values.
+
+Rewriting the problem in simpler terms:
+
+- \(P\) and \(Q\) are monic quadratics: 
+  \[
+  P(x) = x^2 + a x + b, \quad Q(x) = x^2 + c x + d.
+  \]
+- Degrees are 2.
+- Roots of \(P(Q(x))\): \(-23, -21, -17, -15\).
+- Roots of \(Q(P(x))\): \(-59, -57, -51, -49\).
+- Define minimal values of \(P\) and \(Q\) as values at their vertex, i.e., 
+  \[
+  p_{\min} = P(-a/2), \quad q_{\min} = Q(-c/2).
+  \]
+- We want \(p_{\min} + q_{\min}\).
+
+This is a complicated algebraic problem usually solved by symbolic manipulation.
+
+To investigate, the Python code below:
+
+- Enumerates possible quadratics \(P, Q\) with integer coefficients \(a, b, c, d\) in a small range.
+- Computes roots of \(P(Q(x))\) and \(Q(P(x))\).
+- Checks if these roots match the given sets (up to permutations).
+- Calculates minimal values when matching found.
+
+Since roots have to be those exact sets, and degree 4 polynomials \(P(Q(x))\), \(Q(P(x))\), we use resultant and factorization properties.
+
+We simplify by evaluating compositions numerically, check approximate roots, then print out candidates with matching roots up to small error tolerance.
+
+This will help us conjecture \(p_{\min} + q_{\min}\).
+
+```python
+import math
+
+# Given roots sets
+roots_PQ = [-23, -21, -17, -15]
+roots_QP = [-59, -57, -51, -49]
+
+# Helper function to compute roots of a quartic from numerical approach:
+# since P(Q(x)) = 0 means Q(x) is root of P(t) = 0 with t = Q(x),
+# similarly for Q(P(x))=0.
+
+# But here, just compute the quartic coefficient array of P(Q(x)) and Q(P(x)).
+# P(x) = x^2 + a*x + b
+# Q(x) = x^2 + c*x + d
+# Then P(Q(x)) = (Q(x))^2 + a Q(x) + b
+# = (x^2 + c x + d)^2 + a (x^2 + c x + d) + b
+# = x^4 + 2 c x^3 + (c^2 + 2 d) x^2 + 2 c d x + d^2 + a x^2 + a c x + a d + b
+# Coefficients of P(Q(x)):
+# x^4: 1
+# x^3: 2 c
+# x^2: c^2 + 2 d + a
+# x^1: 2 c d + a c
+# x^0: d^2 + a d + b
+
+# Similar for Q(P(x)).
+
+def quartic_roots(coeffs):
+    # coeffs: [1, c3, c2, c1, c0]
+    # Use numpy roots to get numerical roots
+    import numpy as np
+    roots = np.roots(coeffs)
+    # Filter real roots within small imaginary part
+    real_roots = [r.real for r in roots if abs(r.imag) < 1e-6]
+    real_roots.sort()
+    return real_roots
+
+def approx_equal_sets(A, B, tol=1e-3):
+    if len(A) != len(B):
+        return False
+    A = sorted(A)
+    B = sorted(B)
+    return all(abs(a - b) < tol for a, b in zip(A, B))
+
+# Enumerate integers a,b,c,d in small range to find matching polynomials
+print("Enumerating candidates for (a,b,c,d)...")
+for a in range(-10, 11):
+    for b in range(-100, 1):  # b likely negative since roots quite negative
+        for c in range(-10, 11):
+            for d in range(-100, 1):
+                # Coefficients for P(Q(x))
+                PQ = [
+                    1,
+                    2 * c,
+                    c ** 2 + 2 * d + a,
+                    2 * c * d + a * c,
+                    d ** 2 + a * d + b
+                ]
+                # Roots of P(Q(x))
+                roots_pq = quartic_roots(PQ)
+                if not approx_equal_sets(roots_pq, roots_PQ):
+                    continue  # no match
+
+                # Coefficients for Q(P(x))
+                QP = [
+                    1,
+                    2 * a,
+                    a ** 2 + 2 * b + c,
+                    2 * a * b + c * a,
+                    b ** 2 + c * b + d
+                ]
+                roots_qp = quartic_roots(QP)
+                if not approx_equal_sets(roots_qp, roots_QP):
+                    continue  # no match
+
+                # If both match, compute pmin & qmin and output
+                pmin = (a ** 2) / 4 - b
+                qmin = (c ** 2) / 4 - d
+                print(f"P: x^2 + {a}x + {b}, Q: x^2 + {c}x + {d}")
+                print(f"pmin = {pmin}, qmin = {qmin}, sum = {pmin + qmin}")
+                # Can stop after some solutions to limit output
+```
+
+This code searches over a reasonable range for coefficients, prints candidates matching root conditions, and outputs minimal values sum. This will assist in finding the true answer.

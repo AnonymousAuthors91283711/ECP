@@ -1,0 +1,47 @@
+[write_program]
+This problem asks whether there exists an injective sequence of 1985 natural numbers whose squares sum to a perfect cube and whose cubes sum to a perfect square. We'll write a Python program to search for small examples with fewer numbers to build intuition.
+
+The program will:
+1. Search for sequences of length n (starting small)
+2. Check if the sum of squares is a cube and sum of cubes is a square
+3. Ensure all numbers are distinct
+4. Print any valid sequences found
+
+```python
+import math
+
+def is_perfect_square(n):
+    root = math.isqrt(n)
+    return root * root == n
+
+def is_perfect_cube(n):
+    root = round(n ** (1/3))
+    return root ** 3 == n
+
+def search_sequences(max_n, max_num, max_sum):
+    for n in range(1, max_n + 1):
+        print(f"Checking sequences of length {n}...")
+        # We'll generate strictly increasing sequences to ensure distinctness
+        def backtrack(start, current, sum_sq, sum_cb):
+            if len(current) == n:
+                if is_perfect_cube(sum_sq) and is_perfect_square(sum_cb):
+                    print(f"Found sequence: {current}")
+                    print(f"Sum of squares: {sum_sq} (={int(round(sum_sq ** (1/3)))}^3)")
+                    print(f"Sum of cubes: {sum_cb} (={math.isqrt(sum_cb)}^2)")
+                    return True
+                return False
+            
+            for num in range(start, max_num + 1):
+                new_sum_sq = sum_sq + num * num
+                new_sum_cb = sum_cb + num * num * num
+                if new_sum_sq > max_sum or new_sum_cb > max_sum:
+                    break
+                if backtrack(num + 1, current + [num], new_sum_sq, new_sum_cb):
+                    return True
+            return False
+        
+        backtrack(1, [], 0, 0)
+
+# Search with conservative parameters to keep runtime reasonable
+search_sequences(max_n=5, max_num=20, max_sum=100000)
+```

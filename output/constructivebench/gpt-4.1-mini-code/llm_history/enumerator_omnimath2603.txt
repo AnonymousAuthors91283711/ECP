@@ -1,0 +1,50 @@
+[write_program]
+The problem involves counting certain functions \( f \) from a finite set of size \( m \) to subsets of another finite set of size \( n \), where each subset has size \( k \) and is closed under adding 1 modulo \( n \). Then it asks for the ratio of functions where there exists an element missing from all subsets.
+
+We will enumerate all such functions for given \( n=10, k=5, m=4 \), count the total number and count those that exclude at least one element in all subsets, and then compute the scaled ratio \( 10000 * (|A|/|Ω|) \).
+
+```python
+from itertools import combinations, product
+
+n = 10
+k = 5
+m = 4
+
+# Generate all k-sized subsets of [0..n-1] that are "closed under +1 mod n"
+# Because k=5 and closure under +1 mod n means the subset is an orbit of length k.
+
+# Such subsets are exactly the sets of consecutive k elements modulo n
+# For example, {0,1,2,3,4}, {1,2,3,4,5}, ... {9,0,1,2,3}
+
+closed_subsets = []
+for start in range(n):
+    subset = frozenset((start + i) % n for i in range(k))
+    closed_subsets.append(subset)
+
+print(f"Closed subsets ({len(closed_subsets)}):")
+for s in closed_subsets:
+    print(sorted(s))
+
+# Omega is all functions f: Fin m -> closed_subsets
+# So total |Ω| = (number of closed subsets)^m
+total_Omega = len(closed_subsets) ** m
+
+count_A = 0
+# f in Omega where ∃ x in [0..n-1] such that x not in f(i) for all i.
+# Equivalently, union of f(i) is not full [0..n-1]
+
+# We iterate over all functions f: [0..m-1] -> closed_subsets
+for f in product(closed_subsets, repeat=m):
+    union_all = set()
+    for subset in f:
+        union_all |= subset
+    if len(union_all) < n:
+        count_A += 1
+        print(f"A function excluding elements: {sorted(set(range(n)) - union_all)}")
+
+print(f"Total Omega = {total_Omega}")
+print(f"Count A = {count_A}")
+ratio = 10000 * count_A / total_Omega
+print(f"10000 * (|A|/|Ω|) = {ratio}")
+```
+

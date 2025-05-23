@@ -1,0 +1,63 @@
+[write_program]
+The problem involves finding a set of distinct positive integers summing to 2021, maximizing their product, and then examining the 2-adic valuation (the exponent of 2 in the prime factorization of that product). Since the problem is quite involved, let's write a Python program that enumerates candidate sets for small values of n and looks for high-product sets summing to 2021.
+
+We'll:
+- Try a small number of summands n (e.g., 2 to 6).
+- Enumerate partitions of 2021 into n distinct positive integers.
+- Compute the product for each partition.
+- Track the maximal product found and its 2-adic valuation.
+- Immediately print candidates with better products.
+- Finally print the maximal 2-adic valuation found.
+
+This will help conjecture the answer for the 2-adic valuation of the maximum product.
+
+```python
+from math import prod
+from collections import defaultdict
+
+def v2(x):
+    # 2-adic valuation: exponent of 2 in prime factorization
+    count = 0
+    while x % 2 == 0 and x > 0:
+        x //= 2
+        count += 1
+    return count
+
+def partitions_sum_n(n, total, start=1, prefix=[]):
+    # Generate strictly increasing partitions of total into n parts
+    if n == 0:
+        if total == 0:
+            yield prefix
+        return
+    for x in range(start, total - n + 2):
+        # minimal sum for remaining parts: sum of next n-1 numbers strictly increasing
+        # minimal sum for increasing sequence starting at x would be sum(x+i for i in range(n))
+        # However, to keep it simple, just ensure sum stays possible.
+        if x > total:
+            break
+        yield from partitions_sum_n(n - 1, total - x, x + 1, prefix + [x])
+
+def main():
+    total = 2021
+    max_product = 0
+    max_v2 = -1
+    # Limit n to small values due to combinatorial explosion
+    for n in range(2, 7):
+        print(f"Trying n={n}")
+        for part in partitions_sum_n(n, total):
+            p = prod(part)
+            if p > max_product:
+                max_product = p
+                val2 = v2(p)
+                max_v2 = val2
+                print(f"New max product: {p} with parts {part}, v2={val2}")
+            elif p == max_product:
+                val2 = v2(p)
+                print(f"Equal max product: {p} with parts {part}, v2={val2}")
+
+    print(f"Max product found: {max_product}")
+    print(f"Corresponding 2-adic valuation (v2): {max_v2}")
+
+if __name__ == "__main__":
+    main()
+```

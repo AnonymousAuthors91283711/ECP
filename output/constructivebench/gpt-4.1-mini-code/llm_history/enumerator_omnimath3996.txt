@@ -1,0 +1,59 @@
+[write_program]
+The problem involves finding the greatest number of divisors that the expression "a + b divides a * b" can have, where a ≤ 1983 and m is the count of b satisfying that divisibility. We want to enumerate values m for sample a ≤ 1983 to conjecture the maximum.
+
+We implement a Python program that:
+- Iterates over a small sample of a values (e.g., a from 1 to 30).
+- For each a, finds all b such that a + b divides a * b.
+- Prints the count of such b (m) for each a.
+- Tracks the maximum m found.
+
+This approach helps conjecture the maximal m achievable for the problem.
+
+```python
+# Enumerate counts m = |{b | a+b divides a*b}| for a in a sample range
+# Then identify the maximal count m among these samples.
+
+def divisors(n):
+    # Efficiently return divisors of n
+    divs = set()
+    i = 1
+    while i * i <= n:
+        if n % i == 0:
+            divs.add(i)
+            divs.add(n // i)
+        i += 1
+    return divs
+
+def count_b_for_a(a):
+    count = 0
+    # From a + b | a * b
+    # Equivalent to (a * b) % (a + b) == 0
+    # for b >=1 we can check b from 1 to some reasonable limit
+    # Analysis suggests checking divisors of a^2 because for divisibility,
+    # x = a+b would divide a*b -> x divides a*b
+
+    # From the problem, a+b divides a*b => (a+b) | ab
+    # rewrite condition: a + b divides a*b
+    # We try b in [1, 2a] as heuristic bound.
+
+    limit = 2 * a
+    result_b = []
+    for b in range(1, limit + 1):
+        if (a * b) % (a + b) == 0:
+            count += 1
+            result_b.append(b)
+    return count, result_b
+
+max_count = 0
+max_a = None
+print("a,count")
+
+for a in range(1, 31):  # small sample a ≤ 30 for insight
+    c, bs = count_b_for_a(a)
+    print(f"{a},{c}")
+    if c > max_count:
+        max_count = c
+        max_a = a
+
+print(f"Maximum count m found: {max_count} at a = {max_a}")
+```

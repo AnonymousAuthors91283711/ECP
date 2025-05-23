@@ -1,0 +1,55 @@
+[write_program]
+This problem involves geometric measure theory and probability with measure-preserving transformations. The key idea is to analyze the set S, the transformation T, and compute the probability p that a randomly chosen point in S gets mapped back into S under T, then find coprime integers a/b approximating p and satisfy the linear relation 100 * a + b.
+
+I'll use a simple discretization for S (unit square), apply T to points, and check how many map back into S scaled by μ(S) (area of S, which is 1). The probability simplifies to the ratio of points in S that remain in S after T.
+
+Here's a step-by-step plan:
+- Discretize the square [0,1]×[0,1].
+- Count points within S that map under T back into S.
+- Calculate the ratio as an approximation of p.
+- Loop over candidate fractions a/b close to p to find those with 100 * a + b within a certain range.
+- Print all candidates matching the approximate ratio.
+
+Maximize efficiency by grid sampling with a moderate resolution (say 100x100). To keep output within tokens, I'll select a small sample resolution and limit candidate checks.
+
+```python
+# Enumerate possible p approximations from a grid sampling
+resolution = 100
+points_in_S = 0
+points_in_T_inv_S = 0
+
+# Loop over a grid in [0,1]x[0,1]
+for i in range(resolution + 1):
+    for j in range(resolution + 1):
+        x = i / resolution
+        y = j / resolution
+        # Check if point is in S
+        if 0 <= x <= 1 and 0 <= y <= 1:
+            points_in_S += 1
+            # Transform point
+            x_t = 3*x + 2*y
+            y_t = x + 4*y
+            # Check if transformed point is in S
+            if 0 <= x_t <= 1 and 0 <= y_t <= 1:
+                points_in_T_inv_S += 1
+
+# Compute approximate probability p
+p = points_in_T_inv_S / points_in_S if points_in_S else 0
+
+# Search for nearby rational approximations a/b
+candidate_fractionals = []
+max_b = 100  # limit denominator
+for b in range(1, max_b + 1):
+    a_float = p * b
+    a = round(a_float)
+    if 0 < a < b:  # ensures probability less than 1
+        # Check if ratio close to p
+        approx_p = a / b
+        if abs(approx_p - p) < 0.01:
+            candidate_fractionals.append((a, b, 100 * a + b))
+
+# output results
+print(f"Estimated p = {p}")
+for a, b, val in candidate_fractionals:
+    print(f"Candidate ratio: {a}/{b} = {approx_p}, sum = {val}")
+```

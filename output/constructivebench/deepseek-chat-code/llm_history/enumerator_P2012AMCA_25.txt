@@ -1,0 +1,54 @@
+[write_program]
+This problem asks for the smallest positive integer n such that the set of real numbers x satisfying |2*frac(x)-1| = frac(n*x) has cardinality at least 2012, where frac() denotes the fractional part.
+
+We'll approach this by:
+1. Understanding the equation |2*frac(x)-1| = frac(n*x)
+2. For each n, count how many solutions exist in [0,1) (due to periodicity)
+3. Find the smallest n where this count ≥ 2012
+
+The key observation is that the equation defines piecewise linear functions, and the number of solutions grows linearly with n.
+
+```python
+def count_solutions(n):
+    """Count distinct x in [0,1) satisfying |2*frac(x)-1| = frac(n*x)"""
+    count = 0
+    # We'll check each linear segment
+    for k in range(n):
+        # For x in [k/n, (k+1)/n), frac(n*x) = n*x - k
+        # Equation becomes |2*(x - int(x)) - 1| = n*x - k
+        # Since x ∈ [0,1), int(x)=0, so |2x - 1| = n*x - k
+        # This gives two cases:
+        # Case 1: 2x - 1 = n*x - k → x = (k - 1)/(n - 2) if n != 2
+        # Case 2: -2x + 1 = n*x - k → x = (k + 1)/(n + 2)
+        # Check if solution is in [k/n, (k+1)/n)
+        
+        # Case 1
+        if n != 2:
+            x1 = (k - 1) / (n - 2)
+            if k/n <= x1 < (k+1)/n:
+                count += 1
+        
+        # Case 2
+        x2 = (k + 1) / (n + 2)
+        if k/n <= x2 < (k+1)/n:
+            count += 1
+    return count
+
+def find_min_n(target=2012):
+    """Find smallest n where solution count >= target"""
+    n = 1
+    while True:
+        cnt = count_solutions(n)
+        print(f"n={n}, solutions={cnt}")  # Stream partial results
+        if cnt >= target:
+            print(f"\nMinimum n satisfying the condition: {n}")
+            return
+        n += 1
+
+# Execute with a smaller test case first to verify
+print("Testing with smaller target (10) first:")
+find_min_n(10)
+
+print("\nNow running for target=2012:")
+find_min_n(2012)
+```

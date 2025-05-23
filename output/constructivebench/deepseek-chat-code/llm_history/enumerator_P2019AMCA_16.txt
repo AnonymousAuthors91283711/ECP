@@ -1,0 +1,50 @@
+[write_program]
+This problem involves counting bijective functions (permutations) on a 9-element set with certain constraints related to 3×3 grids. The constraints require that for each row and column in the grid interpretation, the sum of (value + 1) for the three positions must be odd.
+
+We'll approach this by:
+1. Enumerating all permutations of 9 elements (9! = 362880 possibilities)
+2. Checking which permutations satisfy the row and column constraints when arranged in a 3×3 grid
+3. Counting the valid permutations and computing the probability
+
+Since enumerating all 9! permutations is computationally intensive, we'll optimize by:
+- Using itertools.permutations for permutation generation
+- Early termination when constraints fail
+- Representing the grid as a flattened list
+
+```python
+import itertools
+from math import factorial
+
+def is_valid(p):
+    # Check row constraints
+    for i in range(3):
+        row_sum = sum(p[3*i + k] + 1 for k in range(3))
+        if row_sum % 2 == 0:
+            return False
+    # Check column constraints
+    for j in range(3):
+        col_sum = sum(p[3*k + j] + 1 for k in range(3))
+        if col_sum % 2 == 0:
+            return False
+    return True
+
+def enumerate_valid_permutations():
+    count = 0
+    total = factorial(9)
+    processed = 0
+    batch_size = 10000  # Print progress periodically
+    
+    for perm in itertools.permutations(range(9)):
+        processed += 1
+        if processed % batch_size == 0:
+            print(f"Processed {processed}/{total} permutations")
+        if is_valid(perm):
+            count += 1
+            print(f"Found valid permutation #{count}: {perm}")
+    
+    probability = count / total
+    print(f"Total valid permutations: {count}")
+    print(f"Probability: {probability} ({count}/{total})")
+
+enumerate_valid_permutations()
+```

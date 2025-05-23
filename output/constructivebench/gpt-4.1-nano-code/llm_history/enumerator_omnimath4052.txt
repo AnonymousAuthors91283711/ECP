@@ -1,0 +1,62 @@
+[write_program]
+This problem appears to involve finding the smallest natural number \( n \) such that there exists a finite set \( s \subseteq \mathbb{N} \) with \( \text{card}(s) = n \), all elements of \( s \) are positive, and the product over all \( i \in s \) of \( 1 - \frac{1}{i} \) equals \( \frac{51}{2010} \).
+
+Equivalently, the product condition can be simplified:
+\[
+\prod_{i \in s} \left( 1 - \frac{1}{i} \right) = \prod_{i \in s} \frac{i-1}{i} = \frac{\prod_{i \in s} (i-1)}{\prod_{i \in s} i}
+\]
+
+Given that, the key is to find a set \( s \) with the above product equal to \( 51/2010 \).
+
+Since the original is a Lean theorem with `IsLeast`, the task is to find the minimal such \( n \).
+
+**Approach:**
+
+- Generate subsets of small positive integers, starting from small sizes.
+- For each subset, compute the product.
+- When the product matches \( 51/2010 \), record the size \( n \).
+- Continue until the minimal \( n \) is confirmed.
+
+Given potential computational complexity, limit the search to small element sets (say up to 10 elements). The set's elements are all positive integers, and the product equals \( 51/2010 \).
+
+Because the answer is unknown, we will write code to enumerate such sets and print the minimal \( n \).
+
+```python
+from itertools import combinations
+from fractions import Fraction
+
+target = Fraction(51, 2010)
+
+# Upper bound for set elements to limit search
+max_element = 20
+
+# Store minimal size found
+min_size = None
+# Store answer set (for reference, optional)
+answer_set = None
+
+# Enumerate sizes from small to larger
+for size in range(1, 11):
+    found_in_this_size = False
+    # Generate all combinations of size 'size' from 1..max_element
+    for s in combinations(range(1, max_element + 1), size):
+        # Compute product of (i - 1)/i for each i in s
+        prod = Fraction(1, 1)
+        for i in s:
+            prod *= Fraction(i - 1, i)
+        if prod == target:
+            print(f"Set: {s} of size {size} yields product {prod}")
+            if min_size is None or size < min_size:
+                min_size = size
+                answer_set = s
+            found_in_this_size = True
+    if found_in_this_size:
+        # We found at least one set for this size, check if minimal
+        break
+
+# Output the minimal size answer if found
+if min_size is not None:
+    print(f"Minimal n: {min_size} with set {answer_set}")
+else:
+    print("No such set found within search bounds.")
+```

@@ -1,0 +1,67 @@
+[write_program]
+The problem is about finding the least positive integer \(t\) for which there exists a function \(x : \{0, \ldots, t-1\} \to \mathbb{Z}\) such that the sum of the cubes of \(x(i)\) equals \(2002^{2002}\).
+
+The program enumerates possible \(t\) values (number of terms \(t\)) starting from 1 and tries to find integer solutions \((x_0,\ldots,x_{t-1})\) to the equation \(\sum x_i^3 = 2002^{2002}\). We'll attempt to find sums of cubes equal to \(2002^{2002}\) with increasingly many cubes. We'll limit the range of \(x_i\) for computational feasibility. 
+
+Since \(2002^{2002}\) is enormous, direct search is impossible, but we can try small powers like \(200^2\) or smaller powers for demonstration to conjecture the minimal \(t\).
+
+The program prints intermediate results including the chosen target values and possible decompositions of cubes summing approximately (exact in the reduced examples) to these targets.
+
+```python
+# Enumerate minimal t for expressing n = a^b as sum of t cubes of integers
+# Due to huge exponent 2002, we test smaller exponents and bases to conjecture behavior.
+
+def cubes_up_to(n):
+    # generate cubes up to n
+    c = []
+    i = 0
+    while i**3 <= n:
+        c.append(i**3)
+        i += 1
+    return c
+
+def find_sum_of_cubes(target, max_terms, max_abs=50):
+    # Search for a solution with up to max_terms cubes in range [-max_abs, max_abs]
+    # Uses simple backtracking. Prints exact solutions when found.
+    sols = []
+    arr = []
+    def backtrack(pos, current_sum):
+        if pos == max_terms:
+            if current_sum == target:
+                sols.append(arr.copy())
+                print(f"Sum of cubes = {target} found with {max_terms} terms: {arr}")
+            return
+        # Try small range for speed
+        for x in range(-max_abs, max_abs+1):
+            arr.append(x)
+            s_new = current_sum + x**3
+            # Prune if s_new too large or too small
+            if abs(s_new) <= abs(target):
+                backtrack(pos+1, s_new)
+            arr.pop()
+    backtrack(0, 0)
+    return sols
+
+def main():
+    # Sample smaller targets due to complexity; print parameters used
+    exponents = [2,3]  # test for perfect squares and cubes of 2002
+    base = 2002
+    max_terms_limit = 4  # small t for demo
+    max_abs = 30
+
+    for b in exponents:
+        target = base**b
+        print(f"Testing target = {base}^{b} = {target} with max_terms up to {max_terms_limit}")
+        found = False
+        for t in range(1, max_terms_limit+1):
+            sols = find_sum_of_cubes(target, t, max_abs)
+            if sols:
+                print(f"Minimum t for target {target} is at most {t}")
+                found = True
+                break
+        if not found:
+            print(f"No solution found for target {target} with t <= {max_terms_limit}")
+
+if __name__ == "__main__":
+    main()
+```

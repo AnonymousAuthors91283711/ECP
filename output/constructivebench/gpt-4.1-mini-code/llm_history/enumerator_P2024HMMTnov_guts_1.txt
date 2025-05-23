@@ -1,0 +1,53 @@
+[write_program]
+The problem asks about the greatest value of a set derived from angles \(\theta_1, \theta_2\) on the circle and a complicated "smallest_piece" formula involving arc lengths defined by these angles. We want to enumerate possible values of the expression for sample angles \(\theta_1, \theta_2\) and analyze the output.
+
+Below is a Python program that:
+- Samples angles \(\theta_1, \theta_2\) discretely in \([0,2\pi)\),
+- Computes the pieces as in the problem,
+- Computes `smallest_piece / (2 * pi)`,
+- Prints each value when found,
+- Tracks candidates to conjecture the greatest value.
+
+```python
+import math
+
+def mod2pi(x):
+    return x % (2*math.pi)
+
+def smallest_piece(theta1, theta2):
+    # Compute Δθ as abs difference mod 2pi
+    dtheta = abs(theta1 - theta2)
+    dtheta = min(dtheta, 2*math.pi - dtheta)  # arc length min
+    
+    piece1 = dtheta
+    piece2 = math.pi - max(dtheta, 2*math.pi - dtheta)
+    piece3 = 2*math.pi - piece1 - piece2
+    sp = min(piece1, piece2, piece3)
+    return sp
+
+def main():
+    n = 100  # number of discrete samples for theta1, theta2
+    seen = set()
+    candidates = []
+    print("Enumerating values of smallest_piece/(2π) for θ1, θ2 in [0,2π):")
+    for i in range(n):
+        theta1 = 2*math.pi * i / n
+        for j in range(n):
+            theta2 = 2*math.pi * j / n
+            if abs(theta1 - theta2) < 1e-12:
+                continue  # θ1 ≠ θ2
+            sp = smallest_piece(theta1, theta2)
+            val = sp / (2*math.pi)
+            # Round to avoid too many near duplicates
+            val_r = round(val, 6)
+            if val_r not in seen:
+                seen.add(val_r)
+                candidates.append(val_r)
+                print(val_r)
+    max_val = max(candidates)
+    print("\nGreatest candidate value found:")
+    print(max_val)
+
+if __name__ == "__main__":
+    main()
+```

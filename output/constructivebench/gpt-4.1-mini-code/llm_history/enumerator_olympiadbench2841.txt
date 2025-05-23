@@ -1,0 +1,69 @@
+[write_program]
+The problem involves real parameters a, b, and T, with T fixed at 20, and an equation asserting the equality of two sets defined by quadratic equations in x. The sets being equal means the equations define the same set of roots. We want to identify possible values of a satisfying this condition.
+
+To assist exploration, I'll consider the problem with T = 20, and enumerate values of a, b from small integer ranges, checking whether the sets defined by the two quadratics are equal by comparing their roots (which are real or complex). Then I will print the parameter values and roots when the sets coincide.
+
+```python
+# enumerate.py
+# Enumerates possible (a,b) pairs satisfying the set equality condition for T=20
+
+import cmath
+
+def roots(coeffs):
+    # coeffs = [A,B,C] for quadratic Ax^2 + Bx + C = 0
+    A,B,C = coeffs
+    if abs(A) < 1e-14:  # linear or constant
+        if abs(B) < 1e-14:
+            return set() if abs(C)>1e-14 else {0}
+        return {-C/B}
+    D = B*B - 4*A*C
+    sqrtD = cmath.sqrt(D)
+    r1 = (-B + sqrtD)/(2*A)
+    r2 = (-B - sqrtD)/(2*A)
+    return {r1, r2}
+
+def equal_roots_set(r1, r2, tol=1e-9):
+    # check if two root sets are equal accounting for minor complex noise
+    if len(r1) != len(r2):
+        return False
+    # match roots pairwise considering tolerance on real and imag
+    lista = list(r1)
+    listb = list(r2)
+    matched = [False]*len(listb)
+    for x in lista:
+        found = False
+        for i,y in enumerate(listb):
+            if not matched[i] and abs(x.real - y.real) < tol and abs(x.imag - y.imag) < tol:
+                matched[i] = True
+                found = True
+                break
+        if not found:
+            return False
+    return all(matched)
+
+T = 20
+
+print(f"T = {T}")
+
+# try a and b in small integer ranges
+for a in range(-5,6):
+    for b in range(-5,6):
+        # First polynomial: x^2 + (5*b - T - a)*x - (T + 1) = 0
+        A1 = 1
+        B1 = 5*b - T - a
+        C1 = -(T + 1)
+
+        # Second polynomial: 2*x^2 + (T + 8*a - 2)*x + 10*b = 0
+        A2 = 2
+        B2 = T + 8*a - 2
+        C2 = 10*b
+
+        rset1 = roots([A1,B1,C1])
+        rset2 = roots([A2,B2,C2])
+
+        if equal_roots_set(rset1,rset2):
+            print(f"a={a}, b={b} equal roots sets")
+            print(f" Roots1: {rset1}")
+            print(f" Roots2: {rset2}")
+```
+This program prints the parameter values a and b along with roots when the two sets coincide. It tests integer a,b in range -5 to 5 to help conjecture the solution a.

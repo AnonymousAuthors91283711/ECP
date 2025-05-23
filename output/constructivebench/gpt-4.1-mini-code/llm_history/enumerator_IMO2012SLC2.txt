@@ -1,0 +1,49 @@
+[write_program]
+The problem deals with finding the maximum size of a set of pairs of natural numbers (a, b) satisfying certain uniqueness constraints related to their elements and sums, with the sums bounded by n. We will enumerate such sets for small values of n to conjecture the maximum size.
+
+```python
+# Enumerate sets of pairs (a,b) with:
+# 1. a,b in ℕ, 1 ≤ a,b, and a+b ≤ n
+# 2. No two pairs share any element in either position (a or b)
+# 3. The sums a+b are distinct for different pairs
+# Goal: find max |pairs| for small n, print candidates as found
+
+from itertools import combinations
+
+def valid_pair_set(pairs):
+    # All sums distinct
+    sums = [a+b for (a,b) in pairs]
+    if len(sums) != len(set(sums)):
+        return False
+    # No overlapping elements in any position across pairs
+    a_elements = set()
+    b_elements = set()
+    for (a,b) in pairs:
+        if a in a_elements or a in b_elements or b in a_elements or b in b_elements:
+            return False
+        a_elements.add(a)
+        b_elements.add(b)
+    return True
+
+MAX_N = 7  # small values for demonstration and output brevity
+
+for n in range(1, MAX_N+1):
+    candidates = []
+    pairs = [(a,b) for a in range(1,n+1) for b in range(1,n+1) if a+b <= n]
+    max_size = 0
+    # Check all subsets efficiently by size descending
+    for size in range(len(pairs), 0, -1):
+        found = []
+        for subset in combinations(pairs, size):
+            if valid_pair_set(subset):
+                found.append(subset)
+        if found:
+            max_size = size
+            for s in found:
+                print(f"n={n} size={size} pairs={sorted(s)}")
+            break
+    if max_size == 0:
+        print(f"n={n} size=0 pairs=[]")
+    else:
+        print(f"Max size for n={n} is {max_size}\n")
+```

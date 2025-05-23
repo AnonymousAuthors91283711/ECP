@@ -1,0 +1,50 @@
+[write_program]
+The problem is to find the least natural number \( n \) for which there exists a function \( k : \text{Fin } n \to \mathbb{N} \) such that \(\sum_{i=0}^{n-1} k_i \cdot 35 \geq 500\). Because the factor 35 is constant, the problem reduces to finding the minimal \( n \) so that summing any \( k_i \cdot 35 \) terms can reach at least 500.
+
+Since \( k_i \) are natural numbers (including zero), setting any \( k_i \) suitably large will increase the sum. However, the problem implicitly assumes a condition on \( k \) (e.g., \( k \) bounded), but as stated it seems trivial (for \( n=1 \), choosing \( k_0=15 \) works since \( 15 \cdot 35=525 \geq 500 \)).
+
+Hence likely there is more subtlety. The original Lean theorem appears incomplete (the `sorry` placeholder), but since the problem is about enumerating answers, I will write a program that for sample values of \( n \), enumerates all possible \( k : \text{Fin } n \to \mathbb{N} \) with small bounds to check which \( n \) allows \(\sum k_i \cdot 35 \geq 500\).
+
+To keep computations manageable, I will assume \( k_i \in \{0, \ldots, M\} \) where \( M \) is small. I will select \( n \) from 1 to 15 and \( M=15 \) (since 15*35=525, enough to surpass 500 with one term).
+
+The program will print \( n \) and example \( k \) that satisfy the condition. It will also print the minimal such \( n \).
+
+```python
+# Enumerate minimal n so that exists k: Fin n -> N with sum(k_i * 35) >= 500
+# For computation tractability, restrict k_i in [0..15].
+# Print first found k for each n meeting the condition and minimal n.
+
+M = 15  # max k_i value
+TARGET = 500
+factor = 35
+
+def try_n(n):
+    # We attempt all k tuples (k_0,...,k_{n-1}) with k_i in [0..M]
+    # To keep computation feasible, try the simplest approach:
+    # Since each k_i can add up to 35*M=525 >500 alone,
+    # the problem boils down to having at least one k_i >= ceil(500/35)=15 
+    # so for n=1, k=[15] works
+    # Let's confirm by printing such k for each n.
+    
+    # Because arbitrary ks allowed, for any n>=1, choosing one k_i=15 and rest zero works.
+    k = [0]*n
+    k[0] = (TARGET + factor -1)//factor  # minimal k_0 to reach TARGET
+    s = sum(x*factor for x in k)
+    if s >= TARGET:
+        print(f"n={n}, example k={k}, sum={s}")
+        return True
+    return False
+
+def main():
+    minimal_n = None
+    for n in range(1, 16):
+        if try_n(n):
+            minimal_n = n
+            break
+    print(f"Minimal n with sum(k_i * 35) >= 500 exists: {minimal_n}")
+
+if __name__ == "__main__":
+    main()
+```
+
+The output will show minimal n found is 1 with \( k_0=15 \) achieving 525≥500. This aligns with trivial reasoning that only one element is needed.

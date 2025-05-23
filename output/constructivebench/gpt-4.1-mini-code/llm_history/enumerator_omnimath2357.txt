@@ -1,0 +1,51 @@
+[write_program]
+The problem appears to involve comparing vectors \( your\_order \) and \( opp\_order \) in the simplex \(\Omega\), determining a "winning" set of indices where \( your\_order[i] \geq opp\_order[i] \), then analyzing the fixed vector\[ your\_order = [1/4, 1/4, 1/2] \] over all possible opponent vectors \( opp\_order \) in \(\Omega = \{ x \in \mathbb{R}^3_{\geq 0} \mid \sum x_i = 1 \} \).
+
+We want to explore the possible "winning_fields" — subsets of \(\{0,1,2\}\) where your_order beats or ties the opponent's coordinate value — for various \( opp\_order \). We enumerate several sample opponent vectors in the simplex and print their resulting winning sets to make a conjecture on omnimath2357_answer.
+
+```python
+from itertools import product
+
+# Fixed vector your_order
+your_order = [1/4, 1/4, 1/2]
+
+def winning_fields(opp_order):
+    return frozenset(i for i in range(3) if your_order[i] >= opp_order[i])
+
+# Enumerate opponent orders on a coarse grid in the simplex by steps of 0.25
+# Ensure sum to 1 exactly
+step = 0.25
+threshold = 1 + 1e-9  # for floating sum check
+
+tested_opp_orders = set()
+
+print("Enumerating opponent orders and their winning fields:")
+for x0 in [0, 0.25, 0.5, 0.75, 1.0]:
+    for x1 in [0, 0.25, 0.5, 0.75, 1.0]:
+        x2 = 1 - x0 - x1
+        if 0 <= x2 <= 1:
+            opp = (x0, x1, x2)
+            if abs(sum(opp) - 1) < 1e-9 and opp not in tested_opp_orders:
+                tested_opp_orders.add(opp)
+                wf = winning_fields(opp)
+                print(f"opp_order={opp} => winning_fields={sorted(wf)}")
+
+# After enumeration, print a conjectured extremal result
+# For demonstration, find minimal |winning_fields| and print those sets
+
+min_len = 3
+min_sets = set()
+for opp in tested_opp_orders:
+    wf = winning_fields(opp)
+    l = len(wf)
+    if l < min_len:
+        min_len = l
+        min_sets = {wf}
+    elif l == min_len:
+        min_sets.add(wf)
+
+print("\nMinimum size of winning_fields found:", min_len)
+print("Winning_fields with minimum size:")
+for s in min_sets:
+    print(sorted(s))
+```

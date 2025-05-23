@@ -1,0 +1,73 @@
+[write_program]
+The problem is to find the smallest natural number \( N \) such that there exists an interval \([k, k+N-1]\) within natural numbers starting at some \( k \geq 1000 \), where every prefix product from \( k \) up to any \( m \in [k, k+N-1] \) is divisible by \(2010^2\).
+
+We want to examine prefix products of consecutive integers from \(k\) up to \(m\) and find the minimal length \(N\) so that for some \(k \geq 1000\), all these prefix products are divisible by \(2010^2\).
+
+The approach involves:
+1. Fix candidates for \(k \geq 1000\), consider the product of integers from \(k\) up to \(m\), for \(m = k, k+1, \ldots, k+N-1\).
+2. For each \(m\), check if \(2010^2\) divides the product \(\prod_{i=k}^m i\).
+3. If for all \(m\) in this range the divisibility holds, record \(N\).
+4. Enumerate to find minimal such \(N\).
+
+We will test various \(k\) starting values to find if, for a given \(N\), any \(k \ge 1000\) satisfies the condition.
+
+Since \(2010 = 2 \times 3 \times 5 \times 67\), we analyze prime factorization and check if the product contains prime factors of \(2010^2 = 2^2 \times 3^2 \times 5^2 \times 67^2\).
+
+```python
+# Python program to enumerate intervals [k, k+N-1], k>=1000,
+# where for every prefix product from k to m (m in [k,k+N-1]),
+# the product is divisible by 2010^2.
+
+def prime_factors_count(n, p):
+    # Counts the exponent of prime p in n
+    count = 0
+    while n % p == 0:
+        n //= p
+        count +=1
+    return count
+
+def product_factors_range(k, m, primes):
+    # Count total exponent of primes in product k*k+1*...*m
+    # by summing exponents for each integer in range
+    counts = {p:0 for p in primes}
+    for x in range(k, m+1):
+        for p in primes:
+            counts[p] += prime_factors_count(x, p)
+    return counts
+
+def divisible_by_2010_sq(counts):
+    # 2010^2 = 2^2 * 3^2 * 5^2 * 67^2, so each exponent >= 2
+    for p in [2,3,5,67]:
+        if counts[p] < 2:
+            return False
+    return True
+
+def main():
+    primes = [2,3,5,67]
+    limit_N = 10  # Try up to length 10 for speed
+    start_k = 1000
+    max_k = 1020  # Limit k search to keep output short, sample some k
+
+    print("Scanning for N from 1 to", limit_N)
+    for N in range(1, limit_N+1):
+        found_for_N = False
+        for k in range(start_k, max_k+1):
+            # For all prefixes m in [k, k+N-1], check divisibility
+            all_ok = True
+            for m in range(k, k+N):
+                counts = product_factors_range(k, m, primes)
+                if not divisible_by_2010_sq(counts):
+                    all_ok = False
+                    break
+            if all_ok:
+                print(f"N={N} suitable k={k}")
+                found_for_N = True
+                # For minimal N, one example suffices.
+                # Could break here if desired
+        if found_for_N:
+            print(f"Minimal N found: {N}")
+            break
+
+if __name__ == "__main__":
+    main()
+```

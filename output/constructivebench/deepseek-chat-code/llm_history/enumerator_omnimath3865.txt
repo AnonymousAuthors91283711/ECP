@@ -1,0 +1,44 @@
+[write_program]
+This problem involves finding all real polynomials P that satisfy a given functional equation for all real x and nonzero integer m. To approach this computationally, we'll:
+
+1. Parameterize P as a polynomial of degree up to some reasonable bound (say 5)
+2. Substitute P into the equation and solve the resulting system of equations
+3. Enumerate possible solutions for small m values (m=1,2,3)
+
+We'll use sympy for symbolic computation to handle the polynomial algebra.
+
+```python
+from sympy import symbols, Poly, Eq, solve, degree
+from sympy.abc import x, m
+
+def find_polynomials(max_degree=5, m_values=[1, 2, 3]):
+    """Find polynomials P satisfying the functional equation for given m values"""
+    for deg in range(max_degree + 1):
+        print(f"\nChecking degree {deg} polynomials:")
+        # Create general polynomial of degree deg
+        coeffs = symbols(f'a0:{deg+1}')
+        P = sum(coeff * x**i for i, coeff in enumerate(coeffs))
+        
+        for m_val in m_values:
+            print(f"  For m = {m_val}:")
+            # Construct left side of equation
+            left = (x**3 - m_val*x**2 + 1) * P.subs(x, x+1) + \
+                   (x**3 + m_val*x**2 + 1) * P.subs(x, x-1)
+            # Construct right side of equation
+            right = 2 * (x**3 - m_val*x + 1) * P
+            
+            # Get the difference and collect coefficients
+            diff = Poly(left - right, x)
+            eqs = [Eq(coeff, 0) for coeff in diff.coeffs()]
+            
+            # Solve the system
+            solutions = solve(eqs, coeffs, dict=True)
+            for sol in solutions:
+                # Construct the polynomial from solution
+                P_sol = P.subs(sol)
+                if P_sol != 0:  # Ignore trivial solution
+                    print(f"    Found solution: {P_sol}")
+
+if __name__ == "__main__":
+    find_polynomials()
+```

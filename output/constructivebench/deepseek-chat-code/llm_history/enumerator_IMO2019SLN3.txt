@@ -1,0 +1,83 @@
+[write_program]
+This problem is from the IMO 2019 Shortlist (N3) and involves finding all integer sets S that satisfy certain polynomial root conditions. The problem is quite abstract, so we'll approach it by enumerating small candidate sets S and checking the conditions for small parameters.
+
+We'll:
+1. Consider small integer sets S as candidates
+2. Check if they contain all differences of powers of 2 (2^a - 2^b)
+3. Verify the polynomial condition for small n and simple polynomials
+
+```python
+def main():
+    # We'll test small candidate sets S up to size 5 with elements between -10 and 10
+    from itertools import combinations
+    
+    # First generate all possible differences of 2^a - 2^b for a,b <= 5
+    required = set()
+    for a in range(1, 6):
+        for b in range(1, 6):
+            if a != b:
+                required.add(2**a - 2**b)
+    
+    print("Required elements (differences of powers of 2):", sorted(required))
+    
+    # Now test candidate sets S that contain all required elements
+    elements = list(range(-10, 11))
+    for size in range(len(required), 6):
+        for candidate in combinations(elements, size):
+            S = set(candidate)
+            # Check if S contains all required differences
+            if not required.issubset(S):
+                continue
+            
+            print("\nTesting candidate set S:", sorted(S))
+            
+            # Now test the polynomial condition for n=1 and n=2
+            valid = True
+            # Case n=1: polynomial a0 + a1*x
+            for a0 in S:
+                for a1 in S:
+                    if a1 == 0:
+                        continue
+                    root = -a0 // a1
+                    if a0 + a1 * root != 0:
+                        continue  # Not actually a root
+                    if root not in S:
+                        valid = False
+                        break
+                if not valid:
+                    break
+            
+            if not valid:
+                continue
+            
+            # Case n=2: polynomial a0 + a1*x + a2*x^2
+            for a0 in S:
+                for a1 in S:
+                    for a2 in S:
+                        if a2 == 0:
+                            continue  # reduces to n=1 case
+                        # Check integer roots
+                        discriminant = a1**2 - 4*a0*a2
+                        if discriminant < 0:
+                            continue
+                        sqrt_disc = int(round(discriminant**0.5))
+                        if sqrt_disc**2 != discriminant:
+                            continue
+                        for sign in [-1, 1]:
+                            root = (-a1 + sign * sqrt_disc) // (2 * a2)
+                            if a0 + a1*root + a2*root**2 == 0 and root not in S:
+                                valid = False
+                                break
+                        if not valid:
+                            break
+                    if not valid:
+                        break
+                if not valid:
+                    break
+            
+            if valid:
+                print("Valid candidate found:", sorted(S))
+
+if __name__ == "__main__":
+    main()
+```

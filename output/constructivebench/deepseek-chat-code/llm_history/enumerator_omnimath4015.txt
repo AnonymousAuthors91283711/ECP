@@ -1,0 +1,46 @@
+[write_program]
+This problem involves finding a polynomial P(x) such that for all real x, P(2x + α) ≤ (x^20 + x^19)P(x). We'll write a program to search for possible polynomial solutions by testing small degree polynomials and specific values of α.
+
+The approach will:
+1. Test small integer values for α (like 0, 1, -1)
+2. For each α, test polynomials of increasing degree
+3. Check the inequality at sample points to eliminate candidates
+4. Output plausible candidates that satisfy the condition at test points
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+
+def test_polynomial(P, alpha, test_points):
+    """Test if P satisfies the condition at given test points."""
+    for x in test_points:
+        lhs = P(2*x + alpha)
+        rhs = (x**20 + x**19) * P(x)
+        if lhs > rhs + 1e-6:  # Small tolerance for floating point
+            return False
+    return True
+
+def find_possible_polynomials(max_degree=5, alpha_values=[0, 1, -1]):
+    test_points = np.linspace(-2, 2, 20)  # Test range
+    
+    for alpha in alpha_values:
+        print(f"\nTesting α = {alpha}")
+        
+        for degree in range(max_degree + 1):
+            # Generate all monic polynomials of current degree with small integer coefficients
+            from itertools import product
+            coeff_ranges = [range(-3, 4) for _ in range(degree)]
+            
+            for coeffs in product(*coeff_ranges):
+                coeff_list = list(coeffs) + [1]  # Make monic
+                P = Polynomial(coeff_list)
+                
+                if test_polynomial(P, alpha, test_points):
+                    print(f"Possible candidate: P(x) = {P}, α = {alpha}")
+                    
+    print("\nNote: The zero polynomial trivially satisfies the condition.")
+    print("For non-trivial solutions, higher degree polynomials may need to be considered.")
+
+if __name__ == "__main__":
+    find_possible_polynomials()
+```

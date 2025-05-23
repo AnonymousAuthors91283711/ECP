@@ -1,0 +1,73 @@
+[write_program]
+The problem asks to find the number of positive real numbers \( x \) satisfying the equation
+\[
+(3 \cdot 2^{\lfloor \log_2 x \rfloor} - x)^{16} = 2022 \cdot x^{13}.
+\]
+We want to enumerate such \( x \) and count them. The main difficulty is the floor function inside and the high powers.
+
+To approach this:
+- For integer \( n = \lfloor \log_2 x \rfloor \), \( x \in [2^n, 2^{n+1}) \).
+- On each interval, rewrite the equation and check for solutions.
+- Enumerate over a reasonable range of \( n \) (e.g., small integers) because the powers make values large.
+- Solve \( (3 \cdot 2^n - x)^{16} = 2022 \cdot x^{13} \) for \( x \in [2^n, 2^{n+1}) \).
+
+We print all positive real solutions found with their intervals and values. We approximate roots efficiently by evaluating the polynomial on a fine grid and applying a root-finding method near sign changes.
+
+```python
+# Enumerate solutions x > 0 to (3*2^(floor(log2 x)) - x)^16 = 2022*x^13
+# For n = floor(log2 x), x in [2^n, 2^{n+1}), solve (3*2^n - x)^16 = 2022 * x^13
+# Scan small n, search for solutions and print them immediately
+
+import math
+
+def f(x, n):
+    # Evaluate left - right (inside ^16) to find zeros
+    # We consider y = (3 * 2^n - x)^16 - 2022 * x^13 = 0
+    # To find roots numerically.
+    left = (3 * 2**n - x)**16
+    right = 2022 * x**13
+    return left - right
+
+def sign(x):
+    return 1 if x > 0 else (-1 if x < 0 else 0)
+
+def find_roots_on_interval(n, x0, x1, steps=1000):
+    xs = [x0 + i*(x1-x0)/steps for i in range(steps+1)]
+    vals = [f(x, n) for x in xs]
+    roots = []
+    for i in range(steps):
+        if sign(vals[i]) != sign(vals[i+1]) and vals[i] != 0 and vals[i+1] != 0:
+            # root in (xs[i], xs[i+1]), do bisection
+            a, b = xs[i], xs[i+1]
+            fa, fb = vals[i], vals[i+1]
+            for _ in range(30):
+                m = (a + b) / 2
+                fm = f(m, n)
+                if fm == 0 or (b - a) < 1e-14:
+                    break
+                if sign(fm) == sign(fa):
+                    a, fa = m, fm
+                else:
+                    b, fb = m, fm
+            root = (a + b) / 2
+            # Verify root inside interval and positive
+            if root > 0 and 2**n <= root < 2**(n+1):
+                roots.append(root)
+    return roots
+
+def main():
+    print("Enumerating positive solutions to (3*2^{floor(log2 x)} - x)^16 = 2022*x^13")
+    # Explore n from 0 to 10 (x in [1, 2048))
+    candidates = []
+    for n in range(0, 11):
+        x0 = 2**n
+        x1 = 2**(n+1)
+        roots = find_roots_on_interval(n, x0, x1)
+        for r in roots:
+            print(f"n={n} interval [{x0},{x1}): solution x ≈ {r:.14f}")
+            candidates.append(r)
+    print(f"Total solutions found: {len(candidates)}")
+
+if __name__ == "__main__":
+    main()
+```

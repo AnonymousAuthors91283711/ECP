@@ -1,0 +1,49 @@
+[write_program]
+The problem involves finding all integers \( n \) such that for any positive real \( a,b,c,x,y,z \) with \( a = \max\{a,b,c,x,y,z\} \), \( a+b+c = x+y+z \), and \( abc = xyz \), the inequality \( a^n + b^n + c^n \geq x^n + y^n + z^n \) holds. 
+
+To explore the set of such \( n \in \mathbb{Z} \), we will enumerate integers and try various samples of positive \(a,b,c,x,y,z\) satisfying the conditions to check if the inequality can fail. We aim to print out any counterexamples to quickly restrict the set. Positive \(a,b,c,x,y,z\) with the max equal to \(a\) mean \(a \geq b,c,x,y,z\).
+
+We focus on \( n \) in a moderate range (say -5 to 5) for efficiency and print test results immediately.
+
+```python
+from math import isclose
+from itertools import product
+
+# Helper to check approx equality with tolerance
+def approx_eq(x,y,eps=1e-9): 
+    return abs(x - y) < eps
+
+# Given n, test if inequality can fail for some positive reals satisfying:
+# a >= b,c,x,y,z >0, a = max, a+b+c = x+y+z, abc=xyz, and check if a^n+b^n+c^n >= x^n+y^n+z^n always.
+# We try discrete small values (up to 4) for b,c,x,y,z <= a to find a counterexample.
+
+def check_n(n):
+    # Fix a as max element, try a=2..4 for speed
+    for a in range(2,5):
+        # b,c,x,y,z all in (0, a], use some fractions: 1, a/2, a*0.9 for diversity
+        candidates = [1, a/2, a*0.9]
+        # Generate all possible tuples
+        for b,c,x,y,z in product(candidates, repeat=5):
+            if not (a >= b and a >= c and a >= x and a >= y and a >= z):
+                continue
+            sum1 = a + b + c
+            sum2 = x + y + z
+            if not approx_eq(sum1, sum2):
+                continue
+            prod1 = a * b * c
+            prod2 = x * y * z
+            if not approx_eq(prod1, prod2):
+                continue
+            lhs = a**n + b**n + c**n
+            rhs = x**n + y**n + z**n
+            # Since floats, allow tiny epsilon
+            if lhs + 1e-9 < rhs:
+                print(f"n={n}: counterexample with a,b,c,x,y,z = {a},{b},{c},{x},{y},{z}, lhs={lhs:.5f}, rhs={rhs:.5f}")
+                return False
+    print(f"n={n}: no counterexample found in tested samples.")
+    return True
+
+print("Testing integers n from -5 to 5:")
+for n in range(-5,6):
+    check_n(n)
+```

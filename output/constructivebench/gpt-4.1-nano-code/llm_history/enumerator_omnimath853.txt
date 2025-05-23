@@ -1,0 +1,60 @@
+[write_program]
+This problem seems to be exploring the minimal size of a family of nonempty subsets on a finite set of size 2021, such that the product over each subset's elements forms an injective function, with the elements chosen to be pairwise coprime whenever the indices differ.
+
+To assist the conjecture, I will:
+- Fix small sample functions `x` with pairwise coprime values.
+- Enumerate all possible nonempty subsets of the set of size 2021.
+- Check which collections of subsets satisfy the injectivity condition for the products.
+- Keep track of the minimal `k` (cardinality of the collection).
+
+Since direct heavy computation over all subsets would be infeasible, I'll restrict enumeration to small subset sizes and look for patterns or minimal examples.
+
+```python
+import itertools
+from math import gcd
+
+# Parameters
+n = 10  # Small number to simulate the set {0, 1, ..., n-1}
+max_subset_size = 3  # Limit subset sizes for feasibility
+
+# Generate a set of pairwise coprime values
+# For simplicity, assign each element a prime number
+primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+x_values = {i: primes[i] for i in range(n)}
+
+# Store minimal collection size found
+min_size = None
+min_collections = []
+
+# Generate all nonempty subsets up to size max_subset_size
+all_subsets = []
+for size in range(1, max_subset_size + 1):
+    all_subsets.extend(itertools.combinations(range(n), size))
+
+# For each possible collection of subsets, check injectivity of product function
+for r in range(1, 21):  # limit to collections of size up to 20
+    for S in itertools.combinations(all_subsets, r):
+        # Ensure all subsets are nonempty (already guaranteed)
+        # Check injectivity: distinct subsets should produce distinct products
+        seen_products = set()
+        injective = True
+        for s in S:
+            prod = 1
+            for i in s:
+                prod *= x_values[i]
+            if prod in seen_products:
+                injective = False
+                break
+            seen_products.add(prod)
+        if injective:
+            k = len(S)
+            print(f"Found collection with size {k}: {S}")
+            if min_size is None or k < min_size:
+                min_size = k
+                min_collections = [S]
+            elif k == min_size:
+                min_collections.append(S)
+
+# Output the minimal size found
+print(f"Minimal collection size: {min_size}")
+```

@@ -1,0 +1,52 @@
+[write_program]
+This problem asks for the smallest natural number `n` that can be expressed as the sum of four distinct primes `p, q, r, s` where `30` divides `p*q - r*s`. We'll write a Python program to enumerate possible sums of four distinct primes and check the divisibility condition.
+
+The approach:
+1. Generate primes up to a reasonable limit (we'll use 100)
+2. Check all combinations of 4 distinct primes
+3. For each combination, check if 30 divides p*q - r*s
+4. Track the smallest sum that satisfies the condition
+
+```python
+import itertools
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+# Generate primes up to 100
+primes = [p for p in range(2, 101) if is_prime(p)]
+min_sum = float('inf')
+
+# Check all combinations of 4 distinct primes
+for combo in itertools.combinations(primes, 4):
+    p, q, r, s = combo
+    if (p*q - r*s) % 30 == 0:
+        current_sum = p + q + r + s
+        if current_sum < min_sum:
+            min_sum = current_sum
+            print(f"Found new minimal sum: {min_sum} with primes {p}, {q}, {r}, {s}")
+
+print(f"\nThe minimal sum is: {min_sum}")
+```

@@ -1,0 +1,55 @@
+[write_program]
+The problem deals with polynomials \(P\) over the reals such that for all real \(t\),
+\[
+P(t) = P(1) t^2 + P(P(1)) t + P(P(P(1))).
+\]
+We want to find the greatest real number \(y\) for which there exists such a polynomial \(P\) with
+\[
+y = P(P(P(P(1)))).
+\]
+
+To explore this, we will try polynomials \(P(x) = a x^2 + b x + c\) and enforce the condition symbolically for sample coefficients. Then we will compute the values \(P(1)\), \(P(P(1))\), \(P(P(P(1)))\), and finally \(P(P(P(P(1))))\). We enumerate over a grid of parameters and print possible \(y\) values that satisfy the polynomial equation condition within some tolerance. This will help conjecture the greatest such \(y\).
+
+```python
+# Enumerate quadratic polynomials P(x) = a x^2 + b x + c over small integers
+# Check if P(t) = P(1)*t^2 + P(P(1))*t + P(P(P(1))) holds for all t by checking at some points
+# Compute y = P(P(P(P(1)))) if condition holds approximately
+
+import numpy as np
+
+def eval_poly(a,b,c,x):
+    return a*x*x + b*x + c
+
+def check_condition(a,b,c):
+    p1 = eval_poly(a,b,c,1)
+    p_p1 = eval_poly(a,b,c,p1)
+    p_pp1 = eval_poly(a,b,c,p_p1)
+    # Define rhs polynomial coefficients:
+    # Q(t) = p1 t^2 + p_p1 t + p_pp1
+    # Check if P(t) == Q(t) holds for several t values
+    for t in [-1,0,1,2]:
+        lhs = eval_poly(a,b,c,t)
+        rhs = p1 * t*t + p_p1 * t + p_pp1
+        if abs(lhs - rhs) > 1e-8:
+            return None
+    # Condition holds approximately, compute y
+    p_ppp1 = eval_poly(a,b,c,p_pp1) # P(P(P(1)))
+    y = eval_poly(a,b,c,p_ppp1)    # P(P(P(P(1))))
+    return y
+
+candidates = []
+print("Enumerating quadratic polynomials with coefficients in [-5..5]")
+for a in range(-5,6):
+    for b in range(-5,6):
+        for c in range(-5,6):
+            y = check_condition(a,b,c)
+            if y is not None:
+                print(f"P(x)={a}x^2+{b}x+{c} -> y={y:.6g}")
+                candidates.append(y)
+
+if candidates:
+    max_y = max(candidates)
+    print(f"Maximum y found: {max_y:.6g}")
+else:
+    print("No polynomial found satisfying the condition.")
+```

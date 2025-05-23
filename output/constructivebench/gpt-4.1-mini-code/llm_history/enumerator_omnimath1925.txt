@@ -1,0 +1,80 @@
+[write_program]
+The problem is to find the value of the sum of the cube roots of \(3r_i - 2\), where the \(r_i\) are roots of the cubic polynomial \(x^3 - 3x^2 + 1 = 0\).
+
+The roots \(r_i\) satisfy:
+\[
+r_i^3 - 3 r_i^2 + 1 = 0.
+\]
+
+We want to compute:
+\[
+S = \sum_{i=0}^2 (3r_i - 2)^{1/3}.
+\]
+
+To gain insight, we can proceed numerically:
+- Find approximate roots of the polynomial,
+- Compute \(3 r_i - 2\),
+- Compute cube roots,
+- Sum them.
+
+This enumeration will print the roots and the partial sums, allowing us to conjecture the answer (likely a simple expression).
+
+```python
+# enumerator.py
+import math
+
+def cube_root(x):
+    # cube root preserving sign
+    if x >= 0:
+        return x ** (1/3)
+    else:
+        return -(-x) ** (1/3)
+
+def poly(x):
+    return x**3 - 3*x**2 + 1
+
+def derivative(x):
+    return 3*x**2 - 6*x
+
+def newton_raphson(start, eps=1e-12, max_iter=100):
+    x = start
+    for _ in range(max_iter):
+        fx = poly(x)
+        if abs(fx) < eps:
+            return x
+        dfx = derivative(x)
+        if dfx == 0:
+            break
+        x = x - fx / dfx
+    return x
+
+def find_roots():
+    # Use rough initial guesses to find 3 roots
+    guesses = [0.5, 2.0, 3.0]
+    roots = []
+    for g in guesses:
+        root = newton_raphson(g)
+        # reject duplicates
+        if all(abs(root - r) > 1e-8 for r in roots):
+            roots.append(root)
+    return roots
+
+def main():
+    roots = find_roots()
+    print("Roots of x^3 -3 x^2 + 1 = 0:")
+    for i, r in enumerate(roots):
+        print(f"r_{i} = {r:.15f}")
+
+    sum_cuberoots = 0.0
+    print("Computing sum of cube roots of 3*r_i - 2:")
+    for i, r in enumerate(roots):
+        val = 3*r - 2
+        croot = cube_root(val)
+        sum_cuberoots += croot
+        print(f"(3*r_{i} - 2)^{1/3} = {croot:.15f}")
+
+    print(f"Sum = {sum_cuberoots:.15f}")
+
+if __name__ == "__main__":
+    main()
+```

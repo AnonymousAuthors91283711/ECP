@@ -1,0 +1,46 @@
+[write_program]
+The problem asks for the minimal real number `a` such that for any four real numbers `a₁, a₂, a₃, a₄`, there exist integers `k₁, k₂, k₃, k₄` making the sum of squared pairwise differences of the fractional parts `(a_i - k_i)` at most `a`. 
+
+To approach this, we'll:
+1. Consider all possible fractional part configurations (mod 1) for four points
+2. For each configuration, find the minimal sum of squared pairwise differences when shifted by integers
+3. Track the maximum minimal sum across all configurations
+
+The worst case occurs when the points are arranged symmetrically around 0.5. We'll enumerate fractional configurations with precision 0.1 to approximate the answer.
+
+```python
+import itertools
+
+def main():
+    # We'll test fractional parts in [0,1) with step 0.1 for approximation
+    step = 0.1
+    fractions = [i * step for i in range(10)]
+    max_min_sum = 0.0
+    
+    # Iterate all possible 4-point combinations
+    for quad in itertools.product(fractions, repeat=4):
+        current_min = float('inf')
+        
+        # Try all possible integer shifts (we only need to check shifts that keep points in [-1,1])
+        for shifts in itertools.product([-1, 0, 1], repeat=4):
+            shifted = [quad[i] + shifts[i] for i in range(4)]
+            
+            # Calculate sum of squared pairwise differences
+            total = 0.0
+            for i in range(4):
+                for j in range(i+1, 4):
+                    diff = shifted[i] - shifted[j]
+                    total += diff * diff
+            
+            if total < current_min:
+                current_min = total
+        
+        if current_min > max_min_sum:
+            max_min_sum = current_min
+            print(f"New max found: {max_min_sum:.4f} at configuration {quad}")
+    
+    print(f"\nFinal maximum minimal sum: {max_min_sum:.4f}")
+
+if __name__ == "__main__":
+    main()
+```

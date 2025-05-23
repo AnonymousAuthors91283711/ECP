@@ -1,0 +1,62 @@
+[write_program]
+This problem appears to involve finding all functions \(f: \mathbb{Z} \to \mathbb{Z}\) satisfying a given functional equation involving integers, with the goal of identifying the set of such functions. The functional equation is:
+
+\[
+x \neq 0 \Rightarrow x \cdot f(2f(y) - x) + y^2 \cdot f(2x - f(y)) = \frac{f(x)^2}{x} + f(yf(y))
+\]
+
+Given the complexity, a typical approach is to test specific integer inputs systematically, looking for patterns and potential solutions, especially for simple or linear functions, by enumerating possible small integer values.
+
+The code below will only test a small, manageable subset of functions (like constant functions, linear functions with small coefficients, or simple transformations), check whether they satisfy the equation for a set of sample inputs, and output the ones that satisfy all tests. It will not attempt to solve symbolically but will instead *enumerate possibilities* in a brute-force but efficient way, printing candidates immediately when they satisfy the tested conditions.
+
+Note: Due to the problem's symmetry and the nature of equations involving polynomials, solutions might include constant functions, linear functions, or specific simple transformations.
+
+```python
+# Enumerate candidate functions f: Z -> Z:
+# We'll test constant functions and linear functions as simple cases.
+# For constant functions f(x) = c
+# For linear functions f(x) = a*x + b
+# We'll test small integer coefficients over a small sample of inputs.
+
+def test_constant(c):
+    # For constant c, verify the equation for a few sample inputs
+    test_values = [(1,1), (2,-1), (-1,2), (0,1)]  # include x=0 to test the domain, but note equation only for x ≠ 0
+    for x, y in test_values:
+        if x == 0:
+            continue
+        lhs = x * c + y**2 * c
+        rhs = (c**2)//x + c  # f(yf(y)) with y=f(y)=c
+        if lhs != rhs:
+            return False
+    return True
+
+def test_linear(a, b):
+    # For linear f(x)=a*x + b, test same sample inputs
+    def f(x): return a*x + b
+    test_values = [(1,1), (2,-1), (-1,2)]
+    for x, y in test_values:
+        if x == 0:
+            continue
+        fx = f(x)
+        fy = f(y)
+        fyfy = f(fy)
+        try:
+            lhs = x * f(2*fy - x) + y**2 * f(2*x - fy)
+            rhs = (fx**2)//x + fyfy
+        except ZeroDivisionError:
+            continue
+        if lhs != rhs:
+            return False
+    return True
+
+# Enumerate simple constant functions
+for c in range(-3, 4):
+    if test_constant(c):
+        print(f"Constant function: f(x) = {c}")
+
+# Enumerate linear functions with small coefficients
+for a in range(-2, 3):
+    for b in range(-2, 3):
+        if test_linear(a, b):
+            print(f"Linear function: f(x) = {a}*x + {b}")
+```

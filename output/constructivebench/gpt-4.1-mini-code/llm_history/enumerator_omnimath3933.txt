@@ -1,0 +1,73 @@
+[write_program]
+The problem asks for all functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying
+\[
+f(f(x) - f(y)) = f(f(x) + f(y)) - 4 f(x) f(y) \quad \forall x,y \in \mathbb{R}.
+\]
+
+We want to enumerate possible candidate functions (e.g., linear, constant, quadratic, trigonometric forms) by sampling some \(x,y\) values and checking if the relation approximately holds, which might help conjecture the exact forms.
+
+Below is a Python program enumerating some simple function candidates, printing those that nearly satisfy the equation for a sample of points. This helps suggest candidates for the functional equation.
+
+```python
+import math
+
+# Define candidate functions to test
+def f_zero(x): return 0
+def f_const1(x): return 1
+def f_linear(x): return x
+def f_linear_neg(x): return -x
+def f_square(x): return x*x
+def f_neg_square(x): return -x*x
+def f_cos(x): return math.cos(x)
+def f_sin(x): return math.sin(x)
+
+candidates = [f_zero, f_const1, f_linear, f_linear_neg, f_square, f_neg_square, f_cos, f_sin]
+names = ["zero", "const1", "linear", "linear_neg", "square", "neg_square", "cos", "sin"]
+
+# Sample points to test the functional equation
+points = [-1, 0, 1]
+
+def close(a,b,eps=1e-6):
+    return abs(a-b) < eps
+
+print("Testing candidate functions f:")
+
+# Check approx satisfying the equation on all pairs (x,y) in points
+for f, name in zip(candidates, names):
+    valid = True
+    for x in points:
+        for y in points:
+            lhs = f(f(x)-f(y))
+            rhs = f(f(x)+f(y)) - 4*f(x)*f(y)
+            if not close(lhs, rhs):
+                valid = False
+                break
+        if not valid:
+            break
+    if valid:
+        print(f"Function '{name}' satisfies approximately on test points:")
+        for x in points:
+            for y in points:
+                lhs = f(f(x)-f(y))
+                rhs = f(f(x)+f(y)) - 4*f(x)*f(y)
+                print(f"x={x}, y={y}: LHS={lhs:.6f}, RHS={rhs:.6f}")
+        print()
+
+# Try parameterized functions: f(x)=a*x, check if equation restricts a
+print("Testing linear functions f(x)=a*x:")
+for a in [-2, -1, -0.5, 0, 0.5, 1, 2]:
+    def f_param(x, a=a): return a*x
+    valid = True
+    for x in points:
+        for y in points:
+            lhs = f_param(f_param(x)-f_param(y))
+            rhs = f_param(f_param(x)+f_param(y)) - 4*f_param(x)*f_param(y)
+            if not close(lhs, rhs):
+                valid = False
+                break
+        if not valid:
+            break
+    if valid:
+        print(f"a={a}: linear f(x)=a*x satisfies approximately on test points")
+```
+This outputs which simple function forms approximately satisfy the equation on sample points. You can extend with more complex functions as needed.

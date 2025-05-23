@@ -1,0 +1,122 @@
+[write_program]
+The problem involves finding the number of positive integers \(k\) such that there exist positive integers \(x, y\) satisfying two linear equations:
+
+\[
+\begin{cases}
+9x + 4y = 600 \\
+kx - 4y = 24
+\end{cases}
+\]
+
+with the constraints \(x > 0\), \(y > 0\).
+
+Rearranged, from the second equation:
+
+\[
+kx = 24 + 4y \implies x = \frac{24 + 4y}{k}
+\]
+
+Substituting into the first:
+
+\[
+9 \left( \frac{24 + 4y}{k} \right) + 4y = 600
+\]
+
+Multiplying through by \(k\):
+
+\[
+9(24 + 4y) + 4 y k = 600 k
+\]
+\[
+216 + 36 y + 4 y k = 600 k
+\]
+
+Rearranged to solve for \(k\):
+
+\[
+4 y k - 600 k = -216 - 36 y
+\]
+\[
+k (4 y - 600) = -216 - 36 y
+\]
+
+Thus,
+
+\[
+k = \frac{-216 - 36 y}{4 y - 600}
+\]
+
+We need \(k > 0\), \(x > 0\), \(y > 0\), and the division \(x = (24 + 4 y)/k\) must be integral.
+
+Implementing a brute-force enumeration over plausible \(y\):
+
+- since \(y>0\) and \(x>0\),
+- \(x = (24 + 4 y)/k > 0\),
+- \(k\) positive implies numerator and denominator must have the same sign.
+
+Because \(k = \frac{-216 -36 y}{4 y -600}\), for \(k>0\):
+
+- numerator \(N = -216 -36 y\),
+- denominator \(D = 4 y - 600\),
+
+we look for \(y>0\) where numerator and denominator are both negative (so their ratio is positive):
+
+\[
+N<0 \implies -216 -36 y < 0 \implies y > -6
+\]
+(holds for all positive \(y\))
+
+\[
+D<0 \implies y < 150
+\]
+
+Similarly, for numerator and denominator both positive:
+
+\[
+N>0 \implies y < -6 \quad \text{(impossible since } y>0)
+\]
+
+Therefore, for \(k>0\):
+
+\[
+\text{Check } y \in \{1, 2, \dots, 149\}
+\]
+
+and for each \(y\):
+
+1. compute \(k = \frac{-216 -36 y}{4 y - 600}\),
+2. check if \(k\) is an integer and positive,
+3. compute \(x = (24 + 4 y)/k\),
+4. check if \(x\) is a positive integer.
+
+Let's do this efficiently in Python.
+
+```python
+# Enumerate possible values of y to find positive integer solutions
+answers = []
+
+for y in range(1, 150):  # y in 1..149
+    numerator = -216 - 36 * y
+    denominator = 4 * y - 600
+
+    # Avoid division by zero
+    if denominator == 0:
+        continue
+    
+    # Check if numerator divides denominator evenly
+    if numerator % denominator == 0:
+        k = numerator // denominator
+        if k > 0:
+            # Compute x
+            x_num = 24 + 4 * y
+            if x_num % k == 0:
+                x = x_num // k
+                if x > 0:
+                    # Found valid solution
+                    # Store the value of k
+                    answers.append(k)
+                    print(k)
+                    
+# Output the total count of such k
+print("Total solutions for k:", len(set(answers)))
+```

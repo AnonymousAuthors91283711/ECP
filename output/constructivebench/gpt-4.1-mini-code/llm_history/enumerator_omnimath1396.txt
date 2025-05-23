@@ -1,0 +1,48 @@
+[write_program]
+The problem is about finding the greatest lower bound \( f \) such that for every \( n \)-tuple \( a \) of real numbers, with sum an integer, there exists an index \( i \) so that \( |a_i - \frac{1}{2}| \geq f \).
+
+We want to enumerate possible \( f \) to estimate or guess the answer for small \( n \). For each \( n \), we consider many tuples \( a \) with \( \sum a_i \in \mathbb{Z} \), and try to find the minimum over \( a \) of the maximum \( |a_i - \frac{1}{2}| \). Then the supremum lower bound \( f(n) \) is the minimum over \( a \) of that maximum.
+
+Due to combinatorial explosion, we test small \( n \) with discrete approximations. We try tuples \( a \) with values in a grid around 0.5, ensuring the sum is integer, and seek the minimal maximum deviation.
+
+Below is a Python program that enumerates \( f(n) \) candidates for \( n=1,2,3 \).
+
+```python
+import itertools
+from math import isclose
+
+def candidates(n, steps=10):
+    # Generate points in [0,1] with steps, tuples of length n whose sum is integer
+    values = [i/steps for i in range(steps+1)]
+    for a in itertools.product(values, repeat=n):
+        s = sum(a)
+        if isclose(s, round(s), abs_tol=1e-9):
+            yield a
+
+def max_deviation(a):
+    return max(abs(x - 0.5) for x in a)
+
+def enumerate_f(n, steps=10):
+    # For all a with integer sum, find the minimal max deviation
+    min_max_dev = None
+    found = []
+    for a in candidates(n, steps):
+        dev = max_deviation(a)
+        if (min_max_dev is None) or (dev < min_max_dev - 1e-9):
+            min_max_dev = dev
+            found = [a]
+            print(f"n={n}, new min max deviation: {dev:.4f}, example: {a}")
+        elif isclose(dev, min_max_dev, abs_tol=1e-9):
+            if len(found) < 3:
+                found.append(a)
+                print(f"n={n}, same min max deviation: {dev:.4f}, example: {a}")
+    print(f"n={n} => approximate answer f(n) ≈ {min_max_dev:.4f}\n")
+
+def main():
+    print("Enumerating candidate values for f(n) for small n:")
+    for n in range(1, 4):
+        enumerate_f(n, steps=10)
+
+if __name__ == "__main__":
+    main()
+```

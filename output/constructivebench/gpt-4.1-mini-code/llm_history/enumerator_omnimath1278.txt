@@ -1,0 +1,85 @@
+[write_program]
+The problem is to find a function \( f:\mathbb{Q} \to \mathbb{Q} \) satisfying
+\[
+3 f\left(\frac{1}{x}\right) + \frac{2}{x} f(x) = x^2 \quad \text{for } x \neq 0,
+\]
+and then determine the value \( f(-2) \).
+
+To explore this systematically, I'll enumerate rational values \(x \neq 0\), try to solve the functional equation for \(f(x)\) and \(f(1/x)\), then look for a pattern or explicit form for \(f\).
+
+```python
+# Enumerate candidate rational values x to inspect relations between f(x) and f(1/x)
+# We'll solve the functional equation for sample x values and print inferred values.
+# Goal: Deduce formula or pattern to conjecture f(-2).
+
+from fractions import Fraction
+
+# Dictionary to hold (x, f(x)) pairs once found
+f_values = {}
+
+# The functional equation is:
+# 3*f(1/x) + (2/x)*f(x) = x^2 for x != 0
+
+def solve_for_f1_over_x(x, fx_val):
+    # 3*f(1/x) = x^2 - (2/x)*f(x)
+    return (x**2 - (2/x)*fx_val) / 3
+
+def solve_for_fx(x, f1x_val):
+    # (2/x)*f(x) = x^2 - 3*f(1/x)
+    return (x**2 - 3*f1x_val) * (x/2)
+
+# Try to find f values for x = 1, 2, 3, 1/2, -1, -2
+# Since the equation links f(x) and f(1/x), solve linear system for pairs (x, 1/x).
+
+sample_xs = [Fraction(n) for n in [2, 3, 1, -2, -3, 1, -1]]
+
+# For each pair x and 1/x where x != 0, solve for f(x) and f(1/x)
+# From eq: 3 f(1/x) + 2 f(x) / x = x^2
+# Also write the same with x replaced by 1/x:
+# 3 f(x) + 2 x f(1/x) = (1/x)^2 = 1 / x^2
+
+def solve_pair(x):
+    # System:
+    # 3 F_{1/x} + (2/x) F_x = x^2
+    # 3 F_x + 2 x F_{1/x} = 1 / x^2
+    # Solve for F_x and F_{1/x}
+    from sympy import symbols, Eq, solve, Rational
+    Fx, F1x = symbols('Fx F1x')
+    eq1 = Eq(3*F1x + (2/x)*Fx, x**2)
+    eq2 = Eq(3*Fx + 2*x*F1x, 1/(x**2))
+    sol = solve((eq1, eq2), (Fx, F1x))
+    # sol returns dict {Fx: val, F1x: val}
+    return {float(x): { 'f(x)': sol[Fx], 'f(1/x)': sol[F1x] }}
+
+print("Exploring function values f(x) and f(1/x) for sample x:")
+
+from fractions import Fraction
+import math
+
+used_x = set()
+
+for n in range(-3, 4):
+    if n == 0:
+        continue
+    x = Fraction(n)
+    if x in used_x or (1/x) in used_x:
+        continue
+    result = solve_pair(x)
+    used_x.add(x)
+    used_x.add(1/x)
+    for val, res in result.items():
+        print(f"x = {val}: f(x) = {res['f(x)']}, f(1/x) = {res['f(1/x)']}")
+
+print("\nCheck f(-2) from above:")
+
+# Manually compute f(-2) based on solve_pair(-2)
+from sympy import symbols, Eq, solve, Rational
+x = Rational(-2)
+Fx, F1x = symbols('Fx F1x')
+eq1 = Eq(3*F1x + (2/x)*Fx, x**2)
+eq2 = Eq(3*Fx + 2*x*F1x, 1/(x**2))
+sol = solve((eq1, eq2), (Fx, F1x))
+print(f"f(-2) = {sol[Fx]}")
+
+```
+This enumerates and attempts to solve the system for \(x\) and \(1/x\) to find tentative values of \(f(x)\), including \(f(-2)\). This should help identify \(f(-2)\) exactly.

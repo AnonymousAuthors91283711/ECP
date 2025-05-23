@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for a function f: ℕ → ℕ where:
+1. For all n > 0, the sum of f(k) from k=1 to n is a perfect square
+2. For all n > 0, f(n) divides n³
+
+We'll write a Python program to enumerate possible functions f that satisfy these conditions for small n values, looking for patterns.
+
+```python
+import math
+
+def is_square(x):
+    s = int(math.isqrt(x))
+    return s * s == x
+
+def find_functions(max_n):
+    # We'll build f incrementally, checking conditions at each step
+    # f[0] is unused (since problem starts at n=1)
+    solutions = [[]]  # Start with empty partial solution
+    
+    for n in range(1, max_n + 1):
+        new_solutions = []
+        n_cubed = n ** 3
+        # Find all divisors of n³ that could be f(n)
+        possible_f_n = []
+        for d in range(1, n_cubed + 1):
+            if n_cubed % d == 0:
+                possible_f_n.append(d)
+        
+        for partial in solutions:
+            current_sum = sum(partial)
+            for f_n in possible_f_n:
+                new_sum = current_sum + f_n
+                if is_square(new_sum):
+                    new_solutions.append(partial + [f_n])
+        
+        solutions = new_solutions
+        if not solutions:
+            print(f"No solutions exist for n={n}")
+            return
+        
+        print(f"For n={n}, found {len(solutions)} possible functions:")
+        for i, f in enumerate(solutions[:3]):  # Print first 3 solutions
+            print(f"  Solution {i+1}: {f}")
+        if len(solutions) > 3:
+            print(f"  ... and {len(solutions)-3} more")
+
+find_functions(8)
+```

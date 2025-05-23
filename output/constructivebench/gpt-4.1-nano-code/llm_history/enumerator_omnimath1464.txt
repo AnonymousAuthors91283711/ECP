@@ -1,0 +1,62 @@
+[write_program]
+The problem describes a function sequence \(a: \mathbb{N} \to \mathbb{R}\) with initial value \(a_0 = a_0\) where \(a_0 > 0\), and recursive relations:
+\[
+a_{i+1} = \begin{cases}
+2a_i + 1, & \text{or} \\
+\frac{a_i}{a_i+2}
+\end{cases}
+\]
+It seeks the minimal positive index \(n\) such that \(a_n = 2014\), for some sequence satisfying these rules.
+
+Our goal: Search for sequences starting from small initial \(a_0 > 0\), track their sequences, and look for a sequence that hits 2014 at some \(n\). We will enumerate over reasonable \(a_0\) values and sequence lengths.
+
+**Implementation plan:**
+- Fix small initial \(a_0\).
+- Recursively build sequences applying allowed updates.
+- Stop when \(a_n = 2014\) is reached.
+- Record minimal \(n\) found.
+
+To avoid infinite or too long sequences, set maximum depth. We will assume \(a_0\) integer and within small bounds. Since the second operation asymptotically decreases \(a_i\), and first increases rapidly, we focus on the first operation for possible reachability of 2014.
+
+```python
+# Enumerate sequences to find the minimal n where a sequence reaches 2014
+# Starting from small initial values, applying recursive steps
+# Prioritizing the direct addition (2*a_i+1) for easier reach
+
+import sys
+sys.setrecursionlimit(10000)
+
+TARGET = 2014
+max_depth = 20  # limiting sequence length for efficiency
+
+# We'll check initial a_0 values from 1 to 10
+initial_values = range(1, 11)
+
+# Store results: a dict mapping (a0, n) if found
+results = []
+
+def recurse(a, n, depth):
+    if depth > max_depth:
+        return
+    if abs(a - TARGET) < 1e-8:
+        results.append(n)
+        print(f"Found sequence reaching {TARGET} at n={n} with initial {initial}")
+        return
+    # Apply first rule: a_{i+1} = 2 * a_i + 1
+    recurse(2 * a + 1, n + 1, depth + 1)
+    # Apply second rule if a_i + 2 != 0 (avoid division by zero)
+    if a + 2 != 0:
+        a_next = a / (a + 2)
+        recurse(a_next, n + 1, depth + 1)
+
+# Run searches for each initial value
+for initial in initial_values:
+    print(f"Starting sequences with initial a_0={initial}")
+    recurse(initial, 0, 0)
+
+# Output minimal n if any found
+if results:
+    print(f"Minimum n where a sequence reaches {TARGET}: {min(results)}")
+else:
+    print(f"No sequence reaching {TARGET} within depth {max_depth}")
+```

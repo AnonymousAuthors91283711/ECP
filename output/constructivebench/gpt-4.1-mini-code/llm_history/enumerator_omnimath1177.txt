@@ -1,0 +1,70 @@
+[write_program]
+The problem involves finding the least natural number \( n \) such that for every function \( f : \text{Fin } n \to \text{Fin } 10 \to \text{Bool} \), there exists a subset \( s \subseteq \text{Fin } n \) with 57 elements and two indices \( i, j \in \text{Fin } 10 \) satisfying either all \( f(x,i) = f(x,j) \) or all \( f(x,i) \neq f(x,j) \).
+
+We will write a Python program to explore small values of \( n \) by enumerating functions \( f: \{0,\dots,n-1\} \times \{0,\dots,9\} \to \{False, True\} \) and checking whether such a subset and indices exist.
+
+Given the huge search space, we will fix small \( n \) values (e.g., \( n=57,58,59 \)) and try random samples or partial enumerations. We'll print the current \( n \) being checked and any discovered subset and indices that satisfy the condition, to aid in conjectures about the minimal \( n \).
+
+```python
+# We consider functions f: [n] x [10] -> {False, True}
+# For a fixed n, we try to find whether for all such functions, there exists a subset s of size 57
+# and i,j in [10] such that either f(x,i)=f(x,j) for all x in s, or f(x,i)!=f(x,j) for all x in s.
+# Due to enormous search space, we instead sample functions and try to find counterexamples or supporting examples.
+
+import itertools
+import random
+
+def check_condition(n):
+    # For random functions f: [n] x [10] -> {False, True}, check if there's s, i, j meeting the conditions.
+    # We attempt to find a counterexample function f for which no such s,i,j exist.
+    # If we find such f, print it and return False.
+    # Otherwise, after many tries, print supporting evidence.
+
+    indices = list(range(10))
+    tries = 1000  # number of random functions to test
+
+    for t in range(tries):
+        # Generate random f: dict (x,i) -> bool
+        f = {(x,i): random.choice([False,True]) for x in range(n) for i in indices}
+
+        # Try all pairs i,j with i < j
+        found = False
+        for i in indices:
+            for j in indices:
+                if i >= j: continue
+                # Check subsets s of size 57 (we try random subsets due to combinatorial explosion)
+                # For efficiency, sample several subsets.
+                for _ in range(20):
+                    s = random.sample(range(n), 57)
+                    # Check all f(x,i) == f(x,j) or all f(x,i) != f(x,j) for x in s
+                    eq_vals = [f[(x,i)] == f[(x,j)] for x in s]
+                    if all(eq_vals) or not any(eq_vals):
+                        # Condition satisfied for this s,i,j
+                        found = True
+                        print(f"n={n}: found subset s of size 57, indices ({i},{j}), condition satisfied.")
+                        break
+                if found:
+                    break
+            if found:
+                break
+        if not found:
+            print(f"n={n}: found counterexample function f with no suitable s,i,j.")
+            # For brevity, do not print f
+            return False
+    print(f"After {tries} tries at n={n}, no counterexample found; condition likely holds.")
+    return True
+
+def main():
+    # Check values of n starting at 57, then 58,59
+    for n in range(57, 60):
+        print(f"Testing n = {n}")
+        res = check_condition(n)
+        if res:
+            print(f"Condition appears to hold at n={n}")
+        else:
+            print(f"Condition fails at n={n}")
+
+if __name__ == "__main__":
+    main()
+```
+

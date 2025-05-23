@@ -1,0 +1,42 @@
+[write_program]
+The problem looks for integer coefficients a, b, c such that the quartic polynomial f = X^4 + aX^2 + bX + c has integer roots 2, -3, and 5, and we want to find the sum a + b + c. To assist in conjecturing the answer, I will enumerate all possibilities for the roots (including the 4th root), compute coefficients, print them, and their sums. Since the polynomial is monic with integer coefficients, and the known roots are 2, -3, 5, the 4th root must also be an integer (to keep coefficients integral). I will test possible integer roots within a reasonable range, say from -10 to 10. For each candidate 4th root r, I will find the polynomial formed by roots 2, -3, 5, r, expand it, extract a,b,c, compute a+b+c, and print results.
+
+```python
+from sympy import symbols, expand, Poly, Integer
+
+# Define variable
+X = symbols('X')
+
+# Known roots
+roots_fixed = [2, -3, 5]
+
+print(f"Known roots fixed: {roots_fixed}")
+print("Trying possible integer 4th roots in range -10 to 10 (excluding known roots)...")
+
+for r in range(-10, 11):
+    if r in roots_fixed:
+        continue  # skip known roots
+    # Construct polynomial with roots: 2, -3, 5, r
+    poly_expr = (X - 2)*(X + 3)*(X - 5)*(X - r)
+    poly_expanded = expand(poly_expr)
+    # Extract coefficients: poly_expanded = X^4 + a X^2 + b X + c + (might have X^3 term)
+    poly = Poly(poly_expanded, X)
+    coeffs = poly.all_coeffs()  # coeffs[0]*X^4 + coeffs[1]*X^3 + coeffs[2]*X^2 + coeffs[3]*X + coeffs[4]
+
+    # coeffs is list of length 5: [1, coef_X^3, a, b, c]
+    # From problem statement polynomial form: X^4 + a X^2 + b X + c
+    # So we verify if coeffs[1] (X^3 coefficient) is zero
+    if coeffs[1] != 0:
+        # The polynomial from roots might have X^3 term, but problem doesn't exclude this
+        # Problem polynomial is X^4 + a X^2 + b X + c (no X^3 term)
+        # So we discard polynomials with X^3 term != 0
+        continue
+
+    a = Integer(coeffs[2])
+    b = Integer(coeffs[3])
+    c = Integer(coeffs[4])
+    s = a + b + c
+
+    print(f"4th root: {r}, polynomial: X^4 + {a}*X^2 + {b}*X + {c}, sum a+b+c = {s}")
+```
+

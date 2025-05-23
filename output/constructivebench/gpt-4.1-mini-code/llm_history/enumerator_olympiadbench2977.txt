@@ -1,0 +1,114 @@
+[write_program]
+The problem asks for the least natural number \( n > 1 \) such that the product of all divisors of \( n \) equals \( n^4 \).
+
+Recall: The product of divisors of \( n \) is \( n^{\frac{d(n)}{2}} \), where \( d(n) \) is the number of divisors of \( n \).
+
+Given \( \prod_{d|n} d = n^4 \), so:
+
+\[
+n^{\frac{d(n)}{2}} = n^4 \implies \frac{d(n)}{2} = 4 \implies d(n) = 8
+\]
+
+We want the least \( n > 1 \) with exactly 8 divisors.
+
+Hence, the problem reduces to finding the smallest positive integer \( n > 1 \) with 8 divisors.
+
+Now, divisors count formula:
+
+If
+
+\[
+n = p_1^{a_1} p_2^{a_2} \cdots p_k^{a_k}
+\]
+
+then
+
+\[
+d(n) = (a_1 + 1)(a_2 + 1) \cdots (a_k + 1)
+\]
+
+We want
+
+\[
+d(n) = 8
+\]
+
+Possible factorizations of 8:
+
+- \(8 = 8\)
+- \(8 = 4 \times 2\)
+- \(8 = 2 \times 2 \times 2\)
+
+Corresponding exponent patterns:
+
+- One prime: \( a_1 + 1 = 8 \implies a_1 = 7 \) so \( n = p^7 \)
+- Two primes: \( (a_1+1)(a_2+1) = 8 \)
+
+  - \( (4)(2) \implies a_1 = 3, a_2 = 1 \)
+
+  - \( (2)(4) \implies a_1 = 1, a_2 = 3 \)
+
+- Three primes: \( (2)(2)(2) \implies a_1 = a_2 = a_3 = 1 \)
+
+Enumerate candidates of these forms and find minimal \( n \).
+
+We will enumerate all such \( n \) for small primes:
+
+- For \( p^7 \), \( p=2 \implies 2^7=128 \)
+- For two primes \( p^3 q^1 \) or \( p^1 q^3 \), with \( p<q \), test small primes 2,3,5,...
+- For three primes \( p^1 q^1 r^1 \) with \( p<q<r \)
+
+Print all candidates immediately.
+
+After enumerating candidates, print minimal.
+
+```python
+# Enumerate numbers n>1 with exactly 8 divisors and print them immediately.
+# Then output the minimal one.
+
+def primes_upto(n):
+    sieve = [True]*(n+1)
+    sieve[0]=sieve[1]=False
+    for i in range(2,int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i,n+1,i):
+                sieve[j]=False
+    return [p for p in range(2,n+1) if sieve[p]]
+
+def main():
+    primes = primes_upto(30)  # Primes up to 30 for search
+    candidates = set()
+
+    # 1) n = p^7
+    for p in primes:
+        n = p**7
+        if n > 1:
+            print(f"p^7: {p}^7 = {n}")
+            candidates.add(n)
+
+    # 2) n = p^3 * q^1 with p<q
+    for i,p in enumerate(primes):
+        for q in primes[i+1:]:
+            n = p**3 * q
+            if n > 1:
+                print(f"p^3*q: {p}^3*{q} = {n}")
+                candidates.add(n)
+            n = q**3 * p
+            if n > 1:
+                print(f"q^3*p: {q}^3*{p} = {n}")
+                candidates.add(n)
+
+    # 3) n = p*q*r with p<q<r distinct primes
+    for i,p in enumerate(primes):
+        for j,q in enumerate(primes[i+1:],start=i+1):
+            for r in primes[j+1:]:
+                n = p*q*r
+                if n > 1:
+                    print(f"p*q*r: {p}*{q}*{r} = {n}")
+                    candidates.add(n)
+    min_n = min(candidates)
+    print(f"Minimum n with 8 divisors: {min_n}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,49 @@
+[write_program]
+The problem is to find all real pairs \((x,y)\) with \(x,y \neq 0\) satisfying the system:
+\[
+\frac{x}{\sqrt{x^2 + y^2}} - \frac{1}{x} = 7, \quad \frac{y}{\sqrt{x^2 + y^2}} + \frac{1}{y} = 4
+\]
+
+We will enumerate candidate values for \(x,y\) over some rational approximations (fractions) avoiding zero, compute the left sides precisely, and check if they satisfy the equalities exactly or to a close numerical tolerance (since exact algebraic solves are complicated). The program will print each approximate solution found and then output the best candidate after enumeration.
+
+```python
+import math
+
+def close(a,b,eps=1e-9):
+    return abs(a-b)<eps
+
+# Enumerate rational pairs (x,y) with denominators and numerators up to limit
+limit = 20
+found = []
+
+print("Searching for (x,y) in rationals with numerator/denominator ≤ ±20 (excluding zero)...")
+for xn in range(-limit, limit+1):
+    if xn == 0:
+        continue
+    for xd in range(1, limit+1):
+        x = xn/xd
+        for yn in range(-limit, limit+1):
+            if yn == 0:
+                continue
+            for yd in range(1, limit+1):
+                y = yn/yd
+                r2 = x*x + y*y
+                if r2 == 0:
+                    continue
+                r = math.sqrt(r2)
+                lhs1 = x/r - 1/x
+                lhs2 = y/r + 1/y
+                if close(lhs1,7) and close(lhs2,4):
+                    print(f"Candidate: x={x}, y={y} (Left sides: {lhs1:.9f}, {lhs2:.9f})")
+                    found.append((x,y,lhs1,lhs2))
+
+if found:
+    # Find closest pair by residual
+    best = min(found, key=lambda t: abs(t[2]-7)+abs(t[3]-4))
+    print("\nBest candidate found:")
+    print(f"x = {best[0]}, y = {best[1]}")
+else:
+    print("No candidates found with current enumeration.")
+```
+
+This will help conjecture the solution pair. Since the problem originates from algebraic conditions, this numeric search guides to a candidate which can then be proven unique and exact.

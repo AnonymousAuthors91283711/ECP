@@ -1,0 +1,49 @@
+[write_program]
+The problem involves counting the number of complex numbers that are both roots of unity and roots of some integer quadratic polynomial \( z^2 + a z + b = 0 \) with integer coefficients \(a, b\). We want to enumerate such roots for small values of \(a, b\) and test if they are roots of unity. Since roots of unity satisfy \( z^n = 1 \) for some positive integer \(n\), and roots of quadratic equations have explicit formulas, we will loop over small integers \(a, b\), compute the roots, check if they are roots of unity by testing powers up to a certain order, and print candidates found.
+
+We limit the ranges of \(a, b\) and the order \(n\) of roots of unity to keep computations fast and outputs small. This enumeration may help conjecture the total count.
+
+```python
+# Enumerate complex roots of x^2 + a x + b = 0 (a,b in Z small range),
+# check which are roots of unity (z^n =1 for some n <= max_n).
+# Print each root and associated (a,b,n). Enumerate candidates then total count.
+
+import cmath
+
+def is_root_of_unity(z, max_order=20, tol=1e-10):
+    # Check if z^n == 1 for some n in 1..max_order
+    for n in range(1, max_order+1):
+        val = z**n
+        if abs(val.real - 1) < tol and abs(val.imag) < tol:
+            return n
+    return 0
+
+def main():
+    found = set()
+    max_abs = 5  # range of a,b from -max_abs to max_abs
+    max_order = 20
+    count = 0
+
+    print("Enumerating roots of x^2 + a x + b = 0 that are roots of unity:")
+    for a in range(-max_abs, max_abs+1):
+        for b in range(-max_abs, max_abs+1):
+            disc = a*a - 4*b
+            # Compute roots, possibly complex
+            sqrt_disc = cmath.sqrt(disc)
+            roots = [(-a + sqrt_disc)/2, (-a - sqrt_disc)/2]
+            for z in roots:
+                n = is_root_of_unity(z,max_order)
+                if n > 0:
+                    # Round to avoid float noise in printing
+                    zr = round(z.real,6)
+                    zi = round(z.imag,6)
+                    key = (zr, zi)
+                    if key not in found:
+                        found.add(key)
+                        count += 1
+                        print(f"Root: {zr}+{zi}i is {n}-th root of unity for polynomial x^2 + {a}x + {b} = 0")
+    print(f"Total distinct roots found: {count}")
+
+if __name__ == "__main__":
+    main()
+```

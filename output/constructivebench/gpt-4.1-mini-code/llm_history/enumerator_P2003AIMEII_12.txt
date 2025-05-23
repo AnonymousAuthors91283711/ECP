@@ -1,0 +1,76 @@
+[write_program]
+The problem asks for the least positive integer \( n \) such that there exists a distribution of votes among 27 candidates (indexed by Fin 27) totaling \( n \) votes, and for each candidate \( i \), the inequality
+
+\[
+\frac{100 \cdot \text{votes}_i}{n} < \text{votes}_i - 1
+\]
+
+holds. We want to find the minimum such \( n \).
+
+To investigate this, we can:
+
+1. Enumerate \( n \) starting from 27 (the minimum sum votes since each candidate must have at least 1 vote to meet \( \text{votes}_i - 1 \geq 0 \) condition).
+2. For each \( n \), try to find a votes array (27 nonnegative integers summing to \( n \)).
+3. For each candidate's votes \( v_i \), check if:
+
+   \[
+   \frac{100 v_i}{n} < v_i - 1
+   \]
+   
+   rearranged:
+
+   \[
+   (v_i - 1) - \frac{100 v_i}{n} > 0 \implies v_i \left(1 - \frac{100}{n}\right) > 1
+   \]
+
+   That suggests \( v_i \) must be sufficiently large relative to \( n \).
+
+To simplify, note that if any \( v_i = 0 \), then \( (v_i - 1) = -1 \), and the inequality is \(\frac{0}{n} < -1\) which is false. So votes \( v_i \geq 1 \).
+
+Because of complexity, we try to test small values of \( n \geq 27 \) and find candidate vote distributions meeting the conditions.
+
+We will try to:
+
+- For each \( n \in [27, 100] \):
+  - Enumerate partitions of \( n \) into 27 positive integers (votes).
+  - Instead of full enumeration, approximate votes through some heuristic: assign all votes equally (which won't work), or try some votes larger than a threshold and others minimal.
+  
+Due to complexity, let's test only some plausible divisions: one candidate with large votes, the rest 1 vote.
+
+Let's implement and print candidates \( n \) and votes meeting the conditions.
+
+```python
+from math import floor
+
+def check_condition(n, votes):
+    total = sum(votes)
+    if total != n:
+        return False
+    for v in votes:
+        if v <= 0:
+            return False
+        # Check inequality: (100*v)/n < v-1
+        if (100 * v) / n >= v - 1:
+            return False
+    return True
+
+def try_n(n):
+    # Try distributions with one candidate having large votes, rest 1 each,
+    # since minimal votes is 1 (otherwise v_i -1 negative or zero)
+    base = 1
+    rest = 27 - 1
+    for big_votes in range(base + 1, n - rest + 1):
+        votes = [big_votes] + [base] * rest
+        if sum(votes) == n and check_condition(n, votes):
+            print(f"n={n}, votes={votes}")
+
+def main():
+    print("Trying n from 27 to 100...")
+    for n in range(27, 101):
+        try_n(n)
+
+if __name__ == "__main__":
+    main()
+```
+
+This code tries values of \( n \) from 27 to 100, for each \( n \) tries one candidate with \( v_i = \) big_votes and others 1, checking the inequality. It prints matching results. This enumeration should help conjecture the minimal \( n \) and corresponding vote distribution.

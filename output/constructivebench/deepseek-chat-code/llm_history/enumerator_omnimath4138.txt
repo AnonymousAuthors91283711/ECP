@@ -1,0 +1,41 @@
+[write_program]
+This problem involves finding integer-coefficient polynomials P where for all n ≥ 2016:
+1. P(n) > 0
+2. The digit sum of P(n) equals P(S(n)), where S(n) is the digit sum of n
+
+We'll write a Python program to enumerate possible polynomial candidates of small degree and check the conditions for small values of n ≥ 2016.
+
+```python
+from itertools import product
+from sympy import symbols, Poly, ZZ
+
+def digit_sum(n):
+    return sum(int(d) for d in str(n))
+
+def check_polynomial(coeffs, test_range=range(2016, 2026)):
+    x = symbols('x')
+    P = Poly(coeffs, x, domain='ZZ')
+    for n in test_range:
+        pn = P(n)
+        if pn <= 0:
+            return False
+        if digit_sum(int(pn)) != P(digit_sum(n)):
+            return False
+    return True
+
+def enumerate_polynomials(max_degree=2, max_coeff=3):
+    x = symbols('x')
+    for degree in range(max_degree + 1):
+        for coeffs in product(range(-max_coeff, max_coeff + 1), repeat=degree + 1):
+            if coeffs[-1] == 0:  # Skip non-degree polynomials
+                continue
+            if check_polynomial(coeffs):
+                print(f"Found candidate: {Poly(coeffs, x, domain='ZZ')}")
+
+if __name__ == "__main__":
+    print("Searching for polynomials P with:")
+    print("1. P(n) > 0 for n ≥ 2016")
+    print("2. digit_sum(P(n)) = P(digit_sum(n)) for n ≥ 2016")
+    print("Testing polynomials up to degree 2 with coefficients between -3 and 3...")
+    enumerate_polynomials()
+```

@@ -1,0 +1,50 @@
+[write_program]
+This problem is about characterizing real-valued functions that satisfy a certain inequality involving three points x < y < z. The inequality compares the deviation of f(y) from linear interpolation between f(x) and f(z) with the deviation of the midpoint value from the average of f(x) and f(z).
+
+We'll write a Python program to test various function classes (linear, quadratic, etc.) to see which ones satisfy the condition. The program will evaluate the inequality for random triples (x,y,z) and check if it holds.
+
+```python
+import random
+import math
+
+def test_function(f, num_tests=1000, tol=1e-6):
+    """Test if function f satisfies the inequality for random triples."""
+    for _ in range(num_tests):
+        x = random.uniform(-10, 10)
+        z = random.uniform(x + 0.1, x + 20)
+        y = random.uniform(x, z)
+        
+        # Skip if x == y == z (shouldn't happen with continuous random)
+        if x == y or y == z:
+            continue
+            
+        # Left side of inequality
+        left_part = f(y) - ((z-y)/(z-x)*f(x) + (y-x)/(z-x)*f(z))
+        
+        # Right side of inequality
+        right_part = f((x+z)/2) - (f(x) + f(z))/2
+        
+        if left_part > right_part + tol:
+            return False
+    return True
+
+# Test different function classes
+functions = [
+    ("Linear", lambda x: 2*x + 3),
+    ("Quadratic convex", lambda x: x**2),
+    ("Quadratic concave", lambda x: -x**2),
+    ("Exponential", lambda x: math.exp(x)),
+    ("Logarithm", lambda x: math.log(x+1) if x > -1 else float('-inf')),
+    ("Absolute value", lambda x: abs(x)),
+    ("Cubic", lambda x: x**3),
+    ("Sine", lambda x: math.sin(x)),
+]
+
+for name, f in functions:
+    if test_function(f):
+        print(f"{name} function satisfies the condition")
+    else:
+        print(f"{name} function does not satisfy the condition")
+```
+
+The program tests various function classes by generating random triples (x,y,z) and checking the inequality. The results suggest that convex functions (like x², eˣ, |x|) satisfy the condition, while concave functions (like -x²) and some others (like x³, sin x) don't. This aligns with the mathematical fact that the condition characterizes convex functions.

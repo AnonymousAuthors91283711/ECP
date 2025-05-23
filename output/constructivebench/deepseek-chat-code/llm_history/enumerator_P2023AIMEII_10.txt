@@ -1,0 +1,53 @@
+[write_program]
+This problem involves counting the number of valid colorings of a 2×6 grid graph with 12 colors under adjacency constraints, then finding the number of divisors of that count. We'll write a Python program to enumerate smaller cases (2×n grids for small n) to help identify the pattern.
+
+```python
+from itertools import permutations
+from math import gcd
+
+def count_valid_colorings(m, n, k):
+    """Count valid colorings of m×n grid with k colors where adjacent colors differ mod 3"""
+    size = m * n
+    if size > k:
+        return 0  # Not enough colors for injective mapping
+    
+    count = 0
+    grid = [(i, j) for i in range(m) for j in range(n)]
+    
+    for coloring in permutations(range(k), size):
+        valid = True
+        # Check injectivity (guaranteed by permutation) and adjacency condition
+        for i in range(m):
+            for j in range(n):
+                if i > 0 and (coloring[i*n+j] - coloring[(i-1)*n+j]) % 3 == 0:
+                    valid = False
+                    break
+                if j > 0 and (coloring[i*n+j] - coloring[i*n+j-1]) % 3 == 0:
+                    valid = False
+                    break
+            if not valid:
+                break
+        if valid:
+            count += 1
+    return count
+
+def num_divisors(n):
+    """Count number of divisors of n"""
+    if n == 0:
+        return 0
+    count = 0
+    i = 1
+    while i*i <= n:
+        if n % i == 0:
+            count += 1 if i*i == n else 2
+        i += 1
+    return count
+
+# Enumerate smaller cases to observe pattern
+for n in range(1, 4):  # 2×1, 2×2, 2×3 grids
+    m = 2
+    k = 2 * n + 6  # Using more colors than needed for injectivity
+    count = count_valid_colorings(m, n, k)
+    divisors = num_divisors(count)
+    print(f"2×{n} grid: {count} valid colorings, {divisors} divisors")
+```

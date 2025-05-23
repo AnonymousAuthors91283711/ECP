@@ -1,0 +1,48 @@
+[write_program]
+The problem involves finding triples (x, y, z) of real numbers satisfying a system of nonlinear equations. We try small integer values for y and z, solve for x accordingly, and check the conditions. We'll enumerate solutions and print them as soon as they are found.
+
+```python
+# Enumerate integer triples (x,y,z) satisfying:
+# x²*y + y²*z = 1040
+# x²*z + z²*y = 260
+# (x - y)*(y - z)*(z - x) = -540
+# We try small integers y,z in range [-10..10]. For each pair, solve for x².
+
+def candidates():
+    for y in range(-10,11):
+        for z in range(-10,11):
+            if y == z:
+                continue  # avoid zero product in last equation
+            # From the two equations:
+            # Let a = x²
+            # Using first: a*y + y²*z = 1040  => a = (1040 - y²*z)/y  if y != 0
+            # Using second: a*z + z²*y = 260   => a = (260 - z²*y)/z  if z != 0
+            if y != 0 and z != 0:
+                a1 = (1040 - y**2 * z)/y
+                a2 = (260 - z**2 * y)/z
+                # Check if a1 approx equals a2 (within 1e-8)
+                if abs(a1 - a2) < 1e-8 and a1 >= 0:
+                    a = a1
+                    import math
+                    x_candidates = []
+                    r = math.isqrt(int(a)) if a == int(a) else None
+                    # exact square check
+                    if r is not None and r*r == int(a):
+                        x_candidates = [r, -r]
+                    else:
+                        # approximate roots if a is positive
+                        if a > 0:
+                            root = math.sqrt(a)
+                            x_candidates = [root, -root]
+                        else:
+                            continue
+                    for x in x_candidates:
+                        p = (x - y)*(y - z)*(z - x)
+                        if abs(p + 540) < 1e-8:
+                            yield (x,y,z)
+
+print("Enumerating candidate solutions (x,y,z):")
+for sol in candidates():
+    print(sol)
+```
+

@@ -1,0 +1,56 @@
+[write_program]
+The problem is to find the minimum value \(k = g(14)\) for a function \(g: \mathbb{N} \to \mathbb{N}\) such that for every positive \(x,y\), \(g(x) + g(y) > x^2\), and \(g\) minimizes \(\sum_{i=1}^{20} g(i)\) among all functions \(h\) with the same inequality. The program will enumerate functions on the domain \(\{1,\ldots,20\}\) with integer values and check constraints, printing all valid \(g(14)\) values found for candidate functions.
+
+We bound values to keep enumeration feasible and print each valid \(k = g(14)\), then print the minimal \(k\) after enumeration. This will give insight into the minimal \(k\).
+
+Note: Because fully enumerating is infeasible, we'll enumerate functions defined only on \(\{1, \ldots, 20\}\) and try small values of \(g(i)\). The inequality \(g(x)+ g(y) > x^2\) only depends on \(x\), so for fixed \(x\), \(g(y)\) must be large enough for all \(y\). Testing functions \(g\) that grow with \(x\) is better. We'll start with a rough approach to get candidate \(k\).
+
+```python
+# Enumerate candidate functions g: {1..20} -> {1..u}, where u is small upper bound.
+# For each function g, check the main inequality and if g(x)+g(y) > x^2 for all x,y,
+# then print g(14). After enumeration print minimal g(14).
+
+def main():
+    n = 20
+    max_val = 30  # Upper bound for g values to keep search space manageable
+    candidates = []
+    
+    # To reduce search space, for each x, g(x) must be > (x^2 - min_g_y)
+    # Approximate min_g_y as 1 to reason minimal possible
+    # We'll do a backtracking approach with pruning
+
+    from itertools import product
+
+    # We attempt enumerations with increasing max_val
+    for max_val in range(5, 31):
+        print(f"Trying max g(i) values up to {max_val}")
+        # Generate all possible vectors g with values in [1, max_val]
+        # Prune with constraints
+        count = 0
+        for g_tuple in product(range(1, max_val+1), repeat=n):
+            g = list(g_tuple)
+            # Check g(x)+g(y) > x^2 for all x,y in 1..20
+            # Since x^2 grows fast, focus on x first
+            valid = True
+            # For each x, check min_g_y to satisfy g(x)+g(y)>x^2
+            for x in range(1, n+1):
+                lhs_candidates = [g[x-1] + g[y-1] for y in range(1, n+1)]
+                # We require all lhs_candidates > x^2
+                if any(val <= x*x for val in lhs_candidates):
+                    valid = False
+                    break
+            if valid:
+                k = g[13]  # g(14)
+                print(k)
+                candidates.append(k)
+                count += 1
+            if count >= 10:  # Limit prints per max_val to control output
+                break
+        if candidates:
+            min_k = min(candidates)
+            print(f"Minimum g(14) found so far: {min_k}")
+            break
+
+if __name__ == "__main__":
+    main()
+```

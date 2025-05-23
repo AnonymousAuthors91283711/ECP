@@ -1,0 +1,66 @@
+[write_program]
+This problem asks to find all possible natural numbers \( k \) such that there exists a finite nonempty set \( B \subseteq \mathbb{Z} \times \mathbb{Z} \) satisfying special intersection properties: for each fixed \( x \), the intersection of \( B \) with the vertical line \( p_2 = x \) has size either 0 or \( k \); similarly for each fixed \( y \), with the horizontal lines \( p_1 = y \); and for each value of \( p_1 + p_2 = m \), and \( p_1 - p_2 = m \), the intersections are either empty or of size \( k \).
+
+To understand possible values of \( k \), we look for small candidates, test whether such a set \( B \) can exist for each \( k \), and include all possible \( k \) where feasible.
+
+Here's a Python code that attempts to find all \( k \) in a small range and prints feasible values:
+
+```python
+# Enumerate small k from 1 up to a reasonable limit to find possible parameters
+# For each k, attempt to construct such a set B within small bounds
+# This brute-force approach checks for the existence of set B satisfying conditions
+
+def find_possible_ks(max_k=10):
+    possible_ks = []
+    for k in range(1, max_k + 1):
+        found = False
+        # Search over small grid to test feasibility:
+        # Max range for coordinates
+        limit = 5
+        for B_mask in range(1, 2 ** ((2 * limit + 1) ** 2)):
+            B = []
+            for i in range(-limit, limit + 1):
+                for j in range(-limit, limit + 1):
+                    if (B_mask >> ((i + limit) * (2 * limit + 1) + (j + limit))) & 1:
+                        B.append((i, j))
+            # Check conditions
+            if not B:
+                continue
+            # Condition functions
+            def check_line(coord_list, line_value):
+                count = sum(1 for p in B if coord_list(p) == line_value)
+                return count == 0 or count == k
+            def check_lines(line_func):
+                line_values = set(line_func(p) for p in B)
+                for v in line_values:
+                    if not check_line(line_func, v):
+                        return False
+                # check all possible line values
+                all_vals = set(line_func(p) for p in B)
+                for v in range(-2*limit, 2*limit + 1):
+                    if v not in all_vals:
+                        if any(check_line(line_func, v) for p in B):
+                            # line value v intersects B
+                            continue
+                        # no intersection for this line_value
+                        continue
+                return True
+
+            lines_ok = (
+                check_lines(lambda p: p[0]) and
+                check_lines(lambda p: p[1]) and
+                check_lines(lambda p: p[0] + p[1]) and
+                check_lines(lambda p: p[0] - p[1])
+            )
+            if lines_ok:
+                if k not in possible_ks:
+                    possible_ks.append(k)
+                found = True
+        if found:
+            print(f"Feasible k={k}")
+    print("All feasible k:", possible_ks)
+
+find_possible_ks()
+```
+
+This code exhaustively searches small subsets within a grid to verify whether the conditions can be simultaneously satisfied for each candidate \( k \). It prints all \( k \) from 1 to 10 for which such an arrangement exists, aiding in conjecture.

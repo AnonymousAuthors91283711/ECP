@@ -1,0 +1,46 @@
+[write_program]
+This problem involves maximizing the expression \( z = x'^2 - 6x' + y'^2 \) subject to the constraint \( |x' + y'| + |x' - y'| = 2 \). We want to enumerate values of \((x', y')\) satisfying the constraint and calculate corresponding \(z\), printing out values to conjecture the maximum.
+
+Since the constraint involves absolute values, we can consider the geometry of the set \(\{(x', y') : |x' + y'| + |x' - y'| = 2\}\). This describes a square rotated by 45 degrees with vertices on the coordinate axes.
+
+We'll sample rational values for \(x', y'\) on this boundary and compute \(z\), printing each and finally printing the greatest value found.
+
+```python
+# Enumerate (x', y') satisfying |x'+y'| + |x'-y'| = 2 with small rational values
+# and compute z = x'^2 - 6x' + y'^2 to conjecture maximum.
+
+def absval(x):
+    return x if x >= 0 else -x
+
+def constraint(x, y):
+    return absval(x + y) + absval(x - y) == 2
+
+def enumerate_candidates(step=0.1):
+    max_z = None
+    max_points = []
+    values_seen = set()
+    # Since |x'+y'|+|x'-y'|=2 characterizes a rotated square with vertices at (1,0),(0,1),(-1,0),(0,-1),
+    # restrict search space accordingly: x,y in [-1.5,1.5]
+    for i in range(-15,16):
+        for j in range(-15,16):
+            x = i * step
+            y = j * step
+            if abs(absval(x + y) + absval(x - y) - 2) < 1e-9:  # floating tolerance for equality
+                z = x**2 - 6*x + y**2
+                print(f"x'={x:.2f}, y'={y:.2f}, z={z:.4f}")
+                if (x,y) not in values_seen:
+                    values_seen.add((x,y))
+                    if max_z is None or z > max_z:
+                        max_z = z
+                        max_points = [(x,y,z)]
+                    elif abs(z - max_z) < 1e-9:
+                        max_points.append((x,y,z))
+    print("\nMaximum z found:")
+    for xp, yp, zp in max_points:
+        print(f"x'={xp:.2f}, y'={yp:.2f}, z={zp:.4f}")
+
+if __name__ == "__main__":
+    print("Enumerating candidates for (x', y') with step=0.1 on constraint |x'+y'|+|x'-y'|=2:")
+    enumerate_candidates()
+```
+This program prints all candidates with two decimals precision satisfying the constraint and shows the max \(z\) value found with corresponding points. This output helps conjecture the true maximum value and the optimizer for the problem.

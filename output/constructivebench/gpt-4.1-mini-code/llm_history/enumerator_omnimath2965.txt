@@ -1,0 +1,53 @@
+[write_program]
+The problem appears to be about finding the smallest number \( n \) such that any multiset \( s \) of elements from \(\{0,1,2\}\) with cardinality \( n \) satisfies either:
+- There exists an element \( c \) that appears at least 3 times, or
+- There exist three distinct elements each appearing at least once.
+
+To explore this, we enumerate multisets \( s \) of size \( n \) from \(\{0,1,2\}\), count the occurrences of each element, and check the conditions. We start from small \( n \) and increment until the condition always holds.
+
+```python
+# Enumerate multisets s from {0,1,2} of size n,
+# check if either some element appears ≥3 times,
+# or all three elements appear at least once.
+# Find the minimal n where this always holds.
+
+from collections import Counter
+from itertools import combinations_with_replacement
+
+def check_condition(counts):
+    # counts is a dict or list of counts of elements 0,1,2
+    # Condition: ∃ c count[c] ≥ 3 OR all counts ≥1
+    if any(c >= 3 for c in counts):
+        return True
+    if all(c >= 1 for c in counts):
+        return True
+    return False
+
+def multiset_counts(n):
+    # Generate all multisets (with repetition) of size n from {0,1,2}
+    # Using integer partitions with 3 parts summing to n:
+    # counts of 0, 1, 2 summing to n
+    for c0 in range(n+1):
+        for c1 in range(n+1 - c0):
+            c2 = n - c0 - c1
+            yield (c0, c1, c2)
+
+def main():
+    print("n and example failing multisets (c0,c1,c2 counts):")
+    for n in range(1, 20):
+        # For this n, check if any multiset fails condition
+        failed = []
+        for counts in multiset_counts(n):
+            if not check_condition(counts):
+                failed.append(counts)
+        if not failed:
+            # no failing multisets for this n
+            print(f"Condition always holds at n = {n}")
+            return
+        else:
+            # print at most 3 failing examples
+            print(f"n={n}, fails on {failed[:3]} ... total {len(failed)} failing multisets")
+
+if __name__ == "__main__":
+    main()
+```

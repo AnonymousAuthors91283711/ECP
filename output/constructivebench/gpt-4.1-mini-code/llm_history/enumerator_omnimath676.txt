@@ -1,0 +1,57 @@
+[write_program]
+The problem involves finding triples of positive integers (a, b, c) such that:
+
+- a^b ends with digit 4,
+- b^c ends with digit 2,
+- c^a ends with digit 9.
+
+We want to find all such triples with small values to guess possible sums a+b+c that satisfy these conditions and potentially identify the minimal such sum.
+
+```python
+# Enumerate triples (a,b,c) with a,b,c in [1..20]
+# Check conditions on last digits of powers
+# Print triples and their sums when conditions hold
+
+def last_digit_pow(base, exponent):
+    # Efficiently get last digit of base^exponent using cyclicity
+    # Patterns repeat modulo 4 or less
+    base_mod = base % 10
+    if exponent == 0:
+        return 1
+    if base_mod in [0,1,5,6]:
+        return base_mod
+    # Determine cycle length and pattern
+    # Precompute cycle
+    cycle = []
+    x = base_mod
+    while True:
+        if x in cycle:
+            break
+        cycle.append(x)
+        x = (x * base_mod) % 10
+    # Find index using (exponent-1) mod len(cycle)
+    idx = (exponent - 1) % len(cycle)
+    return cycle[idx]
+
+max_n = 20
+candidates = []
+print("Enumerating triples (a,b,c) with a,b,c in [1..20].")
+for a in range(1, max_n+1):
+    for b in range(1, max_n+1):
+        if last_digit_pow(a,b) != 4:
+            continue
+        for c in range(1, max_n+1):
+            if last_digit_pow(b,c) != 2:
+                continue
+            if last_digit_pow(c,a) != 9:
+                continue
+            s = a + b + c
+            print(f"a={a}, b={b}, c={c}, sum={s}")
+            candidates.append(s)
+
+if candidates:
+    minimal_sum = min(candidates)
+    print(f"Minimal sum found: {minimal_sum}")
+else:
+    print("No triples found with conditions for a,b,c in [1..20].")
+```

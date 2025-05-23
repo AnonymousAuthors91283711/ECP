@@ -1,0 +1,89 @@
+[write_program]
+The problem is about quadratic polynomials f(x) = ax² + bx + c with integer coefficients a,b,c, which satisfy:
+- f(u)=0, f(v)=0, f(w)=2 for distinct integers u,v,w,
+- and d = discriminant = b² - 4ac.
+We want to find the greatest possible value of d under these conditions.
+
+To explore, we can enumerate small triples of distinct integers (u,v,w), try to find integer quadratic polynomials passing through those points, and compute the discriminants d.
+
+Note: The polynomial is determined by points (u,0), (v,0), (w,2).
+We have system:
+f(u)=a u² + b u + c = 0
+f(v)=a v² + b v + c = 0
+f(w)=a w² + b w + c = 2
+
+From the first two equations, f(u)=0 and f(v)=0, so u,v are roots of the polynomial.
+
+The polynomial can be written as f(x) = a(x - u)(x - v), so c = auv, b = -a(u+v).
+
+Substituting into f(w) = 2:
+a (w-u)(w-v) = 2
+=> a = 2/[(w-u)(w-v)]
+
+We look for integers u,v,w distinct with w ≠ u, w ≠ v, and a as above integer, then b and c are integers, so b = -a(u+v) integer and c = a u v integer as well.
+
+Finally, discriminant:
+d = b² - 4 a c = ( -a(u+v) )² - 4 a (a u v ) = a² (u+v)² - 4 a² u v = a² ( (u+v)² - 4 u v ) = a² (u-v)²
+
+Since a = 2/((w-u)(w-v)), the discriminant is
+d = [2/((w-u)(w-v))]² (u - v)² = 4 (u - v)² / ((w - u)² (w - v)²)
+
+Since d must be integer (b,c,a integers), we check candidates where a is integer, then compute d.
+
+We will enumerate small u,v,w distinct integers in some range, check if a is integer, then compute d and print it.
+
+Let's implement this enumeration.
+
+```python
+# Enumerate quadratic polynomials f(x)=a x^2 + b x + c with integer a,b,c,
+# that satisfy f(u)=0, f(v)=0, f(w)=2 for distinct integers u,v,w with |u,v,w| ≤ 10.
+# Compute discriminants d = b^2 - 4ac and print them immediately.
+# Also print the parameters (u,v,w,a,b,c) with the discriminant.
+# Then print the maximum discriminant found.
+
+def gcd(a,b):
+    while b:
+        a,b=b,a%b
+    return abs(a)
+
+def enum():
+    max_d = None
+    printed = set()
+    print("Enumerating all discriminants d and corresponding polynomials:")
+    for u in range(-10,11):
+        for v in range(-10,11):
+            if v == u:
+                continue
+            for w in range(-10,11):
+                if w == u or w == v:
+                    continue
+                denom = (w - u) * (w - v)
+                if denom == 0:
+                    continue
+                # a = 2 / denom must be integer
+                if 2 % denom != 0:
+                    # Try also negative divisors (as denom can be negative)
+                    continue
+                a = 2 // denom
+                b = -a * (u + v)
+                c = a * u * v
+                # Verify f(u)=0,f(v)=0,f(w)=2
+                if a*u*u + b*u + c != 0:
+                    continue
+                if a*v*v + b*v + c !=0:
+                    continue
+                if a*w*w + b*w + c !=2:
+                    continue
+                d = b*b - 4*a*c
+                key = (d,a,b,c,u,v,w)
+                if key in printed:
+                    continue
+                printed.add(key)
+                print(f"d={d}, a={a}, b={b}, c={c}, roots=({u},{v}), w={w}")
+                if max_d is None or d > max_d:
+                    max_d = d
+    print(f"Maximum discriminant found: {max_d}")
+
+if __name__ == "__main__":
+    enum()
+```

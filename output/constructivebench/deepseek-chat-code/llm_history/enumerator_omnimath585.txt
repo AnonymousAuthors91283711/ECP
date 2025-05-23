@@ -1,0 +1,85 @@
+[write_program]
+This problem involves calculating the probability that a 13-card hand from a standard 52-card deck has exactly 4 high cards (10, J, Q, K, A) and a point value of at least 13, where points are assigned as: A=4, K=3, Q=2, J=1. We'll enumerate all possible combinations to estimate this probability.
+
+The approach:
+1. Generate all combinations of 13 cards from 52
+2. Filter hands with exactly 4 high cards (10/J/Q/K/A)
+3. Calculate point values for qualifying hands
+4. Count hands meeting the point threshold
+5. Compute probability as ratio of qualifying hands to total hands with 4 high cards
+
+Since enumerating all combinations is computationally intensive, we'll use combinatorics to count valid combinations efficiently.
+
+```python
+import math
+from itertools import combinations
+
+def point_value(hand):
+    points = 0
+    for card in hand:
+        rank = card % 13
+        if rank == 0:   # Ace
+            points += 4
+        elif rank == 12: # King
+            points += 3
+        elif rank == 11: # Queen
+            points += 2
+        elif rank == 10: # Jack
+            points += 1
+    return points
+
+def count_combinations():
+    deck = range(52)
+    high_cards = [c for c in deck if c % 13 >= 10]
+    other_cards = [c for c in deck if c % 13 < 10]
+    
+    total_valid = 0
+    qualifying = 0
+    
+    # Choose 4 high cards from 20 (5 ranks * 4 suits)
+    for high_combo in combinations(high_cards, 4):
+        remaining_high = len(high_cards) - 4
+        # Choose 9 other cards from 32 (8 ranks * 4 suits)
+        for other_combo in combinations(other_cards, 9):
+            hand = high_combo + other_combo
+            total_valid += 1
+            if point_value(hand) >= 13:
+                qualifying += 1
+            if total_valid % 100000 == 0:
+                print(f"Progress: {total_valid} combinations checked, {qualifying} qualifying")
+    
+    print(f"Total valid hands: {total_valid}")
+    print(f"Qualifying hands: {qualifying}")
+    print(f"Probability: {qualifying/total_valid}")
+
+# Since full enumeration is impractical, we'll use combinatorics
+def combinatorial_solution():
+    # Total ways to choose 4 high cards from 20
+    ways_high = math.comb(20, 4)
+    # Total ways to choose 9 other cards from 32
+    ways_other = math.comb(32, 9)
+    total_valid = ways_high * ways_other
+    
+    # For qualifying hands, we need point_value >= 13
+    # We need to count combinations of high cards that sum to >=13 points
+    # High cards are: A(4),K(3),Q(2),J(1),10(0)
+    point_counts = {0:4, 1:4, 2:4, 3:4, 4:4}  # 10,J,Q,K,A counts
+    
+    qualifying = 0
+    # Enumerate all possible combinations of 4 high cards
+    for a in range(min(4,4)+1):  # Aces
+        for k in range(min(4,4-a)+1):  # Kings
+            for q in range(min(4,4-a-k)+1):  # Queens
+                j = 4 - a - k - q  # Jacks
+                if j >= 0 and j <=4:
+                    points = 4*a + 3*k + 2*q + 1*j
+                    if points >= 13:
+                        count = math.comb(4,a) * math.comb(4,k) * math.comb(4,q) * math.comb(4,j)
+                        qualifying += count * ways_other
+    
+    print(f"Total valid hands: {total_valid}")
+    print(f"Qualifying hands: {qualifying}")
+    print(f"Probability: {qualifying/total_valid}")
+
+combinatorial_solution()
+```

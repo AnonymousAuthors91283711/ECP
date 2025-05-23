@@ -1,0 +1,108 @@
+[write_program]
+The problem involves finding the minimum size of a finite set \( S \subseteq \mathbb{Z}^3 \) such that if two functions \( f, g: \mathbb{Z}^3 \to \mathbb{R} \) satisfy discrete harmonic conditions in each coordinate and agree on \( S \), then \( f = g \) everywhere. This is related to uniqueness sets for discrete harmonic functions on \(\mathbb{Z}^3\).
+
+To explore this computationally, we can attempt small finite sets \( S \), check if the imposed equalities on \( S \) imply uniqueness of \( f \) and \( g \), by enumerating the space of harmonic functions restricted to a finite box, and verifying when equality on the chosen \( S \) forces equality everywhere on the box.
+
+We will:
+- Choose small boxes \(\{ (a,b,c): a,b,c \in [0,m] \}\) in \(\mathbb{Z}^3\).
+- Enumerate subsets \(S\) of points in this box up to a chosen size \(n\).
+- For each \(S\), test numerical linear algebra conditions to see if harmonic functions matching on \(S\) are identical.
+- Print candidate sizes \(n\) as we find sets with uniqueness.
+
+Due to complexity, we fix \(m=2\) (3x3x3 cube = 27 points) and test sets \(S\) of increasing size. We print found sizes where uniqueness holds.
+
+```python
+import itertools
+import numpy as np
+
+# Dimension of the cube in each direction
+m = 2  # points from 0 to m on each axis: 3x3x3=27 points total
+
+points = [(x,y,z) for x in range(m+1) for y in range(m+1) for z in range(m+1)]
+n_points = len(points)
+
+# Map point to index for matrix construction
+index = {p:i for i,p in enumerate(points)}
+
+# Construct the discrete Laplace linear system: f(p) = average of neighbors along each axis
+# The harmonicity condition for point p (not on boundary) implies:
+# 6*f(p) = sum of f(neighbors in +/- x,y,z directions)
+# We use these equations for inner points; boundary points have no such constraint.
+
+def neighbors(p):
+    x,y,z = p
+    nbrs = []
+    for dx,dy,dz in [(1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1)]:
+        nx, ny, nz = x+dx, y+dy, z+dz
+        if 0 <= nx <= m and 0 <= ny <= m and 0 <= nz <= m:
+            nbrs.append((nx,ny,nz))
+    return nbrs
+
+# Build linear system A f = 0 for f harmonic in interior points.
+A = np.zeros((n_points, n_points))
+# For boundary points, no harmonicity constraint => zero row
+for p,i in index.items():
+    nbrs = neighbors(p)
+    if len(nbrs) == 6:
+        # interior point: 6 f(p) - sum f(nbr) = 0
+        A[i,i] = 6
+        for nb in nbrs:
+            A[i,index[nb]] = -1
+    else:
+        # boundary point: no equation, row zero, f free
+        A[i,i] = 0
+
+# The nullspace of A gives the space of harmonic functions on the cube with free values at boundary.
+# Since boundary rows zero, that means boundary values free; interior determined by boundary.
+
+# For uniqueness, if two harmonic functions agree on set S, and also A f=0,
+# the difference h = f-g is harmonic and zero on S.
+# So zero values on S => h zero everywhere iff restriction matrix from nullspace basis to S is injective.
+
+# Compute nullspace of A (numeric kernel)
+def nullspace(A, tol=1e-10):
+    u,s,vh = np.linalg.svd(A)
+    null_mask = (s <= tol)
+    null_space = np.compress(null_mask, vh, axis=0)
+    return np.transpose(null_space)
+
+N = nullspace(A)  # each column is a nullspace vector of length n_points
+
+print(f"Total points: {n_points}, Nullity of A (dimension of harmonic space): {N.shape[1]}")
+
+# Enumerate candidate sets S of size n increasing from 1 up to 7 (to limit output)
+max_n = 7
+found_sizes = set()
+
+for n in range(1, max_n+1):
+    # To keep computations fast, sample some sets randomly if too many subsets
+    # but for small n total subsets count = C(27,n) manageable up to n=4/5
+    # Let's limit exhaustive search for n<=3, random samples for n>3
+    
+    if n<=3:
+        setsS = itertools.combinations(points, n)
+    else:
+        # sample random subsets
+        import random
+        setsS = (tuple(random.sample(points, n)) for _ in range(1000))
+    
+    for S in setsS:
+        indices_S = [index[p] for p in S]
+        # Restrict nullspace vectors to S: matrix dim (#S rows x nullity cols)
+        M = N[indices_S, :]
+        # Check if kernel of restriction is zero vector only
+        # i.e. M has full column rank -> rank = dim nullspace
+        rank = np.linalg.matrix_rank(M)
+        if rank == N.shape[1]:
+            print(f"Uniqueness set size candidate found: {n} with points {S}")
+            found_sizes.add(n)
+            break  # found for this n, go to next n
+
+    if found_sizes:
+        # Print minimal found size as current minimum candidate
+        min_candidate = min(found_sizes)
+        print(f"Minimal uniqueness set size candidate so far: {min_candidate}")
+
+# Note: This is exploratory; the true minimal size might be larger.
+```
+This enumerator outputs candidate minimal sizes \( n \) of uniqueness sets \( S \) in the 3D discrete harmonic function setting. It prints each found candidate immediately. Adjusting parameters and increasing the search range helps conjecture the minimal cardinality.

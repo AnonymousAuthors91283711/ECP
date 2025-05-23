@@ -1,0 +1,48 @@
+[write_program]
+The problem describes a sequence \(a\) defined on indices \(0,1,\ldots,n+1\) with constraints:
+- \(a_n = a_0\)
+- \(a_{n+1} = a_1\)
+- For each \(i \in [0..n-1]\), \(a_{i+2} = a_i \cdot a_{i+1} + 1\)
+We want all \(n \geq 3\) for which such a sequence exists.
+
+The recurrence is nonlinear, and additionally, the last two terms wrap around to the first two terms. We want to enumerate small \(n\) to find which satisfy the system for real \(a_0,a_1,\dots,a_{n+1}\).
+
+We will:
+- For \(n=3,4,5,6\), sample \(a_0,a_1\) over rational values in small integer range.
+- Generate the sequence.
+- Check if \(a_n = a_0\) and \(a_{n+1} = a_1\) hold exactly (using Fraction to avoid float errors).
+- Print values of \(n\) where the fixed point condition holds.
+
+If found multiple results, print them as candidates.
+
+```python
+from fractions import Fraction
+from itertools import product
+
+def check_n(n):
+    # Try a0,a1 in range -3..3 (exclude zero division risk; zero allowed here)
+    candidates = []
+    for a0_int, a1_int in product(range(-3,4), repeat=2):
+        a0 = Fraction(a0_int,1)
+        a1 = Fraction(a1_int,1)
+        # Sequence length n+2
+        a = [None]*(n+2)
+        a[0] = a0
+        a[1] = a1
+        # Recurrence a[i+2] = a[i]*a[i+1] + 1
+        for i in range(n):
+            a[i+2] = a[i]*a[i+1] + 1
+        # check wrap conditions
+        if a[n] == a0 and a[n+1] == a1:
+            print(f"n={n}, a0={a0}, a1={a1}, sequence={a}")
+            candidates.append((a0,a1))
+    return candidates
+
+print("Enumerating candidate n with sequences satisfying constraints:")
+for n in range(3,7):
+    cands = check_n(n)
+    if cands:
+        print(f"Possible n = {n} with {len(cands)} solutions")
+
+# Result hint: not all n have solutions. Enumerating small n helps conjecture omnimath3912_answer.
+```

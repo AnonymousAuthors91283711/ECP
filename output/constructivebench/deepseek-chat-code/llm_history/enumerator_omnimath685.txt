@@ -1,0 +1,50 @@
+[write_program]
+This problem asks to find all 8-bit binary strings (lists of Booleans) where any two distinct strings in the set must have Hamming distance at least 3. This is equivalent to finding a binary code of length 8 with minimum distance 3. The largest such code is known to be the extended Hamming code (16 codewords), but we'll enumerate smaller examples first.
+
+We'll generate all possible 8-bit strings and check the distance condition, starting with smaller subsets and increasing size until we can't find larger sets. The program will output valid sets it finds.
+
+```python
+from itertools import combinations
+
+def hamming_distance(a, b):
+    return sum(x != y for x, y in zip(a, b))
+
+def is_valid_code(words):
+    for a, b in combinations(words, 2):
+        if hamming_distance(a, b) < 3:
+            return False
+    return True
+
+def generate_all_binary_strings(length):
+    if length == 0:
+        return [tuple()]
+    smaller = generate_all_binary_strings(length - 1)
+    return [(False,) + s for s in smaller] + [(True,) + s for s in smaller]
+
+all_8bit = generate_all_binary_strings(8)
+
+max_size = 0
+best_codes = []
+
+# Try increasing subset sizes
+for size in range(1, 17):
+    found = False
+    for candidate in combinations(all_8bit, size):
+        if is_valid_code(candidate):
+            print(f"Found valid code of size {size}:")
+            for word in candidate:
+                print(word)
+            found = True
+            if size > max_size:
+                max_size = size
+                best_codes = [candidate]
+            elif size == max_size:
+                best_codes.append(candidate)
+            break  # Just show one example per size
+    if not found:
+        print(f"No codes found of size {size}")
+        break
+
+print("\nMaximum code size found:", max_size)
+print("Number of maximum size codes found:", len(best_codes))
+```

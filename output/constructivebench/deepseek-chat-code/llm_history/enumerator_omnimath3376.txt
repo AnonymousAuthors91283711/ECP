@@ -1,0 +1,84 @@
+[write_program]
+This problem involves calculating the probability that a student has both eye colors the same, given probabilities for each color appearing in either eye. We'll model this using probability theory and combinatorial counting.
+
+The approach:
+1. Model the eye color pairs as a 3x3 grid (since there are 3 colors)
+2. Let p_ij be the probability of color pair (i,j)
+3. Set up equations based on the given probabilities for each color appearing in either eye
+4. Solve for the diagonal probabilities (where i=j)
+5. Calculate the total probability of matching eye colors
+
+We'll enumerate possible probability distributions that satisfy the given conditions.
+
+```python
+from itertools import product
+
+def solve():
+    # We'll represent the 3x3 grid of probabilities p[i][j]
+    # The given conditions are:
+    # P(row=0 or col=0) = 0.3
+    # P(row=1 or col=1) = 0.4
+    # P(row=2 or col=2) = 0.5
+    # We need to find P(row=col)
+    
+    # We'll discretize the probabilities to hundredths for enumeration
+    for total in range(1, 101):
+        # Try all possible counts for the diagonal entries
+        for a in range(0, total+1):
+            for b in range(0, total+1 - a):
+                c = total - a - b
+                if c < 0:
+                    continue
+                
+                # Calculate the remaining probabilities
+                # Using inclusion-exclusion for the given conditions
+                # P(row=0 or col=0) = P(row=0) + P(col=0) - P(row=0 and col=0)
+                # Similarly for other colors
+                
+                # Let's define:
+                # x = p01 + p02 (other entries in row 0)
+                # y = p10 + p12 (other entries in row 1)
+                # z = p20 + p21 (other entries in row 2)
+                # u = p10 + p20 (other entries in col 0)
+                # v = p01 + p21 (other entries in col 1)
+                # w = p02 + p12 (other entries in col 2)
+                
+                # The conditions become:
+                # (a + x + u) = 30
+                # (b + y + v) = 40
+                # (c + z + w) = 50
+                
+                # Also, x + y + z + u + v + w = 100 - (a + b + c)
+                remaining = 100 - (a + b + c)
+                
+                # We need to find non-negative integers x,y,z,u,v,w that satisfy:
+                # x + u = 30 - a
+                # y + v = 40 - b
+                # z + w = 50 - c
+                # x + y + z + u + v + w = remaining
+                
+                # Let's try to find possible values
+                xu_target = 30 - a
+                yv_target = 40 - b
+                zw_target = 50 - c
+                
+                if xu_target < 0 or yv_target < 0 or zw_target < 0:
+                    continue
+                
+                if (xu_target + yv_target + zw_target) != remaining:
+                    continue
+                
+                # Now we can find possible distributions
+                # The exact distribution doesn't matter for the diagonal probability
+                # since we already have a, b, c
+                diagonal_prob = a + b + c
+                print(f"Possible solution found with diagonal probability: {diagonal_prob}/100")
+                
+                # Since we're looking for the exact value, we can stop after first valid solution
+                # (the problem implies there's a unique solution)
+                return
+    
+    print("No solution found")
+
+solve()
+```

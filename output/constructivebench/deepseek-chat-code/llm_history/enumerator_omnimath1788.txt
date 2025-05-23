@@ -1,0 +1,74 @@
+[write_program]
+This problem involves finding the absolute value of the sum of three real numbers a, b, c that satisfy a system of three equations. We'll approach this by:
+1. Looking for symmetric solutions where a = b
+2. Solving the resulting equations
+3. Checking all permutations of the solutions
+4. Computing |a + b + c| for valid solutions
+
+We'll use exact rational arithmetic where possible to avoid floating-point inaccuracies.
+
+```python
+from fractions import Fraction
+from itertools import permutations
+
+def solve_system():
+    # Try symmetric case a = b first
+    a = b = Symbol('a')
+    c = Symbol('c')
+    eq1 = a**2 - b*c - 14
+    eq2 = b**2 - c*a - 14
+    eq3 = c**2 - a*b + 3
+    
+    # Since a = b, eq1 and eq2 are identical
+    # Solve eq1 and eq3 with a = b
+    solutions = []
+    
+    # Case 1: a = b
+    # From eq1: a^2 - a*c = 14 => c = (a^2 - 14)/a
+    # Substitute into eq3: c^2 - a^2 + 3 = 0
+    # Let's solve numerically first to find candidates
+    from sympy import symbols, Eq, solve
+    a_sym = symbols('a')
+    c_expr = (a_sym**2 - 14)/a_sym
+    eq3_sym = c_expr**2 - a_sym**2 + 3
+    a_vals = solve(eq3_sym, a_sym)
+    
+    for a_val in a_vals:
+        if a_val == 0:
+            continue
+        c_val = (a_val**2 - 14)/a_val
+        # Check all permutations of (a_val, a_val, c_val)
+        for perm in set(permutations([a_val, a_val, c_val])):
+            a_p, b_p, c_p = perm
+            # Verify all original equations
+            eq1_check = a_p**2 - b_p*c_p - 14
+            eq2_check = b_p**2 - c_p*a_p - 14
+            eq3_check = c_p**2 - a_p*b_p + 3
+            if abs(eq1_check) < 1e-10 and abs(eq2_check) < 1e-10 and abs(eq3_check) < 1e-10:
+                solutions.append((float(a_p), float(b_p), float(c_p)))
+    
+    # Remove duplicates considering floating point precision
+    unique_solutions = []
+    seen = set()
+    for sol in solutions:
+        rounded = tuple(round(x, 6) for x in sol)
+        if rounded not in seen:
+            seen.add(rounded)
+            unique_solutions.append(sol)
+    
+    # Compute |a + b + c| for each solution
+    results = set()
+    for a, b, c in unique_solutions:
+        s = abs(a + b + c)
+        results.add(round(s, 6))
+    
+    return sorted(results)
+
+if __name__ == "__main__":
+    from sympy import Symbol
+    results = solve_system()
+    for r in results:
+        print(r)
+    if results:
+        print(f"Possible values of |a + b + c|: {results}")
+```

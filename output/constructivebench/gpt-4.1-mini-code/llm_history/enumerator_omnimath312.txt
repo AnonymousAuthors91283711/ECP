@@ -1,0 +1,57 @@
+[write_program]
+The problem considers a set of natural numbers \( n \) for which there exist three monic integer polynomials \( p_0, p_1, p_2 \) such that every integer from 1 to \( n \) can be represented as \( p_j(m) \) for some integer \( m \) and some polynomial \( j \in \{0,1,2\} \).
+
+We want to find the greatest \( n \) for which this property holds.
+
+We'll enumerate possible \( n \) values up to some range, and for each \( n \), try to find polynomials \( p_0, p_1, p_2 \) that cover all integers from 1 to \( n \). To keep complexity low, we can consider polynomials of degree 1 or 2 (and monic implies leading coefficient 1).
+
+For example, consider polynomials: \( p_i(x) = x + a_i \) or \( x^2 + b_i x + c_i \) with integer coefficients.
+
+We'll try linear polynomials with integer shifts first, as these are simpler and might already yield large coverage.
+
+The program enumerates small sets of integer shifts for three linear monic polynomials, checking if their integer outputs cover \( 1 \) to \( n \) for increasing \( n \).
+
+Print polynomials and \( n \) when a full coverage is found.
+
+```python
+# Enumerate n and try to find three monic integer polynomials p_0, p_1, p_2,
+# each either x + a or x^2 + b x + c, covering {1,...,n} by their integer values.
+
+# We'll restrict to linear monic polynomials of form x + a for efficiency.
+
+# For each triple (a,b,c) in range(-5,6), check coverage on {1,...,n} for n up to 20.
+
+def monic_linear_values(a, low, high):
+    # Values of p(x) = x + a for x in integers s.t. p(x) in [low,high]
+    vals = set()
+    # Solve x+a in [low, high] => x in [low - a, high - a]
+    x_low, x_high = low - a, high - a
+    for x in range(x_low, x_high + 1):
+        vals.add(x + a)
+    return vals
+
+def check_coverage(n, shifts):
+    covered = set()
+    low, high = 1, n
+    for a in shifts:
+        covered |= monic_linear_values(a, low, high)
+    return set(range(1, n+1)) <= covered
+
+def main():
+    from itertools import product
+    max_n = 20
+    # Search shifts a,b,c in -5 to 5 for polynomials x + a, x + b, x + c
+    candidates = []
+    for n in range(1, max_n+1):
+        for shifts in product(range(-5,6), repeat=3):
+            if check_coverage(n, shifts):
+                # Print immediately when found
+                print(f"n = {n}, shifts = {shifts}")
+                candidates.append(n)
+                break
+    if candidates:
+        print(f"Greatest n found (linear): {max(candidates)}")
+
+if __name__ == "__main__":
+    main()
+```

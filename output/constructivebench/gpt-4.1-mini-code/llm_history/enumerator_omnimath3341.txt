@@ -1,0 +1,72 @@
+[write_program]
+The problem asks whether there exists a function \( f: \mathbb{Z} \times \mathbb{Z} \to \{0,\ldots,9\} \) (Fin 10) defined on pairs \((x,y)\) with \(1 \leq x,y \leq 252\), \(x \neq y\), such that for any distinct integers \(a, b, c\), we have \(f(a,b) \neq f(b,c)\).
+
+I will interpret this as searching for a coloring on the directed edges of a complete graph on 252 vertices (vertices labeled 1 to 252), with colors 0 to 9, such that for any three distinct vertices \(a, b, c\), the color of edge \((a,b)\) differs from the color of edge \((b,c)\).
+
+I'll write a Python program to try small \(n\) (number of vertices) and k=10 colors, and try to find or enumerate colorings satisfying the property for these small cases, printing the parameters and any satisfying colorings (or partial patterns), to help conjecture if this is possible for n=252.
+
+Since the complete enumeration is huge, I'll limit analysis to paths of length two with distinct vertices and check the property.
+
+The program enumerates all functions on edges for a small n (3 or 4), prints the functions passing the condition, then scales up to check feasibility.
+
+```python
+# Enumerate colorings f: edges of complete directed graph on n vertices -> {0..9}
+# such that for any distinct a,b,c, f(a,b) != f(b,c).
+
+from itertools import product, permutations
+
+def check_coloring(n, coloring):
+    # coloring: dict mapping (a,b) with a != b to color in 0..9
+    # Check that for all distinct a,b,c: color(a,b)!=color(b,c)
+    for a, b, c in permutations(range(1, n+1), 3):
+        if coloring[(a,b)] == coloring[(b,c)]:
+            return False
+    return True
+
+def edges(n):
+    return [(a,b) for a in range(1,n+1) for b in range(1,n+1) if a != b]
+
+def main():
+    k = 10  # number of colors
+    for n in [3,4]:
+        print(f"Trying n={n}, colors={k}")
+        e = edges(n)
+        total_edges = len(e)
+        # We try to find one coloring satisfying the condition.
+        # Enumerate color assignments for all edges: k^(n*(n-1)), quickly too big.
+        # Instead, attempt a backtracking search.
+        def backtrack(idx, coloring):
+            if idx == total_edges:
+                if check_coloring(n, coloring):
+                    print("Found coloring:")
+                    for edge in e:
+                        print(f"f{edge}={coloring[edge]}", end=' ')
+                    print()
+                return
+            edge = e[idx]
+            for color in range(k):
+                coloring[edge] = color
+                # Prune: only check triples that involve this edge as (a,b) or (b,c)
+                # We'll check local consistency only
+                consistent = True
+                a,b = edge
+                for c in range(1, n+1):
+                    if c != a and c != b:
+                        # Check if color(edge) == color(b,c)
+                        if (b,c) in coloring and coloring[edge] == coloring[(b,c)]:
+                            consistent = False
+                            break
+                        # Check if color(a,b) == color(c,a)
+                        if (c,a) in coloring and coloring[(c,a)] == coloring[edge]:
+                            # Actually, pattern is f(a,b) != f(b,c), 
+                            # Here c,a is (c,a), so only need to check f(a,b) != f(b,c) for triple (a,b,c)
+                            continue
+                if consistent:
+                    backtrack(idx+1, coloring)
+                del coloring[edge]
+        backtrack(0, {})
+
+if __name__ == "__main__":
+    main()
+```
+This program tries to find colorings for n=3 and n=4, printing any found. Insights from these small cases may help conjecture about the case n=252.

@@ -1,0 +1,63 @@
+[write_program]
+The problem involves enumerating natural numbers \( c > 0 \) such that for all choices of signs \( s_1, s_2 \in \{1,-1\} \), there exists a rational number \( r \) satisfying
+\[ r^2 + s_1 p r + s_2 c = 0 \]
+for a large prime \( p = 2^{24036583} - 1 \). Since \( p \) is enormous and checking primality or direct computation is impossible here, we will try small values of \( p \) and \( c \) to understand the structure and assist in conjecturing the count of such \( c \).
+
+Key points to check:
+- For each \( c > 0 \), and for each pair \( (s_1, s_2) \in \{1, -1\}^2 \), the quadratic
+  \[ r^2 + s_1 p r + s_2 c = 0 \]
+  must have a solution \( r \in \mathbb{Q} \).
+- A quadratic \( r^2 + a r + b = 0 \) with \( a,b \in \mathbb{Z} \) has a rational root if and only if its discriminant \( \Delta = a^2 - 4b \) is a perfect square integer.
+- Using this criterion, we will test for small primes \( p \) (e.g., 3, 5, 7) and enumerate \( c \) up to a small threshold (say 50) to find all such \( c \).
+
+This will provide candidates and help conjecture the nature or count of such \( c \) for the big \( p \).
+
+```python
+# enumerator.py
+import math
+
+def is_perfect_square(n):
+    if n < 0:
+        return False
+    root = int(math.isqrt(n))
+    return root * root == n
+
+def has_rational_root(a, b):
+    # quadratic: x^2 + a x + b = 0
+    # rational root iff discriminant a^2 - 4b is a perfect square
+    disc = a*a - 4*b
+    return is_perfect_square(disc)
+
+def test_p_c(p, max_c=50):
+    print(f"Testing for p = {p}, c in 1..{max_c}")
+    candidates = []
+    for c in range(1, max_c+1):
+        ok = True
+        for s1 in [1, -1]:
+            for s2 in [1, -1]:
+                a = s1 * p
+                b = s2 * c
+                if not has_rational_root(a, b):
+                    ok = False
+                    break
+            if not ok:
+                break
+        if ok:
+            print(f"c = {c} satisfies condition")
+            candidates.append(c)
+    print(f"Total candidates for p={p}: {len(candidates)}")
+    if candidates:
+        print(f"Minimum candidate for p={p}: {min(candidates)}")
+        print(f"Maximum candidate for p={p}: {max(candidates)}")
+    print()
+
+def main():
+    # Since p = 2^24036583 -1 is huge, test smaller primes of similar form
+    primes = [3, 5, 7]  # small primes, for demonstration
+    for p in primes:
+        test_p_c(p, max_c=50)
+
+if __name__ == "__main__":
+    main()
+```
+

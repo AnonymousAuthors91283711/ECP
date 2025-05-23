@@ -1,0 +1,45 @@
+[write_program]
+The problem involves finding the greatest value of the expression \( t = x - y + z \) subject to the quadratic constraint
+\[
+2x^2 + y^2 + z^2 = 2x - 4y + 2xz - 5.
+\]
+To empirically explore this, I'll sample small rational values of \(x, y, z\) from a reasonable range (e.g., integers from -3 to 3), check the equality, and print the values of \( t = x - y + z \) when the relation holds exactly (within floating-point tolerance). This enumeration can hint at the maximum possible \(t\).
+
+```python
+# Enumerate possible (x,y,z) triples over small rationals, test the relation,
+# print t = x - y + z when equality holds, and track the maximum t found.
+
+import math
+
+def lhs(x, y, z):
+    return 2*x**2 + y**2 + z**2
+
+def rhs(x, y, z):
+    return 2*x - 4*y + 2*x*z - 5
+
+tolerance = 1e-9
+max_t = None
+max_point = None
+
+print("Enumerating (x,y,z) in {-3,...,3}^3 satisfying the relation exactly:")
+
+for x_num in range(-6, 7):  # Using half steps to get rationals like -3,-2.5,...3
+    x = x_num * 0.5
+    for y_num in range(-6, 7):
+        y = y_num * 0.5
+        for z_num in range(-6, 7):
+            z = z_num * 0.5
+            left = lhs(x, y, z)
+            right = rhs(x, y, z)
+            if math.isclose(left, right, abs_tol=tolerance):
+                t = x - y + z
+                print(f"t = {t:.3f} at (x,y,z) = ({x:.2f},{y:.2f},{z:.2f})")
+                if (max_t is None) or (t > max_t):
+                    max_t = t
+                    max_point = (x, y, z)
+
+if max_t is not None:
+    print(f"Max t found: {max_t:.3f} at point {max_point}")
+else:
+    print("No exact solutions found in the sampled range.")
+```

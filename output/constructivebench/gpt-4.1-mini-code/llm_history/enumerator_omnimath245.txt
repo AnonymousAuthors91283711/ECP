@@ -1,0 +1,69 @@
+[write_program]
+The problem describes a functional equation for integer-valued functions \( f: \mathbb{Z} \to \mathbb{Z} \) involving parameters \(x, y \in \mathbb{Z}\), with \( x \neq 0 \):
+
+\[
+x \cdot f(2f(y)-x) + y^2 \cdot f(2x - f(y)) = \frac{f(x)^2}{x} + f(y f(y))
+\]
+
+To assist in understanding possible solutions \(f\), we will enumerate some integer-valued functions \(f\) on a small domain (say \(\{-3, -2, -1, 0, 1, 2, 3\}\)), test the given functional equation for various pairs \((x,y)\), and print those that satisfy the equation exactly.
+
+Since \(f\) maps integers to integers, we can consider simple polynomial or low-degree functions (constant, identity, linear, quadratic) and check which satisfy the equation on the sampled domain.
+
+We will:
+
+- Define a small domain \(D = \{-3, \ldots, 3\}\).
+- Enumerate candidate functions: constant functions \(f(x) = c\), linear \(f(x) = a x + b\), quadratic \(f(x) = a x^2 + b x + c\) for small integer coefficients.
+- For each candidate, check the functional equation for all pairs \((x,y)\) with \(x \neq 0\).
+- Print candidate functions passing all tests.
+
+This enumeration helps conjecture the true solution set.
+
+```python
+# enumerator.py
+from itertools import product
+
+D = range(-3,4)  # domain to test x,y in
+X_NONZERO = [x for x in D if x != 0]
+
+def f_const(c):
+    return lambda x: c
+
+def f_linear(a,b):
+    return lambda x: a*x + b
+
+def f_quad(a,b,c):
+    return lambda x: a*x*x + b*x + c
+
+def check_function(f):
+    for x in X_NONZERO:
+        fx = f(x)
+        # f(x)^2/x must be integer => check divisibility
+        if fx*fx % x != 0:
+            return False
+        lhs_rhs_int = (fx*fx)//x
+        for y in D:
+            left = x * f(2*f(y)-x) + y*y * f(2*x - f(y))
+            right = lhs_rhs_int + f(y * f(y))
+            if left != right:
+                return False
+    return True
+
+print("Testing constant functions f(x)=c with c in -2..2:")
+for c in range(-2,3):
+    f = f_const(c)
+    if check_function(f):
+        print(f"Constant function: f(x) = {c}")
+
+print("\nTesting linear functions f(x)=a*x+b with a,b in -2..2:")
+for a,b in product(range(-2,3),repeat=2):
+    f = f_linear(a,b)
+    if check_function(f):
+        print(f"Linear function: f(x) = {a}*x + {b}")
+
+print("\nTesting quadratic functions f(x)=a*x^2 + b*x + c with a,b,c in -1..1:")
+for a,b,c in product(range(-1,2),repeat=3):
+    f = f_quad(a,b,c)
+    if check_function(f):
+        print(f"Quadratic function: f(x) = {a}*x^2 + {b}*x + {c}")
+```
+

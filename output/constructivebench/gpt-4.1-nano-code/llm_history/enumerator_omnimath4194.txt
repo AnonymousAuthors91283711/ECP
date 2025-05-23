@@ -1,0 +1,47 @@
+[write_program]
+This problem appears to involve finding positive integers \(a, b, p\) with \(p\) prime such that:
+\[ a^p = (b)! + p. \]
+To help conjecture possible solutions, I will enumerate small values for \(b\) and prime \(p\), checking if \(a^p = (b)! + p\) for some integer \(a\).
+
+Since factorials grow rapidly, I will limit \(b\) to small values and \(p\) to small primes (e.g., 2, 3, 5, 7). For each \(b\) and \(p\), I compute \(fact_b = (b)!\), then check if \(fact_b + p\) is a perfect \(p\)-th power. If yes, I output the candidate \((a, b, p)\).
+
+This enumeration prioritizes exact integer solutions, streaming answers as soon as discovered.
+
+```python
+import math
+
+# Generate small primes
+def small_primes(n):
+    sieve = [True]*(n+1)
+    sieve[0:2] = [False, False]
+    for i in range(2, int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i, n+1, i):
+                sieve[j] = False
+    return [i for i in range(2, n+1) if sieve[i]]
+
+primes = small_primes(10)  # small primes up to 10
+
+# Limit for b to avoid large factorials
+b_max = 8
+# Store found solutions
+solutions = []
+
+for b in range(1, b_max+1):
+    fact_b = math.factorial(b)
+    for p in primes:
+        val = fact_b + p
+        pth_root = val ** (1 / p)
+        a_floor = int(round(pth_root))
+        # Check if a^p == val
+        if a_floor > 0:
+            if abs(a_floor ** p - val) < 1e-9:
+                print((a_floor, b, p))
+                solutions.append((a_floor, b, p))
+            # Check neighbor if rounding was off
+            for a_candidate in [a_floor-1, a_floor+1]:
+                if a_candidate > 0:
+                    if abs(a_candidate ** p - val) < 1e-9:
+                        print((a_candidate, b, p))
+                        solutions.append((a_candidate, b, p))
+```

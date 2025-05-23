@@ -1,0 +1,52 @@
+[write_program]
+The problem describes a set \( S \subseteq \mathbb{R} \) such that:
+- \(1 \in S\), and
+- for any \(x, y \in S\) with \(x > y\), \(\sqrt{x^2 - y^2} \in S\).
+
+We want to understand the structure of all such sets \(S\).
+
+A good way to explore this is to attempt enumerations starting from \(\{1\}\), generate values by applying the rule, and see what elements appear. If the set is closed under this operation, it may generate recognizable sequences or structures.
+
+We will:
+- start with \(S = \{1\}\),
+- repeatedly add \(\sqrt{x^2 - y^2}\) for all \(x,y \in S\), \(x>y\), until no new elements appear (up to some floating-point tolerance),
+- print all new elements as they are discovered,
+- observe the generated numbers.
+
+If we suspect the set forms something specific, printing the values will help conjecture and ultimately prove the structure.
+
+```python
+# enumerator.py
+import math
+
+def close_enough(a, b, eps=1e-12):
+    return abs(a - b) < eps
+
+def main():
+    S = {1.0}
+    frontier = {1.0}  # newly added in last iteration
+    print("Starting set S = {1}")
+    iteration = 0
+    while frontier:
+        iteration += 1
+        new_frontier = set()
+        S_list = sorted(S)
+        for x in S_list:
+            for y in S_list:
+                if x > y:
+                    val = math.sqrt(x**2 - y**2)
+                    # check if val already in S (within tolerance)
+                    if not any(close_enough(val, s) for s in S):
+                        # add new value
+                        new_frontier.add(val)
+        if not new_frontier:
+            break
+        print(f"Iteration {iteration}: found {len(new_frontier)} new values")
+        for v in sorted(new_frontier):
+            print(f"{v:.12f}")
+        S.update(new_frontier)
+        frontier = new_frontier
+
+if __name__ == "__main__":
+    main()
+```

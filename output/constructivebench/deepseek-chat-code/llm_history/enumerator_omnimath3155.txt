@@ -1,0 +1,52 @@
+[write_program]
+This problem involves counting sets of numbers with specific properties. We need to enumerate possible answers for small values of n to help conjecture the pattern. The key is to count sets S ⊆ {1,...,n} where for any two elements a,b ∈ S with (a+b) even, their average (a+b)/2 must also be in S.
+
+We'll write a Python program to:
+1. Generate all subsets of {1,...,n}
+2. Check the mediocre condition
+3. Count valid sets for n up to a threshold
+4. Compute the difference A(n+2)-2A(n+1)+A(n) and check when it equals 1
+
+```python
+def is_mediocre(S):
+    """Check if set S satisfies the mediocre condition"""
+    elements = sorted(S)
+    for i in range(len(elements)):
+        a = elements[i]
+        for j in range(i, len(elements)):
+            b = elements[j]
+            if (a + b) % 2 == 0:
+                avg = (a + b) // 2
+                if avg not in S:
+                    return False
+    return True
+
+def count_mediocre_sets(n):
+    """Count all mediocre subsets of {1,...,n}"""
+    from itertools import combinations
+    count = 0
+    for k in range(n + 1):
+        for subset in combinations(range(1, n + 1), k):
+            if is_mediocre(subset):
+                count += 1
+    return count
+
+def main():
+    max_n = 8  # Reasonable threshold for demonstration
+    A = [0] * (max_n + 3)  # A[0] to A[max_n+2]
+    
+    print("n | A(n) | A(n+2)-2A(n+1)+A(n)")
+    print("-----------------------------")
+    for n in range(max_n + 1):
+        A[n] = count_mediocre_sets(n)
+        if n >= 2:
+            diff = A[n] - 2 * A[n-1] + A[n-2]
+            print(f"{n-2} | {A[n-2]} | {diff}")
+            if diff == 1:
+                print(f"Found n = {n-2} where difference equals 1")
+
+if __name__ == "__main__":
+    main()
+```
+
+The program computes the sequence A(n) and checks the difference condition for n up to 8. The output shows n, A(n), and the difference A(n+2)-2A(n+1)+A(n). When the difference equals 1, it prints the corresponding n value. This helps identify the pattern without revealing the final answer.

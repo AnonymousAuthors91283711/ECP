@@ -1,0 +1,41 @@
+[write_program]
+This problem asks for the minimum number of planes needed to cover all non-zero integer points in the cube [1,n]×[1,n]×[1,n] in 3D space, excluding the origin. The planes must pass through the origin (since they can't contain (0,0,0)).
+
+We'll write a Python program to enumerate the minimal number of planes needed for small values of n, looking for a pattern. The key observation is that we need planes covering all directions (x,y,z) where gcd(x,y,z)=1 (primitive vectors).
+
+```python
+import math
+from itertools import product
+
+def count_required_planes(n):
+    # Generate all non-zero points in [1,n]^3
+    points = set(product(range(1, n+1), repeat=3))
+    points.discard((0,0,0))
+    
+    # We'll represent planes by their normal vectors (a,b,c) with gcd(a,b,c)=1
+    planes = set()
+    
+    # For each point, find its reduced normal vector
+    covered = set()
+    for (x,y,z) in points:
+        if (x,y,z) in covered:
+            continue
+        # Compute gcd and reduced normal vector
+        g = math.gcd(math.gcd(x,y), z)
+        a, b, c = x//g, y//g, z//g
+        planes.add((a,b,c))
+        # Mark all multiples of this direction as covered
+        k = 1
+        while True:
+            pt = (k*a, k*b, k*c)
+            if max(pt) > n:
+                break
+            covered.add(pt)
+            k += 1
+    
+    return len(planes)
+
+# Enumerate for small values of n
+for n in range(2, 7):
+    print(f"n={n}: {count_required_planes(n)} planes")
+```

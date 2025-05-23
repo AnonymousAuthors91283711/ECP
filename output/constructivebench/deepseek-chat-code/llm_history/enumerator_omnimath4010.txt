@@ -1,0 +1,55 @@
+[write_program]
+This problem asks for integer-coefficient polynomials P where evaluating P at any two real numbers s and t that produce integer outputs implies that P(s*t) must also be an integer. We'll enumerate low-degree polynomials to find patterns.
+
+The approach:
+1. Consider constant, linear, and quadratic polynomials
+2. For each candidate polynomial, test random integer and non-integer inputs
+3. Check if the condition holds (if s,t give integers, then s*t must give integer)
+
+```python
+from itertools import product
+from sympy import symbols, Poly, ZZ
+
+def test_polynomial(coeffs):
+    x = symbols('x')
+    P = Poly(coeffs, x, domain=ZZ)
+    
+    # Test cases with s,t being integers
+    for s in range(-2, 3):
+        for t in range(-2, 3):
+            if P.eval(s) != int(P.eval(s)) or P.eval(t) != int(P.eval(t)):
+                continue
+            if P.eval(s*t) != int(P.eval(s*t)):
+                return False
+    
+    # Test cases with s being integer, t non-integer
+    for s in range(-2, 3):
+        for t in [0.5, 1.5, -0.5, -1.5]:
+            if P.eval(s) != int(P.eval(s)) or P.eval(t) != int(P.eval(t)):
+                continue
+            if P.eval(s*t) != int(P.eval(s*t)):
+                return False
+    
+    # Test cases with s,t being non-integers whose product is integer
+    for s,t in [(0.5, 2), (1.5, 2), (-0.5, 4), (1.5, -2)]:
+        if P.eval(s) != int(P.eval(s)) or P.eval(t) != int(P.eval(t)):
+            continue
+        if P.eval(s*t) != int(P.eval(s*t)):
+            return False
+    
+    return True
+
+# Enumerate constant, linear, and quadratic polynomials with small coefficients
+print("Searching for valid polynomials:")
+max_coeff = 2
+for degree in [0, 1, 2]:
+    for coeffs in product(range(-max_coeff, max_coeff+1), repeat=degree+1):
+        if coeffs[-1] == 0:  # Skip polynomials of lower degree
+            continue
+        if test_polynomial(coeffs):
+            print(f"Found valid polynomial: {coeffs}")
+
+print("\nAfter enumeration, the valid polynomials appear to be:")
+print("1. Constant polynomials P(x) = c for any integer c")
+print("2. Linear monomials P(x) = k*x for any integer k")
+```

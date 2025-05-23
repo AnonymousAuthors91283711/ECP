@@ -1,0 +1,79 @@
+[write_program]
+This problem asks us to find the largest possible size \( n \) for a set of vertices with certain properties in a graph-like structure, where edge labels are from \(\{0,1,2\}\). It requires that:
+- Edges are symmetric.
+- No vertex is connected only with edges of a single color.
+- All three colors appear on edges incident to at least two vertices.
+- Edges of each color appear somewhere in the graph.
+- The graph does not contain any triangle with all edges the same color (no monochromatic triangle).
+
+Given the complexity, we need to systematically enumerate small cases. We will:
+- Test small values of \( n \) starting from 2 upwards.
+- For each \( n \), attempt to construct an adjacency matrix satisfying the constraints.
+- Stop when constraints are impossible to satisfy or after a reasonable range.
+
+The code will:
+- Generate all symmetric edge labelings for a given \( n \).
+- Check constraints efficiently.
+- Record the maximum \( n \) satisfying the conditions.
+
+```python
+import itertools
+
+def check_constraints(n, E):
+    # Check edges symmetry and color conditions
+    colors = {0, 1, 2}
+    # All edges between distinct vertices: for i<j, E[i][j] == E[j][i]
+    for i in range(n):
+        for j in range(i+1, n):
+            if E[i][j] != E[j][i]:
+                return False
+    # For each vertex, check it is not connected only with one color
+    for i in range(n):
+        neighbor_colors = {E[i][j] for j in range(n) if j != i}
+        if len(neighbor_colors) == 1:
+            return False
+        # Check all three colors appear at least once in the whole graph
+    # Confirm at least one edge of each color Exists
+    edge_colors = set()
+    for i in range(n):
+        for j in range(i+1, n):
+            edge_colors.add(E[i][j])
+    if not {0,1,2}.issubset(edge_colors):
+        return False
+    # Check no monochromatic triangles
+    for trio in itertools.combinations(range(n), 3):
+        i,j,k = trio
+        if (E[i][j] == E[j][k] == E[k][i]):
+            return False
+    return True
+
+max_n = 0
+max_graph = None
+
+# Try increasing sizes, up to 6 for computational feasibility
+for n in range(2, 7):
+    vertices = range(n)
+    # Generate all possible adjacency matrices (symmetric, no self-loops)
+    edges = list(itertools.combinations(vertices, 2))
+    total_edges = len(edges)
+    found = False
+    # For each labeling combination (3^number of edges)
+    for labels in itertools.product([0,1,2], repeat=total_edges):
+        E = [[0]*n for _ in range(n)]
+        # Fill the adjacency matrix
+        for idx, (i,j) in enumerate(edges):
+            E[i][j] = labels[idx]
+            E[j][i] = labels[idx]
+        if check_constraints(n, E):
+            print(f"Found valid graph for n={n}")
+            max_n = n
+            max_graph = E
+            found = True
+            # Since we want maximum n, break after first one
+            break
+    if not found:
+        # No valid graphs for this n, move to next
+        continue
+
+print(f"Maximum n satisfying conditions: {max_n}")
+```

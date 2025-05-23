@@ -1,0 +1,64 @@
+[write_program]
+The problem involves counting certain functions with parity constraints, depending on parameters \(n\) and \(k\) with \(n \leq k\) and \(n \equiv k \pmod{2}\). To assist conjecturing the explicit formula olympiadbench2127_answer, we enumerate small cases, printing \(n, k\) and the computed values of \(N\), \(M\), and their ratio \(N / M\) if \(M \neq 0\).
+
+```python
+from itertools import product
+
+def parity_count(images, n):
+    # images: list of integers (function outputs)
+    # n is the domain size
+    count = [0] * n
+    for x in images:
+        count[x] += 1
+    return all(c % 2 == 1 for c in count)
+
+def N_count(n, k):
+    # Count σ: [k]→[2n] with parity conditions:
+    # For i in [n), count of j with σ(j)=i is odd
+    # For i in [n,2n), count is even (including zero)
+    count = 0
+    for sigma in product(range(2*n), repeat=k):
+        # Check s(i) parity conditions
+        cnt = [0]*(2*n)
+        for val in sigma:
+            cnt[val] += 1
+        ok = True
+        for i in range(n):
+            if cnt[i] % 2 != 1:
+                ok = False
+                break
+        if not ok:
+            continue
+        for i in range(n, 2*n):
+            if cnt[i] % 2 != 0:
+                ok = False
+                break
+        if ok:
+            count += 1
+    return count
+
+def M_count(n, k):
+    # Count σ: [k]→[n] with odd parity (all counts odd)
+    count = 0
+    for sigma in product(range(n), repeat=k):
+        if all(sigma.count(i) % 2 == 1 for i in range(n)):
+            count += 1
+    return count
+
+def main():
+    # Try small n,k with n <= k and same parity n % 2 = k % 2
+    for n in range(1, 5):
+        for k in range(n, 6):
+            if n % 2 == k % 2:
+                M = M_count(n, k)
+                N = N_count(n, k)
+                print(f"n={n}, k={k}, N={N}, M={M}", end="")
+                if M != 0:
+                    ratio = N // M
+                    print(f", N/M={ratio}")
+                else:
+                    print(", M=0 (skip ratio)")
+
+if __name__ == "__main__":
+    main()
+```

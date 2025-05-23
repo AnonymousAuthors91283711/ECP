@@ -1,0 +1,89 @@
+[write_program]
+This problem involves finding the maximum value of a nested polynomial evaluation under certain constraints. We'll approach it by:
+1. Modeling the polynomial relationship
+2. Enumerating possible polynomial degrees
+3. Solving the resulting equations for each case
+4. Tracking the maximum value found
+
+The key insight is that the polynomial must satisfy a functional equation, which severely restricts possible forms. We'll check low-degree polynomials first since higher degrees likely won't satisfy the constraints.
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+
+def find_max_evaluation():
+    max_val = -float('inf')
+    
+    # Check constant polynomials (degree 0)
+    for c in np.linspace(-5, 5, 101):
+        P = Polynomial([c])
+        try:
+            # Compute nested evaluations
+            a = P(1)
+            b = P(a)
+            c_val = P(b)
+            d = P(c_val)
+            
+            # Check if functional equation holds
+            def check(t):
+                lhs = P(t)
+                rhs = P(1)*t**2 + P(a)*t + P(b)
+                return abs(lhs - rhs) < 1e-8
+                
+            if all(check(t) for t in np.linspace(-1, 1, 5)):
+                print(f"Found valid constant polynomial P(x) = {c} with evaluation {d}")
+                if d > max_val:
+                    max_val = d
+        except:
+            continue
+    
+    # Check quadratic polynomials (degree 2)
+    for p in np.linspace(-2, 2, 5):
+        for q in np.linspace(-2, 2, 5):
+            for r in np.linspace(-2, 2, 5):
+                P = Polynomial([r, q, p])
+                try:
+                    a = P(1)
+                    b = P(a)
+                    c_val = P(b)
+                    d = P(c_val)
+                    
+                    def check(t):
+                        lhs = P(t)
+                        rhs = P(1)*t**2 + P(a)*t + P(b)
+                        return abs(lhs - rhs) < 1e-8
+                        
+                    if all(check(t) for t in np.linspace(-1, 1, 5)):
+                        print(f"Found valid quadratic polynomial with evaluation {d}")
+                        if d > max_val:
+                            max_val = d
+                except:
+                    continue
+    
+    # Check linear polynomials (degree 1)
+    for p in np.linspace(-2, 2, 21):
+        for q in np.linspace(-2, 2, 21):
+            P = Polynomial([q, p])
+            try:
+                a = P(1)
+                b = P(a)
+                c_val = P(b)
+                d = P(c_val)
+                
+                def check(t):
+                    lhs = P(t)
+                    rhs = P(1)*t**2 + P(a)*t + P(b)
+                    return abs(lhs - rhs) < 1e-8
+                    
+                if all(check(t) for t in np.linspace(-1, 1, 5)):
+                    print(f"Found valid linear polynomial P(x) = {p}x + {q} with evaluation {d}")
+                    if d > max_val:
+                        max_val = d
+            except:
+                continue
+    
+    print(f"\nMaximum value found: {max_val}")
+
+if __name__ == "__main__":
+    find_max_evaluation()
+```

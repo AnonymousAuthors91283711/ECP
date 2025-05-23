@@ -1,0 +1,68 @@
+[write_program]
+This problem involves finding the largest prime p < 1000 for which there exists a complex number z satisfying two given equations. We'll write a Python program to enumerate primes p < 1000 and check for solutions z to the system of equations.
+
+The approach will be:
+1. Generate all primes below 1000
+2. For each prime p, check if there exists a complex z satisfying:
+   - z³ = (z² + 1)*i
+   - i*z² = (z + 1)²
+3. Track the largest prime satisfying these conditions
+
+We'll use numerical approximation with a tolerance to check the equations.
+
+```python
+import cmath
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def check_equations(z, tol=1e-8):
+    eq1 = z**3 - (z**2 + 1)*1j
+    eq2 = 1j*z**2 - (z + 1)**2
+    return abs(eq1) < tol and abs(eq2) < tol
+
+max_prime = 0
+for p in range(999, 1, -1):
+    if not is_prime(p):
+        continue
+    
+    # Try to find z that satisfies the equations
+    # We'll sample points on a circle of radius 1 as initial guess
+    found = False
+    for angle in range(0, 360, 15):  # Check every 15 degrees
+        theta = math.radians(angle)
+        z = cmath.rect(1.0, theta)  # Complex number with magnitude 1
+        if check_equations(z):
+            print(f"Found prime {p} with solution z ≈ {z}")
+            max_prime = p
+            found = True
+            break
+    
+    if found:
+        break
+
+print(f"Largest prime found: {max_prime}")
+```

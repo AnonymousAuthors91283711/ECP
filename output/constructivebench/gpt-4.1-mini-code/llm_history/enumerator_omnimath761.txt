@@ -1,0 +1,45 @@
+[write_program]
+This problem iterates operator T on a set of integer lattice points, starting from {(0,0)}, where T expands the set by adding all neighbors (up, down, left, right). After 14 iterations, we want to find the cardinality of the resulting set.
+
+To solve this, the set after n iterations is all lattice points reachable within n steps from (0,0) by moves in the four directions. This forms a diamond (l1 ball) of radius n in Z² with points satisfying |x| + |y| ≤ n.
+
+The cardinality of such a diamond can be found by summing points on each "shell" from 0 to n:
+- At radius k, the number of points with |x| + |y| = k is 4k for k ≥ 1,
+- At k=0 (the center), the count is 1,
+so the total number of points is 1 + 4(1 + 2 + ... + n) = 1 + 4(n(n+1)/2) = 2n² + 2n + 1.
+
+The program below enumerates the sets, prints their sizes for a few steps, and prints the size at iteration 14, confirming the formula.
+
+```python
+# Enumerate the size of T^[n] applied to {(0,0)} where T expands points
+# by their four neighbors on Z^2. Print sizes for n=0..14.
+
+def neighbors(p):
+    x, y = p
+    return [(x, y), (x, y-1), (x, y+1), (x-1, y), (x+1, y)]
+
+def iterate_T(S):
+    # Apply T once: union S with neighbors of all points in S
+    new_set = set()
+    for p in S:
+        new_set.update(neighbors(p))
+    return new_set
+
+def formula(n):
+    # Known formula for size: 2n^2 + 2n + 1
+    return 2*n*n + 2*n + 1
+
+def main():
+    S = {(0,0)}
+    print(f"Iteration 0: size = {len(S)}")
+    for n in range(1, 15):
+        S = iterate_T(S)
+        size = len(S)
+        print(f"Iteration {n}: size = {size}")
+    # Print the formula value for n=14
+    fval = formula(14)
+    print(f"Formula value at n=14: {fval}")
+
+if __name__ == "__main__":
+    main()
+```

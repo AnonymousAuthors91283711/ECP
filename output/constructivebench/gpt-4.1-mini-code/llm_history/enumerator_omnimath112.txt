@@ -1,0 +1,56 @@
+[write_program]
+The problem involves a functional equation with rational inputs and outputs. The equation is:
+
+f(2xy + 1/2) + f(x - y) = 4 f(x) f(y) + 1/2.
+
+We need to find all functions f: ℚ → ℚ satisfying it.
+
+To assist, we enumerate behaviors of potential functions by testing possible polynomial forms (e.g., linear or quadratic) at small rational points to get candidate values. This can guide guessing the exact formula.
+
+We'll test functions like f(x) = a x + b or f(x) = a x^2 + b x + c over sample rational points x,y, compare values, and print those candidates that nearly satisfy the equation.
+
+```python
+from fractions import Fraction
+
+# Define candidates as linear or quadratic rationals
+def f_linear(x, a, b):
+    return a * x + b
+
+def f_quad(x, a, b, c):
+    return a * x * x + b * x + c
+
+# Test functional equation for given f, parameters, and small sample points
+def test_fe(f, params):
+    # Test at sample rationals (x,y) with small numerator and denominator
+    sample_points = [Fraction(n, d) for n in range(-2,3) for d in range(1,4) if d != 0]
+    # Filter to unique pairs (x,y)
+    checked = 0
+    satisfied = True
+    for x in sample_points:
+        for y in sample_points:
+            lhs = f(2 * x * y + Fraction(1,2), *params) + f(x - y, *params)
+            rhs = 4 * f(x, *params) * f(y, *params) + Fraction(1,2)
+            if lhs != rhs:
+                satisfied = False
+                return False
+            checked += 1
+    return satisfied
+
+print("# Enumerating candidate functions matching the functional equation:")
+
+# Trying linear candidates f(x)=a x + b with small integer a,b
+for a_int in range(-3,4):
+    for b_int in range(-3,4):
+        params = (Fraction(a_int,1), Fraction(b_int,1))
+        if test_fe(f_linear, params):
+            print(f"Linear candidate: f(x) = {params[0]} * x + {params[1]}")
+
+# Trying quadratic candidates f(x) = a x^2 + b x + c with small int coefficients
+for a_int in range(-2,3):
+    for b_int in range(-3,4):
+        for c_int in range(-3,4):
+            params = (Fraction(a_int,1), Fraction(b_int,1), Fraction(c_int,1))
+            if test_fe(f_quad, params):
+                print(f"Quadratic candidate: f(x) = {params[0]} * x^2 + {params[1]} * x + {params[2]}")
+```
+

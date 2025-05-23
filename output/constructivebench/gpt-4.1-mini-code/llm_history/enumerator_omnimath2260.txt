@@ -1,0 +1,69 @@
+[write_program]
+The problem involves finding the greatest natural number \( n \) such that there exists a function \( f \) from \( \text{Fin } 9 \times \text{Fin } 9 \) to \( \text{Fin } 9 \) with the property that \( f \) is bijective when restricted to every row, every column, and every \( 3 \times 3 \) block. This is reminiscent of Sudoku constraints, where in each row, column, and block the values form a permutation of \( \{0, \dots, 8\} \).
+
+I will write a Python program to search for such functions, or rather to enumerate partial assignments satisfying these constraints, focusing on the values assigned, counting some statistics or verifying constraints, and testing some known or partial solutions.
+
+The goal is to generate candidates for \( f \), verify if they satisfy the conditions, and output any found \( n \) that works (likely \( n = 9 \)). Because enumerating all functions is intractable, I will illustrate a backtracking partial search to find valid assignments, print partial valid assignments as they’re found, and the result should suggest the maximal \( n \).
+
+```python
+# Enumerate partial Sudoku-like functions f: 9x9 -> 9 with row, col, block bijections
+# Output partial and complete valid assignments as they are found.
+
+from itertools import permutations
+
+def blocks(i, j):
+    return (i // 3, j // 3)
+
+def is_valid(grid, r, c, val, row_used, col_used, block_used):
+    if val in row_used[r]:
+        return False
+    if val in col_used[c]:
+        return False
+    b = blocks(r, c)
+    if val in block_used[b]:
+        return False
+    return True
+
+def solve(grid, pos, row_used, col_used, block_used):
+    if pos == 81:
+        # Found a complete solution
+        print("Complete valid function f found:")
+        for row in grid:
+            print(row)
+        print()
+        return True
+    r, c = divmod(pos, 9)
+    for val in range(9):
+        if is_valid(grid, r, c, val, row_used, col_used, block_used):
+            grid[r][c] = val
+            row_used[r].add(val)
+            col_used[c].add(val)
+            block_used[blocks(r, c)].add(val)
+            if solve(grid, pos + 1, row_used, col_used, block_used):
+                # Print partial results immediately
+                pass
+            # Backtrack
+            row_used[r].remove(val)
+            col_used[c].remove(val)
+            block_used[blocks(r, c)].remove(val)
+            grid[r][c] = -1
+    return False
+
+def main():
+    grid = [[-1]*9 for _ in range(9)]
+    row_used = [set() for _ in range(9)]
+    col_used = [set() for _ in range(9)]
+    block_used = [set() for _ in range(9)]
+    print("Trying to find Sudoku-like functions f with row, col, block bijections.")
+    solve(grid, 0, row_used, col_used, block_used)
+    print("Enumeration done.")
+
+if __name__ == "__main__":
+    main()
+```
+
+This will print (stream) solutions to the problem. Finding any solution shows \( n=9 \) is achievable. If there were smaller \( n \), modifications can be made.
+
+Because of complexity, typically first solution found demonstrates \( n=9 \) is possible, which suggests the maximal \( n \) is 9.
+
+This program can be run via `python enumerator.py`.

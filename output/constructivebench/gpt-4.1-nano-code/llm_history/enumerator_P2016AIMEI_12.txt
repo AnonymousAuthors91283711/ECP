@@ -1,0 +1,61 @@
+[write_program]
+This problem involves finding the least positive integer \( m \) such that there exists a \( k \ge 4 \) and a function \( p: Fin\,k \to \mathbb{N} \) with all \( p(i) \) prime, satisfying:
+
+\[
+\prod_{i=0}^{k-1} p(i) = m^2 - m + 11
+\]
+
+We need to enumerate possible factorizations where the product of \( \ge 4 \) primes equals \( m^2 - m + 11 \), and find the least such \( m \).
+
+Approach:
+- Fix small values of \( m \), compute \( m^2 - m + 11 \).
+- Factor this number into at least 4 primes.
+- Check if the factorization contains at least 4 primes (the primes can be repeated).
+- For each valid factorization, record \( m \).
+
+We prioritize exact factorizations with small primes for efficiency. 
+
+```python
+import itertools
+from sympy import primefactors, isprime
+
+# Precompute small prime list for candidate factorization
+small_primes = [
+    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47
+]
+
+def factor_into_primes(n, min_factors=4):
+    """
+    Attempt to factor n into at least min_factors primes (with repetition).
+    Return list of prime factors if possible, else None.
+    """
+    # For small n, try to find combinations of small primes
+    for num_primes in range(min_factors, 15):
+        # Generate all factorizations with num_primes factors
+        for combo in itertools.combinations_with_replacement(small_primes, num_primes):
+            prod = 1
+            for p in combo:
+                prod *= p
+            if prod == n:
+                return list(combo)
+    return None
+
+# Search m starting from 1 upwards
+m = 1
+found_m = None
+max_m = 100  # limit to prevent long run
+while m <= max_m:
+    val = m*m - m + 11
+    # Check if val can be factored into >=4 primes
+    factors = factor_into_primes(val, min_factors=4)
+    if factors:
+        print(f"Found for m={m}: {val} = {' * '.join(map(str, factors))}")
+        found_m = m
+        break
+    m += 1
+
+if found_m is not None:
+    print(f"Least m satisfying the condition is {found_m}")
+else:
+    print("No such m found within search limit.")
+```

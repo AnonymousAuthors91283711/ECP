@@ -1,0 +1,50 @@
+[write_program]
+This problem involves finding the smallest natural number n such that the number of distinct products of (d_i + 1) for all functions d:Fin n → Fin 6 is exactly 936. We'll approach this by:
+
+1. Modeling all possible functions from Fin n to Fin 6 (each d_i can be 0-5)
+2. Calculating the product (d_i + 1) for each function
+3. Counting distinct products until we reach 936 distinct values
+4. Finding the minimal n where this count equals 936
+
+We'll implement this by:
+- Generating all multisets of exponents (since product is commutative)
+- Calculating the product for each multiset
+- Counting distinct products
+
+```python
+from math import prod
+from collections import defaultdict
+
+def count_distinct_products(n):
+    # We'll use dynamic programming to count distinct products
+    # dp[i][p] = number of ways to get product p with first i positions
+    dp = defaultdict(int)
+    dp[1] = 1  # initial product
+    
+    for _ in range(n):
+        new_dp = defaultdict(int)
+        for p in dp:
+            for d in range(6):  # Fin 6 has values 0-5
+                new_p = p * (d + 1)
+                new_dp[new_p] += dp[p]
+        dp = new_dp
+    
+    return len(dp)
+
+def find_min_n(target=936):
+    n = 1
+    while True:
+        count = count_distinct_products(n)
+        print(f"n={n}, distinct products={count}")
+        if count >= target:
+            break
+        n += 1
+    # Verify if we hit exactly the target
+    if count == target:
+        print(f"Minimal n where count equals {target} is {n}")
+    else:
+        print(f"Reached {count} products at n={n}, but didn't hit target {target}")
+
+if __name__ == "__main__":
+    find_min_n()
+```

@@ -1,0 +1,76 @@
+[write_program]
+The problem defines a sequence \( s:\mathbb{N}\to\mathbb{N} \) with initial conditions and a complicated functional equation that relates values at indices involving multiples and linear transforms of \( n \). We want to find or conjecture \( s(1000) \).
+
+Given the complexity and the nonlinear term \(\frac{(s(2n-1))^2}{s(n-1)}\), we should carefully implement the recurrence and compute initial values step-by-step, caching computed values to avoid redundant calculations. We will print all computed values up to \( n=1000 \), then display the final result for \( s(1000) \).
+
+Note: Since \( s \) is only defined on natural numbers and division appears, we interpret division as integer division or rational arithmetic that always yields integers (to avoid floating issues). To keep exactness, use fractions (from fractions module) to handle rational numbers exactly.
+
+```python
+from fractions import Fraction
+
+# Cache computed s(n)
+s_cache = {}
+
+def s(n):
+    if n in s_cache:
+        return s_cache[n]
+    if n == 0:
+        s_cache[0] = Fraction(1)
+        print(f"s(0) = 1")
+        return s_cache[0]
+    if n == 1:
+        s_cache[1] = Fraction(1)
+        print(f"s(1) = 1")
+        return s_cache[1]
+
+    if n % 2 == 0:
+        # n even, n>0: s(2n) = s(n), so for even index, s(n) = s(n//2)
+        half = n // 2
+        val = s(half)
+        s_cache[n] = val
+        # Only print when first computed (to reduce output, print only for some n)
+        if n <= 50 or n == 1000:
+            print(f"s({n}) = s({half}) = {val}")
+        return val
+    else:
+        # n odd >1: match 4n+1 or 4n-1 form? Or decompose from the given formulas.
+        # We try to invert the relations for odd n not covered by s(2n).
+        # Find n=4k+1 or 4k-1
+        # From problem:
+        # s(4n+1) = s(2n+1)
+        # s(4n-1) = s(2n-1) + (s(2n-1))^2 / s(n-1)
+
+        # We try to find if n is of form 4m+1 or 4m-1:
+        if (n - 1) % 4 == 0:
+            m = (n - 1) // 4
+            val = s(2*m + 1)
+            s_cache[n] = val
+            if n <= 50 or n == 1000:
+                print(f"s({n}) = s(4*{m}+1) = s(2*{m}+1) = {val}")
+            return val
+        elif (n + 1) % 4 == 0:
+            m = (n + 1) // 4
+            a = s(2*m - 1)
+            b = s(m - 1)
+            val = a + a*a / b
+            s_cache[n] = val
+            if n <= 50 or n == 1000:
+                print(f"s({n}) = s(4*{m}-1) = s(2*{m}-1) + (s(2*{m}-1))^2 / s({m}-1) = {a} + {a}²/{b} = {val}")
+            return val
+        else:
+            # fallback, theoretically all n are covered by above
+            # but for safety:
+            print(f"Cannot compute s({n}) with given relations")
+            s_cache[n] = Fraction(0)
+            return s_cache[n]
+
+# Compute and print all values of s(n) for n=0..50 and n=1000 to inspect pattern
+for i in range(51):
+    s(i)
+
+# Also compute s(1000)
+val_1000 = s(1000)
+print(f"s(1000) = {val_1000} = {val_1000.numerator}/{val_1000.denominator} (Fraction) ≈ {float(val_1000)}")
+```
+
+This enumeration approach will print all computed values (up to 50 and index 1000) and the final value for \( s(1000) \) to conjecture the answer.

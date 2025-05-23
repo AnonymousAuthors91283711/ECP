@@ -1,0 +1,53 @@
+[write_program]
+This problem involves finding all sequences `a : ℕ → ℕ` that satisfy a polynomial recurrence relation. The recurrence relates the value of the sequence at point `n` to the product of the next `k` terms. We'll write a program to enumerate possible sequences for small values of `k`.
+
+The approach:
+1. For small k (2-4), generate polynomial candidates
+2. For each polynomial, try to generate sequences that satisfy the recurrence
+3. Check if the sequences satisfy the polynomial equation
+
+```python
+from itertools import count
+from math import prod
+
+def check_sequence(k, P, sequence, max_n=10):
+    """Check if sequence satisfies P(a_n) = product(a_{n+1}..a_{n+k}) for first max_n terms"""
+    for n in range(max_n):
+        lhs = P(sequence[n])
+        rhs = prod(sequence[n+1+i] for i in range(k))
+        if lhs != rhs:
+            return False
+    return True
+
+def find_sequences_for_k(k):
+    print(f"\nChecking k = {k}:")
+    
+    # Try linear sequences a_n = c*n + d
+    for c in range(1, 5):
+        for d in range(1, 5):
+            seq = lambda n: c*n + d
+            # The polynomial would be P(x) = (x - d + c)/c * product_{i=1}^{k-1} (x - d + c*(i+1))/c
+            # For simplicity, we'll just check if it's constant sequence
+            if c == 0:
+                P = lambda x: d**(k-1) * x
+                if check_sequence(k, P, seq):
+                    print(f"Found constant sequence: a_n = {d} with P(x) = {d}^{k-1}*x")
+    
+    # Try exponential sequences a_n = c^n
+    for c in range(1, 5):
+        seq = lambda n: c**n
+        P = lambda x: x**(k+1) / c**(k*(k+1)//2)
+        if check_sequence(k, P, seq):
+            print(f"Found exponential sequence: a_n = {c}^n with P(x) = x^{k+1}/{c}^{k*(k+1)//2}")
+    
+    # Try factorial sequences a_n = n!
+    if k == 2:
+        seq = lambda n: 1 if n == 0 else n * seq(n-1)
+        P = lambda x: x * (x + 1)
+        if check_sequence(k, P, seq):
+            print("Found factorial sequence: a_n = n! with P(x) = x(x+1)")
+
+# Check for small k values
+for k in range(2, 5):
+    find_sequences_for_k(k)
+```

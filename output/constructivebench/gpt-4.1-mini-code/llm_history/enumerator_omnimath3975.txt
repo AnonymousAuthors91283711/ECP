@@ -1,0 +1,51 @@
+[write_program]
+The problem asks to characterize all functions \( f:\mathbb{R} \to \mathbb{R} \) satisfying 
+\[ \forall x,y \in \mathbb{R}, \quad x \cdot f(x + f(y)) = (y - x) \cdot f(f(x)). \]
+
+To assist in conjecturing the form of such functions, we'll enumerate candidate functions among some simple types (linear, constant, zero, identity, negation) and check numerically if they satisfy the equation for small integer \(x,y\). This will help us identify possible forms for \( f \).
+
+```python
+# Enumerate simple candidate functions f:R->R and check equation
+# Since the equation is functional, checking on a grid is heuristic but helpful.
+
+def check_eq(f, xs, ys, tol=1e-9):
+    # Check if equation holds for all (x,y) in xs x ys within tol
+    for x in xs:
+        for y in ys:
+            lhs = x * f(x + f(y))
+            rhs = (y - x) * f(f(x))
+            if abs(lhs - rhs) > tol:
+                return False
+    return True
+
+def main():
+    xs = range(-3,4)
+    ys = range(-3,4)
+
+    # Candidate functions to test
+    candidates = []
+
+    # zero function
+    candidates.append((lambda t: 0, "f(x)=0"))
+    # identity
+    candidates.append((lambda t: t, "f(x)=x"))
+    # negation
+    candidates.append((lambda t: -t, "f(x)=-x"))
+    # constant functions (try c=-2,-1,0,1,2)
+    for c in range(-2,3):
+        f_const = (lambda c: (lambda t: c))(c)
+        candidates.append((f_const, f"f(x)={c}"))
+    # linear functions f(x) = a x + b with a,b in small range
+    for a in [-1,0,1]:
+        for b in [-1,0,1]:
+            f_linear = (lambda a,b: (lambda t: a*t + b))(a,b)
+            candidates.append((f_linear, f"f(x)={a}x+{b}"))
+
+    # Test candidates
+    for f, name in candidates:
+        if check_eq(f, xs, ys):
+            print(f"Candidate satisfies equation: {name}")
+
+if __name__ == "__main__":
+    main()
+```

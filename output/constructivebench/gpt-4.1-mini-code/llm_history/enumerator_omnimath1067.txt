@@ -1,0 +1,89 @@
+[write_program]
+The problem involves counting 3x3 matrices with natural number entries subject to divisibility and fixed corner constraints. We'll enumerate candidate matrices \( M \) where \( M_{0,0} = 1 \), \( M_{2,2} = 2009 \), and for \( i,j < 2 \), \( M_{i,j} > 0 \), divides \( M_{i,j+1} \), and divides \( M_{i+1,j} \). The matrix entries outside these constraints are unrestricted natural numbers.
+
+We focus on the 2x2 top-left submatrix since there the conditions \( M_{i,j} \mid M_{i,j+1} \) and \( M_{i,j} \mid M_{i+1,j} \) apply, with the first row and column limited by \( M_{0,0} = 1 \).
+
+The plan:
+
+- Fix \( M_{0,0} = 1 \).
+- Enumerate positive divisors of 2009 for the bottom-right corner.
+- For \( M_{0,1} \), \( M_{1,0} \), and \( M_{1,1} \), enumerate possible values compatible with the divisibility rules.
+- Use constraints to reduce search space.
+- Print each qualifying matrix.
+
+This enumeration will help synthesize the count and potentially the explicit answer.
+
+```python
+# Enumerate 3x3 matrices M with M[0,0]=1, M[2,2]=2009,
+# and for i,j<2: M[i,j]>0, M[i,j] divides M[i,j+1] and M[i+1,j]
+
+from math import gcd
+
+def divisors(n):
+    divs = []
+    for i in range(1, int(n**0.5)+1):
+        if n % i == 0:
+            divs.append(i)
+            if i*i != n: divs.append(n//i)
+    return sorted(divs)
+
+# Fixed corners
+M00 = 1
+M22 = 2009
+
+# Precompute divisors of 2009 for entries in last row/col as candidates
+div_2009 = divisors(M22)
+
+count = 0
+print(f"Enumerating matrices with M00={M00} and M22={M22}")
+
+# Constraints for M are on the 2x2 block top-left:
+# M[0,0]=1 divides M[0,1] and M[1,0]
+# M[i,j] divides M[i,j+1] and M[i+1,j] for i,j<2
+# So:
+# M00=1 divides M01, M10
+# M01 divides M02, M11
+# M10 divides M11, M20
+# M11 divides M12, M21
+
+# We fix M20, M21, M02, M12 arbitrary positive; only M22 fixed to 2009
+# But problem only requires the conditions for i,j<2
+
+# Since conditions apply only for i,j<2 (positions (0,0),(0,1),(1,0),(1,1))
+# We'll try possible values for M01, M10, M11 respecting divisibility and positivity
+
+# We start enumerating M01 and M10 >0:
+# Since M00=1 divides M01 and M10, no constraint other than positive integers
+
+# To reduce search space, limit M01 and M10 to divisors of 2009 (since M11 should be multiple)
+for M01 in div_2009:
+    for M10 in div_2009:
+        # M01 divides M02 and M11
+        # M10 divides M11 and M20
+        # We'll choose M11 divisible by both M01 and M10
+        # So M11 % M01 == 0 and M11 % M10 ==0
+        # so M11 is multiple of lcm(M01,M10)
+        # M11 must be >0 and divides M12 and M21 (but i,j<2 so no condition there)
+        # For simplicity only check divisibility condition on 2x2 block
+        from math import lcm
+        base = lcm(M01, M10)
+        # M11 must divide something next, no conditions for outside 2x2 block given
+        # So only constrained by M11 multiple of base, and M11 divides M12 and M21 - undefined here, so no constraint
+        # We'll try multiples of base that divide 2009 (to limit)
+        for M11 in div_2009:
+            if M11 % base == 0:
+                # Check M01 divides M11 and M10 divides M11 
+                # Given above, true
+                # M00=1 divides M01 and M10, OK
+                # M01 divides M02 and M11 - only check post here M01 divides M11 (true)
+                # M10 divides M11 and M20 - check divides M11 (true)
+                # Conditions fulfilled for 2x2 block
+                count += 1
+                print(f"Matrix top-left 2x2 block:")
+                print(f"  M[0,0]={M00} M[0,1]={M01}")
+                print(f"  M[1,0]={M10} M[1,1]={M11}")
+                # M02, M12, M20, M21 unconstrained, M22 fixed to 2009
+
+print(f"Total candidate 2x2 blocks satisfying divisibility: {count}")
+```
+

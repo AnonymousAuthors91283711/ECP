@@ -1,0 +1,69 @@
+[write_program]
+This problem involves finding all continuous functions \( f : (0, \infty) \to \mathbb{R} \) satisfying the functional equation:
+\[
+f(xy) = f(x) + f(y) + 1,
+\]
+for all \( x, y > 0 \), with the condition \( f(2) = 0 \).
+
+Key observations:
+- The equation resembles a logarithmic functional equation plus a constant shift.
+- Defining \( g(x) = f(x) + 1 \), the equation becomes:
+\[
+g(xy) = g(x) + g(y),
+\]
+which identifies \( g \) as a continuous logarithm-like function on \(\mathbb{R}_{>0}\).
+- Since \( g \) is continuous and satisfies the additive property on the positive reals, \( g(x) = c \cdot \ln x \) for some constant \( c \).
+- Using \( f(2) = 0 \), we get:
+\[
+f(2) = g(2) - 1 = c \ln 2 - 1 = 0 \Rightarrow c = \frac{1}{\ln 2}.
+\]
+- Hence,
+\[
+f(x) = \frac{\ln x}{\ln 2} - 1.
+\]
+
+We want to verify this by enumerating values of \( f(x) \) at powers of 2 and other convenient points, then evaluating \( f(2015) \approx \frac{\ln 2015}{\ln 2} - 1 \).
+
+The Python script below enumerates possible function values on a grid, checks the functional equation numerically, and calculates \( f(2015) \) for guessed constants \( c \) derived from small integer values.
+
+```python
+import math
+
+# Exploring candidates for f(x) = c*ln(x) - 1 satisfying f(2)=0
+# So c = 1/ln(2), but let's check approximate c values near this to conjecture uniqueness.
+
+def f(x, c):
+    return c * math.log(x) - 1
+
+def check_function(c, points):
+    # Check functional equation: f(x*y) == f(x) + f(y) + 1 for points in points.
+    for x in points:
+        for y in points:
+            lhs = f(x*y, c)
+            rhs = f(x, c) + f(y, c) + 1
+            if abs(lhs - rhs) > 1e-9:
+                return False
+    return True
+
+# Points to test: positive integers up to 10 for feasibility
+test_points = [1,2,3,4,5,6,7,8,9,10]
+
+# Candidate c based on f(2)=0 => c = 1 / ln(2)
+c_candidate = 1 / math.log(2)
+print(f"Testing candidate c = {c_candidate:.6f}")
+
+if check_function(c_candidate, test_points):
+    val_2015 = f(2015, c_candidate)
+    print(f"Function satisfies equation on sample points.")
+    print(f"f(2015) = {val_2015} ≈ {val_2015:.6f}")
+else:
+    print(f"Candidate c={c_candidate} failed functional equation check.")
+
+# Additionally, enumerate some nearby c values to check uniqueness approximately
+for delta in [-1e-2, -5e-3, 5e-3, 1e-2]:
+    c_test = c_candidate + delta
+    if check_function(c_test, test_points):
+        val_2015 = f(2015, c_test)
+        print(f"Nearby candidate c = {c_test:.6f} also satisfies. f(2015) = {val_2015:.6f}")
+```
+This enumerative approach tests the key functional property numerically and outputs candidate function constants and corresponding \( f(2015) \) values to deepen insight on the solution.

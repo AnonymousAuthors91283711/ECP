@@ -1,0 +1,58 @@
+[write_program]
+The problem involves counting tuples of digits (u, w, x, y, z, v) in finite sets with given inequalities and a specific arithmetic condition related to doubling a 4-digit number and matching certain digits. We must enumerate all u in 0..9, and (w,x,y,z,v) digits also in 0..9 with distinctness constraints, checking if doubling the 4-digit number n (formed by wxyz) matches the specified digit condition.
+
+We will:
+- Enumerate u in 0..9
+- For w,x,y,z,v in 0..9 with all required distinctness
+- w ≠ 0 (to ensure n is a 4-digit number)
+- Double n = 1000*w + 100*x + 10*y + z to get a 5-digit sum
+- Check if sum's last 4 digits (skipping the highest digit) equals [w, u, y, v] exactly
+- Print each u that meets the condition and count how many such u produce solutions
+- Output the count at the end (which corresponds to Fintype.card ...), along with the u values found
+
+The program prints each u that works; this can be analyzed or counted as the final answer.
+
+```python
+# Enumerate u, w,x,y,z,v in 0..9 with constraints:
+# w != 0, distinctness constraints, and doubling number condition
+# Print each u for which there exist w,x,y,z,v satisfying the condition
+
+def digits_of(n, length):
+    # Return list of digits of n with length (leading zeros if needed)
+    s = str(n).rjust(length, '0')
+    return [int(c) for c in s]
+
+count = 0
+found_us = set()
+for u in range(10):
+    for w in range(1,10):
+        if w == u:
+            continue
+        for x in range(10):
+            if x in (w,u):
+                continue
+            for y in range(10):
+                if y in (w,x,u):
+                    continue
+                for z in range(10):
+                    if z in (w,x,y,u):
+                        continue
+                    for v in range(10):
+                        # distinctness conditions
+                        if v in (w,x,y,z,u):
+                            continue
+                        if len({w,x,y,z,v,u}) < 6:
+                            continue
+                        n = 1000*w + 100*x + 10*y + z
+                        sum_ = n + n
+                        d = digits_of(sum_,5)
+                        # digits.drop 1 == [w,u,y,v]
+                        # this means d[1:] == [w,u,y,v]
+                        if d[1:] == [w,u,y,v]:
+                            print(f"u={u}, w={w}, x={x}, y={y}, z={z}, v={v}, sum={sum_}")
+                            if u not in found_us:
+                                found_us.add(u)
+                                count += 1
+print(f"Count of valid u: {count}")
+```
+

@@ -1,0 +1,64 @@
+[write_program]
+The problem involves a quadratic function \( f(x) = a x^2 + b x + c \) with parameters \( p, a, b, c \) in \(\mathbb{R}\), \( p \neq 0 \), such that:
+- \( f \) attains its maximum at \( x = p \),
+- \( f(p) = p \),
+- \( f(0) = -p \).
+
+We want to find \( b \) in terms of \( p \).
+
+To assist in conjecturing the formula for \( b \), we can enumerate over small rational values \( p \) (both positive and negative, nonzero), solve the constraints symbolically, and print the corresponding \( b \).
+
+Since the parabola attains its maximum at \( p \), the vertex is at \( p \), so \( p = -b/(2a) \), and \( a < 0 \).
+
+With these equations, we can symbolically find \( b \) in terms of \( p \). We will test various values of \( p \) and print \( b \) accordingly.
+
+```python
+import sympy as sp
+
+def enumerate_b_for_p():
+    p = sp.symbols('p', real=True)
+    a, b, c = sp.symbols('a b c', real=True)
+    
+    # Conditions:
+    # 1) vertex at x = p => p = -b/(2a)  => b = -2 a p
+    # 2) f(p) = p => a p^2 + b p + c = p
+    # 3) f(0) = -p => c = -p
+    # 4) since maximum at p, a < 0
+    
+    # Use conditions to express b, c in terms of a, p
+    b_expr = -2 * a * p
+    c_expr = -p
+    
+    # Substitute b and c into f(p) = p
+    eq = a * p**2 + b_expr * p + c_expr - p
+    # Solve for a:
+    sol_a = sp.solve(eq, a)
+    
+    # For each solution for a, compute b
+    # Then print p and b
+    # Since we want numeric enumeration, try some numerical p values
+    numeric_p_values = [1, 2, 3, 0.5, -1, -2, -0.5]
+    print("# p (param), b (coefficient) pairs for a<0 maximizing f at x=p with given constraints")
+    for val_p in numeric_p_values:
+        if val_p == 0:
+            continue
+        subs_p = val_p
+        # Evaluate solutions for a
+        found = False
+        for a_val in sol_a:
+            try:
+                a_num = a_val.evalf(subs={p: subs_p})
+                if a_num < 0:
+                    b_val = (-2) * a_num * subs_p
+                    print(f"p = {subs_p}, b = {b_val.evalf()}")
+                    found = True
+                    break
+            except Exception:
+                pass
+        if not found:
+            print(f"p = {subs_p}, no valid a<0 solution found")
+            
+if __name__ == "__main__":
+    enumerate_b_for_p()
+```
+

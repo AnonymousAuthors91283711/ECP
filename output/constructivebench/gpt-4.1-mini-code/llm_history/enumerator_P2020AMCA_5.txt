@@ -1,0 +1,85 @@
+[write_program]
+Given the constraints, the problem appears to be:
+
+- Construct a 5x5 integer matrix \(M\) with entries distinct integers from \([-10,14]\).
+- Each row sums to the same integer \(S\).
+- Each column sums to \(S\).
+- Both main diagonals sum to \(S\).
+- Find possible values of \(S\).
+
+To assist conjecturing \(S\), I will enumerate sets of distinct integers from \([-10,14]\), build matrices, and check sums \(S\).
+
+Due to combinatorial complexity, I will attempt simplified enumeration:
+
+- Pick 25 distinct integers from the 25 integers in \([-10,14]\).
+- Enumerate permutations as candidate matrices (or sample some).
+- Check sum properties.
+
+I will print each valid magic sum \(S\) and corresponding matrix.
+
+```python
+from itertools import permutations
+
+# Set parameters
+N = 5
+vals = list(range(-10, 15))  # 25 integers total
+
+# Check if matrix M (list of lists) satisfies conditions
+def check_magic(M):
+    S = sum(M[0])
+    # Check rows
+    for row in M:
+        if sum(row) != S:
+            return None
+    # Check columns
+    for j in range(N):
+        if sum(M[i][j] for i in range(N)) != S:
+            return None
+    # Check diagonals
+    if sum(M[i][i] for i in range(N)) != S:
+        return None
+    if sum(M[i][N-1 - i] for i in range(N)) != S:
+        return None
+    return S
+
+found_S = set()
+count = 0
+max_print = 5  # limit number of outputs
+
+# Enumerate permutations of vals (25!)
+# Too big to enumerate fully — limit ourselves by considering just the natural ordering for now
+# As a simple start, test the matrix with rows = vals sliced by 5
+
+M = [vals[i*5:(i+1)*5] for i in range(N)]
+S = check_magic(M)
+if S is not None:
+    print(f"Magic sum S={S}")
+    for row in M:
+        print(row)
+    found_S.add(S)
+
+# Attempt random permutations to find other candidates (limit attempts)
+import random
+attempts = 3000
+
+for _ in range(attempts):
+    perm = random.sample(vals, N*N)
+    M = [perm[i*5:(i+1)*5] for i in range(N)]
+    S = check_magic(M)
+    if S is not None and S not in found_S:
+        print(f"Magic sum S={S}")
+        for row in M:
+            print(row)
+        found_S.add(S)
+        count += 1
+        if count >= max_print:
+            break
+
+if found_S:
+    S_min = min(found_S)
+    S_max = max(found_S)
+    print(f"Minimum magic sum found: {S_min}")
+    print(f"Maximum magic sum found: {S_max}")
+else:
+    print("No magic matrix found with given constraints.")
+```

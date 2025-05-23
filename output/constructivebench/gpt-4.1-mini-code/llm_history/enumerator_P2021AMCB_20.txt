@@ -1,0 +1,71 @@
+[write_program]
+The problem asks to find the remainder polynomial \( R \), with degree less than 2, when dividing
+\[
+X^5 + X^4 + X^3 + X^2 + X + 1
+\]
+by
+\[
+X^2 - X + 1.
+\]
+The theorem states the uniqueness and existence of such a remainder polynomial \( R \).
+
+We can use polynomial long division to find this remainder. Since we want to enumerate and confirm the exact remainder with integer coefficients, let's implement polynomial division over integers for these specific polynomials and print the remainder.
+
+```python
+# Enumerate the remainder polynomial R(X) of degree < 2 for the division:
+# (X^5 + X^4 + X^3 + X^2 + X + 1) ÷ (X^2 - X + 1),
+# confirming the exact coefficients of R.
+
+def poly_division(dividend, divisor):
+    # dividend and divisor are lists of coefficients from highest degree to constant
+    # e.g. X^5 + X^4 + X^3 + X^2 + X + 1 = [1,1,1,1,1,1]
+    # divisor = X^2 - X + 1 = [1, -1, 1]
+    dividend = dividend[:]  # copy
+    divisor_degree = len(divisor) - 1
+    divisor_lead = divisor[0]
+    quotient = []
+
+    while len(dividend) >= len(divisor):
+        lead_coeff = dividend[0] // divisor_lead  # integer division possible since coeff are int
+        quotient.append(lead_coeff)
+        # subtract (lead_coeff * divisor * x^{deg_diff}) from dividend
+        for i in range(len(divisor)):
+            dividend[i] -= lead_coeff * divisor[i]
+        # remove leading zero if any
+        while dividend and dividend[0] == 0:
+            dividend.pop(0)
+        if not dividend:
+            break
+    remainder = dividend if dividend else [0]
+    return quotient, remainder
+
+def format_poly(coeffs):
+    # coeffs highest degree to constant, degree = len(coeffs)-1
+    terms = []
+    degree = len(coeffs) - 1
+    for i, c in enumerate(coeffs):
+        if c == 0:
+            continue
+        power = degree - i
+        if power == 0:
+            terms.append(str(c))
+        elif power == 1:
+            terms.append(f"{c}*X" if c != 1 else "X")
+        else:
+            terms.append(f"{c}*X^{power}" if c != 1 else f"X^{power}")
+    return " + ".join(terms) if terms else "0"
+
+def main():
+    dividend = [1, 1, 1, 1, 1, 1]  # X^5 + X^4 + X^3 + X^2 + X + 1
+    divisor = [1, -1, 1]  # X^2 - X + 1
+
+    q, r = poly_division(dividend, divisor)
+    # print quotient and remainder
+    print("Quotient:")
+    print(format_poly(q))
+    print("Remainder (degree < 2):")
+    print(format_poly(r))
+
+if __name__ == "__main__":
+    main()
+```

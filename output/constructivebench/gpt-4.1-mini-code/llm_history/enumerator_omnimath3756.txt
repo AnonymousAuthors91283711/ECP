@@ -1,0 +1,53 @@
+[write_program]
+The problem is to find the greatest natural number \( n \) such that there exists a finite set \( s \subseteq \mathbb{N} \) with all elements positive, where for every distinct pair \( x,y \in s \), their sum \( x+y \) is a power of two. We want to enumerate possible sets \( s \) of various sizes, and find the maximum size \( n = |s| \) with this property.
+
+We'll try small values for \( n = |s| \) and generate all possible increasing sets \( s = \{a_1 < a_2 < \cdots < a_n\} \) with elements in a reasonable range (e.g. up to 50), checking the pairwise sums. We'll print all candidate sizes \( n \) for which such a set exists, and then determine the maximum \( n \).
+
+```python
+# Enumerate sets of positive integers where all pairwise sums are powers of two.
+# Print the size n of each found set, and the set itself, up to a threshold n.
+# Try n=2,...,6 or so, with elements up to 50 for efficiency.
+
+from itertools import combinations, combinations_with_replacement
+
+def is_power_of_two(x):
+    return x > 0 and (x & (x-1)) == 0
+
+def check_set(s):
+    # For every distinct pair check sum is power of two
+    for x,y in combinations(s,2):
+        if not is_power_of_two(x+y):
+            return False
+    return True
+
+def main():
+    max_element = 50
+    max_n = 7  # maximal candidate set size to try
+
+    found_sizes = set()
+    # We enumerate candidate sets by size n, elements chosen in range 1..max_element
+    # To reduce search we generate combinations with increasing numbers.
+    # Because sums must be powers of two, sums are at least 2, so elements start at least 1.
+    # We'll print sets as soon as found.
+
+    for n in range(2, max_n+1):
+        # For fixed n, try all combinations of [1..max_element] of size n
+        # Stop early if any candidate is found
+        found_this_n = False
+        for s in combinations(range(1, max_element+1), n):
+            if check_set(s):
+                print(f"Found set of size {n}: {s}")
+                found_sizes.add(n)
+                found_this_n = True
+        if not found_this_n:
+            # If no sets found for this n, it likely won't be found for bigger n
+            break
+
+    if found_sizes:
+        print(f"Maximum size of such a set found: {max(found_sizes)}")
+    else:
+        print("No such set found for n>=2.")
+
+if __name__ == "__main__":
+    main()
+```

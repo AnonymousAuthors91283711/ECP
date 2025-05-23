@@ -1,0 +1,49 @@
+[write_program]
+This problem involves calculating the ratio of numbers coprime to 2015 in the range [1,2016] to the total numbers in that range. We'll write a Python program to compute this ratio exactly.
+
+The approach:
+1. Factorize 2015 to get its prime factors (5, 13, 31)
+2. Use inclusion-exclusion principle to count numbers coprime to 2015
+3. Compute the exact ratio as a fraction
+
+```python
+from math import gcd
+from fractions import Fraction
+
+def count_coprimes(n, m):
+    """Count numbers <= n coprime to m using inclusion-exclusion"""
+    def _count_coprimes_recursive(remaining_factors, index, current_product, count_parity):
+        if index == len(remaining_factors):
+            if current_product == 1:
+                return 0
+            return count_parity * (n // current_product)
+        return (_count_coprimes_recursive(remaining_factors, index+1, current_product, count_parity) +
+                _count_coprimes_recursive(remaining_factors, index+1, current_product*remaining_factors[index], -count_parity))
+    
+    # Get unique prime factors of m
+    factors = set()
+    d = 2
+    temp = m
+    while d*d <= temp:
+        if temp % d == 0:
+            factors.add(d)
+            while temp % d == 0:
+                temp //= d
+        d += 1
+    if temp > 1:
+        factors.add(temp)
+    
+    factors = sorted(factors)
+    total = n - _count_coprimes_recursive(factors, 0, 1, -1)
+    return total
+
+def main():
+    m = 2015
+    n = 2016
+    coprimes = count_coprimes(n, m)
+    ratio = Fraction(coprimes, n)
+    print(f"Ratio: {ratio} (exact value: {ratio.numerator}/{ratio.denominator})")
+
+if __name__ == "__main__":
+    main()
+```

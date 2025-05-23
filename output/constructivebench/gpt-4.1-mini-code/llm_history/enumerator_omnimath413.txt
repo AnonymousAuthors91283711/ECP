@@ -1,0 +1,92 @@
+[write_program]
+The problem is about finding the greatest integer \( k \) such that \( 2^k \) divides the number of subsets \( s \) of the set \(\{1, 2, \ldots, 100\}\) where the count of primes in \( s \) is strictly greater than the count of multiples of 4 in \( s \).
+
+We will:
+- Enumerate subsets \( s \) of \(\{1,...,100\}\) based on the counts of primes and multiples of 4.
+- Compute how many subsets satisfy the condition \((\# \text{primes in } s) > (\# \text{multiples of 4 in } s)\).
+- Factor out powers of 2 from the count.
+
+Since enumerating all subsets directly (which are \(2^{100}\)) is impossible, instead:
+- Let \(P\) be the set of primes in \(\{1,\ldots,100\}\).
+- Let \(M\) be the set of multiples of 4 in \(\{1,\ldots,100\}\).
+- Let \(R\) be the rest (non-prime, non-multiples of 4).
+
+For subset \(s\):
+- \(|s \cap P| = p\),
+- \(|s \cap M| = m\),
+- \(|s \cap R| = r\).
+
+The total number of such \( s \) with particular \(p, m, r\) counts:
+\[
+\binom{|P|}{p} \binom{|M|}{m} \binom{|R|}{r}.
+\]
+
+The condition is \(p > m\).
+
+The total count is:
+\[
+\sum_{p=0}^{|P|} \sum_{m=0}^{|M|} \sum_{r=0}^{|R|} \binom{|P|}{p} \binom{|M|}{m} \binom{|R|}{r} \text{ where } p > m.
+\]
+
+Since \(r\) is unrestricted, sums over \(r\) simply multiply by \(2^{|R|}\).
+
+Thus,
+\[
+\text{count} = 2^{|R|} \cdot \sum_{p=0}^{|P|} \sum_{m=0}^{|M|} \binom{|P|}{p} \binom{|M|}{m} [p > m].
+\]
+
+We will enumerate this partial sum, calculate count, then find the largest \(k\) with \(2^k \mid \text{count}\).
+
+```python
+# prime check up to 100
+def is_prime(n):
+    if n < 2: return False
+    for i in range(2,int(n**0.5)+1):
+        if n%i==0: return False
+    return True
+
+def v2_factor(n):
+    count=0
+    while n%2==0 and n>0:
+        n//=2
+        count+=1
+    return count
+
+from math import comb
+
+def main():
+    # Identify prime, multiples of 4, rest counts
+    primes = [i for i in range(1,101) if is_prime(i)]
+    multiples4 = [i for i in range(1,101) if i%4==0]
+    
+    set_primes = set(primes)
+    set_mult4 = set(multiples4)
+    set_rest = set(range(1,101)) - set_primes - set_mult4
+    
+    nP = len(primes)
+    nM = len(multiples4)
+    nR = len(set_rest)
+    
+    print(f"Primes count = {nP}, Multiples of 4 count = {nM}, Rest count = {nR}")
+    
+    total = 0
+    # sum over p>m
+    for p in range(nP+1):
+        comb_p = comb(nP,p)
+        for m in range(nM+1):
+            if p <= m:
+                continue
+            comb_m = comb(nM,m)
+            contrib = comb_p * comb_m
+            total += contrib
+            
+    total *= 2**nR
+    print(f"Total qualifying subsets = {total}")
+    
+    # Find largest k with 2^k divides total
+    k = v2_factor(total)
+    print(f"Largest k with 2^k dividing total = {k}")
+
+if __name__=="__main__":
+    main()
+```

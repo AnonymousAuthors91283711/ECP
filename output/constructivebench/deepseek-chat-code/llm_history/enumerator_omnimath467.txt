@@ -1,0 +1,62 @@
+[write_program]
+This problem asks for the smallest number n of linear conditions (a*x + b*y = 0) needed to characterize when x⁴ = x²y² for all real x,y. We'll enumerate possible n values and check if they satisfy the condition.
+
+The key observation is that x⁴ = x²y² is equivalent to x²(x² - y²) = 0, which gives three cases:
+1. x = 0
+2. x = y
+3. x = -y
+
+We need to find the minimal number of linear conditions that capture exactly these cases.
+
+```python
+def check_condition(x, y, conditions):
+    """Check if x,y satisfies any condition in the set."""
+    for a, b in conditions:
+        if abs(a * x + b * y) < 1e-10:  # account for floating point precision
+            return True
+    return False
+
+def test_n(n):
+    """Test if n conditions can capture x⁴ = x²y²."""
+    # Try all combinations of n conditions (a,b)
+    # We'll use symmetry and known solutions to limit the search space
+    possible_conditions = [
+        (1, 0),   # x = 0
+        (1, -1),  # x = y
+        (1, 1)    # x = -y
+    ]
+    
+    from itertools import combinations
+    for conds in combinations(possible_conditions, n):
+        # Check all cases where x⁴ = x²y² should be true
+        cases_true = [
+            (0, 1), (0, 0), (1, 1), (1, -1), (2, 2), (2, -2)
+        ]
+        # Check cases where x⁴ ≠ x²y² should be false
+        cases_false = [
+            (1, 2), (1, 0.5), (2, 1), (2, -1)
+        ]
+        
+        valid = True
+        for x, y in cases_true:
+            if not check_condition(x, y, conds):
+                valid = False
+                break
+        if not valid:
+            continue
+            
+        for x, y in cases_false:
+            if check_condition(x, y, conds):
+                valid = False
+                break
+        if valid:
+            print(f"Found valid set with n={n}: {conds}")
+            return True
+    return False
+
+# Search for minimal n
+for n in range(1, 4):
+    if test_n(n):
+        print(f"Minimal n is {n}")
+        break
+```

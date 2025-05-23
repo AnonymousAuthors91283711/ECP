@@ -1,0 +1,70 @@
+[write_program]
+This problem asks whether there exists a sequence of 2002 distinct positive integers such that for every n ≥ 2001, at least one term k_i in the sequence makes k_i * 2^n + 1 a prime number. To explore this, we'll:
+
+1. Test smaller cases (e.g., sequence length 2-5 instead of 2002)
+2. Check if simple sequences (like consecutive integers) satisfy the condition
+3. Verify the prime condition for small n values
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def test_sequence(seq, n_start, n_end):
+    for n in range(n_start, n_end + 1):
+        found = False
+        for k in seq:
+            candidate = k * (2 ** n) + 1
+            if is_prime(candidate):
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+# Test small sequences
+for length in [2, 3, 4, 5]:
+    print(f"\nTesting sequences of length {length}:")
+    # Try consecutive odd numbers
+    seq = [2*i + 1 for i in range(length)]
+    print(f"Testing consecutive odds: {seq}")
+    if test_sequence(seq, length, length + 10):
+        print("  --> Works for n in", list(range(length, length + 11)))
+    
+    # Try consecutive numbers
+    seq = [i + 1 for i in range(length)]
+    print(f"Testing consecutive integers: {seq}")
+    if test_sequence(seq, length, length + 10):
+        print("  --> Works for n in", list(range(length, length + 11)))
+    
+    # Try primes
+    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
+    if length <= len(primes):
+        seq = primes[:length]
+        print(f"Testing first {length} primes: {seq}")
+        if test_sequence(seq, length, length + 10):
+            print("  --> Works for n in", list(range(length, length + 11)))
+```

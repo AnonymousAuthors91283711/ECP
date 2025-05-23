@@ -1,0 +1,51 @@
+[write_program]
+The problem involves analyzing sequences defined by a piecewise recurrence depending on divisibility by a parameter \( a \), with a step adding \( d \) otherwise, starting at 1. We want to find the greatest exponent \( n \) such that \( a^n \) divides some term \( x_k \).
+
+To assist in conjecturing and proving the answer, we'll generate terms \( x_k \) for small pairs \((a,d)\) with \(\gcd(a,d)=1\), and print all \( n \) for which \( a^n \mid x_k \) for \( k \) up to a certain limit. We track the maximum exponent observed and print it at the end for each pair.
+
+We limit \( a,d \) to small coprime integers greater than 1, say \( 2 \leq a,d \leq 5 \), and compute terms up to \( k \leq 50 \). The output is streamed as values are found, with final max per pair at the end.
+
+```python
+# Enumerate exponents n where a^n divides some x_k sequence term for small (a,d)
+
+def v_p(n, p):
+    # compute highest exponent e with p^e divides n
+    e = 0
+    while n % p == 0 and n != 0:
+        n //= p
+        e += 1
+    return e
+
+def gcd(a,b):
+    while b:
+        a,b = b,a%b
+    return a
+
+def main():
+    max_terms = 50
+    for a in range(2,6):
+        for d in range(2,6):
+            if gcd(a,d) != 1:
+                continue
+            print(f"Parameters: a={a}, d={d}")
+            x = [1]
+            # Track max n for a^n dividing some x_k
+            max_n = 0
+            for k in range(1, max_terms+1):
+                prev = x[-1]
+                if prev % a == 0:
+                    nxt = prev // a
+                else:
+                    nxt = prev + d
+                x.append(nxt)
+                # Evaluate v_p(x_k,a)
+                e = v_p(nxt, a)
+                if e > 0:
+                    print(f"k={k+1}, x_{k+1}={nxt}, v_{a}={e}")
+                    if e > max_n:
+                        max_n = e
+            print(f"Maximum exponent n with a^n ∣ x_k for k≤{max_terms}: {max_n}\n")
+
+if __name__ == "__main__":
+    main()
+```

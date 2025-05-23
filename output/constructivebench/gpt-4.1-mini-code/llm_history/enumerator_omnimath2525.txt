@@ -1,0 +1,58 @@
+[write_program]
+The problem involves a sequence \( a_i > 0 \) for \( i=0,\ldots,2022 \) with conditions:
+\[
+a_{k+1} = \sum_{i=0}^{2022} |a_{k+1} - a_i|
+\]
+and we want to find the minimal possible value of \( s = \sum_{i=0}^{2022} a_i \).
+
+The given condition is complicated, but we can try for smaller values of \( n \) (size of the sequence) to observe patterns.
+
+Key observations:
+- The problem indexing is in terms of Fin 2023, so indices modulo 2023.
+- The condition involves each \( a_{k+1} \) equals the sum of absolute differences between \( a_{k+1} \) and all \( a_i \).
+- All \( a_i \) are positive integers.
+
+We will write a Python program enumerating sequences of length \( n \) for small \( n \) (e.g., \( n=3,4,5 \)), checking the condition for all \( k \), and printing sums for valid sequences.
+
+We only enumerate sequences with sorted increasing values to reduce search space.
+
+We will print:
+- \( n \), the sequence length
+- sequences and their sum if they satisfy conditions approximately (since exact equality is needed, we check for exact integer equality)
+
+This can help conjecture the minimal sums and patterns for larger \( n \).
+
+```python
+# Python program to investigate the problem for small n.
+# Condition for sequence a: for each k,
+# a[k] == sum_{i} |a[k] - a[i]|, all a[i]>0 integers.
+# We enumerate increasing sequences a with small max values to find examples.
+# For found sequences, print n, sequence, sum.
+
+from itertools import combinations_with_replacement
+
+def check_condition(a):
+    n = len(a)
+    for k in range(n):
+        lhs = a[k]
+        rhs = sum(abs(a[k]-a[i]) for i in range(n))
+        if lhs != rhs:
+            return False
+    return True
+
+def enumerate_sequences(n, max_val):
+    # Enumerate increasing sequences to avoid duplicates
+    for seq in combinations_with_replacement(range(1, max_val+1), n):
+        # Strictly increasing (a[i] > 0 and a sorted increasing)
+        if all(seq[i] < seq[i+1] for i in range(n-1)):
+            if check_condition(seq):
+                print(f"n={n}, seq={seq}, sum={sum(seq)}")
+
+if __name__ == "__main__":
+    # Test for small n and max values
+    for n in range(3,6):
+        print(f"=== Searching sequences of length {n} ===")
+        # Max value chosen reasonably small for performance
+        enumerate_sequences(n, max_val=20)
+```
+

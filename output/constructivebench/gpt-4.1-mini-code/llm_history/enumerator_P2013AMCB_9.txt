@@ -1,0 +1,59 @@
+[write_program]
+The problem asks for the maximum sum of the exponents in the prime factorization of a perfect square divisor of 12!. We enumerate all square divisors by considering only even exponents in the prime factorization of 12!, then sum those exponents and output candidates, then output the maximum.
+
+```python
+from math import factorial
+from sympy import primefactors
+
+def prime_factorization(n):
+    factors = {}
+    for p in primefactors(n):
+        count = 0
+        x = n
+        while x % p == 0:
+            x //= p
+            count += 1
+        factors[p] = count
+    return factors
+
+def factorial_prime_factorization(n):
+    # Counts the exponent of prime p in n!
+    def count_p(n, p):
+        count = 0
+        power = p
+        while power <= n:
+            count += n // power
+            power *= p
+        return count
+
+    primes = primefactors(n)
+    return {p: count_p(n, p) for p in primes}
+
+def main():
+    n = 12
+    factorization = factorial_prime_factorization(n)
+    
+    # Each exponent of perfect square divisor must be even and <= exponent in 12!
+    # Enumerate all such even exponents, sum them, and print.
+    primes = list(factorization.keys())
+    exps = [factorization[p] for p in primes]
+
+    # For each prime, possible exponents are even numbers from 0 to max even <= e
+    ranges = []
+    for e in exps:
+        max_even = e if e % 2 == 0 else e - 1
+        ranges.append([i for i in range(0, max_even + 1, 2)])
+
+    max_sum = -1
+    from itertools import product
+    for combo in product(*ranges):
+        s = sum(combo)
+        print(f"Sum of exponents for square divisor: {s}")
+        if s > max_sum:
+            max_sum = s
+
+    print(f"Maximum sum of exponents for a square divisor of 12! is {max_sum}")
+
+if __name__ == "__main__":
+    main()
+```

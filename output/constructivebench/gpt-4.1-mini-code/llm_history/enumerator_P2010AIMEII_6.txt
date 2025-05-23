@@ -1,0 +1,57 @@
+[write_program]
+The problem involves finding the smallest positive integer \( n \) for which there exist integer polynomials \( P \) and \( Q \) of positive degree, such that the coefficient of \( x^4 \) in \( P \cdot Q \) is 1, and the coefficient of \( x^1 \) in \( P \cdot Q \) is \(-n + 63\).
+
+To assist in conjecturing the answer, we will enumerate pairs of integer polynomials \( P \) and \( Q \) with degrees 1 or 2 and small integer coefficients, compute their product, and check the mentioned coefficients. We'll print the values of \( n = 63 - \text{coeff of } x^1 \) as we find them and record the minimal one.
+
+This approach tries small degrees and coefficients to find valid \( n \), streaming candidate \( n \) values.
+
+```python
+# Enumerate integer polynomials P,Q with degrees 1 or 2, small integer coefficients.
+# Check if (P*Q).coeff(4) == 1 and (P*Q).coeff(1) = -n+63, print n candidates.
+
+def poly_mul(p, q):
+    # Multiply polynomials p,q represented as lists of coefficients (lowest degree first)
+    res = [0]*(len(p)+len(q)-1)
+    for i,c1 in enumerate(p):
+        for j,c2 in enumerate(q):
+            res[i+j] += c1*c2
+    return res
+
+def coeff(poly, k):
+    return poly[k] if k < len(poly) else 0
+
+def main():
+    max_deg = 2  # degrees 1 or 2 (positive degree)
+    coeff_range = range(-3,4)  # Small integer coefficients from -3 to 3
+
+    candidates = set()
+    for deg_p in [1,2]:
+        for deg_q in [1,2]:
+            # Enumerate all polynomials of degree deg with leading coeff != 0
+            p_coefs_list = []
+            # Generate all coefficient tuples with deg_p+1 coeffs, leading coeff != 0
+            def gen_poly(deg):
+                if deg == 1:
+                    for a0 in coeff_range:
+                        for a1 in coeff_range:
+                            if a1 != 0:
+                                yield [a0,a1]
+                elif deg == 2:
+                    for a0 in coeff_range:
+                        for a1 in coeff_range:
+                            for a2 in coeff_range:
+                                if a2 != 0:
+                                    yield [a0,a1,a2]
+            for p in gen_poly(deg_p):
+                for q in gen_poly(deg_q):
+                    prod = poly_mul(p,q)
+                    if coeff(prod,4) == 1:
+                        c1 = coeff(prod,1)
+                        n = 63 - c1
+                        if n > 0 and n not in candidates:
+                            candidates.add(n)
+                            print(f"Found n = {n} with P={p} Q={q}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,49 @@
+[write_program]
+The problem considers the equation \(x^2 = 2^x\) for \(x > 0\). We want to find the sum of all roots of this equation in the positive reals. I'll enumerate possible roots by evaluating the difference \(x^2 - 2^x\) over a grid and locate where it crosses zero, then print these roots and their sum. This will help conjecture the sum of solutions.
+
+```python
+# Enumerate positive solutions to x^2 = 2^x by scanning intervals for sign changes
+# Then find roots using binary search and print each root and partial sum
+
+def f(x):
+    return x**2 - 2**x
+
+def binary_search_zero(a, b, eps=1e-10):
+    fa, fb = f(a), f(b)
+    if fa * fb > 0:
+        return None
+    for _ in range(100):
+        mid = (a+b)/2
+        fm = f(mid)
+        if abs(fm) < eps:
+            return mid
+        if fa*fm < 0:
+            b, fb = mid, fm
+        else:
+            a, fa = mid, fm
+    return (a+b)/2
+
+def main():
+    # Search roots in x in (0,10)
+    roots = []
+    step = 0.01
+    x = 0.01
+    prev = f(x)
+    x += step
+    while x <= 10:
+        curr = f(x)
+        if prev*curr < 0:
+            root = binary_search_zero(x - step, x)
+            if root is not None:
+                # Avoid duplicates within tolerance
+                if not roots or abs(root - roots[-1]) > 1e-7:
+                    roots.append(root)
+                    print(f"Found root: {root:.10f}")
+                    print(f"Partial sum of roots: {sum(roots):.10f}")
+        prev = curr
+        x += step
+    print(f"Sum of all roots found: {sum(roots):.10f}")
+
+if __name__ == "__main__":
+    main()
+```

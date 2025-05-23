@@ -1,0 +1,55 @@
+[write_program]
+This problem asks for the smallest positive integer n where:
+1. The number of prime digit pairs in n is exactly 11
+2. n doesn't start with a leading zero (implied by being a positive integer)
+3. We need to find the minimal such n
+
+We'll write a Python program to enumerate numbers and count their prime digit pairs, tracking the smallest number that reaches exactly 11 prime pairs.
+
+```python
+def is_prime(n):
+    """Check if n is a prime number."""
+    if n < 2:
+        return False
+    if n in (2, 3):
+        return True
+    if n % 2 == 0:
+        return False
+    for p in range(3, int(n**0.5) + 1, 2):
+        if n % p == 0:
+            return False
+    return True
+
+def count_prime_pairs(n):
+    """Count how many consecutive digit pairs form primes."""
+    s = str(n)
+    count = 0
+    for i in range(len(s)-1):
+        pair = int(s[i] + s[i+1])
+        if is_prime(pair):
+            count += 1
+    return count
+
+def find_min_number(target=11, max_digits=20):
+    """Find smallest number with exactly target prime digit pairs."""
+    from itertools import product
+    
+    # Precompute all 2-digit primes
+    primes_2digit = [p for p in range(10, 100) if is_prime(p)]
+    
+    # We need at least 12 digits (11 pairs)
+    min_digits = target + 1
+    for digits in range(min_digits, max_digits + 1):
+        # Generate numbers with increasing digit lengths
+        for num in range(10**(digits-1), 10**digits):
+            if count_prime_pairs(num) == target:
+                print(f"Candidate found: {num}")
+                return num
+        print(f"Checked all {digits}-digit numbers")
+    
+    print("No solution found within digit limit")
+    return None
+
+if __name__ == "__main__":
+    find_min_number()
+```

@@ -1,0 +1,72 @@
+[write_program]
+The problem involves a functional equation for \( f: \mathbb{R} \to \mathbb{R} \) positive on positive reals, satisfying
+\[
+f(x \cdot f(x + y)) = y \cdot f(x) + 1 \quad \forall x,y > 0.
+\]
+We want to explore possible \( f \) candidates numerically for small positive values to guess the form of \( f \).
+
+We'll fix small sample values for \( x, y \), and try some function candidates to see which satisfy the relation approximately. This might help conjecture \( f \).
+
+```python
+# Enumerate and test candidate functions f: (0,∞) -> (0,∞) on small positive samples x,y
+def check_equation(f, xs, ys):
+    # Check if f satisfies f(x*f(x+y)) == y*f(x) + 1 approximately on samples
+    for x in xs:
+        for y in ys:
+            lhs = f(x * f(x + y))
+            rhs = y * f(x) + 1
+            if abs(lhs - rhs) > 1e-8:
+                return False
+    return True
+
+# Candidate functions to test
+def candidate1(t):  # f(t) = 1/t, positive and decreasing
+    return 1/t
+
+def candidate2(t):  # f(t) = constant c, for c>0
+    return 2
+
+def candidate3(t):  # f(t) = 1/(t+c) try with c=1
+    return 1/(t+1)
+
+def candidate4(t):  # f(t) = a*t + b, try a=1, b>0
+    return t + 1
+
+def candidate5(t): # f(t) = k/t + m try k=1,m=0
+    return 1/t
+
+# Sample points
+xs = [0.5, 1.0, 2.0]
+ys = [0.1, 0.5, 1.0]
+
+candidates = {
+    "1/t": candidate1,
+    "constant_2": candidate2,
+    "1/(t+1)": candidate3,
+    "t+1": candidate4,
+}
+
+for name, f in candidates.items():
+    result = check_equation(f, xs, ys)
+    print(f"Function {name} satisfies equation on sample? {result}")
+
+# Enumerate f(x) = 1/(a*x + b) for a,b in small integers and test
+from math import isclose
+for a in [1, 2]:
+    for b in [0, 1]:
+        def f(t, a=a, b=b):  # capture parameters
+            return 1/(a*t + b)
+        ok = True
+        for x in xs:
+            for y in ys:
+                lhs = f(x * f(x + y))
+                rhs = y * f(x) + 1
+                if not isclose(lhs, rhs, abs_tol=1e-8):
+                    ok = False
+                    break
+            if not ok:
+                break
+        if ok:
+            print(f"Function f(t) = 1/({a}*t + {b}) satisfies equation on sample.")
+```
+

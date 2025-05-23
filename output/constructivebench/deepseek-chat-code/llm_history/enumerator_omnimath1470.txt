@@ -1,0 +1,70 @@
+[write_program]
+This problem involves computing a sum over divisors and Euler's totient function φ. We'll write a Python program to compute the given expression S/n for n being the product of the first 10 primes. The program will calculate the exact value by:
+
+1. Generating all divisors of n
+2. For each divisor x, computing n/x and its divisors
+3. Calculating the sum of φ(x)*y for all y dividing n/x
+4. Dividing the total sum by n
+
+```python
+import math
+from functools import reduce
+from itertools import combinations
+
+def get_divisors(n):
+    factors = {}
+    # Factorize n
+    temp = n
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]:
+        if temp % p == 0:
+            cnt = 0
+            while temp % p == 0:
+                temp //= p
+                cnt += 1
+            factors[p] = cnt
+    if temp != 1:
+        factors[temp] = 1
+    
+    # Generate all divisors
+    divisors = [1]
+    for p, exp in factors.items():
+        new_divisors = []
+        for d in divisors:
+            for e in range(exp + 1):
+                new_divisors.append(d * (p ** e))
+        divisors = list(set(new_divisors))
+    return sorted(divisors)
+
+def euler_phi(n):
+    result = n
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]:
+        if n % p == 0:
+            while n % p == 0:
+                n //= p
+            result -= result // p
+    if n > 1:
+        result -= result // n
+    return result
+
+def main():
+    first_10_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+    n = 1
+    for p in first_10_primes:
+        n *= p
+    
+    divisors_n = get_divisors(n)
+    total_sum = 0
+    
+    for x in divisors_n:
+        m = n // x
+        divisors_m = get_divisors(m)
+        phi_x = euler_phi(x)
+        for y in divisors_m:
+            total_sum += phi_x * y
+    
+    result = total_sum // n
+    print(f"Computed result: {result}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,66 @@
+[write_program]
+We want to find integers \(a, b\) such that \(a\) is odd, and
+\[
+p = \frac{a}{2^b} = \frac{\text{favorable outcomes}}{\text{total outcomes}} = \frac{255 \cdot 2^{17}}{2^{25}} = \frac{255}{2^{8}},
+\]
+with the further condition
+\[
+100a + b = 25517.
+\]
+Our goal is to enumerate candidates for \(a,b\) satisfying these conditions and verify which pair fits exactly.
+
+```python
+# Enumerate integers a,b with a odd and p = a/2^b = 255*2^17/2^25 = 255/2^8
+# Also 100*a + b = 25517
+# We vary a around 255 and b around 8 and check conditions.
+
+def gcd(x, y):
+    while y:
+        x, y = y, x % y
+    return x
+
+def enumerate_candidates():
+    # From total and favorable outcomes ratio:
+    # p = 255 / 256 exactly
+    # We seek a odd a,b with p = a / 2^b and 100a + b = 25517
+    # Since 255/256 = 0.99609375, a/2^b must be same fraction.
+    # We iterate b from 1 up to 25517 (since b = 25517 - 100a, and b>0)
+    # For each b, compute a = p * 2^b and check if a integer and a odd
+    p_num, p_den = 255, 256  # exact fraction
+
+    print(f"p = {p_num}/{p_den} = {p_num/p_den}")
+
+    for b in range(1, 300):  # b can't be very large since 100a+b=25517
+        # a = p * 2^b = (255/256)*2^b = 255 * 2^(b-8)
+        # so a= 255 * 2^{b-8}, must be integer and odd
+        if b < 8:
+            continue  # 2^{b-8} fraction, a not integer
+        power = b - 8
+        a = 255 * (2 ** power)
+        # Now check if 100a + b == 25517
+        val = 100 * a + b
+        if val > 25517:
+            # increasing b will only increase val, stop early
+            break
+        if val == 25517 and a % 2 == 1:
+            print(f"Found candidate: a={a}, b={b}, 100a+b={val}")
+            print(f"Check p = a/2^b = {a}/2^{b} = {a/(2**b)}")
+            # Confirm fraction simplified matches 255/256
+            # gcd to confirm fraction
+            g = gcd(a, 2**b)
+            a_red, d_red = a//g, (2**b)//g
+            print(f"Simplified fraction: {a_red}/{d_red}")
+            if a_red == p_num and d_red == p_den:
+                print("Match fraction exactly.")
+            else:
+                print("Does not match fraction exactly.")
+            return a,b
+        if val < 25517:
+            # try next b
+            continue
+    print("No candidate found up to b=300.")
+    return None,None
+
+if __name__ == "__main__":
+    a,b = enumerate_candidates()
+```

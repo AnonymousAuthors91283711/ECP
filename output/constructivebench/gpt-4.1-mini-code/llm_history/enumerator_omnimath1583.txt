@@ -1,0 +1,88 @@
+[write_program]
+The problem involves finding positions \(p = (i,j)\) in a 5x5 grid for which there exists a sequence of toggles (rows or columns) that set exactly the bit at \(p\) to true, and all others remain false. Each toggle flips all bits in a chosen row or column.
+
+We want to enumerate all such positions \(p\). The toggle operations correspond to toggling entire rows or columns, and the final matrix must have exactly one true at \(p\).
+
+We will:
+- Represent the 5x5 matrix as 25 bits.
+- Toggle rows and columns correspond to flipping sets of bits.
+- We try all subsets of toggles where toggles are identified by their row or column indices.
+- For each position \(p\), check if there exists a toggles list that results in exactly one true at \(p\).
+
+Because toggling twice cancels out, toggling sets correspond to subsets (sets of rows and columns toggled an odd number of times). So the problem reduces to solving for each \(p\) if there exists a subset of rows and columns toggled so that the final matrix is all False except the bit at \(p\) is True.
+
+We'll enumerate over all combinations of rows toggled (from 0 to 31) and columns toggled (0 to 31), and for each compute the parity matrix resulting. This matrix can be represented as a bitmask of 25 bits.
+
+For optimizing:
+- Use bitwise operations for rows and columns toggles.
+- For each toggle, flipping the row flips all bits in that row, columns flips all bits in that column.
+- After applying toggles, check if matrix has one True at \(p\).
+
+We'll find all such \(p\). According to the problem, \(p\) is in omnimath1583_answer iff such toggles exist.
+
+Output all positions that satisfy this property.
+
+```python
+# Enumerate positions p in 5x5 grid (indices 0 to 4)
+# Each toggle is a choice of row toggle set and column toggle set
+# Toggling a row flips bits in that row
+# Toggling a column flips bits in that column
+# After toggling, matrix M has True at p and False elsewhere iff exactly that bit is set
+
+def bit_positions_set(x):
+    # Generator of bits set in x (0-based)
+    pos = 0
+    while x:
+        if x & 1:
+            yield pos
+        x >>= 1
+        pos += 1
+
+def main():
+    size = 5
+    positions = []
+    # Precompute masks for rows and columns, each is 25-bit representing the board
+    row_masks = []
+    for r in range(size):
+        mask = 0
+        for c in range(size):
+            mask |= 1 << (r * size + c)
+        row_masks.append(mask)
+    col_masks = []
+    for c in range(size):
+        mask = 0
+        for r in range(size):
+            mask |= 1 << (r * size + c)
+        col_masks.append(mask)
+
+    # Enumerate all subsets of row toggles (0..31)
+    # Enumerate all subsets of column toggles (0..31)
+    # For each toggle set, compute the resultant matrix bits toggled
+    # Store possible matrices indexed by the 25-bit matrix representation
+
+    possible_positions = [False] * (size*size)
+    for row_toggle_set in range(1 << size):
+        row_flip = 0
+        for r in bit_positions_set(row_toggle_set):
+            row_flip ^= row_masks[r]
+        for col_toggle_set in range(1 << size):
+            col_flip = 0
+            for c in bit_positions_set(col_toggle_set):
+                col_flip ^= col_masks[c]
+            final_state = row_flip ^ col_flip
+            # Check if final_state has exactly one bit set
+            if final_state != 0 and (final_state & (final_state - 1)) == 0:
+                pos = final_state.bit_length() - 1
+                possible_positions[pos] = True
+                r, c = divmod(pos, size)
+                print(f"Possible position: ({r},{c}) with toggles rows={bin(row_toggle_set)} cols={bin(col_toggle_set)}")
+
+    print("\nPositions with required property (omnimath1583_answer):")
+    for pos, val in enumerate(possible_positions):
+        if val:
+            r, c = divmod(pos, size)
+            print(f"({r},{c})")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,58 @@
+[write_program]
+The problem asks for the count of integer 7-tuples \((n_1, \ldots, n_7)\) such that the sum of their sixth powers equals 96957. To assist, we enumerate all such integer 7-tuples for small ranges (to keep runtime reasonable), print each tuple when found, and finally output the total count.
+
+```python
+# Enumerate 7-tuples of integers n_i with n_i^6 summing to 96957
+# Small search space due to 6th power growing fast; |n_i|^6 ≤ 96957 => |n_i| ≤ 7 approx
+
+# We'll use backtracking with pruning to enumerate all solutions efficiently
+def sixth_power(n):
+    return n**6
+
+target = 96957
+limit = 7  # because 7^6 = 117649 > 96957, but 6^6=46656 < 96957
+
+count = 0
+
+# Precompute sixth powers for range [-limit, limit]
+powers = {i: sixth_power(i) for i in range(-limit, limit+1)}
+
+# To reduce complexity, precompute all possible sums of 3 sixth powers and 4 sixth powers,
+# then combine them to find 7-tuples efficiently.
+
+from collections import defaultdict
+
+sum3 = defaultdict(list)
+for n1 in range(-limit, limit+1):
+    p1 = powers[n1]
+    for n2 in range(-limit, limit+1):
+        p2 = powers[n2]
+        for n3 in range(-limit, limit+1):
+            s = p1 + p2 + powers[n3]
+            if s <= target:
+                sum3[s].append((n1, n2, n3))
+
+sum4 = defaultdict(list)
+for n4 in range(-limit, limit+1):
+    p4 = powers[n4]
+    for n5 in range(-limit, limit+1):
+        p5 = powers[n5]
+        for n6 in range(-limit, limit+1):
+            p6 = powers[n6]
+            for n7 in range(-limit, limit+1):
+                s = p4 + p5 + p6 + powers[n7]
+                if s <= target:
+                    sum4[s].append((n4, n5, n6, n7))
+
+# Enumerate pairs of sums to get total sum == target
+for s3 in sum3:
+    s4 = target - s3
+    if s4 in sum4:
+        for triple in sum3[s3]:
+            for quadruple in sum4[s4]:
+                ans = triple + quadruple
+                print(ans)
+                count += 1
+
+print("Total count:", count)
+```

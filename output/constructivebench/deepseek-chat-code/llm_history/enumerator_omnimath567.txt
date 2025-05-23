@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for the maximum number of pairs (i,j) with i,j ≤ n such that there exists exactly one injective function f mapping each i to j where (i,f(i)) is in the set. We'll write a Python program to enumerate possible values for small n and observe the pattern.
+
+The approach:
+1. For small n (0 to 5), enumerate all possible sets of pairs
+2. For each set size k, check if there's exactly one injective function f
+3. Track the maximum k that satisfies the condition
+
+```python
+from itertools import combinations, permutations
+
+def count_injective_functions(pairs, n):
+    """Count injective functions f where (i,f(i)) in pairs for all i<=n"""
+    count = 0
+    # Try all possible injective functions (permutations of length n+1)
+    for f in permutations(range(n+1), n+1):
+        valid = True
+        for i in range(n+1):
+            if (i, f[i]) not in pairs:
+                valid = False
+                break
+        if valid:
+            count += 1
+            if count > 1:  # Early exit if multiple found
+                return count
+    return count
+
+def find_max_k(n):
+    max_k = 0
+    all_pairs = [(i,j) for i in range(n+1) for j in range(n+1)]
+    
+    # Try all possible set sizes from largest to smallest
+    for k in range((n+1)**2, 0, -1):
+        found = False
+        # Check all combinations of size k
+        for pairs in combinations(all_pairs, k):
+            if count_injective_functions(set(pairs), n) == 1:
+                max_k = k
+                found = True
+                break
+        if found:
+            break
+    return max_k
+
+# Compute for small n values
+for n in range(6):
+    print(f"n={n}, max_k={find_max_k(n)}")
+```

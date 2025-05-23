@@ -1,0 +1,44 @@
+[write_program]
+This problem involves finding values of \( p \) in \([0,1]\) such that the tail probabilities of two binomial distributions (with parameters \( (3, p) \) and \( (5, p) \)) at given thresholds are equal. We will enumerate sample \( p \) values in \([0,1]\), compute the sums exactly, and print values of \( p \) where the two sums are close (within a small tolerance), suggesting potential equality points.
+
+```python
+from math import comb
+
+# Compare sums for given p
+def binom_tail_sum(n, threshold, p):
+    total = 0.0
+    for k in range(n+1):
+        if k > threshold:
+            total += comb(n, k) * p**k * (1 - p)**(n - k)
+    return total
+
+print("Enumerating candidate p values in [0,1] where sums nearly equal")
+
+# We choose a fine grid on [0, 1]
+step = 0.01
+threshold1 = 1.5  # k > 3/2 means k >= 2
+threshold2 = 2.5  # k > 5/2 means k >= 3
+
+prev_diff = None
+candidate_ps = []
+
+for i in range(101):
+    p = i * step
+    sum_left = binom_tail_sum(3, threshold1, p)
+    sum_right = binom_tail_sum(5, threshold2, p)
+    diff = sum_left - sum_right
+    # Print sums for inspection
+    print(f"p={p:.2f}, sum_left={sum_left:.5f}, sum_right={sum_right:.5f}, diff={diff:.5f}")
+    # Check for approximate equality (difference near zero)
+    if abs(diff) < 0.001:
+        print(f"Candidate p with sums nearly equal: {p:.4f}")
+        candidate_ps.append(p)
+
+# If candidates found, print minimum and maximum candidate
+if candidate_ps:
+    print("Candidates found at p =", candidate_ps)
+    print(f"Minimum candidate p: {min(candidate_ps):.4f}")
+    print(f"Maximum candidate p: {max(candidate_ps):.4f}")
+else:
+    print("No candidates found with sums nearly equal within tolerance.")
+```

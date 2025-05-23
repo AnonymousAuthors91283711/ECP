@@ -1,0 +1,59 @@
+[write_program]
+The problem asks whether there exists a 2000-element subset A of {1, ..., 3000} such that for every x in A, 2x is not in A. The program below tries to find such subsets or count maximal sets with this property. It prints example sets and maximal sizes for small parameter values to help conjecture the actual answer.
+
+```python
+# Enumerate subsets A of {1,...,N} with size k and no x and 2x both in A.
+# For large N and k=2000, brute force is infeasible.
+# Instead, for smaller N and k values, we search and print samples to assist conjecture.
+
+from itertools import combinations
+
+def valid_subset(A):
+    s = set(A)
+    return all(2*x not in s for x in A)
+
+def example_sets(N, k):
+    print(f"Checking subsets of size {k} in [1..{N}] with no x and 2x both in set:")
+    found_any = False
+    count = 0
+    # We limit enumeration to a small number due to combinatorial explosion
+    limit = 5
+    for comb in combinations(range(1, N+1), k):
+        if valid_subset(comb):
+            print("Example set:", comb)
+            found_any = True
+            count += 1
+            if count >= limit:
+                break
+    if not found_any:
+        print("No such subsets found.")
+
+def max_size_no_double(N):
+    # Greedy construction: try to build a maximum subset avoiding x and 2x both.
+    selected = set()
+    for x in range(1, N+1):
+        if x not in selected and (x % 2 == 1 or x // 2 not in selected):
+            selected.add(x)
+    return len(selected), selected
+
+def main():
+    # Small parameters to get intuition
+    for N, k in [(10, 6), (20, 12), (30, 20)]:
+        example_sets(N, k)
+        max_sz, max_set = max_size_no_double(N)
+        print(f"Max size subset in [1..{N}] with no x and 2x both: {max_sz}")
+        print(f"One maximal set example (partial): {sorted(list(max_set))[:20]}")
+
+    # For the problem: N=3000, k=2000
+    # Just compute maximal size lower bound by greedy:
+    max_sz, _ = max_size_no_double(3000)
+    print("For N=3000:")
+    print("Maximum subset size avoiding x and 2x both at least (greedy):", max_sz)
+    if max_sz >= 2000:
+        print("Therefore, 2000-element subset with required property likely exists.")
+    else:
+        print("Cannot find 2000-element subset with required property by greedy method.")
+
+if __name__ == "__main__":
+    main()
+```

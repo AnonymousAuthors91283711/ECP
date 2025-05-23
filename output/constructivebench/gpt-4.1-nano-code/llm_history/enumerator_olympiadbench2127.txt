@@ -1,0 +1,55 @@
+[write_program]
+Here's a code snippet to systematically explore the possible values of N and M for small sample values of n and k, printing results immediately. This approach leverages brute-force enumeration over feasible functions and filtering by the specified conditions, prioritizing exact integer values and meaningful approximation where needed. The code is structured to run efficiently for small parameters and outputs all candidate values within 400 tokens.
+
+```python
+from itertools import product
+from math import comb
+
+# Generate all functions from a domain to a codomain as tuples
+def all_functions(domain_size, codomain_size):
+    return product(range(codomain_size), repeat=domain_size)
+
+# Calculate s: a function from Fin m to Bool based on σ
+def compute_s(sigma, m):
+    s = []
+    for i in range(m):
+        # Count how many j satisfy σ(j) = i
+        count = sum(1 for j in sigma if j == i)
+        s.append(count % 2 == 1)
+    return s
+
+# Generate and count functions σ: Fin k -> Fin (2*n) satisfying first condition
+def count_N(n, k):
+    total = 0
+    for sigma in all_functions(k, 2 * n):
+        s = compute_s(sigma, 2 * n)
+        # Check the first condition: for all i in Fin n, s at i is True
+        if all(s[i] for i in range(n)):
+            total += 1
+    return total
+
+# Count M: functions σ: Fin k -> Fin n with all s(i) = True
+def count_M(n, k):
+    total = 0
+    for sigma in all_functions(k, n):
+        s = compute_s(sigma, n)
+        if all(s):
+            total += 1
+    return total
+
+# Main enumeration for small n and k
+def enumerate_small(n_max=3, k_max=3):
+    for n in range(1, n_max+1):
+        for k in range(1, k_max+1):
+            if n % 2 != k % 2:
+                continue
+            N_val = count_N(n, k)
+            M_val = count_M(n, k)
+            answer = N_val * M_val
+            print(f"n={n}, k={k}, N={N_val}, M={M_val}, answer={answer}")
+
+# Run enumeration
+enumerate_small()
+```
+
+This code brute-forces small parameters, enumerating all relevant functions, and prints the counts of functions N and M, then their product, which could help analyze the value of `olympiadbench2127_answer n k`.

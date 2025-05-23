@@ -1,0 +1,55 @@
+[write_program]
+This problem asks to find all real-valued functions f: ℝ → ℝ that satisfy three conditions:
+1. A functional inequality: f(x)+f(y)+1 ≥ f(x+y) ≥ f(x)+f(y) for all x,y
+2. f(0) ≥ f(x) for x ∈ [0,1)
+3. Boundary conditions: f(-1) = -1 and f(1) = 1
+
+We'll enumerate possible linear functions f(x) = kx + c to find candidates that satisfy all conditions.
+
+```python
+def check_linear_function(k, c):
+    # Check boundary conditions
+    if abs(k * (-1) + c - (-1)) > 1e-9:
+        return False
+    if abs(k * 1 + c - 1) > 1e-9:
+        return False
+    
+    # Check functional inequality for some sample points
+    test_points = [0.5, -0.5, 0.25, -0.25, 0.75, -0.75]
+    for x in test_points:
+        for y in test_points:
+            lhs = k*x + c + k*y + c + 1
+            mid = k*(x+y) + c
+            rhs = k*x + c + k*y + c
+            if not (lhs >= mid + 1e-9 and mid >= rhs - 1e-9):
+                return False
+    
+    # Check f(0) ≥ f(x) for x ∈ [0,1)
+    for x in [0.1, 0.2, 0.5, 0.9]:
+        if c < k*x + c + 1e-9:  # f(0) = c, f(x) = kx + c
+            return False
+    
+    return True
+
+# Search for linear solutions f(x) = kx + c
+# From boundary conditions: f(-1) = -k + c = -1, f(1) = k + c = 1
+# Solving gives c = 0, k = 1
+k = 1.0
+c = 0.0
+
+if check_linear_function(k, c):
+    print(f"Found candidate: f(x) = {k}x + {c}")
+
+# Check if identity function is the only solution
+print("Checking if other solutions exist...")
+found_other = False
+for trial in range(10):
+    k_test = 1.0 + trial * 0.1
+    c_test = 0.0 + trial * 0.1
+    if check_linear_function(k_test, c_test):
+        print(f"Found another candidate: f(x) = {k_test}x + {c_test}")
+        found_other = True
+
+if not found_other:
+    print("No other linear solutions found")
+```

@@ -1,0 +1,73 @@
+[write_program]
+The problem involves a polynomial \( f \in \mathbb{Z}[x] \) and a function \( p(m) \) related to prime factors of \( |m| \), with special cases for \( m=0 \) and \( m=\pm 1 \). We want to find polynomials \( f \) such that \( \exists B \in \mathbb{N}, \forall n \in \mathbb{N}, p(f(n^2)) - 2n \le B \). Our goal is to enumerate some polynomials \( f \) with integer coefficients for small degrees and small coefficients, evaluate \( p(f(n^2)) - 2n \), and try to identify those with bounded values.
+
+Since \( p(m) \) roughly returns the greatest prime dividing \( |m| \), or special values \( 1 \) or \( \infty \) if \( m=\pm1 \) or \( 0 \). For \( p(m)-2n \le B \), large prime factors in \( f(n^2) \) growing faster than \( 2n \) would lead to no finite \( B \).
+
+We will enumerate polynomials with degrees 0,1,2 and coefficients from \(-2\) to 2, evaluate \( p(f(n^2)) - 2n \) for \( n=1..10 \) and print those polynomials where the expression stays bounded (say max less than 10). This might help understand the shape of \( f \in \text{omnimath272\_answer} \).
+
+We use sympy to factor numbers and get the maximal prime factor.
+
+```python
+# Enumerate integer polynomials f of small degree and coefficients
+# For n=1..10, compute m = f(n^2)
+# Compute p(m): if m=0 then "inf" else max prime factor (or 1 if ±1)
+# Print polynomials with max(p(m)-2n) <= 10
+
+import sympy
+
+def p(m):
+    if m == 0:
+        return float('inf')
+    if abs(m) == 1:
+        return 1
+    factors = sympy.factorint(abs(m))
+    return max(factors.keys()) if factors else 1
+
+def poly_val(coeffs, x):
+    # coeffs: list of coeffs a_0 + a_1 x + a_2 x^2 + ...
+    return sum(c * (x**i) for i, c in enumerate(coeffs))
+
+def poly_str(coeffs):
+    terms = []
+    for i, c in enumerate(coeffs):
+        if c == 0:
+            continue
+        s = f"{c}" if i==0 else (f"{c}*x^{i}" if i>1 else f"{c}*x")
+        terms.append(s)
+    return " + ".join(terms) if terms else "0"
+
+max_coeff = 2
+max_deg = 2
+max_n = 10
+threshold = 10
+
+for deg in range(max_deg+1):
+    # coeffs from -2..2
+    def gen_coeffs(d):
+        if d < 0:
+            yield []
+        else:
+            for cs in gen_coeffs(d-1):
+                for c in range(-max_coeff, max_coeff+1):
+                    yield cs + [c]
+    for coeffs in gen_coeffs(deg):
+        if all(c == 0 for c in coeffs):
+            continue
+        vals = []
+        overflow = False
+        for n in range(1, max_n+1):
+            x = n*n
+            val = poly_val(coeffs, x)
+            pm = p(val)
+            if pm == float('inf'):
+                overflow = True
+                break
+            diff = pm - 2*n
+            vals.append(diff)
+            if diff > threshold:
+                overflow = True
+                break
+        if not overflow:
+            print(f"f = {poly_str(coeffs)}; max p(f(n^2))-2n = {max(vals)}")
+```
+

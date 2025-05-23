@@ -1,0 +1,67 @@
+[write_program]
+The problem is to find all positive integer quadruples (a, b, c, d) such that:
+
+a^3 + b^4 + c^5 = d^11
+
+with a, b, c, d > 0 and a*b*c < 100,000.
+
+The main difficulty is the very large exponents and constraint on the product a*b*c. To enumerate candidates efficiently, we can:
+
+- Iterate a, b, c starting from 1 with a*b*c < 100,000.
+- For each triple (a,b,c), compute s = a^3 + b^4 + c^5.
+- Check if s is a perfect 11th power by attempting to compute d = round(s^(1/11)) and verify d^11 = s.
+- Print any such (a,b,c,d) quadruples immediately when found.
+
+We will limit the iteration so that a*b*c < 100,000, with a,b,c ≥1. Since the product grows fast, the upper limits will not exceed a few hundreds.
+
+This brute force enumeration aligns with the problem requirements.
+
+```python
+# Enumerate positive integers (a,b,c,d) satisfying:
+# a^3 + b^4 + c^5 = d^11 with a,b,c,d>0 and a*b*c < 100000
+# Print each quadruple immediately when found.
+
+def is_perfect_11th_power(n):
+    # Find integer d such that d^11 = n if it exists
+    # Use integer binary search to avoid floating-point inaccuracies
+    low, high = 1, max(1, int(n**(1/11)) + 2)
+    while low <= high:
+        mid = (low + high) // 2
+        val = mid**11
+        if val == n:
+            return mid
+        elif val < n:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return None
+
+def main():
+    limit = 100000
+    # Since c^5 grows quickly, c will be small
+    # b^4 grows quickly, b is limited
+    # a^3 grows less quickly, a is limited
+    # Iterate over c first to reduce loops: c from 1 while c^5 < some max
+    max_c = 40  # 40^5 = 102400000, which is quite large but product limit restrains
+
+    for c in range(1, max_c+1):
+        c5 = c**5
+        # For b, similarly restrict
+        max_b = 80  # 80^4 is 40960000, big but still limited
+        for b in range(1, max_b+1):
+            b4 = b**4
+            if c5 + b4 > 10**15:
+                break
+            # For a, ensure a*b*c < 100000 and a>0
+            max_a = min((limit // (b*c)), 200)  # safety upper bound on a
+            for a in range(1, max_a+1):
+                if a*b*c >= limit:
+                    break
+                s = a**3 + b4 + c5
+                d = is_perfect_11th_power(s)
+                if d is not None:
+                    print(f'(a,b,c,d) = ({a}, {b}, {c}, {d})')
+
+if __name__ == "__main__":
+    main()
+```

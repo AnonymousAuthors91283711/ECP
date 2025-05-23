@@ -1,0 +1,57 @@
+[write_program]
+This problem involves characterizing all continuous real-valued functions \( f \) on \(\mathbb{R}\) such that for any real numbers \( x,y \), if \(x - y\) is rational, then \( f(x) - f(y) \) is rational. This is a classic type of problem exploring functions with "rational differences" on certain domains.
+
+To conjecture the possible form of such functions, let's enumerate examples of continuous functions \( f \) and test the condition on sample points differing by rational values. The main insight is that if \( f \) respects rational differences in domain by mapping to rational differences in range, this likely restricts \( f \) to be affine functions with rational slope.
+
+We will try functions of form \( f(x) = a x + b \) with \(a,b\) rational or irrational, and test the property on multiple pairs \( (x,y) \).
+
+```python
+# Enumerate possible continuous functions f : ℝ → ℝ
+# satisfying that whenever x - y is rational, f(x) - f(y) is rational.
+# We test functions f(x) = a*x + b for various a,b rational or irrational.
+# Print those f that satisfy the condition on many rational differences.
+
+from fractions import Fraction
+import math
+
+def is_rational(z, tol=1e-12):
+    # Check if z is close to a rational number with denominator <= 100
+    # This is heuristic for the test
+    for denom in range(1, 101):
+        num = round(z * denom)
+        if abs(z - num/denom) < tol:
+            return True
+    return False
+
+def test_f(a, b):
+    # Test f(x)=a*x + b for x,y with rational difference
+    # We'll try various x,y with x-y rational
+    # f(x)-f(y) = a*(x-y), so must be rational for all rational x-y
+    # So 'a' must be rational to satisfy the property exactly
+    # Let's confirm by testing.
+    rationals = [Fraction(n, d) for n in range(-5,6) for d in range(1,6) if d != 0]
+    for r in rationals:
+        diff = a*r  # f(x)-f(y) = a*(x-y) with x-y=r
+        if not is_rational(diff):
+            return False
+    return True
+
+def main():
+    # Enumerate candidates for a,b from a small set
+    rationals = [Fraction(n, d) for n in range(-3,4) for d in range(1,4)]
+    irrationals = [math.sqrt(2), math.pi]
+    
+    print("Testing functions f(x) = a*x + b")
+    for a in rationals + irrationals:
+        for b in rationals + irrationals:
+            if test_f(float(a), float(b)):
+                print(f"f(x) = ({a}) * x + ({b}) satisfies the condition")
+
+    # We note the special case a=0, then f(x)=b constant real number (any real b)
+    # is trivial since f(x)-f(y)=0 in rationals for all x,y.
+    print("Constant functions f(x)=b satisfy the condition for any real b.")
+
+if __name__ == "__main__":
+    main()
+```
+This will print linear functions \( ax+b \) where \( a \) is rational (since only then \( a \cdot r \) is rational for all rational \( r \)) and any \( b \), as well as constant functions, which obviously satisfy the property. This helps narrow down the candidate functions in \(\texttt{omnimath2297_answer}\).

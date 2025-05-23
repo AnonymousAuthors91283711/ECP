@@ -1,0 +1,59 @@
+[write_program]
+This problem is from IMO 2020 Shortlist N3, asking to find all positive integers n such that for any non-constant function a from {1,...,n} to natural numbers, there exist indices i,j where (a_i + a_j)/2 is not a perfect square of any a_k. We'll write a program to enumerate possible n values that might satisfy this condition.
+
+The approach is:
+1. For small n values (up to 20), check if they satisfy the condition
+2. For each n, generate all non-constant functions from {1..n} to small integers (up to 5)
+3. Check if any function violates the condition (all pairwise averages are squares)
+4. If no violating function exists for an n, it's a candidate answer
+
+```python
+def is_perfect_square(x):
+    s = int(x**0.5)
+    return s*s == x
+
+def check_condition(n, max_val=5):
+    from itertools import product
+    
+    # Generate all non-constant functions {1..n} -> {1..max_val}
+    for func in product(range(1, max_val+1), repeat=n):
+        if len(set(func)) == 1:  # Skip constant functions
+            continue
+            
+        # Check if all pairwise averages are squares of some a_k
+        condition_holds = True
+        for i in range(n):
+            for j in range(i, n):
+                avg = (func[i] + func[j]) / 2
+                if not is_perfect_square(avg):
+                    condition_holds = False
+                    break
+                # Check if avg equals some a_k^2
+                found = False
+                for k in range(n):
+                    if func[k] * func[k] == avg:
+                        found = True
+                        break
+                if not found:
+                    condition_holds = False
+                    break
+            if not condition_holds:
+                break
+                
+        if condition_holds:
+            return False  # Found violating function
+    return True  # No violating function found
+
+def main():
+    max_n = 20
+    candidates = []
+    for n in range(1, max_n+1):
+        if check_condition(n):
+            candidates.append(n)
+            print(f"Found candidate: {n}")
+    
+    print("\nFinal candidates:", candidates)
+
+if __name__ == "__main__":
+    main()
+```

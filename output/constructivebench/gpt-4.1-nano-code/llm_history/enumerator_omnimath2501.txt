@@ -1,0 +1,102 @@
+[write_program]
+This problem involves finding a positive integer \( n \) such that the number of divisors of \( n^n \) is exactly 861. The key insight is that the number of divisors of a number depends on its prime factorization. If
+\[
+n = p_1^{a_1} p_2^{a_2} \cdots p_k^{a_k}
+\]
+then
+\[
+n^n = p_1^{a_1 n} p_2^{a_2 n} \cdots p_k^{a_k n}
+\]
+and the number of divisors is
+\[
+\prod_{i=1}^k (a_i n + 1)
+\]
+
+Our goal is:
+\[
+\prod_{i=1}^k (a_i n + 1) = 861
+\]
+
+Factor 861:
+\[
+861 = 3 \times 287 = 3 \times 7 \times 41
+\]
+
+So the divisor count factors 861 into integers greater than 1 (or 1 if a trivial factor), and each corresponds to \( a_i n + 1 \).
+
+Since \( a_i \ge 0 \), \( a_i n + 1 \ge 1 \), and their product is 861, we must find all factorizations of 861 into factors.
+
+Possible factorizations:
+- 861 as four factors: \( 1 \times 1 \times 3 \times 287 \), etc.
+- 861 as three factors, two factors, or one factor.
+
+In particular, factors greater than 1:
+- \(3 \times 287\)
+- \(7 \times 123\)
+- \(41 \times 21\)
+- etc.
+
+Let's first list all factorizations of 861 into factors greater than or equal to 1.
+
+We focus on the simplest: two factors, three factors, four factors.
+
+Our main concern: to find all pairs \((a_i n + 1)\) multiplying to 861, then solve for \( n \).
+
+Implemented in code:
+
+```python
+# Enumerate all factorizations of 861 into factors >= 1
+# For each factorization, try to determine n and a_i
+# since a_i n + 1 = factor => a_i = (factor - 1) / n
+# a_i must be integer >=0, so (factor - 1) divisible by n
+
+from itertools import combinations_with_replacement, permutations
+
+number = 861
+
+# Function to find divisors of a number efficiently
+def divisors(x):
+    divs = set()
+    for i in range(1, int(x**0.5) + 1):
+        if x % i == 0:
+            divs.add(i)
+            divs.add(x // i)
+    return sorted(divs)
+
+# List all divisor combinations that multiply to 861
+# For simplicity, check pairs and triplets (since larger ones become complex)
+# Generate all possible factorizations
+
+def factorization_candidates(n):
+    # For two factors
+    for d in divisors(n):
+        if n % d == 0:
+            yield (d, n // d)
+    # For three factors
+    for d1 in divisors(n):
+        for d2 in divisors(n // d1):
+            d3 = n // (d1 * d2)
+            if d3 >= 1:
+                yield (d1, d2, d3)
+
+# Main enumeration
+for factors in factorization_candidates(number):
+    # For each factor, check if (factor - 1) divisible by candidate n
+    # We can try small n values (from 1 up to, say, 30)
+    for n_candidate in range(1, 31):
+        candidate_valid = True
+        a_list = []
+        for f in factors:
+            if (f - 1) % n_candidate != 0:
+                candidate_valid = False
+                break
+            a = (f - 1) // n_candidate
+            if a < 0:
+                candidate_valid = False
+                break
+            a_list.append(a)
+        if candidate_valid:
+            print(f"n = {n_candidate}, factors: {factors}, a's: {a_list}")
+```
+
+This code explores factorization possibilities, checks if corresponding \( a_i \) are integral, and prints candidate solutions immediately, aiding in conjecture.

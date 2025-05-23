@@ -1,0 +1,57 @@
+[write_program]
+This problem asks for the largest sum s of a subset S of {1,2,...,12} such that for all k ≥ 2, S cannot be partitioned into k non-empty disjoint subsets with equal sums. We'll write a Python program to enumerate all possible subset sums and check this condition.
+
+The approach:
+1. Generate all possible subsets of {1,2,...,12}
+2. For each subset, calculate its sum
+3. Check if the sum can be partitioned into k equal parts for any k ≥ 2
+4. Track the maximum sum that fails this condition
+
+```python
+from itertools import combinations
+
+def has_k_equal_partitions(numbers, k):
+    total = sum(numbers)
+    if total % k != 0:
+        return True  # Can't partition, so satisfies our condition
+    target = total // k
+    n = len(numbers)
+    
+    # Early exit if any number exceeds target
+    if any(x > target for x in numbers):
+        return True
+    
+    # Check if k equal partitions exist
+    def backtrack(start, current_sum, groups_remaining):
+        if groups_remaining == 1:
+            return True
+        if current_sum == target:
+            return backtrack(0, 0, groups_remaining - 1)
+        for i in range(start, n):
+            if not used[i] and current_sum + numbers[i] <= target:
+                used[i] = True
+                if backtrack(i+1, current_sum + numbers[i], groups_remaining):
+                    return True
+                used[i] = False
+        return False
+    
+    used = [False] * n
+    return not backtrack(0, 0, k)
+
+max_s = 0
+for size in range(1, 13):
+    for subset in combinations(range(1, 13), size):
+        s = sum(subset)
+        if s <= max_s:
+            continue
+        valid = True
+        for k in range(2, size + 1):
+            if not has_k_equal_partitions(subset, k):
+                valid = False
+                break
+        if valid:
+            print(f"Found candidate: {subset} with sum {s}")
+            max_s = s
+
+print(f"Maximum sum found: {max_s}")
+```

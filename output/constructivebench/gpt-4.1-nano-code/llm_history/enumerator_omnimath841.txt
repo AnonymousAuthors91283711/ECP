@@ -1,0 +1,88 @@
+[write_program]
+The problem seems to involve a functional equation for `f : ℤ → ℤ → ℤ` with some conditions, and asks to find `f 1000 (3^2021)` based on these rules. The conditions specify how `f a b` behaves depending on inequalities involving `a`, `b`, and manipulations like `2 * a`. My approach is to analyze the recursion and pattern by considering small sample cases, then generalize.
+
+I'll implement a recursive enumeration for `f`, handling the conditions, and explicitly compute `f 1000 (3^2021)` by mimicking the recursion with small sample values for parameters, and print all candidates to assist in conjecture.
+
+Since the original problem is complex and involves inequalities that partition the domain, I'll simulate the recursion with small sample inputs to explore the behavior and guess the answer.
+
+```python
+# Python program to simulate the recursive definition with small sample values
+# and print potential answers for the specific case of f(1000, 3^2021).
+
+import math
+import sys
+sys.setrecursionlimit(10**7)
+
+# For the purpose of enumeration, we define a small memoization cache
+memo = {}
+
+def f(a, b, depth=0):
+    # Use memoization to avoid repeated calculation
+    if (a, b) in memo:
+        return memo[(a, b)]
+    # Base case: if a <= 0 or b <= 0 (not specified in the problem), or limit to small values
+    if a <= 0 or b <= 0:
+        result = 0
+        print(f"{'  '*depth}f({a}, {b}) = {result} (base)")
+        memo[(a, b)] = result
+        return result
+    # Apply the conditions based on inequalities
+    # Condition 1: a > b -> f a b = b
+    if a > b:
+        result = b
+        print(f"{'  '*depth}f({a}, {b}) = {result} (a > b)")
+        memo[(a, b)] = result
+        return result
+    # Condition 2: a ≤ b and f(2a, b) < a -> f a b = f(2a, b)
+    # Condition 3: a ≤ b and not(f(2a, b) < a) -> f a b = f(2a, b) - a
+    else:
+        # Compute f(2a, b)
+        val_for_2a_b = f(2*a, b, depth+1)
+        if val_for_2a_b < a:
+            result = val_for_2a_b
+            print(f"{'  '*depth}f({a}, {b}) = {result} (a ≤ b and f(2a, b) < a)")
+            memo[(a, b)] = result
+            return result
+        else:
+            result = val_for_2a_b - a
+            print(f"{'  '*depth}f({a}, {b}) = {result} (a ≤ b and not(f(2a, b) < a))")
+            memo[(a, b)] = result
+            return result
+
+# Small tests: try with small b to observe pattern
+print("Sample evaluations:")
+print(f"f(1,1): {f(1,1)}")
+print(f"f(2,3): {f(2,3)}")
+print(f"f(100,50): {f(100,50)}")
+print(f"f(10,20): {f(10,20)}")
+print(f"f(1000, 3^3): {f(1000, 27)}")  # Small power, for pattern exploration
+
+# Now, attempt to evaluate or approximate f(1000, 3^2021)
+# Since 3^2021 is large, and recursive evaluation won't terminate reasonably,
+# we instead estimate behavior based on pattern deductions.
+
+# Observations:
+# 1. If a > b, f a b = b
+# 2. When a ≤ b, the recursion depends on whether f(2a, b) < a.
+# 3. For large b, doubling a repeatedly: 2a, 4a, 8a,... until surpassing b.
+# 4. The pattern resembles the Euclidean division:
+#    - The recursion reduces b by multiples of a, similar to modulo operation.
+
+# We hypothesize:
+# - When 'a' divides 'b', the recursion reduces to a pattern involving modular arithmetic.
+# - Since in the end, the values resemble floor divisions or remainders.
+
+# Approximate the answer based on the behavior:
+# For large arguments, the pattern suggests f(a, b) approximates b % a,
+# because repeated doubling aligns with reduction mod a.
+
+# Compute an approximation for f(1000, 3^2021):
+large_b = 3 ** 2021
+
+approximation = large_b % 1000
+
+print(f"Approximate value for f(1000, 3^2021) based on pattern analysis: {approximation}")
+
+# We stream partial results and hypotheses; in practice, further proofs would confirm.
+# This code provides conjectural answers and insight based on recursive behavior.
+```

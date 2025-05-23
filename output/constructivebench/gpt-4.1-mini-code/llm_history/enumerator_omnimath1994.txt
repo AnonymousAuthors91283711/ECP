@@ -1,0 +1,58 @@
+[write_program]
+The problem is to analyze the real roots of the polynomial equation:
+\[ x^9 + \frac{9}{8}x^6 + \frac{27}{64}x^3 - x + \frac{219}{512} = 0. \]
+
+We want to enumerate all real roots numerically (and exactly if possible), printing each as soon as we find it.
+
+Since this is a degree 9 polynomial with rational coefficients, exact algebraic roots are complicated. Instead, we will use a numerical root-finding approach combined with interval scanning over a reasonable domain (e.g., -2 to 2), printing roots as found.
+
+The code uses numpy and scipy to find roots of the polynomial. It scans linearly spaced intervals and applies a root-finding method to narrow down roots. It avoids duplicates by checking proximity.
+
+```python
+# omnimath1994 enumerator.py
+# Enumerate real roots of the given 9th-degree polynomial numerically.
+
+import numpy as np
+from scipy.optimize import brentq
+
+# Polynomial coefficients for:
+# x^9 + (9/8)*x^6 + (27/64)*x^3 - x + 219/512 = 0
+coeffs = [1,0,0,9/8,0,0,27/64, -1, 0, 219/512]
+
+def poly(x):
+    return ((((((x**9)
+                + (9/8)*x**6)
+                + (27/64)*x**3)
+                - x)
+                + 219/512))
+
+def find_roots():
+    roots = []
+    # We scan from -2 to 2 because polynomial values grow rapidly outside this
+    xs = np.linspace(-2, 2, 8000)
+    for i in range(len(xs) - 1):
+        a, b = xs[i], xs[i+1]
+        fa, fb = poly(a), poly(b)
+        # Check sign change for root existence
+        if fa * fb <= 0:
+            try:
+                r = brentq(poly, a, b)
+                # Avoid duplicates near previously found roots
+                if all(abs(r - rt) > 1e-8 for rt in roots):
+                    roots.append(r)
+                    print(f"Root found: x = {r:.16f}")
+            except ValueError:
+                continue
+    return roots
+
+if __name__ == "__main__":
+    print("Enumerating roots of x^9 + 9/8 x^6 + 27/64 x^3 - x + 219/512 = 0")
+    roots = find_roots()
+    roots_sorted = sorted(roots)
+    print(f"Number of roots found: {len(roots_sorted)}")
+    print("Roots (approx.):")
+    for r in roots_sorted:
+        print(f"x = {r:.16f}")
+```
+
+This program scans a reasonable domain and outputs roots as soon as it finds them, helping to conjecture the exact solutions or their count.

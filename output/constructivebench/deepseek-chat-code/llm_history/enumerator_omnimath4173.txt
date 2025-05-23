@@ -1,0 +1,60 @@
+[write_program]
+This problem involves finding all integer pairs (u,v) that can generate all integers through a specific set of operations. We'll write a Python program to enumerate small integer pairs and check if they satisfy the generation conditions up to a certain bound.
+
+The approach:
+1. Iterate through small integer pairs (u,v)
+2. For each pair, generate all numbers that can be formed using the allowed operations
+3. Check if all integers in a certain range can be generated
+4. Output pairs that satisfy the condition
+
+```python
+def generate_numbers(u, v, max_steps=10, check_range=10):
+    """Generate numbers from u,v using allowed operations up to max_steps iterations"""
+    numbers = {u, v}
+    for _ in range(max_steps):
+        new_numbers = set(numbers)
+        # Addition operation: a + b for distinct a,b in numbers
+        for a in numbers:
+            for b in numbers:
+                if a != b:
+                    new_numbers.add(a + b)
+        # Quadratic root operation: solution to a*x² + b*x + c = 0 for distinct a,b,c
+        for a in numbers:
+            for b in numbers:
+                for c in numbers:
+                    if a != b and b != c and a != c:
+                        # Solve a*x² + b*x + c = 0
+                        discriminant = b*b - 4*a*c
+                        if discriminant >= 0:
+                            sqrt_disc = int(discriminant**0.5)
+                            if sqrt_disc * sqrt_disc == discriminant:
+                                for sign in [-1, 1]:
+                                    x = (-b + sign * sqrt_disc) // (2*a)
+                                    if (-b + sign * sqrt_disc) % (2*a) == 0:
+                                        new_numbers.add(x)
+        if numbers == new_numbers:
+            break
+        numbers = new_numbers
+    return numbers
+
+def check_pair(u, v):
+    """Check if pair (u,v) can generate all integers in check_range"""
+    numbers = generate_numbers(u, v)
+    for n in range(-10, 11):
+        if n not in numbers:
+            return False
+    return True
+
+def enumerate_pairs(max_abs=5):
+    """Enumerate pairs (u,v) with |u|,|v| <= max_abs"""
+    for u in range(-max_abs, max_abs+1):
+        for v in range(-max_abs, max_abs+1):
+            if u == v:
+                continue
+            if check_pair(u, v):
+                print(f"Found valid pair: ({u}, {v})")
+
+if __name__ == "__main__":
+    print("Searching for valid pairs (u,v) with |u|,|v| <= 5...")
+    enumerate_pairs()
+```

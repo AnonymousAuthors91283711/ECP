@@ -1,0 +1,69 @@
+[write_program]
+This problem asks for the number of functions from a finite set of 12 elements to {true, false} that satisfy a certain non-homogeneity condition on any 4-element subset with certain sum relations. The key idea revolves around avoiding monochromatic solutions under specific sum constraints.
+
+Given the complex conditions, a practical approach is to consider small sample parameters — here, the set size is small (12). We will:
+
+- Enumerate all 16 possible Boolean functions (since 2^12).
+- For each function, check all 4-element subsets that satisfy the sum relations.
+- Count functions that do *not* have any 4-tuple where all four images are equal and the sum conditions hold.
+
+Since the total number of functions is 2^12 = 4096, iterating over all functions and subsets is feasible with efficient pruning.
+
+In particular:
+- For each function (represented as a 12-bit mask), generate all 4-element subsets.
+- For each subset, check the sum conditions (since indices are small, we can just test all sums).
+- Count functions that satisfy the condition "no such monochromatic subset" (thus valid functions).
+- The final number is the count of such functions.
+
+Let's implement this.
+
+```python
+# Enumerate all functions from 12 elements to {0,1} (represented as bits)
+# For each, check all 4-element subsets if they violate the condition
+# Sum conditions: check all 4-tuples with sum relations
+# Count functions that have no monochromatic violations under the sum conditions
+
+import itertools
+
+n = 12
+all_indices = list(range(n))
+count_valid = 0
+
+# Generate all possible functions represented by 12-bit masks
+for mask in range(1 << n):
+    f = [(mask >> i) & 1 for i in range(n)]  # function values
+
+    valid = True
+    # Generate all 4-element subsets
+    for subset in itertools.combinations(all_indices, 4):
+        a, b, c, d = subset
+        # Check sum relations
+        sum_ab = a + b
+        sum_ac = a + c
+        sum_ad = a + d
+        sum_bc = b + c
+        sum_bd = b + d
+        sum_cd = c + d
+        sum_sets = [
+            (sum_ab, sum_cd),
+            (sum_ac, sum_bd),
+            (sum_ad, sum_bc)
+        ]
+        # Check if any sum relation holds (equality of sums)
+        for s1, s2 in sum_sets:
+            if s1 == s2:
+                # Check if all four are same color
+                vals = [f[a], f[b], f[c], f[d]]
+                if all(val == vals[0] for val in vals):
+                    valid = False
+                    break
+        if not valid:
+            break
+    if valid:
+        print(f"Valid function mask: {bin(mask)}")
+        count_valid += 1
+
+print(f"Total valid functions: {count_valid}")
+```
+
+This code exhaustively checks all 4096 functions, which is computationally feasible. It streams valid functions immediately as they are found, adhering to the problem constraints. It is also optimized to break early upon violation detection to improve efficiency.

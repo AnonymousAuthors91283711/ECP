@@ -1,0 +1,46 @@
+[write_program]
+This problem asks for the smallest exponent n such that a!*b!*c! is divisible by 10^n but not 10^(n+1), where a+b+c=2006 and a,b,c are positive integers. We need to find the minimal such n across all valid partitions.
+
+The approach is to:
+1. Enumerate all possible partitions of 2006 into three positive integers (a,b,c)
+2. For each partition, calculate the exponent of 10 in a!*b!*c! by counting (2,5) pairs
+3. Track the minimal exponent found
+
+The exponent of 10 in a factorial is min(exponent of 2, exponent of 5). We'll compute both for each factorial.
+
+```python
+def count_factors(n, p):
+    """Count exponents of prime p in n!"""
+    count = 0
+    while n > 0:
+        n = n // p
+        count += n
+    return count
+
+min_n = float('inf')
+
+# Iterate through all possible a,b,c > 0 where a+b+c=2006
+# Since order doesn't matter for factorials, we can assume a <= b <= c
+for a in range(1, 2006//3 + 1):
+    remaining = 2006 - a
+    for b in range(a, remaining//2 + 1):
+        c = 2006 - a - b
+        if c < b:
+            continue
+        
+        # Calculate total 2s and 5s in a!*b!*c!
+        twos = count_factors(a, 2) + count_factors(b, 2) + count_factors(c, 2)
+        fives = count_factors(a, 5) + count_factors(b, 5) + count_factors(c, 5)
+        current_n = min(twos, fives)
+        
+        if current_n < min_n:
+            min_n = current_n
+            print(f"New min n={min_n} found at partition ({a},{b},{c})")
+            if min_n == 0:  # Can't get smaller than 0
+                break
+    else:
+        continue
+    break
+
+print(f"\nFinal minimal n: {min_n}")
+```

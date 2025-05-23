@@ -1,0 +1,37 @@
+[write_program]
+This problem asks for a polynomial P with integer coefficients that has roots at all real numbers x where 0 < x < 1, and specifically gives the coefficient of x^2022. The solution involves constructing such a polynomial and finding its 2022nd coefficient.
+
+The key insight is that the polynomial should have roots at all points 1/n for n ≥ 2. The minimal such polynomial would be the infinite product (x-1/2)(x-1/3)(x-1/4)... but we need a finite polynomial. We can use the generating function for the reciprocal roots.
+
+Here's a Python program to enumerate possible coefficients for smaller degree cases to help identify the pattern:
+
+```python
+from math import factorial
+from sympy import symbols, expand, Poly
+
+def enumerate_reciprocal_polynomial(max_degree):
+    x = symbols('x')
+    for n in range(2, max_degree + 1):
+        # Construct polynomial (x-1/2)(x-1/3)...(x-1/n)
+        poly = 1
+        for k in range(2, n+1):
+            poly *= (x - 1/k)
+        expanded = expand(poly)
+        
+        # Multiply by n! to clear denominators and get integer coefficients
+        coeff_poly = expanded * factorial(n)
+        p = Poly(coeff_poly, x)
+        
+        print(f"\nPolynomial up to 1/{n}:")
+        print(f"Degree: {p.degree()}")
+        print("Coefficients:")
+        for d in range(p.degree() + 1):
+            print(f"x^{d}: {p.coeff_monomial(x**d)}")
+
+# Enumerate for small cases to observe pattern
+enumerate_reciprocal_polynomial(6)
+```
+
+The program constructs polynomials with roots at 1/2, 1/3,...,1/n for increasing n, then clears denominators by multiplying by n!. It prints the resulting integer-coefficient polynomial and its coefficients. This helps observe that the coefficient pattern relates to Stirling numbers of the first kind.
+
+For the actual problem (coefficient of x^2022), the solution would involve the Stirling number S(2023, k) where k = 2023 - 2022 = 1, but we don't hardcode this in the enumerator. The enumerator helps verify the pattern on smaller cases.

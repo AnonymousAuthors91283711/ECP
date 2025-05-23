@@ -1,0 +1,48 @@
+[write_program]
+The problem is to find the smallest natural number \( n \) such that for every function \( f: \text{Fin}(n) \to \text{Fin}(2) \), there exists a 3-element subset \( s \subseteq \text{Fin}(n) \) on which \( f \) is constant.
+
+This is a Ramsey-type problem. Here, \(\text{Fin}(n)\) is just \(\{0,1,\ldots,n-1\}\), and \(f\) colors each element either 0 or 1. We want the minimal \( n \) so that any 2-coloring of \( \{0,\ldots,n-1\} \) contains a monochromatic subset of size 3.
+
+We will enumerate \( n \) starting from 1 upwards, and for each \( n \), enumerate all functions \( f: \{0,\ldots,n-1\} \to \{0,1\} \). For each such function, check if there exists a 3-element subset all of the same color.
+
+If for all \( f \) such a subset exists, print \( n \) as a candidate answer.
+
+Output each \( n \) immediately when confirmed.
+
+We limit to \( n \leq 7 \) for efficiency and since the classical Ramsey number \( R(3,3) = 6 \) suggests the answer is 6.
+
+```python
+from itertools import product, combinations
+
+def has_monochromatic_3_subset(f):
+    # f is a list of length n, values 0 or 1
+    n = len(f)
+    for s in combinations(range(n), 3):
+        vals = {f[i] for i in s}
+        if len(vals) == 1:
+            return True
+    return False
+
+def check_n(n):
+    # Enumerate all f: [0..n-1] -> {0,1}
+    # Return True if all f have a monochromatic 3-subset
+    for f in product([0,1], repeat=n):
+        if not has_monochromatic_3_subset(f):
+            return False
+    return True
+
+def main():
+    print("Enumerating n and checking all functions f: Fin(n)->Fin(2)")
+    for n in range(1,8):
+        if check_n(n):
+            print(f"All functions on n={n} have monochromatic 3-subset.")
+        else:
+            print(f"Counterexample exists for n={n}.")
+    # From output, minimal n with no counterexample is minimal answer
+    # Filter n with all functions satisfying property:
+    minimal = min(n for n in range(1,8) if check_n(n))
+    print(f"Minimal n = {minimal}")
+
+if __name__ == "__main__":
+    main()
+```

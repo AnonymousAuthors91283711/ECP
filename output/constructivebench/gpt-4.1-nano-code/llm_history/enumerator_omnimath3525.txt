@@ -1,0 +1,51 @@
+[write_program]
+The problem appears to involve a set \( S \) of functions \( t : \text{Fin} 3 \to \mathbb{N} \) where all \( t(i) \) are prime, and the set of such functions where the quadratic \( t(0) x^2 + t(1) x + t(2)=0 \) has a rational solution. The goal is to find all primes \( p \) such that at least 7 such functions \( t \) (with one of the \( t(i) = p \)) exist within \( S \).
+
+Key points:
+- \( t(i) \) are prime.
+- The quadratic \( t(0) x^2 + t(1) x + t(2) = 0 \) has a rational solution if and only if its discriminant is a perfect square, i.e., \( \Delta = t(1)^2 - 4 t(0) t(2) \) is a perfect square.
+- We need to count how many such \( t \) exist for each prime \( p \) in the position \( t(i) \), where the other \( t(j) \) are prime as well.
+- The candidate primes for \( t(i) \) are small, as we are enumerating.
+
+Let's pick small prime values (say, all primes ≤ 19) to efficiently generate candidates and count solutions.
+
+```python
+# Enumerate small primes for t(i)
+primes = [2, 3, 5, 7, 11, 13, 17, 19]
+
+# Function to check if a number is a perfect square
+def is_perfect_square(n):
+    root = int(n**0.5)
+    return root * root == n
+
+# Count how many triplets (t0, t1, t2) are prime and satisfy the discriminant condition
+# with t_i fixed to prime p, and counting how many have t_i = p
+from collections import Counter
+
+answer_counts = {p:0 for p in primes}
+
+for p in primes:
+    count_for_p = 0
+    for t0 in primes:
+        for t1 in primes:
+            for t2 in primes:
+                # Assign t_i to p for each i in 0,1,2
+                for fixed_pos in range(3):
+                    if fixed_pos == 0:
+                        if t0 != p:
+                            continue
+                    elif fixed_pos == 1:
+                        if t1 != p:
+                            continue
+                    else:
+                        if t2 != p:
+                            continue
+                    # Compute discriminant
+                    disc = t1*t1 - 4 * t0 * t2
+                    if disc >= 0 and is_perfect_square(disc):
+                        count_for_p += 1
+    answer_counts[p] = count_for_p
+    # If count >= 7, immediately print p (candidate prime)
+    if count_for_p >= 7:
+        print(p)
+```

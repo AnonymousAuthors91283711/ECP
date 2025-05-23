@@ -1,0 +1,79 @@
+[write_program]
+The problem is about characterizing polynomials \( f \in \mathbb{N}[X] \) such that for every prime \( p \) and positive integer \( n \), the evaluation \( f(p) \) is a prime power \( q^m \) for some prime \( q \) and positive integer \( m \). The goal is to explore such polynomials and conjecture their form by evaluating \( f \) at several primes.
+
+We will try polynomials of low degree with small coefficients, evaluate at small primes, and check whether the value is a prime power. The code will print all such polynomials that satisfy the condition at the tested primes, helping to conjecture the structure of \(\text{omnimath3970_answer}\).
+
+```python
+# Enumerate low-degree polynomials with small nonnegative integer coefficients over ℕ
+# Test whether for small primes p, f(p) is a prime power q^m for some prime q, m>0
+# Print candidates f and their values on primes immediately
+
+from sympy import primerange, isprime, Poly
+from sympy.abc import x
+from math import log
+
+def is_prime_power(n):
+    # Check if n is a prime power q^m with m>0
+    if n < 2:
+        return False
+    if isprime(n):
+        return True
+    for base in primerange(2, int(n ** 0.5) + 2):
+        if n % base == 0 and isprime(base):
+            # Check if n = base^m exactly
+            m = round(log(n, base))
+            if base ** m == n:
+                return m > 0
+    return False
+
+def poly_to_str(coeffs):
+    # coeffs: list of coefficients in ascending order of power
+    terms = []
+    for i, c in enumerate(coeffs):
+        if c == 0:
+            continue
+        if i == 0:
+            terms.append(str(c))
+        elif i == 1:
+            terms.append(f"{c}*x" if c != 1 else "x")
+        else:
+            terms.append(f"{c}*x^{i}" if c != 1 else f"x^{i}")
+    return " + ".join(terms) if terms else "0"
+
+def main():
+    primes = list(primerange(2, 20))  # test primes up to 19
+    max_deg = 3
+    max_coef = 3
+
+    print("Testing polynomials up to degree", max_deg, "with coefficients in [0..", max_coef, "]")
+    for deg in range(max_deg + 1):
+        # Enumerate all coeffs
+        # polynomial: c0 + c1*x + c2*x^2 + c3*x^3 with coefficients in [0..max_coef]
+        # Skip zero polynomial
+        def recurse_coeffs(pos, coeffs):
+            if pos > deg:
+                if all(c == 0 for c in coeffs):
+                    return
+                # Test polynomial on primes
+                vals = []
+                all_pp = True
+                for p in primes:
+                    val = sum(c * (p ** i) for i, c in enumerate(coeffs))
+                    if not is_prime_power(val):
+                        all_pp = False
+                        break
+                    vals.append(val)
+                if all_pp:
+                    print(f"Candidate polynomial coefficients (lowest to highest): {coeffs}")
+                    print("Evaluations at primes:", [(p, v) for p, v in zip(primes, vals)])
+                    print("Polynomial: ", poly_to_str(coeffs))
+                    print()
+                return
+            for c in range(max_coef + 1):
+                recurse_coeffs(pos + 1, coeffs + [c])
+
+        recurse_coeffs(0, [])
+
+if __name__ == "__main__":
+    main()
+```

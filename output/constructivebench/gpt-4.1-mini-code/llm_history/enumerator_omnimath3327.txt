@@ -1,0 +1,54 @@
+[write_program]
+The problem involves finding a unique speed \( v \) (in mph) greater than 0 that satisfies a condition about how many cars pass per truck given certain speeds and spacings. We want to enumerate possible values of \( v \), compute the relevant expressions exactly, and check when the number of cars passed per truck equals 2.
+
+We'll try values of \( v \) slightly greater than the maximum speed (75 mph) since \( v \) must be greater than truck and car speeds to have positive relative speeds. We'll print each candidate \( v \) that makes "cars_passed_per_truck" close to 2, focusing on exact computations.
+
+```python
+# Enumerate candidate speeds v > 75 mph with small increments
+# and compute cars_passed_per_truck until the count is exactly 2
+
+def cars_passed_per_truck(v, truck_speed=60, car_speed=75, truck_spacing=0.25, car_time_spacing=3):
+    # Convert all speeds to consistent units (mph)
+    # car_distance_spacing in miles = car_speed * (car_time_spacing / 3600)
+    car_distance_spacing = car_speed * (car_time_spacing / 3600)  # miles
+    relative_speed_truck = v - truck_speed
+    relative_speed_car = v - car_speed
+    # To avoid division by zero or negative speeds, return None
+    if relative_speed_truck <= 0 or relative_speed_car <= 0:
+        return None
+    time_between_trucks = truck_spacing / relative_speed_truck
+    cars_between_spacing = car_distance_spacing / relative_speed_car
+    cars_passed = time_between_trucks / cars_between_spacing
+    return cars_passed
+
+def approx_eq(a, b, tol=1e-12):
+    return abs(a - b) < tol
+
+def main():
+    print("Searching for v with cars_passed_per_truck = 2")
+    start_v = 75.0000001  # slightly above car speed
+    step = 1e-6
+    max_steps = 1000000  # search up to ~76 mph
+    candidates = []
+    for i in range(max_steps):
+        v = start_v + i * step
+        cpt = cars_passed_per_truck(v)
+        if cpt is None:
+            continue
+        # Print each candidate with exact equality or very close to 2
+        if approx_eq(cpt, 2):
+            print(f"v={v:.12f}, cars_passed_per_truck={cpt}")
+            candidates.append(v)
+        # Also print when cpt crosses 2 to show behavior
+        elif abs(cpt - 2) < 0.001:
+            print(f"v={v:.12f}, cars_passed_per_truck={cpt:.6f}")
+    # Print unique candidate if found
+    if candidates:
+        v_unique = candidates[0]
+        print(f"\nUnique solution found: v = {v_unique:.12f}")
+    else:
+        print("No solution found in the range.")
+
+if __name__ == "__main__":
+    main()
+```

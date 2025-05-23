@@ -1,0 +1,46 @@
+[write_program]
+The problem asks us to investigate the set of positive integers \( d \) such that there exist \( m < n \) with \( n - m = d \), for which the number of multiples of 2021 in the interval \( [m, n) \) strictly exceeds the number of multiples of 2000 in the same interval. The goal is to find the maximum such \( d \).
+
+To get insight, we can try small values of \( d \) and check intervals \( [m, m+d) \) for \( m = 0, 1, \dots \) to see if the count of 2021-multiples exceeds that of 2000-multiples.
+
+The approach:
+- For each \( d \) in a reasonable range (up to a certain threshold to control output),
+- Enumerate \( m \) up to a few multiples of the larger divisor to sample different positions,
+- Count how many numbers divisible by 2021 and 2000 lie in \( [m, m+d) \),
+- If count(2021) > count(2000), print \( d \) and \( m \) as a witness.
+
+We print all candidate \( d \) found to estimate the supremum and identify the maximum.
+
+```python
+# enumerator.py
+# Enumerates d for which intervals [m, m+d) exist with more multiples of 2021 than 2000
+
+def count_multiples(div, start, end):
+    # Count multiples of div in [start, end)
+    return end//div - (start+div-1)//div
+
+def main():
+    max_d = 50000  # limit to keep output brief and runtime reasonable
+    sample_ms = 50  # sample multiples of largest divisor for starting points
+    d_candidates = []
+
+    for d in range(1, max_d+1):
+        found = False
+        # Sample m around multiples of LCM or largest divisor to cover cases
+        for m in range(0, sample_ms * 2000, 2000):
+            count_2021 = count_multiples(2021, m, m+d)
+            count_2000 = count_multiples(2000, m, m+d)
+            if count_2021 > count_2000:
+                print(f"d={d}, start={m}, count_2021={count_2021}, count_2000={count_2000}")
+                d_candidates.append(d)
+                found = True
+                break
+    if d_candidates:
+        max_candidate = max(d_candidates)
+        print(f"Maximum d found with condition: {max_candidate}")
+    else:
+        print("No d found with more multiples of 2021 than 2000 in any sampled interval.")
+
+if __name__ == "__main__":
+    main()
+```

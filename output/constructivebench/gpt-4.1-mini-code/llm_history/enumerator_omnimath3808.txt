@@ -1,0 +1,95 @@
+[write_program]
+The problem involves a graph with \( n = 2000 \) vertices, where each vertex has exactly \( k = 1000 \) outgoing edges (friends). We want to find the minimum \( m \), the number of edges that are mutual (i.e., edges \((i,j)\) where both \( i \to j \) and \( j \to i \) are friends). The task seems to minimize the mutual friendships count given the number of friends each vertex has.
+
+To provide insights and conjecture a formula, we can:
+
+- Try smaller \(n, k\) pairs.
+- Enumerate all graphs with exactly \( k \) friends per vertex (out-degree), count mutual edges (edges with edges in both directions).
+- Output each \(m\) found.
+- After enumeration up to a partial threshold due to complexity, print the minimal \(m\) encountered.
+
+Due to exponential complexity, the program will randomly generate graphs rather than exhaustive enumeration, but for small \( n \), exhaustive search or partial can be done.
+
+```python
+# Enumerate possible min mutual edges m for given n,k by generating all or partial graphs
+# Each vertex has outdegree k; count edges that are mutual (both i->j and j->i)
+# For small n,k, exhaustive; for large n,k, random samples to conjecture minimal value.
+
+import itertools
+import random
+
+def count_mutual_edges(n, friends):
+    # friends: list of sets, friends[i] is set of j where i->j
+    count = 0
+    for i in range(n):
+        for j in friends[i]:
+            if i < j and i in friends[j]:
+                count += 1
+    return count
+
+def all_k_subsets(n, k):
+    # returns all subsets of size k for {0,..,n-1}
+    return itertools.combinations(range(n), k)
+
+def try_enumerate(n, k):
+    print(f"Parameters: n={n}, k={k}")
+    # For small n,k do full enumeration (only if n<=6 for time)
+    if n > 6:
+        print("Too large for full enumeration; sampling 1000 random graphs")
+        min_m = None
+        for _ in range(1000):
+            friends = []
+            for i in range(n):
+                # random k friends excluding self
+                choices = list(range(n))
+                choices.remove(i)
+                out = set(random.sample(choices, k))
+                friends.append(out)
+            m = count_mutual_edges(n, friends)
+            print(f"Mutual edges count: {m}")
+            if min_m is None or m < min_m:
+                min_m = m
+        print(f"Minimal mutual edges found: {min_m}")
+        return
+
+    # Full enumeration approach: all assignments of friends
+    # Each vertex chooses k friends from n-1 others
+    # Total possibilities (for n=4,k=2): (C(3,2))^4 == 3^4=81
+    min_m = None
+    sets_per_vertex = list(itertools.combinations(range(n), k))
+    # Filter out self for each vertex in assignment below
+
+    # We'll generate all tuples (s0,s1,...,s_{n-1}) where s_i in sets_per_vertex but excluding i in subset
+    # To do that, precompute for each vertex the subsets excluding self
+    valid_subsets = []
+    for v in range(n):
+        valid_subsets.append([s for s in sets_per_vertex if v not in s])
+
+    total = 1
+    for v in range(n):
+        total *= len(valid_subsets[v])
+    print(f"Total graphs to check: {total}")
+    checked = 0
+
+    for assignment in itertools.product(*valid_subsets):
+        friends = [set(a) for a in assignment]
+        m = count_mutual_edges(n, friends)
+        print(f"Mutual edges count: {m}")
+        if min_m is None or m < min_m:
+            min_m = m
+        checked += 1
+        if checked >= 10000:
+            # limit output for brevity
+            print("Stopped early to limit output.")
+            break
+    print(f"Minimal mutual edges found: {min_m}")
+
+def main():
+    # Try sample parameters
+    samples = [(4,2), (5,2), (6,3)]
+    for n,k in samples:
+        try_enumerate(n,k)
+
+if __name__=="__main__":
+    main()
+```

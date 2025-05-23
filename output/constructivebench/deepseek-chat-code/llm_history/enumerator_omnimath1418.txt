@@ -1,0 +1,44 @@
+[write_program]
+This problem asks for the number of positive real numbers x satisfying (3*2^floor(log2(x)) - x)^16 = 2022*x^13. We'll approach it by:
+
+1. Considering x in intervals [2^n, 2^(n+1)) where n is an integer
+2. Within each interval, floor(log2(x)) = n, so the equation becomes (3*2^n - x)^16 = 2022*x^13
+3. We'll numerically solve this equation in sample intervals to count solutions
+
+```python
+import math
+
+def count_solutions():
+    count = 0
+    # Check negative n values (0 < x < 1)
+    for n in range(-10, 0):
+        a = 2**n
+        b = 2**(n+1)
+        # Function to find roots of: (3*2^n - x)^16 - 2022*x^13
+        f = lambda x: (3*2**n - x)**16 - 2022*x**13
+        # Check sign change (crude root detection)
+        if f(a) * f(b) < 0:
+            count += 1
+    
+    # Check positive n values (x >= 1)
+    for n in range(0, 50):
+        a = 2**n
+        b = 2**(n+1)
+        f = lambda x: (3*2**n - x)**16 - 2022*x**13
+        # Check for possible multiple roots
+        # We'll sample points to detect sign changes
+        samples = 10
+        prev_sign = math.copysign(1, f(a))
+        roots_in_interval = 0
+        for i in range(1, samples+1):
+            x = a + (b-a)*i/samples
+            current_sign = math.copysign(1, f(x))
+            if current_sign != prev_sign:
+                roots_in_interval += 1
+            prev_sign = current_sign
+        count += min(roots_in_interval, 2)  # At most 2 roots per interval
+    
+    print(f"Found {count} solutions")
+
+count_solutions()
+```

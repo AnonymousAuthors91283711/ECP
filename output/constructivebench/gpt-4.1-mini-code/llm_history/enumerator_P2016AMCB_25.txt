@@ -1,0 +1,49 @@
+[write_program]
+The problem involves the sequence defined by
+\[
+a_0 = 1, \quad a_1 = 2^{1/19}, \quad a_{n+2} = a_{n+1} \cdot (a_n)^2,
+\]
+and the goal is to find the smallest positive integer \( k \) such that the product
+\[
+\prod_{i=1}^k a_i
+\]
+is an integer.
+
+The program below computes the terms \( a_n \) symbolically in the form \( 2^{x_n} \) because each term is a power of 2 raised to some rational exponent. Then it computes the exponent of the product \(\sum_{i=1}^k x_i\) and checks for integrality by verifying if the total exponent is an integer. We print all candidates \( k \) where this happens up to some limit, then conclude with the minimum found.
+
+```python
+# Enumerate k to find smallest k with integer product of a_1...a_k
+# a_0 = 1 = 2^0
+# a_1 = 2^(1/19)
+# a_{n+2} = a_{n+1} * (a_n)^2 = 2^{x_{n+1}} * 2^{2 x_n} = 2^{x_{n+1} + 2 x_n}
+# We track x_n exponents as rationals.
+
+from fractions import Fraction
+
+def main():
+    # Initialize exponents x_0, x_1
+    x = [Fraction(0,1), Fraction(1,19)]
+    max_k = 50  # search upper limit
+    found_ks = []
+
+    # Compute exponents using recurrence: x_{n+2} = x_{n+1} + 2*x_n
+    for n in range(max_k + 2):
+        if n+2 >= len(x):
+            x.append(x[n+1] + 2*x[n])
+
+    # Check for each k >=1 if sum_{i=1}^k x_i is integer
+    for k in range(1, max_k+1):
+        total_exp = sum(x[1:k+1], Fraction(0,1))
+        if total_exp.denominator == 1:
+            print(f"Integer product found for k={k}, total exponent sum={total_exp}")
+            found_ks.append(k)
+
+    if found_ks:
+        smallest_k = min(found_ks)
+        print(f"Smallest k with integer product: {smallest_k}")
+    else:
+        print("No integer product found up to k =", max_k)
+
+if __name__ == "__main__":
+    main()
+```

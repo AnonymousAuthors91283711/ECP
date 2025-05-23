@@ -1,0 +1,230 @@
+[write_program]
+This problem asks to find four prime numbers p, q, r, s such that their product is 27,000,001 and their sum is minimized. We'll write a Python program to factorize 27,000,001 and find all possible combinations of four prime factors, then calculate their sums to find the minimal one.
+
+The approach:
+1. First factorize 27000001 into its prime factors (with multiplicity)
+2. Generate all combinations of 4 factors (allowing duplicates if needed) that multiply to 27000001
+3. Calculate the sums of these combinations and find the minimal sum
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def factorize(n):
+    factors = []
+    # Check small primes first
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]:
+        while n % p == 0:
+            factors.append(p)
+            n = n // p
+    if n == 1:
+        return factors
+    # Check if remaining is prime
+    if is_prime(n):
+        factors.append(n)
+        return factors
+    # Pollard's Rho algorithm for larger factors
+    def pollards_rho(n):
+        if n % 2 == 0:
+            return 2
+        if n % 3 == 0:
+            return 3
+        if n % 5 == 0:
+            return 5
+        while True:
+            c = math.floor(2 + (n - 1) * random.random())
+            f = lambda x: (pow(x, 2, n) + c) % n
+            x, y, d = 2, 2, 1
+            while d == 1:
+                x = f(x)
+                y = f(f(y))
+                d = math.gcd(abs(x - y), n)
+            if d != n:
+                return d
+    d = pollards_rho(n)
+    return factors + factorize(d) + factorize(n // d)
+
+# Main factorization
+n = 27000001
+factors = factorize(n)
+print(f"Prime factors of {n}: {factors}")
+
+# Generate all combinations of 4 factors that multiply to n
+from itertools import combinations_with_replacement
+
+unique_factors = list(set(factors))
+min_sum = float('inf')
+best_combination = None
+
+# We need exactly 4 primes (with possible repeats) that multiply to n
+def generate_combinations(current, index, remaining_factors, current_product):
+    if len(current) == 4:
+        if current_product == n:
+            return [current]
+        return []
+    if index >= len(remaining_factors) or current_product > n:
+        return []
+    factor = remaining_factors[index]
+    max_count = 0
+    temp = current_product
+    while temp * factor <= n and len(current) + max_count < 4:
+        temp *= factor
+        max_count += 1
+    result = []
+    for count in range(0, min(max_count, 4 - len(current)) + 1):
+        new_current = current + [factor] * count
+        new_product = current_product * (factor ** count)
+        result += generate_combinations(new_current, index + 1, remaining_factors, new_product)
+    return result
+
+all_combinations = generate_combinations([], 0, unique_factors, 1)
+
+for comb in all_combinations:
+    if len(comb) != 4:
+        continue
+    s = sum(comb)
+    print(f"Found combination: {comb}, sum = {s}")
+    if s < min_sum:
+        min_sum = s
+        best_combination = comb
+
+print(f"\nMinimal sum combination: {best_combination}, sum = {min_sum}")
+```
+[refine_program]
+Judgement Explanation:
+1. The problem requires finding four prime numbers (p,q,r,s) whose product is 27000001 and their sum is minimized.
+2. The program attempts to factorize 27000001 and find all combinations of 4 factors, but fails to produce any valid combinations.
+3. The factorization step is incomplete - it doesn't properly handle the case where 27000001 is a product of four distinct primes.
+4. The combination generation logic is overly complex and doesn't correctly enumerate all possible prime quadruples.
+5. The program doesn't stream partial results as required.
+
+The program is rejected because:
+1. It fails to find any valid combinations (empty result)
+2. The factorization approach is flawed for this specific problem
+3. The combination generation doesn't properly handle the case of four distinct primes
+
+<<<False>>>
+
+Here's a corrected version that:
+1. Uses a more efficient factorization approach
+2. Properly handles the case of four distinct primes
+3. Streams partial results
+4. Finds the minimal sum:
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def factorize(n):
+    factors = []
+    # Check divisibility by small primes
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        while n % p ==
+[refine_program]
+Explanation:
+The problem asks to find four prime numbers p, q, r, s such that their product equals 27000001 and their sum is minimized (implied by the theorem statement). However, the provided "program" is empty, which is clearly insufficient for solving the problem.
+
+Since there's no program to evaluate, I must reject this submission. Below is a corrected Python program that efficiently searches for the four primes that satisfy the conditions.
+
+<<<False>>>
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+target = 27000001
+min_sum = float('inf')
+best_primes = None
+
+# The smallest possible prime is 2, largest possible is cube root of target
+max_p = round(target ** (1/4)) + 1000
+
+for p in range(2, max_p + 1):
+    if not is_prime(p):
+        continue
+    if target % p != 0:
+        continue
+    remaining1 = target // p
+    max_q = round(remaining1 ** (1/3)) + 100
+    
+    for q in range(p, max_q + 1):
+        if not is_prime(q):
+            continue
+        if remaining1 % q != 0:
+            continue
+        remaining2 = remaining1 // q
+        max_r = round(remaining2 ** 0.5) + 100
+        
+        for r in

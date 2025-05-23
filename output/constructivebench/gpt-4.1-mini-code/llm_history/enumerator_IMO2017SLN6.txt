@@ -1,0 +1,48 @@
+[write_program]
+The problem asks to find the smallest positive integer \( n \) for which there exists an infinite set \( s \) of vectors with positive rational entries indexed by \( \{0, \dots, n-1\} \), such that both the sum of the coordinates and the sum of their reciprocals are integers for every vector in \( s \).
+
+To assist in conjecturing and proving the minimal such \( n \), I will enumerate candidate values of \( n \) starting from 1 up to a small threshold (e.g., 5), try to find some explicit examples of vectors where sums and sums of reciprocals are integers, and print any found instances.
+
+Enumerating all infinite sets is impossible, so I will instead, for each fixed \( n \), search for a few sample vectors with the properties: positive rationals, integer sum, integer reciprocal sum. This might help us see if \( n=1 \), \( n=2 \), etc. are plausible.
+
+```python
+from fractions import Fraction
+from itertools import product
+
+def positive_rationals(limit=5):
+    # Generate positive rationals with numerator and denominator <= limit
+    for num in range(1, limit+1):
+        for den in range(1, limit+1):
+            yield Fraction(num, den)
+
+def test_n(n, samples=50):
+    print(f"Testing n={n}")
+    # Generate candidate vectors of length n with entries from positive rationals up to limit
+    limit = 5
+    rationals = list(positive_rationals(limit))
+    found_vectors = []
+    count_tests = 0
+    # We try product with repetition: all n-tuples in rationals
+    for vec in product(rationals, repeat=n):
+        count_tests += 1
+        if count_tests > samples*100:  # limit total attempts
+            break
+        # Only positive, already guaranteed
+        s = sum(vec)
+        r = sum(1/x for x in vec)
+        # Check if both sums are integers
+        if s.denominator == 1 and r.denominator == 1:
+            print(f"Found vector: {[float(x) for x in vec]} sum={s} reciprocal_sum={r}")
+            found_vectors.append(vec)
+            if len(found_vectors) >= samples:
+                break
+    if not found_vectors:
+        print(f"No vectors found for n={n} with integer sums and reciprocal sums.")
+
+def main():
+    for n in range(1, 6):
+        test_n(n)
+
+if __name__ == "__main__":
+    main()
+```

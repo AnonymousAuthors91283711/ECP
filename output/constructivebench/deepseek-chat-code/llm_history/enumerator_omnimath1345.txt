@@ -1,0 +1,53 @@
+[write_program]
+This problem involves solving a system of equations with three positive real variables a, b, c. We'll write a Python program to numerically explore possible solutions by iterating through possible values of b and solving for a and c from the given equations.
+
+The approach will:
+1. Iterate b values in small increments
+2. For each b, solve the quadratic equations for a and c
+3. Check consistency between all three equations
+4. When a valid solution is found, compute the target expression
+
+```python
+import math
+
+def solve_quadratic(p, q, r):
+    """Solve quadratic equation p*x^2 + q*x + r = 0, return positive real root if exists"""
+    discriminant = q**2 - 4*p*r
+    if discriminant < 0:
+        return None
+    sqrt_discriminant = math.sqrt(discriminant)
+    root1 = (-q + sqrt_discriminant) / (2*p)
+    root2 = (-q - sqrt_discriminant) / (2*p)
+    return max(root1, root2) if root1 > 0 or root2 > 0 else None
+
+def find_solutions():
+    # Scan b values in small increments
+    for b in [x * 0.001 for x in range(1000, 5000)]:
+        # Solve for a from a^2 + a*b + b^2 = 9
+        a = solve_quadratic(1, b, b**2 - 9)
+        if a is None:
+            continue
+            
+        # Solve for c from b^2 + b*c + c^2 = 52
+        c = solve_quadratic(1, b, b**2 - 52)
+        if c is None:
+            continue
+            
+        # Verify third equation c^2 + c*a + a^2 ≈ 49
+        lhs = c**2 + c*a + a**2
+        if not math.isclose(lhs, 49, rel_tol=1e-5):
+            continue
+            
+        # Compute target expression
+        numerator = 49 * b**2 - 33 * b * c + 9 * c**2
+        denominator = a**2
+        result = numerator / denominator
+        
+        print(f"Found solution: a={a:.6f}, b={b:.6f}, c={c:.6f}")
+        print(f"Expression value: {result:.6f}")
+        return  # Stop after first valid solution
+        
+    print("No solution found in the scanned range")
+
+find_solutions()
+```

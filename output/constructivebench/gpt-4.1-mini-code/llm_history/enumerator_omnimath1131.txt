@@ -1,0 +1,55 @@
+[write_program]
+The problem involves 4×4 grids colored with 3 colors and counting L-trominoes (three-cell L-shapes) that contain all three distinct colors. We want to enumerate possible numbers of such L-trominoes for various 3-colorings of a 4×4 grid, printing each count found to help conjecture the maximum possible value.
+
+We'll:
+- Enumerate possible 3-colorings of 4×4 with colors 0,1,2 (limit search to a manageable subset to avoid too large search)
+- For each coloring, count L-trominoes with exactly the 3 distinct colors
+- Print each unique count as found
+
+Since full enumeration of all 3^(16) colorings is impossible, we randomly sample a number of colorings.
+
+```python
+import itertools
+import random
+
+N = 4
+COLORS = [0,1,2]
+L_SHAPES = [
+    ((0,0),(0,1),(1,0)), ((0,0),(0,1),(-1,0)),
+    ((0,0),(0,-1),(1,0)), ((0,0),(0,-1),(-1,0)),
+    ((0,0),(1,0),(0,1)), ((0,0),(1,0),(0,-1)),
+    ((0,0),(-1,0),(0,1)), ((0,0),(-1,0),(0,-1))
+]
+
+def in_grid(i,j):
+    return 0 <= i < N and 0 <= j < N
+
+def count_L_trominoes(grid):
+    count = 0
+    for i in range(N):
+        for j in range(N):
+            c0 = grid[i][j]
+            for d1,d2 in L_SHAPES:
+                i1,j1 = i+d1[0], j+d1[1]
+                i2,j2 = i+d2[0], j+d2[1]
+                if in_grid(i1,j1) and in_grid(i2,j2):
+                    c1, c2 = grid[i1][j1], grid[i2][j2]
+                    if len({c0,c1,c2}) == 3:
+                        count += 1
+    return count
+
+found = set()
+print("Sampling 1000 random colorings of 4x4 grid with colors 0,1,2")
+for _ in range(1000):
+    grid = [[random.choice(COLORS) for _ in range(N)] for _ in range(N)]
+    val = count_L_trominoes(grid)
+    if val not in found:
+        found.add(val)
+        print(f"Number of L-trominoes with all 3 colors: {val}")
+
+if found:
+    print(f"Maximum number found: {max(found)}")
+else:
+    print("No values found")
+```
+This program samples random 3-colorings of the grid, counts the number of L-trominoes with all 3 colors for each, and prints each new count found immediately. It helps in conjecturing the maximal achievable number.

@@ -1,0 +1,42 @@
+[check_equivalence] Problem: import Mathlib
+
+open Nat
+
+abbrev P2005AMCA_19_answer : ℕ → ℕ := sorry
+theorem P2005AMCA_19 (odometerReading : ℕ) (actualMiles : ℕ) :
+  actualMiles = P2005AMCA_19_answer odometerReading ↔
+  let digits := (Nat.digits 10 odometerReading).reverse
+  let rec validOdometer : List ℕ → Prop
+    | [] => True
+    | d::ds => d ≠ 4 ∧ validOdometer ds
+  validOdometer digits ∧
+  actualMiles = (Nat.ofDigits 10 (digits.map fun d => if d ≥ 5 then d - 1 else d)) := by sorry
+Ground Truth Answer: fun odometerReading => 
+    let digits := (Nat.digits 10 odometerReading).reverse
+    let rec toActual : List ℕ → ℕ → ℕ
+      | [], _ => 0
+      | d::ds, pow => 
+        let adjustedD := if d ≥ 5 then d - 1 else d
+        adjustedD * 9^pow + toActual ds (pow + 1)
+    toActual digits 0
+Proposed Answer: fun n => Nat.ofDigits 9 ((Nat.digits 10 n).map fun d => if d ≥ 5 then d - 1 else d)
+Let me analyze the equivalence between the ground truth answer and the proposed answer.
+
+1. Both solutions:
+   - Take the digits of the input number in base 10
+   - Adjust each digit by subtracting 1 if it's ≥5 (to skip digit '4')
+   - Convert the adjusted digits to a number
+
+2. The ground truth answer:
+   - Processes digits recursively
+   - Uses 9^pow for positional weighting (base 9 conversion)
+   - Accumulates the result by multiplying each digit by 9^pow
+
+3. The proposed answer:
+   - Uses Nat.ofDigits with base 9
+   - Maps the adjustment function over the digits
+   - Essentially does the same base 9 conversion but more concisely
+
+The key observation is that both implementations are performing the same mathematical operation: converting the adjusted digits (with 4s removed) as if they were base 9 digits. The recursive approach in the ground truth is equivalent to Nat.ofDigits in base 9.
+
+<<<True>>>

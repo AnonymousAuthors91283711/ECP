@@ -1,0 +1,63 @@
+[write_program]
+This problem asks for all quadruples (a, b, c, k) where a, b, c are primes, k is a positive integer, and they satisfy the equation a² + b² + 16c² = 9k² + 1. We'll write a Python program to enumerate possible solutions by checking small prime values and k values up to a reasonable limit.
+
+The approach:
+1. Generate small primes for a, b, c
+2. For each combination, compute the right side of the equation and check if it equals 9k² + 1 for some k
+3. Since c is multiplied by 16, we'll limit c to smaller primes
+4. We'll set reasonable bounds for k based on the equation
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+# Generate small primes up to 100
+primes = [p for p in range(2, 100) if is_prime(p)]
+max_k = 100  # Reasonable upper bound for k
+
+found = []
+for a in primes:
+    for b in primes:
+        for c in primes:
+            lhs = a*a + b*b + 16*c*c
+            # Solve 9k^2 + 1 = lhs => k^2 = (lhs - 1)/9
+            if lhs <= 1:
+                continue
+            if (lhs - 1) % 9 != 0:
+                continue
+            k_squared = (lhs - 1) // 9
+            if k_squared <= 0:
+                continue
+            k = int(math.isqrt(k_squared))
+            if k*k == k_squared and k > 0 and k <= max_k:
+                print(f"Found solution: a={a}, b={b}, c={c}, k={k}")
+                found.append((a, b, c, k))
+
+print("\nAll found solutions:")
+for sol in found:
+    print(sol)
+```

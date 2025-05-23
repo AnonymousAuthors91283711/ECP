@@ -1,0 +1,55 @@
+[write_program]
+The problem describes a functional equation on functions \( f: \mathbb{N} \to \mathbb{N} \):
+\[
+\forall m,n \in \mathbb{N}, \quad f(f(n) + f(m)) = m + n.
+\]
+We want to find all functions \( f \) satisfying this property.
+
+We will try to enumerate possible functions on small finite domains (e.g., \(\{0, 1, 2, 3\}\)) and verify the property for these domain values, printing functions that satisfy the equation on this sample domain. This helps conjecture the form of \( f \). 
+
+By iterating over all functions \( f: \{0,1,2,3\} \to \{0,1,2,3,4,5,6\} \) (range bigger than domain to allow outputs adding up), we check if 
+\[
+f(f(n) + f(m)) = n + m
+\]
+holds for all \( n,m \in \{0,1,2,3\} \).
+
+We print \( f \) if it holds, and later hope to identify candidates or patterns.
+
+```python
+# Enumerate candidate functions f: {0,1,2,3} -> {0,...,7} satisfying:
+#   f(f(n)+f(m)) = n + m for all n,m in {0,1,2,3}
+# This helps to conjecture the true answer.
+
+def check_f(f_vals):
+    # f_vals is a list of length 4: f(0), f(1), f(2), f(3)
+    # Check if f(f(n)+f(m)) = n+m holds for all n,m in 0..3
+    for n in range(4):
+        for m in range(4):
+            arg = f_vals[n] + f_vals[m]
+            if arg >= len(f_vals):
+                # f has domain only 0..3, input out of domain: invalid for this test domain
+                # So discard this f function
+                return False
+            lhs = f_vals[arg]
+            rhs = n + m
+            if lhs != rhs:
+                return False
+    return True
+
+def main():
+    from itertools import product
+    domain = 4
+    max_output = 7  # try outputs 0..7 to cover sums in domain {0..3}+{0..3}=0..6 possibly
+    candidate_count = 0
+    print("Enumerating candidate functions f: {0..3} -> {0..7}...")
+    for f_vals in product(range(max_output+1), repeat=domain):
+        # Check if the function satisfies the condition
+        if check_f(f_vals):
+            candidate_count += 1
+            print(f"Candidate #{candidate_count}: f = {list(f_vals)}")
+    if candidate_count == 0:
+        print("No candidates found with this domain and output range.")
+
+if __name__ == "__main__":
+    main()
+```

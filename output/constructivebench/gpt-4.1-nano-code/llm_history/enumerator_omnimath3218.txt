@@ -1,0 +1,61 @@
+[write_program]
+This problem involves analyzing a set of lattice points based on powers of 2 and their sums of squares, then identifying specific 4-element subsets with a particular geometric structure (likely squares). To assist in conjecturing — especially for small `n` — I will generate all such squares for small `n` (e.g., n from 0 to 3) and enumerate the corresponding subsets.
+
+The code will:
+- Fix small `n` values.
+- Generate `P_n`.
+- Find all 4-element subsets forming the described configuration.
+- Stream results immediately.
+
+The approach avoids heavy computation and relies on explicit enumeration for small `n`.
+
+```python
+import itertools
+
+# Generate the set P_n
+def generate_P_n(n):
+    P = set()
+    # Include (0,0)
+    P.add((0, 0))
+    # Add points p where p.x^2 + p.y^2 = 2^k for some k ≤ n
+    max_k = n
+    max_coord = 2 ** max_k  # bounds for search
+    for x in range(-max_coord, max_coord + 1):
+        for y in range(-max_coord, max_coord + 1):
+            s = x*x + y*y
+            # Check if s is a power of 2 and ≤ 2^n
+            if s > 0 and (s & (s - 1)) == 0:  # s is a power of two
+                k = s.bit_length() - 1
+                if k <= max_k:
+                    P.add((x, y))
+    return P
+
+# Generate all 4-point subsets of P that form the specified structure
+def find_squares(P):
+    results = []
+    points = list(P)
+    # Generate all 4-point subsets
+    for S in itertools.combinations(points, 4):
+        s_set = set(S)
+        # For each subset, check the geometric condition
+        for p in S:
+            # For each possible d: (dx, dy)
+            for d in points:
+                if d == (0, 0):
+                    continue
+                p1 = p
+                p2 = (p[0] + d[0], p[1] + d[1])
+                p3 = (p[0] - d[1], p[1] + d[0])
+                p4 = (p[0] + d[0] - d[1], p[1] + d[1] + d[0])
+                cube = {p1, p2, p3, p4}
+                if cube.issubset(P) and cube == s_set:
+                    print(f"Found square: {s_set}")
+    return
+
+# Enumerate for n = 0 to 3
+for n in range(4):
+    print(f"n = {n}")
+    P_n = generate_P_n(n)
+    print(f"P_{n} has {len(P_n)} points")
+    find_squares(P_n)
+```

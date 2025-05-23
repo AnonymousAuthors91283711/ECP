@@ -1,0 +1,57 @@
+[write_program]
+The problem involves sets \( S \subseteq \{0,1,\ldots,15\} \) that are closed under doubling modulo 16. The property \( P(S) \) is:
+\[
+P(S) \iff \forall x \in S, 2x \mod 16 \in S.
+\]
+
+We want to enumerate all subsets \( S \) of \(\{0,\ldots,15\}\) that satisfy this property.
+
+Key observations:
+- The set must be closed under the operation \( x \mapsto 2x \mod 16 \).
+- The operation defines disjoint orbits on \(\{0,\ldots,15\}\).
+- Any \( S \) with property \( P \) is a union of orbits of the doubling map.
+- Zero is a fixed point since \(2\cdot 0=0\).
+
+The orbits can be found by iterating the doubling map from each element and grouping those elements reachable by repeated doubling.
+
+The program enumerates all orbits and then enumerates all subsets formed by unions of orbits. Each such subset is printed. Finally, it prints the total count.
+
+```python
+# Enumerate sets S ⊆ {0..15} closed under x → 2x mod 16 (doubling mod16)
+# Idea: such sets are unions of orbits under doubling mod16
+
+def doubling_orbit(start):
+    orbit = []
+    x = start
+    while x not in orbit:
+        orbit.append(x)
+        x = (2*x) % 16
+    return orbit
+
+def main():
+    seen = set()
+    orbits = []
+    # find orbits
+    for i in range(16):
+        if i not in seen:
+            o = doubling_orbit(i)
+            orbits.append(o)
+            seen.update(o)
+    print("orbits:", orbits)
+    
+    n = len(orbits)
+    count = 0
+    # enumerate all unions of orbits -> closed sets
+    # total 2^n subsets
+    for mask in range(1<<n):
+        S = set()
+        for i in range(n):
+            if (mask >> i) & 1:
+                S.update(orbits[i])
+        print("Closed set:", sorted(S))
+        count += 1
+    print("Total closed sets:", count)
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,66 @@
+[write_program]
+The problem involves counting, for each point \((x,y,z) \in [0,1]^3\), how many unit cubes in the integer lattice intersect the unit sphere centered at \((x,y,z)\). Then we integrate this count over the unit cube and normalize by its volume. To investigate, we enumerate the integer cubes that can intersect such unit spheres centered in \([0,1]^3\), and approximate or exactly count the average.
+
+We take small integer values for cube indices, e.g., from -1 to 2, because the sphere of radius 1 centered in \([0,1]^3\) can only intersect cubes near the unit cube \([0,1]^3\).
+
+We will:
+- Iterate over a grid of \((x,y,z)\) values in \([0,1]^3\) (e.g., a small grid for efficiency).
+- For each \((x,y,z)\), check which cubes from \((i,j,k) \in \{-1,0,1,2\}^3\) intersect the sphere of radius 1.
+- Count how many cubes intersect.
+- Take the average over sample points.
+
+Below is a Python program that performs this enumeration, prints counts for sample points immediately, and then outputs the approximate average count.
+
+```python
+import itertools
+import math
+
+# Cubes indexed by (i,j,k), i,j,k in {-1,0,1,2}
+# A cube is [i,i+1) x [j,j+1) x [k,k+1)
+
+def cube_sphere_intersect(i, j, k, x, y, z):
+    # Check if unit cube [i,i+1)^3 intersects sphere centered at (x,y,z) radius=1
+    # Using distance from rectangle to point formula
+    # Reference: https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection
+    dx = 0
+    if x < i:
+        dx = i - x
+    elif x > i+1:
+        dx = x - (i+1)
+    dy = 0
+    if y < j:
+        dy = j - y
+    elif y > j+1:
+        dy = y - (j+1)
+    dz = 0
+    if z < k:
+        dz = k - z
+    elif z > k+1:
+        dz = z - (k+1)
+    dist_sq = dx*dx + dy*dy + dz*dz
+    return dist_sq <= 1.0 + 1e-15  # Allow tiny epsilon
+
+# Sample points in [0,1]^3: 5x5x5 grid = 125 points
+N = 5
+coords = [i/(N-1) for i in range(N)]
+cubes_range = range(-1,3)
+
+total_count = 0
+count_points = 0
+
+print("Sample counts for (x,y,z): count")
+
+for x in coords:
+    for y in coords:
+        for z in coords:
+            count = 0
+            for i,j,k in itertools.product(cubes_range, repeat=3):
+                if cube_sphere_intersect(i,j,k,x,y,z):
+                    count += 1
+            print(f"({x:.2f},{y:.2f},{z:.2f}): {count}")
+            total_count += count
+            count_points += 1
+
+average = total_count / count_points
+print(f"\nAverage count over sample points = {average:.6f}")
+```

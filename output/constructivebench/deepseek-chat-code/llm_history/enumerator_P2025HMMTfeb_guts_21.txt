@@ -1,0 +1,52 @@
+[write_program]
+This problem asks for the minimal value of abc given the system of equations:
+a²(b+c)=1, b²(c+a)=2, c²(a+b)=5. We'll write a program to numerically search for solutions.
+
+The approach:
+1. Express b and c in terms of a using the first two equations
+2. Substitute into the third equation to find a
+3. Compute abc for valid solutions
+4. Find the minimal abc
+
+```python
+import numpy as np
+from scipy.optimize import fsolve
+
+def equations(vars):
+    a, b, c = vars
+    eq1 = a**2 * (b + c) - 1
+    eq2 = b**2 * (c + a) - 2
+    eq3 = c**2 * (a + b) - 5
+    return [eq1, eq2, eq3]
+
+# Initial guesses covering different sign combinations
+initial_guesses = [
+    (1, 1, 1),
+    (-1, -1, -1),
+    (1, -1, -1),
+    (-1, 1, -1),
+    (-1, -1, 1),
+    (0.5, 1.5, 2.0),
+    (-0.5, -1.5, -2.0)
+]
+
+min_abc = float('inf')
+tolerance = 1e-6
+
+for guess in initial_guesses:
+    solution = fsolve(equations, guess, xtol=1e-8)
+    a, b, c = solution
+    # Check if solution satisfies all equations
+    if (abs(a**2 * (b + c) - 1) < tolerance and
+        abs(b**2 * (c + a) - 2) < tolerance and
+        abs(c**2 * (a + b) - 5) < tolerance):
+        abc = a * b * c
+        print(f"Found solution: a={a:.6f}, b={b:.6f}, c={c:.6f}, abc={abc:.6f}")
+        if abc < min_abc:
+            min_abc = abc
+
+if min_abc != float('inf'):
+    print(f"\nMinimal abc found: {min_abc:.6f}")
+else:
+    print("No valid solutions found")
+```

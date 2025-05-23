@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for the maximum value of t = x - y + z under the constraint 2x² + y² + z² = 2x - 4y + 2xz - 5. We'll approach this by:
+
+1. Treating it as an optimization problem with a constraint
+2. Using numerical methods to find candidate solutions
+3. Verifying the maximum value found
+
+The Python program will:
+- Define the constraint equation
+- Use scipy's optimization to find maximum t
+- Print intermediate results and the final maximum
+
+```python
+import numpy as np
+from scipy.optimize import minimize
+
+def constraint_eq(vars):
+    x, y, z = vars
+    return 2*x**2 + y**2 + z**2 - (2*x - 4*y + 2*x*z - 5)
+
+def objective(vars):
+    x, y, z = vars
+    return -(x - y + z)  # Negative for maximization
+
+# Initial guess
+x0 = np.array([0.0, 0.0, 0.0])
+
+# Constraints
+cons = {'type': 'eq', 'fun': constraint_eq}
+
+# Bounds (wide enough to capture solution)
+bounds = [(-10, 10), (-10, 10), (-10, 10)]
+
+# Solve
+result = minimize(objective, x0, method='SLSQP', 
+                 bounds=bounds, constraints=cons)
+
+if result.success:
+    x, y, z = result.x
+    max_t = x - y + z
+    print(f"Found solution: x={x:.6f}, y={y:.6f}, z={z:.6f}")
+    print(f"Maximum t value: {max_t:.6f}")
+    # Verify constraint
+    constraint_val = constraint_eq(result.x)
+    print(f"Constraint verification: {constraint_val:.2e} (should be ~0)")
+else:
+    print("Optimization failed")
+```

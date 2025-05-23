@@ -1,0 +1,74 @@
+[write_program]
+This problem is about finding a function f: ℕ → ℕ that satisfies two conditions:
+1. Preserves the number of divisors for non-zero inputs
+2. Strengthens the GCD property for coprime inputs (when neither divides the other)
+
+We'll enumerate possible functions for small natural numbers to identify patterns. The most likely candidate is the identity function f(n) = n, but we'll verify this systematically.
+
+```python
+from math import gcd
+from sympy import divisors
+
+def verify_function(f, max_n=20):
+    """Verify if function f satisfies both conditions up to max_n"""
+    # Condition 1: divisor count preservation
+    for x in range(1, max_n+1):
+        if len(divisors(x)) != len(divisors(f(x))):
+            return False
+    
+    # Condition 2: strengthened GCD property
+    for x in range(1, max_n+1):
+        for y in range(1, max_n+1):
+            if x == 0 or y == 0:
+                continue
+            if x % y == 0 or y % x == 0:
+                continue
+            current_gcd = gcd(f(x), f(y))
+            required = f(gcd(x, y))
+            if current_gcd <= required:
+                return False
+    return True
+
+# Test identity function
+def identity(n):
+    return n
+
+print("Testing identity function:")
+print(verify_function(identity))
+
+# Test square function (counterexample)
+def square(n):
+    return n * n
+
+print("\nTesting square function:")
+print(verify_function(square))
+
+# Test prime counting function (another counterexample)
+def prime_pi(n):
+    if n < 2:
+        return 0
+    return len(list(filter(lambda x: x > 1 and all(x % i != 0 for i in range(2, int(x**0.5)+1)), range(2, n+1))))
+
+print("\nTesting prime counting function:")
+print(verify_function(prime_pi))
+
+# Test radical function (another candidate)
+def radical(n):
+    if n == 1:
+        return 1
+    factors = {}
+    temp = n
+    i = 2
+    while i * i <= temp:
+        if temp % i == 0:
+            factors[i] = True
+            while temp % i == 0:
+                temp //= i
+        i += 1
+    if temp > 1:
+        factors[temp] = True
+    return 1 if not factors else min(factors.keys())
+
+print("\nTesting radical function:")
+print(verify_function(radical))
+```

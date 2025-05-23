@@ -1,0 +1,54 @@
+[write_program]
+The problem involves a sequence \( a_n \) defined on natural numbers, with initial conditions and a recursive mean condition involving a variable length \( k \). We want to explore possible values of \( a_{2018} - a_{2017} \) based on these constraints.
+
+To assist in conjecturing the answer, we will:
+- Generate some sequences \( a_n \) satisfying the initial conditions and the mean property (for small \( n \) due to complexity),
+- Enumerate possible differences \( a_n - a_{n-1} \),
+- Print found values immediately for partial insight.
+
+We'll use small \( n \), try possible \( k \) values, and construct \( a_n \) accordingly.
+
+```python
+# Enumerate possible values of a_n - a_{n-1} for small n satisfying given conditions
+# Initial: a0=0, a1=1
+# For n >= 2, a_n = mean of previous k terms for some k in [1,n] (variable k)
+# We focus on possible values of a_n - a_{n-1}
+
+from fractions import Fraction
+
+def enumerate_sequence(n_max=7):
+    # Store sequences as dict: n -> list of possible sequences (tuples of Fractions)
+    sequences = {1: [ (Fraction(0), Fraction(1)) ]}  # a0=0, a1=1
+
+    for n in range(2, n_max+1):
+        new_seqs = []
+        for seq in sequences[n-1]:
+            for k in range(1, n+1):
+                if k > n-1:
+                    continue
+                start = n - k
+                # mean of a_{start} .. a_{n-1}
+                mean_sum = sum(seq[start:n])  # seq indexed from 0
+                mean = mean_sum / k
+                new_seq = seq + (mean,)
+                new_seqs.append(new_seq)
+        sequences[n] = new_seqs
+
+    # Print differences a_n - a_{n-1} for n=2..n_max, gather unique
+    diffs = set()
+    print(f"Enumerated sequences up to n={n_max}:")
+    for n in range(2, n_max+1):
+        print(f"n={n}:")
+        for seq in sequences[n]:
+            diff = seq[n] - seq[n-1]
+            # Print exact fraction
+            print(f"  a_{n} - a_{n-1} = {diff}")
+            diffs.add(diff)
+
+    print("\nUnique differences found:")
+    for d in sorted(diffs):
+        print(f"  {d}")
+
+if __name__ == "__main__":
+    enumerate_sequence()
+```

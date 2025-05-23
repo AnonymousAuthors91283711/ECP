@@ -1,0 +1,53 @@
+[write_program]
+This problem asks for the count of numbers n (1 ≤ n ≤ 420) where for any two distinct numbers a,b from {5,6,7}, the remainders n%a and n%b are different. We need to enumerate all such numbers efficiently.
+
+The key insight is that for n to satisfy the condition, its remainders modulo 5,6,7 must all be distinct. We can iterate through all possible combinations of remainders (r5,r6,r7) where r5≠r6, r5≠r7, and r6≠r7, then find numbers n in the range that match these remainders using the Chinese Remainder Theorem.
+
+```python
+from math import gcd
+from functools import reduce
+
+def chinese_remainder(a, m):
+    # Solve x ≡ a_i mod m_i for all i
+    def crt_inner(a1, m1, a2, m2):
+        g, p, q = extended_gcd(m1, m2)
+        if (a1 - a2) % g != 0:
+            return (None, None)
+        lcm = m1 // g * m2
+        x = (a1 + (a2 - a1) // g * p % (m2 // g) * m1) % lcm
+        return (x, lcm)
+    return reduce(lambda x, y: crt_inner(x[0], x[1], y[0], y[1]), zip(a, m), (0, 1))
+
+def extended_gcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        g, y, x = extended_gcd(b % a, a)
+        return (g, x - (b // a) * y, y)
+
+def count_valid_numbers():
+    count = 0
+    mods = [5, 6, 7]
+    # Iterate all possible distinct remainders
+    for r5 in range(5):
+        for r6 in range(6):
+            if r6 == r5 % 6:
+                continue
+            for r7 in range(7):
+                if r7 == r5 % 7 or r7 == r6 % 7:
+                    continue
+                # Solve n ≡ r5 mod 5, n ≡ r6 mod 6, n ≡ r7 mod 7
+                x, lcm = chinese_remainder([r5, r6, r7], mods)
+                if x is None:
+                    continue  # no solution
+                # Count all numbers ≡ x mod lcm that are ≤ 420
+                if x == 0:
+                    x = lcm  # since n > 0
+                max_n = 420
+                if x > max_n:
+                    continue
+                count += (max_n - x) // lcm + 1
+    print(count)
+
+count_valid_numbers()
+```

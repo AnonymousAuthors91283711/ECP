@@ -1,0 +1,66 @@
+[write_program]
+The problem involves checking collinearity of three points in \(\mathbb{R}^3\) whose coordinates depend on parameters \(a, b\), then relating this to a function \(omnimath647\_answer(a,b)\). We'll try to guess this function by enumerating \(a,b\) values, checking collinearity using determinants or vector cross products (as three points are collinear if the vectors between them are linearly dependent).
+
+We output the candidate values of \(omnimath647\_answer(a,b)\) when the points are collinear, focusing on exact values for rational \(a,b\).
+
+```python
+from fractions import Fraction
+
+def collinear(p1, p2, p3):
+    # Three points p1,p2,p3 in R^3 are collinear iff vectors p2-p1 and p3-p1 are linearly dependent
+    # i.e. their cross product is zero vector
+    v1 = [p2[i] - p1[i] for i in range(3)]
+    v2 = [p3[i] - p1[i] for i in range(3)]
+    cp = [v1[1]*v2[2] - v1[2]*v2[1],
+          v1[2]*v2[0] - v1[0]*v2[2],
+          v1[0]*v2[1] - v1[1]*v2[0]]
+    return cp == [0,0,0]
+
+def candidate_answer(a, b):
+    # From the problem, the function omnimath647_answer(a,b) is unknown.
+    # We'll test if collinearity holds and print potential values a,b and maybe an expression involving them
+    # We try a guessed function f(a,b) = something simple, output them if collinear
+    p1 = [1, a, b]
+    p2 = [a, 2, b]
+    p3 = [a, b, 3]
+    if collinear(p1, p2, p3):
+        # We print (a,b) and the candidate function a^2 + b^2 + a*b + ... up to 4
+        # since the problem compares to 4, let's print some symmetric expressions close to 4
+        vals = {
+            'a^2+b^2': a**2 + b**2,
+            'a+b+2': a + b + 2,
+            'a*b + a + b': a*b + a + b,
+            'a*b + a^2 + b^2': a*b + a**2 + b**2,
+            'sum': a + b + a*b,
+            '4': 4,
+        }
+        for name, val in vals.items():
+            # Print candidate values
+            print(f"a={a}, b={b}, {name} = {val}")
+
+# Sample small rational values for a,b
+vals = [Fraction(n, d) for n in range(-3,4) for d in (1,2,3) if d != 0]
+seen = set()
+for a in vals:
+    for b in vals:
+        p1 = (1, a, b)
+        p2 = (a, 2, b)
+        p3 = (a, b, 3)
+        if collinear(p1, p2, p3):
+            key = (a,b)
+            if key not in seen:
+                print(f"Collinear for a={a}, b={b}")
+                # Print candidate values including exact fractions, avoiding float
+                s = a + b + 2
+                ab = a*b
+                expr1 = a**2 + b**2
+                expr2 = ab + a + b
+                expr3 = ab + expr1
+                print(f"Candidates: a^2+b^2={expr1}, a+b+2={s}, a*b+a+b={expr2}, a*b+a^2+b^2={expr3}, target=4")
+                # Also print which of these equals 4 exactly (if any)
+                for val, name in [(expr1,'a^2+b^2'), (s,'a+b+2'), (expr2,'a*b+a+b'), (expr3,'a*b+a^2+b^2')]:
+                    if val == 4:
+                        print(f"Exact 4 found for expression {name} at a={a}, b={b}")
+                seen.add(key)
+```
+

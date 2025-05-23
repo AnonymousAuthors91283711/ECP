@@ -1,0 +1,59 @@
+[write_program]
+The problem asks for the greatest \( n \) such that there exists an injective function \( f: \mathrm{Fin}(n) \to \mathrm{Fin}(8) \times \mathrm{Fin}(8) \) with the given property on sums and differences of coordinates. We'll enumerate injective functions for various \( n \), checking the condition, to conjecture that maximum \( n \).
+
+```python
+from itertools import permutations
+
+# Points in Fin(8) x Fin(8) as (x,y), 0<=x,y<8
+points = [(x,y) for x in range(8) for y in range(8)]
+
+def check_condition(f):
+    # f: list of points, length n
+    n = len(f)
+    # For each pair i,j distinct
+    for i in range(n):
+        for j in range(i+1,n):
+            pi, pj = f[i], f[j]
+            s_i = pi[0] + pi[1]
+            s_j = pj[0] + pj[1]
+            d_i = pi[0] - pi[1]
+            d_j = pj[0] - pj[1]
+            if not (s_i == s_j or d_i == d_j):
+                return False
+    # Now check uniqueness condition:
+    # For each pair i,j with i != j, all other k != i,j
+    # s_i or d_i differs uniquely from others
+    for i in range(n):
+        for j in range(i+1,n):
+            s_i = f[i][0] + f[i][1]
+            d_i = f[i][0] - f[i][1]
+            s_j = f[j][0] + f[j][1]
+            d_j = f[j][0] - f[j][1]
+            for k in range(n):
+                if k==i or k==j: 
+                    continue
+                s_k = f[k][0] + f[k][1]
+                d_k = f[k][0] - f[k][1]
+                if s_k == s_i or d_k == d_i or s_k == s_j or d_k == d_j:
+                    return False
+    return True
+
+max_n_found = 0
+
+# Check for n from small to larger to enumerate possible n
+# Time complexity is large, so limit to n<=7 here to produce results.
+for n in range(2,9):  # Try all n up to 8 (max points)
+    found_for_n = False
+    # Enumerate injective f as permutations of points
+    for f in permutations(points, n):
+        if check_condition(f):
+            print(f"n={n}, example function mapping: {f}")
+            found_for_n = True
+            max_n_found = max(max_n_found, n)
+    if found_for_n:
+        print(f"At least one f found for n={n}")
+    else:
+        print(f"No f found for n={n}")
+
+print(f"Maximum n found with such property: {max_n_found}")
+```

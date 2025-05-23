@@ -1,0 +1,72 @@
+[write_program]
+The problem involves finding the greatest value of x satisfying a rational equation, with the solution expressible in the form a + sqrt(b + sqrt(c)), where a, b, c are positive integers summing to 263. To assist, we'll numerically investigate the solutions of the given equation in the real domain, focusing on potential candidate solutions near the points where the denominators are undefined (excluded points).
+
+We'll test a range of x values around these critical points, look for solutions, then check whether solutions can be expressed as the specified nested radical form. Given the structure, we expect the solutions to lie somewhere between the excluded points, likely near the larger ones (17, 19).
+
+Below is an approximate numerical search, printing solutions as soon as they are found.
+
+```python
+import numpy as np
+
+# Define the function for which we find roots
+def f(x):
+    if x in [3, 5, 17, 19]:
+        return None  # Skip undefined points
+    return 3 / (x - 3) + 5 / (x - 5) + 17 / (x - 17) + 19 / (x - 19) - (x ** 2 - 11 * x - 4)
+
+# Search parameters
+x_min, x_max = 16, 20  # Focus around critical points, especially near 17 and 19
+step = 0.01
+
+# Collect potential solutions
+solutions = []
+
+# Iterate over the range to find sign changes indicating roots
+x_vals = np.arange(x_min, x_max, step)
+for i in range(len(x_vals) - 1):
+    x1, x2 = x_vals[i], x_vals[i+1]
+    if None in (f(x1), f(x2)):
+        continue
+    val1, val2 = f(x1), f(x2)
+    if val1 * val2 < 0:
+        # Sign change detected, approximate root by bisection
+        low, high = x1, x2
+        for _ in range(50):  # 50 iterations for precision
+            mid = (low + high) / 2
+            f_mid = f(mid)
+            if f_mid is None:
+                break
+            if f_mid * val1 < 0:
+                high = mid
+                val2 = f_mid
+            else:
+                low = mid
+                val1 = f_mid
+        root = (low + high) / 2
+        print(f"Found approximate root at x = {root:.6f}")
+        solutions.append(root)
+
+# For each solution, attempt to match the radical form
+# Since root approximation is close, check for nested radical form
+for sol in solutions:
+    # Based on approximation, try to find integers a, b, c
+    # Since the form is a + sqrt(b + sqrt(c)), consider candidate a near int part
+    a_candidate = int(round(sol))
+    residual = sol - a_candidate
+    if residual < 0:
+        continue
+    # Approximate sqrt(c + b) as residual, guess c and b
+    # Set constraints: b, c positive integers, residual ≈ sqrt(b + sqrt(c))
+    # Nested radicals suggest c small, test c from 1 to 100
+    for c in range(1, 101):
+        inner = residual ** 2
+        # inner = b + sqrt(c)
+        sqrt_c = np.sqrt(c)
+        b = inner - sqrt_c
+        if b > 0 and abs(b - round(b)) < 0.01:
+            b_int = int(round(b))
+            # Check sum
+            total = a_candidate + b_int + c
+            if total <= 263:
+                print(f"Candidate solution: a={a_candidate}, b={b_int}, c={c}, sum={total}")
+```

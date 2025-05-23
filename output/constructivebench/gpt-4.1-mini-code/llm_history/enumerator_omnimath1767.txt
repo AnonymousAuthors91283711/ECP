@@ -1,0 +1,56 @@
+[write_program]
+The problem is a classic: find the smallest number greater than 1729 expressible as the sum of two positive cubes in two distinct ways with all four numbers positive and distinct from each other accordingly.
+
+We know 1729 = 1^3 + 12^3 = 9^3 + 10^3. We must find the smallest n > 1729 having two distinct representations as sums of two cubes, with the pairs differing in at least the 'a' term.
+
+Our program will enumerate sums a^3 + b^3 with a,b positive and a ≤ b (to avoid double counting), storing sums and the pairs that produce them. We then find sums with at least two such pairs, distinct in the sense described, and print all sums > 1729 found (with their pairs). Then we print the minimal sum found.
+
+We'll limit search up to a certain max, say 100, to keep output short and to meet tokens limit.
+
+```python
+# Enumerate sums of two positive cubes a^3 + b^3 with 1 <= a <= b <= max_a,
+# store sums and pairs, then output sums >1729 with two distinct representations.
+# Print all such sums found and their pairs, then print the minimum sum found.
+
+max_a = 100
+sums = dict()
+limit = 1729
+
+for a in range(1, max_a+1):
+    a3 = a**3
+    for b in range(a, max_a+1):
+        s = a3 + b**3
+        if s > limit:
+            if s not in sums:
+                sums[s] = []
+            # Store pair (a,b)
+            sums[s].append((a,b))
+
+# Now find sums with at least two distinct pairs (a,b) and (c,d),
+# where pairs are distinct in the sense that at least a != c and a != d
+# (implying the pairs are different).
+
+# Print all such sums with the pairs
+candidates = []
+for s, pairs in sums.items():
+    if len(pairs) < 2:
+        continue
+    # Check if there exist two pairs that satisfy conditions
+    found = False
+    for i in range(len(pairs)):
+        for j in range(i+1, len(pairs)):
+            (a,b), (c,d) = pairs[i], pairs[j]
+            if a != c and a != d and b != c and b != d:
+                print(f"n = {s} = {a}^3 + {b}^3 = {c}^3 + {d}^3")
+                candidates.append(s)
+                found = True
+                break
+        if found:
+            break
+
+if candidates:
+    minimum = min(candidates)
+    print(f"Minimum n > 1729 with required property: {minimum}")
+else:
+    print("No such number found up to max_a =", max_a)
+```

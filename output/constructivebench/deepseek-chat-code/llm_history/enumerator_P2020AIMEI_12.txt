@@ -1,0 +1,112 @@
+[write_program]
+This problem asks for the smallest positive integer k such that (3^3 * 5^5 * 7^7) divides (149^k - 2^k), and then to find the number of divisors of that k. We'll approach this by:
+
+1. Finding the minimal k for each prime power (3^3, 5^5, 7^7) separately using the multiplicative order
+2. Taking the least common multiple (LCM) of these minimal exponents
+3. Counting the divisors of the resulting k
+
+The program will compute this step by step, showing intermediate results.
+
+```python
+import math
+from math import gcd
+from functools import reduce
+
+def multiplicative_order(a, n):
+    """Compute the multiplicative order of a modulo n"""
+    if gcd(a, n) != 1:
+        return None
+    phi = n
+    factors = prime_factors(phi)
+    order = phi
+    for (p, e) in factors.items():
+        phi_div_p = phi // (p**e)
+        temp = pow(a, phi_div_p, n)
+        d = 0
+        while temp != 1 and d < e:
+            temp = pow(temp, p, n)
+            d += 1
+        if temp != 1:
+            return None
+        order = order // (p**(e - d))
+    return order
+
+def prime_factors(n):
+    """Return prime factors of n with multiplicity"""
+    factors = {}
+    while n % 2 == 0:
+        factors[2] = factors.get(2, 0) + 1
+        n = n // 2
+    i = 3
+    while i*i <= n:
+        while n % i == 0:
+            factors[i] = factors.get(i, 0) + 1
+            n = n // i
+        i += 2
+    if n > 1:
+        factors[n] = factors.get(n, 0) + 1
+    return factors
+
+def minimal_exponent(a, b, p, e):
+    """Find minimal k where p^e divides a^k - b^k"""
+    if p == 2 and e == 1:  # special case
+        return 1 if (a - b) % 2 == 0 else None
+    
+    pe = p**e
+    if gcd(a, p) == 1 and gcd(b, p) == 1:
+        # Both coprime to p
+        a_inv = pow(a, -1, pe)
+        x = (b * a_inv) % pe
+        if x == 1:
+            return 1
+        ord_p = multiplicative_order(x, p**e)
+        if ord_p is None:
+            return None
+        return ord_p
+    else:
+        # One is divisible by p
+        if gcd(a, p) != gcd(b, p):
+            # Only one is divisible by p
+            k = 0
+            while True:
+                k += 1
+                if (pow(a, k) - pow(b, k)) % pe == 0:
+                    return k
+        else:
+            # Both divisible by p
+            a1 = a // p
+            b1 = b // p
+            return minimal_exponent(a1, b1, p, e)
+
+def count_divisors(n):
+    """Count number of divisors of n"""
+    if n == 0:
+        return 0
+    factors = prime_factors(n)
+    count = 1
+    for exp in factors.values():
+        count *= (exp + 1)
+    return count
+
+def main():
+    a = 149
+    b = 2
+    prime_powers = [(3, 3), (5, 5), (7, 7)]
+    
+    exponents = []
+    for p, e in prime_powers:
+        k = minimal_exponent(a, b, p, e)
+        exponents.append(k)
+        print(f"Minimal exponent for {p}^{e}: {k}")
+    
+    lcm = 1
+    for num in exponents:
+        lcm = lcm * num // gcd(lcm, num)
+    
+    print(f"\nLCM of exponents: {lcm}")
+    num_divisors = count_divisors(lcm)
+    print(f"Number of divisors: {num_divisors}")
+
+if __name__ == "__main__":
+    main()
+```

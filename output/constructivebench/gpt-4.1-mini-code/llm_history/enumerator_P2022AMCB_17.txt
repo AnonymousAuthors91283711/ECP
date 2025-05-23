@@ -1,0 +1,62 @@
+[write_program]
+The problem concerns counting 4x4 matrices over {0,1} with row sums and column sums equal to the permuted sequences (1,2,3,4) in some order. The permutations σ and τ represent the sequences of sums per rows and columns respectively, shifted by +1. We will enumerate such 0-1 matrices and count those that satisfy the constraints.
+
+Since it's a high computational load to enumerate all 2^(16) matrices, we instead generate all permutations σ and τ of [0..3] to define the required row and column sums (each σ(i)+1). Then we try to find 0-1 matrices matching these sums.
+
+To be efficient:
+- For each pair of σ and τ pack row sums and column sums as lists of 1+σ(i) and 1+τ(j).
+- Use a recursive backtracking to fill matrix row by row.
+- At each row, generate all possible 0-1 vectors with sum equal to the desired row sum.
+- Keep track of column sums to ensure final sums match τ.
+- Print each found matrix or just count; to reduce output size, print count per (σ,τ).
+- Print parameters σ, τ and partial counts streaming as results are found.
+
+We enumerate all 24*24=576 pairs and for each, try to find matrices.
+
+```python
+from itertools import permutations, combinations
+
+def row_vectors(n, s):
+    # Generate all 0-1 vectors of length n with sum s
+    for ones in combinations(range(n), s):
+        vec = [0]*n
+        for i in ones:
+            vec[i] = 1
+        yield vec
+
+def backtrack(n, row_sums, col_sums, row=0, matrix=[], col_acc=None):
+    if col_acc is None:
+        col_acc = [0]*n
+    if row == n:
+        if col_acc == col_sums:
+            yield matrix
+        return
+    rs = row_sums[row]
+    for rvec in row_vectors(n, rs):
+        new_col_acc = [c+r for c, r in zip(col_acc, rvec)]
+        # quick pruning: intermediate sums per column cannot exceed col_sums
+        if all(nc <= cs for nc, cs in zip(new_col_acc, col_sums)):
+            yield from backtrack(n, row_sums, col_sums, row+1, matrix+[rvec], new_col_acc)
+
+def main():
+    n = 4
+    base = [1,2,3,4]
+    perms = list(permutations(range(n)))
+    total = 0
+    for sigma in perms:
+        row_sums = [sigma[i]+1 for i in range(n)]
+        for tau in perms:
+            col_sums = [tau[j]+1 for j in range(n)]
+            # Enumerate matrices with these sums
+            count = 0
+            for _ in backtrack(n, row_sums, col_sums):
+                count += 1
+                print(f"σ={sigma}, τ={tau}, matrix #{count} found")
+            if count > 0:
+                print(f"σ={sigma}, τ={tau}, total matrices: {count}")
+            total += count
+    print(f"Total number of matrices: {total}")
+
+if __name__ == "__main__":
+    main()
+```

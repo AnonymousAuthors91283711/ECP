@@ -1,0 +1,59 @@
+[write_program]
+The problem involves finding real numbers \(r_1, r_2, a\) with certain conditions, including equations involving \(a\), \(r_1\), \(r_2\), and a connection to squarefree \(m, n, p\) with a formula for an answer. We want to enumerate possible \((m,n,p)\) triples with \(m\) squarefree, positive integers, and check if the conditions fit, printing candidates for the final answer \(100m + 10n + p\).
+
+We’ll:
+- Enumerate small positive integers \(m, n, p\), \(m\) squarefree.
+- Compute \((\sqrt{m} - n)/p\) as \(a r_1 = a r_2\).
+- Check the condition \(a r_1^2 = 1/8\) or \(a r_2^2 = 1/8\) approximately.
+- Output candidates \(100m + 10n + p\) as soon as found.
+
+We limit \(m, n, p\) to small ranges to keep output small and computations fast.
+
+```python
+import math
+
+def is_squarefree(x):
+    if x < 1:
+        return False
+    for i in range(2, int(math.sqrt(x)) + 1):
+        if x % (i*i) == 0:
+            return False
+    return True
+
+target = 1/8  # 1/8 as a float
+eps = 1e-9
+
+print("Enumerating candidates for (m,n,p) with m squarefree and conditions...")
+
+for m in range(1, 20):  # small range for m
+    if not is_squarefree(m):
+        continue
+    sqrt_m = math.sqrt(m)
+    for n in range(1, 20):
+        for p in range(1, 20):
+            # compute a*r = (sqrt(m)-n)/p
+            ar = (sqrt_m - n) / p
+            
+            # We want to find a,r such that a*r = ar and a*r^2 = 1/8
+            # So a*r^2 = ar * r = 1/8 => (ar) * r = 1/8 => r = (1/8)/ar
+            # Then a = ar / r = ar / ((1/8)/ar) = ar^2/(1/8) = ?
+            # Instead just check if ar !=0 and then compute a*r^2 = 1/8 condition
+            if abs(ar) < 1e-12:
+                continue
+            r = (target) / ar
+            a = ar / r if r != 0 else None
+            if a is None or abs(a) < 1e-12:
+                continue
+            # Check if abs(r) < 1 and a/(1-r)=1 and a/(1 - r2)=1 with r1 != r2 not directly known,
+            # but we'll check r in (-1,1)
+            if abs(r) >= 1:
+                continue
+            # check a/(1-r) ≈ 1
+            if abs(a/(1 - r) - 1) > eps:
+                continue
+            # candidate found
+            answer = 100*m + 10*n + p
+            print(f"Candidate answer: 100*{m} + 10*{n} + {p} = {answer}")
+
+print("Enumeration complete.")
+```

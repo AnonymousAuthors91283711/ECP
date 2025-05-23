@@ -1,0 +1,60 @@
+[write_program]
+The problem concerns sequences \( a : \{0, \ldots, 2009\} \to \mathbb{R} \) with all positive entries and pairwise product bounds \( a_i a_j \leq i + j \) for distinct indices \( i, j \). We want to maximize the product \( \prod a_i \).
+
+We will test smaller ranges \( n = 2, 3, 4 \) to find sequences \( a_0, \ldots, a_{n-1} > 0 \) satisfying \( a_i a_j \leq i+j \), then maximize \( \prod a_i \). For fixed \( n \), we enumerate \( a_i \) as fractions (to keep exact values) with denominators up to 10, check constraints, and track maxima.
+
+```python
+from fractions import Fraction
+from itertools import product
+
+# Enumerate sequences a_i with denominators up to 10 and numerator up to 20 (adjustable)
+# For small n, check constraints a_i * a_j <= i + j and a_i > 0
+# Print candidate products and keep track of maximum product found
+
+def valid_and_product(a):
+    n = len(a)
+    for i in range(n):
+        if a[i] <= 0:
+            return False, None
+        for j in range(n):
+            if i != j and a[i]*a[j] > i+j:
+                return False, None
+    prod = Fraction(1)
+    for x in a:
+        prod *= x
+    return True, prod
+
+def enumerate_and_max(n, max_num=20, max_den=10):
+    print(f"Testing n = {n}")
+    fractions_list = [Fraction(num, den) for num in range(1, max_num+1)
+                                     for den in range(1, max_den+1)
+                                     if Fraction(num, den) > 0]
+    max_prod = Fraction(0)
+    max_seq = None
+    count = 0
+    # To reduce computations, sort fractions and pick sequences of length n with nondecreasing order
+    for seq in product(fractions_list, repeat=n):
+        # Optional pruning: seq sorted nondecreasing to limit search space
+        if any(seq[i] > seq[i+1] for i in range(n-1)):
+            continue
+        valid, prod = valid_and_product(seq)
+        if valid:
+            count +=1
+            print(f"a = {[float(x) for x in seq]}, product = {float(prod):.6f}")
+            if prod > max_prod:
+                max_prod = prod
+                max_seq = seq
+        if count >= 30:  # limit output per n
+            break
+    if max_seq is not None:
+        print(f"Maximum product for n={n} is {float(max_prod):.6f} with a = {[float(x) for x in max_seq]}")
+    else:
+        print(f"No valid sequences found for n={n}")
+
+def main():
+    for n in range(2, 5):
+        enumerate_and_max(n)
+
+if __name__ == "__main__":
+    main()
+```

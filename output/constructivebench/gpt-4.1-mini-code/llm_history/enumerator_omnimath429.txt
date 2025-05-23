@@ -1,0 +1,118 @@
+[write_program]
+The problem involves analyzing a graph \( G \) on \( n \) vertices with specific properties on adjacency and degrees, and finding the smallest clique size \( k \geq 3 \) for which there exists a clique of size \( k \), but no clique of size \( k+1 \) (i.e., the graph is \( (k+1) \)-clique-free). The sum of squares of degrees satisfies \(\sum_v (deg(v))^2 = n^2 - n\).
+
+To assist in conjecturing the minimal such \( k \), let's enumerate small values of \( n \) and graphs \( G \) on vertices \(\{0, \ldots, n-1\}\) satisfying the conditions, then find candidate clique sizes \( k \). Due to complexity, we'll just try small \( n \) (e.g. 3 to 6), enumerate graphs, filter those satisfying conditions, and print the smallest \( k \) with clique \( k \) but no clique \( k+1 \).
+
+For efficiency, and given the constraints, we'll:
+
+- Iterate over all simple graphs on \( n \) vertices.
+- Check \( h1 \) (for any non-adjacent pair \( v,w \), there's a vertex connected to both),
+- Check \( h2 \) (each vertex has at least one non-neighbor),
+- Check degree squared sum equals \( n^2 - n \),
+- Find largest clique size,
+- Print candidate \( k \).
+
+```python
+import itertools
+
+def neighbors(graph, v, n):
+    return {w for w in range(n) if (v, w) in graph or (w, v) in graph}
+
+def degree(graph, v, n):
+    return len(neighbors(graph, v, n))
+
+def is_clique(graph, s):
+    # s is a set of vertices
+    for v, w in itertools.combinations(s, 2):
+        if (v, w) not in graph and (w, v) not in graph:
+            return False
+    return True
+
+def clique_free(graph, n, k):
+    # return True if there is no clique of size k
+    vertices = list(range(n))
+    for subset in itertools.combinations(vertices, k):
+        if is_clique(graph, subset):
+            return False
+    return True
+
+def satisfies_conditions(graph, n):
+    # condition h1: ∀ (v,w) not adjacent, ∃ u s.t u adjacent to both
+    vertices = range(n)
+    adj_set = set(graph)
+    for v, w in itertools.combinations(vertices, 2):
+        if ((v, w) not in adj_set) and ((w, v) not in adj_set):
+            # find u connected to both v,w
+            found = False
+            for u in vertices:
+                if u != v and u != w:
+                    if ((v, u) in adj_set or (u, v) in adj_set) and ((w, u) in adj_set or (u, w) in adj_set):
+                        found = True
+                        break
+            if not found:
+                return False
+    # condition h2: ∀ v ∃ w not adjacent to v
+    for v in vertices:
+        found = False
+        for w in vertices:
+            if w != v and ((v, w) not in adj_set) and ((w, v) not in adj_set):
+                found = True
+                break
+        if not found:
+            return False
+    # hdeg: sum of squares of degrees = n^2 - n
+    degs = [degree(graph, v, n) for v in vertices]
+    s = sum(d*d for d in degs)
+    if s != n*n - n:
+        return False
+    return True
+
+def main():
+    print("Enumerating graphs and checking conditions for n=3..6")
+    for n in range(3,7):
+        print(f"n = {n}")
+        vertices = range(n)
+        # edges: unordered pairs (u,v) u<v
+        edges_all = [(u,v) for u in vertices for v in vertices if u<v]
+        # Iterate over all graphs with edges chosen from edges_all
+        # To limit output, limit to those with sum degrees squared as required
+        # Enumerate graphs by edge subsets
+        # Note: 2^(n(n-1)/2) grows fast, so limit
+
+        max_edges = len(edges_all)
+        max_graphs = 2**max_edges
+        # For quick runtime limit enumeration at half million graphs max
+        limit = 500000
+        step = max(1, max_graphs // limit)
+        found_any = False
+        for i in range(0, max_graphs, step):
+            # build graph with edges corresponding to bits of i
+            edges = set()
+            for j, e in enumerate(edges_all):
+                if (i >> j) & 1:
+                    edges.add(e)
+            if satisfies_conditions(edges, n):
+                # find max clique size
+                maxk = 2
+                for k in range(3, n+1):
+                    # check if graph has clique of size k
+                    # by searching all size k subsets
+                    found_clique = False
+                    for subset in itertools.combinations(vertices, k):
+                        if is_clique(edges, subset):
+                            found_clique = True
+                            break
+                    if found_clique:
+                        maxk = k
+                    else:
+                        break
+                # check if graph is cliqueFree maxk+1
+                if clique_free(edges, n, maxk+1):
+                    print(f"n={n}, candidate k={maxk}")
+                    found_any = True
+        if not found_any:
+            print(f"n={n}, no graph found meeting conditions")
+
+if __name__ == "__main__":
+    main()
+```

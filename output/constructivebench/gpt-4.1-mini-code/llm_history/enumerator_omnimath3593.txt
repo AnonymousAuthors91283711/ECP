@@ -1,0 +1,82 @@
+[write_program]
+This problem involves finite sets \( V \) with cardinality \( n \) and a ternary edge coloring \( E: V \times V \to \{0,1,2\} \). The conditions are:
+
+1. For every vertex \( v \), not all three colors appear on edges from \( v \) to others.
+2. There is no triangle \( (u,v,w) \) with all edges the same color.
+
+We want to find the greatest \( n \) allowing such a structure.
+
+The program tries small \( n \) (e.g., up to 6), enumerates \( V = \{0,...,n-1\} \) and assignments \( E \) with values in \(\{0,1,2\}\) on ordered pairs (excluding diagonal), checks the conditions, and prints all such \( n \).
+
+Due to combinatorial explosion, we only go up to 5 or 6. We print \( n \) whenever a suitable coloring exists.
+
+```python
+# Enumerate candidate sizes n and colorings E: VxV->{0,1,2} (without diagonal)
+# Check conditions:
+# 1) For each v, E(v,u) doesn't contain all 3 colors on outgoing edges
+# 2) No triangle with same color on edges (u,v),(v,w),(w,u)
+
+from itertools import product, combinations
+
+def all_same_color_triangle(n, E):
+    # Check if any triple forms a monochromatic triangle, edges E[u,v],E[v,w],E[w,u] equal
+    for u,v,w in combinations(range(n), 3):
+        # Consider ordered triples clockwise: (u,v,w) and all edges directed
+        # Edges: (u,v), (v,w), (w,u)
+        c1, c2, c3 = E[u][v], E[v][w], E[w][u]
+        if c1 == c2 == c3:
+            return True
+        # Also check (u,w,v) for anti-clockwise triangles with (u,w),(w,v),(v,u)
+        c1b, c2b, c3b = E[u][w], E[w][v], E[v][u]
+        if c1b == c2b == c3b:
+            return True
+    return False
+
+def violates_condition_one(n, E):
+    # For each vertex v, colors on edges from v to other vertices
+    # must NOT be all three colors simultaneously
+    for v in range(n):
+        colors = set()
+        for u in range(n):
+            if u != v:
+                colors.add(E[v][u])
+        if colors == {0,1,2}:
+            return True
+    return False
+
+max_n = 6  # limit for feasibility
+
+for n in range(1, max_n+1):
+    print(f"Trying n={n}")
+    # Number of edges: n*(n-1) (directed, no loops)
+    edges = [(u,v) for u in range(n) for v in range(n) if u!=v]
+    n_edges = len(edges)
+    # We try all colorings E: edges -> {0,1,2}
+    # Number of colorings: 3^(n_edges), too big beyond small n
+    # We try to break early or skip if too big
+    max_colorings = 3**n_edges
+    if max_colorings > 10**7:
+        print(f"Skipping n={n} due to large search space {max_colorings}")
+        continue
+    found = False
+    for coloring in product(range(3), repeat=n_edges):
+        # Build E as adjacency matrix
+        E = [[-1]*n for _ in range(n)]
+        for idx, (u,v) in enumerate(edges):
+            E[u][v] = coloring[idx]
+        if violates_condition_one(n,E):
+            continue
+        if all_same_color_triangle(n,E):
+            continue
+        # Valid coloring found for size n
+        found = True
+        print(f"Valid coloring found for n={n}")
+        # To limit output length, print one example coloring matrix as rows of colors:
+        for row in E:
+            print(''.join(str(c) for c in row))
+        break
+    if not found:
+        print(f"No valid coloring for n={n}")
+print(f"Greatest n found with valid coloring up to {max_n}")
+```
+

@@ -1,0 +1,61 @@
+[write_program]
+The problem involves finding the greatest size \( n \) of a set \( s \) of functions from a 6-element domain (Fin 6) to a 10-element codomain (Fin 10) such that for any two distinct functions \( p_1, p_2 \in s \), they differ in at least 2 positions. We want to enumerate possible sizes of such sets.
+
+Key details:
+- Domain size = 6
+- Codomain size = 10
+- Distance between any two distinct functions in \( s \) is at least 2 (Hamming distance ≥ 2)
+- We want to find the maximum size (cardinality) \( n \) of such a set.
+
+Since the domain is small (6) and codomain size is moderate (10), we can attempt to enumerate subsets of functions and check the pairwise distance condition. To keep computations manageable, we will:
+- Generate all functions from Fin 6 to Fin 10 represented as 6-length tuples, values from 0 to 9.
+- Use a backtracking approach to build a maximal set obeying the minimum pairwise distance ≥ 2.
+- Print sizes of candidate sets rapidly.
+- Choose small sample functions to demonstrate the concept.
+
+```python
+# Python program to enumerate sizes of sets of functions from domain {0..5} to codomain {0..9},
+# where any two distinct functions differ in at least 2 positions.
+
+from itertools import product
+
+def hamming_dist(f1, f2):
+    return sum(a != b for a, b in zip(f1, f2))
+
+def is_valid_addition(candidate_set, new_func):
+    # Check minimum Hamming distance 2 to all functions in candidate_set
+    return all(hamming_dist(existing, new_func) >= 2 for existing in candidate_set)
+
+def backtrack(all_funcs, start, current_set, best_sets):
+    # Print new sizes found
+    size = len(current_set)
+    if size not in best_sets:
+        best_sets.add(size)
+        print(f'Size found: {size}')
+    # Attempt to add next functions
+    for i in range(start, len(all_funcs)):
+        f = all_funcs[i]
+        if is_valid_addition(current_set, f):
+            backtrack(all_funcs, i+1, current_set + [f], best_sets)
+    return
+
+def main():
+    domain_size = 6
+    codomain_size = 10
+    print(f'Domain size = {domain_size}, Codomain size = {codomain_size}')
+    # Generate all functions: too large (10^6), so we sample to keep it small
+    # We'll only consider a small subset of all functions to illustrate
+    sample_funcs = list(product(range(codomain_size), repeat=domain_size))[:200]
+    print(f'Using sample of {len(sample_funcs)} functions')
+    best_sets = set()
+    backtrack(sample_funcs, 0, [], best_sets)
+    if best_sets:
+        max_size = max(best_sets)
+        print(f'Maximum size found in sample: {max_size}')
+    else:
+        print('No valid sets found')
+
+if __name__ == "__main__":
+    main()
+```
+This program enumerates sizes of sets satisfying the distance ≥ 2 constraint using a sample of functions to manage complexity. It prints intermediate sizes found and finally outputs the largest size from the sample. This aids conjecturing about the maximum size of such a set.

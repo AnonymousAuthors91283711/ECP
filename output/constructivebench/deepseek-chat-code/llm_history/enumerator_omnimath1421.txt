@@ -1,0 +1,55 @@
+[write_program]
+This problem involves finding the sum of absolute values of roots of a quartic polynomial, expressed in the form (a + b√c)/d with certain constraints. We'll write a Python program to enumerate possible values of a, b, c, d that satisfy the conditions.
+
+The approach:
+1. Compute the roots of the polynomial numerically
+2. Calculate the sum of their absolute values
+3. Search for integers a, b, c, d that match this sum in the required form
+4. Check the coprimality and squarefree conditions
+5. Output valid candidates as they're found
+
+```python
+import math
+import numpy as np
+from numpy.polynomial import Polynomial
+from math import gcd, isqrt
+
+def is_squarefree(n):
+    if n % 4 == 0:
+        return False
+    for i in range(2, isqrt(n) + 1):
+        if n % (i*i) == 0:
+            return False
+    return True
+
+def compute_sum():
+    # Coefficients of X^4 + 3X^3 + 3X^2 + 3X + 1
+    p = Polynomial([1, 3, 3, 3, 1])
+    roots = p.roots()
+    return sum(abs(r) for r in roots)
+
+target_sum = compute_sum()
+print(f"Numerical sum of roots: {target_sum:.6f}")
+
+max_d = 20  # Reasonable upper bound for denominator
+max_b = 20  # Reasonable upper bound for b coefficient
+max_c = 20  # Reasonable upper bound for c in sqrt(c)
+
+# Check all possible combinations
+for d in range(1, max_d + 1):
+    for c in range(1, max_c + 1):
+        if not is_squarefree(c):
+            continue
+        sqrt_c = math.sqrt(c)
+        for b in range(1, max_b + 1):
+            # Solve for a: (a + b√c)/d ≈ target_sum
+            a_approx = target_sum * d - b * sqrt_c
+            a = round(a_approx)
+            if abs((a + b * sqrt_c)/d - target_sum) < 1e-8:
+                # Check coprimality conditions
+                if (gcd(a, b) == 1 and gcd(a, d) == 1 and gcd(b, d) == 1):
+                    print(f"Found candidate: a={a}, b={b}, c={c}, d={d}")
+                    print(f"Value: ({a} + {b}√{c})/{d}")
+                    print(f"Numerical value: {(a + b * sqrt_c)/d:.6f}")
+                    print(f"Condition check: {1000*a + 100*b + 10*c + d}")
+```

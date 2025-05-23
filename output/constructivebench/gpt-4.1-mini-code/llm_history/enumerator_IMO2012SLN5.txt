@@ -1,0 +1,62 @@
+[write_program]
+The problem involves functions \( f : \mathbb{N} \to \mathbb{N} \) satisfying a divisibility property related to the radical function \(\text{rad}\), which is the product of distinct prime factors of a number. We want to explore candidate functions \( f \) for small values to conjecture their behavior.
+
+We will:
+- Implement the \(\text{rad}\) function.
+- Enumerate simple functions \( f(n) \) of small complexity, such as \( f(n) = n^k \) for some small exponents \( k \) or constant functions.
+- Check the divisibility condition for \( n \) up to a small limit.
+- Print any function satisfying the condition for all tested \( n \).
+
+This will help us generate plausible candidates for the solution set.
+
+```python
+from math import gcd
+from sympy import primefactors
+
+def rad(n):
+    if n <= 1:
+        return 1
+    pf = primefactors(n)
+    prod = 1
+    for p in pf:
+        prod *= p
+    return prod
+
+# Check the divisibility condition for a function f on the range 1..Nmax
+def check_condition(f, Nmax=20):
+    for n in range(1, Nmax+1):
+        fn = f(n)
+        rn = rad(n)
+        rfn = rad(fn)
+        rff = rad(f(n * rn))
+        if rfn == 0:
+            return False
+        if rff % rfn != 0:
+            return False
+    return True
+
+# Enumerate some candidate functions f(n):
+# We try constant functions and monomials n^k for small k (0..3).
+def candidate_functions():
+    # constant functions f(n) = c
+    for c in range(1, 5):
+        def constf(x, c=c): return c
+        yield ('const(%d)'%c, constf)
+    # power functions f(n) = n^k
+    for k in range(0, 4):
+        def powerf(x, k=k): return x**k
+        yield ('power(%d)'%k, powerf)
+    # functions f(n) = rad(n)^k
+    for k in range(0,4):
+        def radpowf(x, k=k): return rad(x)**k
+        yield ('radpow(%d)'%k, radpowf)
+
+def main():
+    Nmax = 20
+    for name, f in candidate_functions():
+        if check_condition(f, Nmax):
+            print(f"Function {name} passes condition for n=1..{Nmax}")
+
+if __name__ == "__main__":
+    main()
+```

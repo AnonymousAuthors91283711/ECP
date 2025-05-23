@@ -1,0 +1,43 @@
+[write_program]
+The problem concerns counting bijections \( f: \{0,\ldots,5\} \to \{0,\ldots,5\} \) with a certain "local adjacency" constraint based on a 2D grid interpretation (2 rows × 3 columns) of the set \(\{0,\ldots,5\}\). For each \(k\), the image \(f(k)\) has at most two neighbors in the set \(f(i)\) for \(i < k\).
+
+We'll write a Python program to enumerate all permutations of size 6, check the neighbors condition, and print out each valid permutation and finally the total count.
+
+```python
+from itertools import permutations
+
+# Grid dimensions
+rows, cols = 2, 3
+N = rows * cols
+
+# Precompute neighbors for each position 0..5 in the grid
+def neighbors(pos):
+    r, c = divmod(pos, cols)
+    nbrs = []
+    for (nr, nc) in [(r, c-1), (r, c+1), (r-1, c), (r+1, c)]:
+        if 0 <= nr < rows and 0 <= nc < cols:
+            nbrs.append(nr*cols + nc)
+    return set(nbrs)
+
+neighbors_map = {i: neighbors(i) for i in range(N)}
+
+count = 0
+
+# Enumerate all permutations f: {0..5} -> {0..5}
+for perm in permutations(range(N)):
+    valid = True
+    eaten = set()
+    for k in range(N):
+        fk = perm[k]
+        # neighbors of fk that are already "eaten"
+        intersection = neighbors_map[fk].intersection(eaten)
+        if len(intersection) > 2:
+            valid = False
+            break
+        eaten.add(fk)
+    if valid:
+        count += 1
+        print(f"Valid permutation #{count}: {perm}")
+
+print(f"Total valid permutations: {count}")
+```

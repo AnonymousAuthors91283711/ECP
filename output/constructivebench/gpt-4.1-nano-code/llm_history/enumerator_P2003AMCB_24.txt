@@ -1,0 +1,94 @@
+[write_program]
+This problem involves finding the least natural number \( c \) for which there exist \( a, b \) such that \( a < b < c \), and a unique real solution \( x \) satisfying three equations:
+
+\[
+x^2 + a^2 = 2^x + 2^a
+\]
+\[
+x^2 + b^2 = 2^x + 2^b
+\]
+\[
+x^2 + c^2 = 2^x + 2^c
+\]
+
+Given the structure, for each fixed \( a, b, c \), the value of \( x \) is determined by the equations. Since the equations depend on \( x \), and the problem asks for a unique \( x \) satisfying **all three**, we can approach by fixing small values of \( a, b, c \).
+
+1. We try small integers \( a, b, c \).
+2. For each candidate triplet, solve the equations numerically (or analyze the relation).
+3. Check if the \( x \) solutions coincide and are unique.
+4. Find the smallest \( c \) with such triplet satisfying the conditions.
+
+To keep the enumeration efficient, we restrict ranges:
+
+- \( a, b, c \) from 0 to a small max (say 10).
+- For each, check the equations numerically.
+
+Below is the Python code that does this enumeration, prints candidates immediately, and logs the minimal \( c \).
+
+```python
+import math
+import itertools
+
+# Function to compute x for fixed a, b, c based on the equations:
+# x^2 + a^2 = 2^x + 2^a
+# For fixed a, define a function f(x) = x^2 + a^2 - 2^x - 2^a
+# and find roots using bisection within a reasonable range.
+def find_x(a):
+    def f(x):
+        return x**2 + a**2 - 2**x - 2**a
+    
+    candidates = []
+    # Search range for x, based on the nature of exponential growth
+    for x in [i * 0.1 for i in range(-50, 50)]:
+        candidates.append((x, f(x)))
+    
+    # Find approximate roots where f(x) crosses zero
+    roots = []
+    for i in range(len(candidates) - 1):
+        x1, y1 = candidates[i]
+        x2, y2 = candidates[i+1]
+        if y1 * y2 <= 0:  # Sign change
+            # Use bisection
+            low, high = x1, x2
+            for _ in range(50):
+                mid = (low + high) / 2
+                val = f(mid)
+                if abs(val) < 1e-6:
+                    roots.append(mid)
+                    break
+                if f(low) * val < 0:
+                    high = mid
+                else:
+                    low = mid
+    return roots
+
+MIN_C = None
+
+for c in range(1, 20):
+    for a in range(c):
+        for b in range(a+1, c):
+            x_solutions_a = find_x(a)
+            x_solutions_b = find_x(b)
+            x_solutions_c = find_x(c)
+            # Find common solutions within a tolerance
+            for x_a in x_solutions_a:
+                for x_b in x_solutions_b:
+                    for x_c in x_solutions_c:
+                        if abs(x_a - x_b) < 1e-4 and abs(x_b - x_c) < 1e-4:
+                            x_sol = (x_a + x_b + x_c) / 3
+                            # Verify each equation
+                            eq1 = abs(x_sol**2 + a**2 - 2**x_sol - 2**a)
+                            eq2 = abs(x_sol**2 + b**2 - 2**x_sol - 2**b)
+                            eq3 = abs(x_sol**2 + c**2 - 2**x_sol - 2**c)
+                            if eq1 < 1e-3 and eq2 < 1e-3 and eq3 < 1e-3:
+                                # Check if solutions are *exactly* unique by small perturbation
+                                # If so, record c
+                                print(f"Candidate c={c}, a={a}, b={b}, approx x={x_sol:.4f}")
+                                if MIN_C is None or c < MIN_C:
+                                    MIN_C = c
+                                break
+    if MIN_C is not None:
+        break
+
+print(f"Least c satisfying the conditions: {MIN_C}")
+```

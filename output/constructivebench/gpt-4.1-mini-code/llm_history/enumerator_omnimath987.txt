@@ -1,0 +1,85 @@
+[write_program]
+The problem involves finding the greatest finite cardinal \( n \) of a set \( V \) with a relation \( E: V \to V \to \textrm{Prop} \), such that for every distinct triple \((A,B,C)\) in \( V \), exactly one of the three cyclic edge conditions holds. This condition models a tournament with the 3-cycle property on every distinct triple.
+
+We want to enumerate candidate sizes \( n \) for small \( n \), and check if such a relation \( E \) exists that satisfies the condition. The property states: for every distinct triple \((A,B,C)\), exactly one of these patterns on edges holds:
+
+1. \(E(A,B) \wedge \neg E(B,C) \wedge \neg E(C,A)\),
+2. \(\neg E(A,B) \wedge E(B,C) \wedge \neg E(C,A)\), or
+3. \(\neg E(A,B) \wedge \neg E(B,C) \wedge E(C,A)\).
+
+Intuitively, this ordering is reminiscent of cyclic orders or structures related to tournaments with special constraints.
+
+The program will:
+- Iterate over small set sizes \( n \) (e.g., up to 7 or 8).
+- Enumerate all edge relations \( E \) (orientations) on \( n \).
+- For each \( E \), check the property for all triples.
+- Print all \( n \) for which such an \( E \) is found.
+
+Due to complexity, we'll only enumerate sets up to 5 or 6 elements for feasibility and efficiency.
+
+```python
+from itertools import combinations, product
+
+def is_valid_edge_set(n, edges_set):
+    # edges_set is a set of ordered pairs (u,v) representing E(u,v)
+    # Check for every triple (a,b,c) of distinct vertices the condition:
+    # Exactly one of:
+    #   (E(a,b) ∧ ¬E(b,c) ∧ ¬E(c,a)) or
+    #   (¬E(a,b) ∧ E(b,c) ∧ ¬E(c,a)) or
+    #   (¬E(a,b) ∧ ¬E(b,c) ∧ E(c,a))
+    verts = list(range(n))
+    for a,b,c in combinations(verts,3):
+        # For the triple, test the property in BOTH orientations:
+        # Because the condition cycles through (a,b,c) order, only one of them
+        # each must hold, but triples are unordered sets, so must verify all 6 permutations
+        # Instead, we can fix order (a,b,c) as is since the problem states A,B,C distinct.
+        conds = []
+        # cyclic permutations of (a,b,c)
+        triplets = [(a,b,c),(b,c,a),(c,a,b)]
+        # For each of these cycles, check if exactly one satisfies the pattern
+        # Actually the problem as stated requires every triple of distinct vertices A,B,C,
+        # with that ordering (A,B,C), exactly one of the three conditions holds:
+        # So for the triple (a,b,c) exactly one of the three pattern holds:
+        # Compute truth values
+        # Use presence or absence of edges in edges_set
+        # For pattern 1:
+        p1 = ((a,b) in edges_set and (b,c) not in edges_set and (c,a) not in edges_set)
+        p2 = ((a,b) not in edges_set and (b,c) in edges_set and (c,a) not in edges_set)
+        p3 = ((a,b) not in edges_set and (b,c) not in edges_set and (c,a) in edges_set)
+        if (p1 + p2 + p3) != 1:
+            return False
+    return True
+
+def enumerate_relations(n):
+    verts = list(range(n))
+    # Edges are pairs (u,v), u != v
+    edge_candidates = [(u,v) for u in verts for v in verts if u != v]
+    # We'll consider directed graphs without loops, edges either present or not
+    # Number of such edges: n*(n-1)
+    # To reduce search space and respect possible tournament structures,
+    # We check orientations with no pair u,v having both edges
+    # (as defining a tournament) - exactly one directed edge per pair
+    # So for each unordered pair {u,v}, choose orientation: either (u,v) or (v,u)
+    # Number of such orientations: 2^(n*(n-1)/2)
+    pairs = list(combinations(verts,2))
+    from itertools import product
+    for orientations in product([0,1], repeat=len(pairs)):
+        edges_set = set()
+        for idx, (u,v) in enumerate(pairs):
+            if orientations[idx]==0:
+                edges_set.add((u,v))
+            else:
+                edges_set.add((v,u))
+        if is_valid_edge_set(n, edges_set):
+            # Print the solution: n and one example edge set
+            print(f"Valid n={n} with edges: {sorted(edges_set)}")
+
+def main():
+    # We'll try for n=3 up to 6 (going higher is very expensive)
+    for n in range(3,7):
+        print(f"Trying n={n}")
+        enumerate_relations(n)
+
+if __name__=="__main__":
+    main()
+```

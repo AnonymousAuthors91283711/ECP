@@ -1,0 +1,72 @@
+[write_program]
+The problem asks for the smallest natural number \( n \) such that \( 123456789 \cdot 10^n \) is divisible by \( 2^{26} \cdot 5^4 \) times some \( k \) coprime to 10. Equivalently, we want the minimal \( n \) so that
+
+\[
+\frac{123456789 \cdot 10^n}{2^{26} \cdot 5^4} = k \text{ with } \gcd(k,10) = 1.
+\]
+
+Since \(10^n = 2^n \cdot 5^n\), the factorization of the numerator is \(123456789 \cdot 2^n \cdot 5^n\). Dividing by \(2^{26} \cdot 5^4\), the remaining factor is
+
+\[
+k = 123456789 \cdot 2^{n-26} \cdot 5^{n-4}.
+\]
+
+For \(k\) to be integer, powers must be nonnegative: \(n \geq 26\) and \(n \geq 4 \Rightarrow n \geq 26.\)
+
+We want \(\gcd(k, 10) = 1\). Since \(k\) is multiplied by powers of 2 and 5, for \(\gcd(k,10) = 1\), it means \(k\) must not contain any factors 2 or 5, i.e., \(k\) itself must be coprime to 10.
+
+Given that, the factor 123456789 may contain factors of 2 or 5; dividing the exact powers out leaves \(k\).
+
+Thus, for each \(n \geq 26\), check if \(k\) is integer and \(\gcd(k, 10) = 1\).
+
+I will write a small program to try \(n\) from 26 upward, factor out powers of 2 and 5 from 123456789, then compute \(k\) and check the gcd condition. The program will print \(n\) and \(k\) whenever the conditions hold and finally print the minimal such \(n\).
+
+```python
+from math import gcd
+
+def factor_out(x, p):
+    # Remove all p factors from x, return (count, remaining)
+    count = 0
+    while x % p == 0:
+        x //= p
+        count += 1
+    return count, x
+
+def main():
+    # factor 123456789 for 2 and 5
+    num = 123456789
+    c2, rem = factor_out(num, 2)
+    c5, rem = factor_out(rem, 5)
+    # rem is the part of num with factors 2 and 5 removed
+    # For k to be coprime to 10, rem must be coprime (no further 2 or 5 factors)
+    # We will vary n >= 26 (since 2^26 factor is needed)
+    # k = rem * 2^(n - 26 + c2) * 5^(n - 4 + c5)
+    # But for gcd(k,10) = 1, the exponents of 2 and 5 in k must be zero.
+    # So to eliminate factors of 2 and 5, (n - 26 + c2) must be zero
+    #   => n = 26 - c2
+    # and (n - 4 + c5) = 0
+    #   => n = 4 - c5
+    # For both to hold, n must satisfy both equations:
+    # There exists n such that n = 26 - c2 = 4 - c5
+    # Else no solution with gcd(k, 10) = 1
+    n_candidates = set([26 - c2, 4 - c5])
+    # Try n >= max(26,4) anyway just in case
+    start = max(26,4)
+    min_n = None
+    for n in range(start, start+20):
+        exp2 = n - 26 + c2
+        exp5 = n - 4 + c5
+        if exp2 == 0 and exp5 == 0:
+            k = rem
+            if gcd(k,10) == 1:
+                print(f"n={n}, k={k}: gcd(k,10)={gcd(k,10)}")
+                if min_n is None or n < min_n:
+                    min_n = n
+    if min_n is not None:
+        print(f"Minimal n with required property: {min_n}")
+    else:
+        print("No suitable n found in range.")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,66 @@
+[write_program]
+The problem asks for the greatest natural number \( n > 0 \) such that \( 2007! \) is divisible by \( 2007^n \). In other words, we want the highest power \( n \) such that \( 2007^n \mid 2007! \).
+
+To solve this, we factorize 2007 first and then find the exponents of its prime factors in \( 2007! \) using Legendre's formula. The limiting factor (minimum over prime factors) will give the highest \( n \).
+
+We'll factor 2007, compute the multiplicity of each prime factor in \( 2007! \), then determine the maximum power \( n \) such that \( 2007^n \) divides \( 2007! \).
+
+The program enumerates divisors for sample composite numbers and directly for 2007 to illustrate the method and eventually print the maximal \( n \).
+
+```python
+from math import floor, sqrt
+
+# Factorization of 2007
+def prime_factors(num):
+    factors = {}
+    n = num
+    # Check divisibility by 2
+    while n % 2 == 0:
+        factors[2] = factors.get(2, 0) + 1
+        n //= 2
+    # Check odd factors
+    f = 3
+    while f * f <= n:
+        while n % f == 0:
+            factors[f] = factors.get(f, 0) + 1
+            n //= f
+        f += 2
+    if n > 1:
+        factors[n] = factors.get(n, 0) + 1
+    return factors
+
+# Legendre's formula to count exponent of p in n!
+def legendre(n, p):
+    count = 0
+    power = p
+    while power <= n:
+        count += n // power
+        power *= p
+    return count
+
+def main():
+    N = 2007
+    print(f"Factorizing {N}...")
+    factors = prime_factors(N)
+    print("Prime factors with exponents:", factors)
+
+    print(f"Computing exponents of prime factors in {N}! ...")
+    exponents = {}
+    for p, exp in factors.items():
+        count = legendre(N, p)
+        exponents[p] = count
+        print(f"Exponent of prime {p} in {N}! is {count}")
+
+    # The maximum power n such that N^n divides N! is min over p of floor(exponent_p / exp_p)
+    candidates = []
+    for p in factors:
+        c = exponents[p] // factors[p]
+        candidates.append(c)
+        print(f"Max power for prime {p}: {c}")
+
+    answer = min(candidates)
+    print("Max n such that 2007^n divides 2007! is", answer)
+
+if __name__ == "__main__":
+    main()
+```

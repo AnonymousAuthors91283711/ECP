@@ -1,0 +1,60 @@
+[write_program]
+The problem involves finding all real-coefficient polynomials \(P\) such that for all nonzero real \(x\),
+\[
+P(x)^2 + P\left(\frac{1}{x}\right)^2 = P\left(x^2\right) \cdot P\left(\frac{1}{x^2}\right).
+\]
+We want to enumerate candidate polynomials \(P\) with small degrees and check if they satisfy the functional equation on some sample \(x\) values. We'll prioritize exact testing using symbolic or rational numbers where possible and print candidate polynomials that satisfy the relation.
+
+```python
+from sympy import symbols, Poly, simplify
+from sympy.abc import x
+from sympy import Rational
+
+# Check polynomial P for the given functional equation on a few sample x values
+def check_poly(coeffs):
+    # Construct polynomial P(x)
+    P = Poly(coeffs, x)
+    pts = [Rational(2), Rational(3), Rational(1,2), Rational(-1), Rational(-2)]
+    for val in pts:
+        if val == 0:
+            continue
+        Px = P.eval(val)
+        P1_over_x = P.eval(1/val)
+        Px2 = P.eval(val**2)
+        P1_over_x2 = P.eval(1/(val**2))
+        lhs = Px**2 + P1_over_x**2
+        rhs = Px2 * P1_over_x2
+        if simplify(lhs - rhs) != 0:
+            return False
+    return True
+
+def poly_str(coeffs):
+    # Return polynomial string for printing
+    terms = []
+    d = len(coeffs)-1
+    for i, c in enumerate(coeffs):
+        if c == 0:
+            continue
+        power = d - i
+        term = (f"{c}" if c != 1 or power==0 else "") + (f"*x**{power}" if power>1 else ("*x" if power==1 else ""))
+        terms.append(term)
+    return " + ".join(terms) if terms else "0"
+
+# We'll try degrees 0 to 3 to keep output short and efficient
+# For each degree n, coefficients c0,..,cn with values in [-2,-1,0,1,2]
+vals = [-2, -1, 0, 1, 2]
+
+print("# Candidate polynomials P satisfying the equation (sample tested):")
+for deg in range(4):
+    # Generate coefficient lists length = deg+1
+    # Skip leading zero coeff for proper degree
+    from itertools import product
+    for coeffs in product(vals, repeat=deg+1):
+        if coeffs[0] == 0:
+            continue
+        if check_poly(coeffs):
+            print(f"P(x) = {poly_str(coeffs)}")
+
+print("# Enumeration complete.")
+```
+This script tests polynomials with degrees 0 to 3 and coefficients in \(\{-2,-1,0,1,2\}\), printing those candidates satisfying the functional equation on sample points. Use this enumeration to conjecture the structure of all such polynomials.

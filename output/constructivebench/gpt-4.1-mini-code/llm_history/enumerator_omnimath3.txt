@@ -1,0 +1,56 @@
+[write_program]
+This problem involves finding positive real coefficients \(a_i\) so that the polynomial \(P(x) = x^{20} + \sum_{i=0}^{19} a_i x^i\) has no real roots, but swapping any two coefficients \(a_i\) and \(a_j\) produces a polynomial with at least one real root.
+
+We will try small sample values for \(a_i\) in a small range, verify the polynomial has no roots, then attempt all index swaps and check if the resulting polynomial has any real roots. We will output such candidates as we find them.
+
+Because degree 20 real-root-freeness check via factoring is complicated, we rely on evaluating the polynomial on many real points and sign changes to guess root existence. This is heuristic but sufficient for enumerating candidates.
+
+```python
+import numpy as np
+
+def poly_vals(coeffs, xs):
+    # Evaluate polynomial with coefficients coeffs on xs
+    # coeffs[i] = coefficient for x^i (degree ascending)
+    return sum(c * xs**i for i, c in enumerate(coeffs))
+
+def has_real_root(coeffs, samples=5000, xmin=-2, xmax=2):
+    xs = np.linspace(xmin, xmax, samples)
+    ys = poly_vals(coeffs, xs)
+    # Check sign changes and zeros
+    signs = np.sign(ys)
+    zero_crossings = np.where(np.diff(signs) != 0)[0]
+    zero_points = np.where(ys == 0)[0]
+    return len(zero_crossings) > 0 or len(zero_points) > 0
+
+def main():
+    deg = 20
+    # We'll try a_i from small integers 1..3 for speed, this is a small search
+    from itertools import product, combinations
+
+    values = [1.0, 2.0, 3.0]
+    for a_tuple in product(values, repeat=deg):
+        coeffs = list(a_tuple)
+        coeffs.append(1.0)  # poly is x^20 + sum a_i x^i, degree ascending order should be a_0..a_19, then x^20 coeff=1 at last index
+        coeffs = coeffs[::-1]  # Reverse to descending order for numpy
+        # Actually for our poly_vals we want ascending order:
+        coeffs = coeffs[::-1]
+        # coeffs is now [a_0, a_1, ..., a_19, 1]
+
+        # Check no real roots for original polynomial
+        if has_real_root(coeffs):
+            continue
+
+        # Check swaps
+        swaps_fail = False
+        for i, j in combinations(range(deg), 2):
+            swapped = list(coeffs)
+            swapped[i], swapped[j] = swapped[j], swapped[i]
+            if not has_real_root(swapped):
+                swaps_fail = True
+                break
+        if not swaps_fail:
+            print("Candidate coefficients a_i:", a_tuple)
+
+if __name__ == "__main__":
+    main()
+```

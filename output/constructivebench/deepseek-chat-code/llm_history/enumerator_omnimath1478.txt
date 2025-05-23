@@ -1,0 +1,66 @@
+[write_program]
+This problem asks to characterize all strictly monotonic real-valued functions `f` for which there exists an involutive function `g` (i.e., g(g(x)) = x) such that f + g is the linear function 2x. We'll write a Python program to enumerate possible candidates for `f` and verify the conditions.
+
+The approach will:
+1. Consider simple function forms (linear, piecewise linear, etc.)
+2. For each candidate `f`, attempt to construct `g` as 2x - f(x)
+3. Verify if `g` is involutive (g(g(x)) = x)
+4. Check strict monotonicity of `f`
+
+```python
+import math
+
+def is_involutive(g, x_values):
+    """Check if g(g(x)) = x for sample x_values"""
+    for x in x_values:
+        try:
+            if not math.isclose(g(g(x)), x, abs_tol=1e-6):
+                return False
+        except:
+            return False  # Handle cases where g might not be defined
+    return True
+
+def check_candidate(f, x_values):
+    """Check if f is strictly monotonic and g = 2x - f(x) is involutive"""
+    # Check strict monotonicity
+    for i in range(1, len(x_values)):
+        if f(x_values[i]) <= f(x_values[i-1]):
+            return False
+    
+    # Define g and check if it's involutive
+    g = lambda x: 2*x - f(x)
+    return is_involutive(g, x_values)
+
+def enumerate_candidates():
+    x_values = [-1, -0.5, 0, 0.5, 1, 1.5, 2]  # Sample points to test
+    
+    # Test linear functions f(x) = a*x + b
+    print("Testing linear functions f(x) = a*x + b:")
+    for a in [0.1, 0.5, 1, 1.5, 2]:
+        b = 0  # Without loss of generality
+        f = lambda x: a*x + b
+        if check_candidate(f, x_values):
+            print(f"Found valid linear function: f(x) = {a}x + {b}")
+
+    # Test piecewise linear functions
+    print("\nTesting piecewise linear functions:")
+    def piecewise_linear(x):
+        return x if x < 1 else 3 - x
+    if check_candidate(piecewise_linear, x_values):
+        print("Found valid piecewise linear function")
+    
+    # Test nonlinear functions
+    print("\nTesting nonlinear functions:")
+    def nonlinear1(x):
+        return x + math.sin(x)
+    if check_candidate(nonlinear1, x_values):
+        print("Found valid nonlinear function: f(x) = x + sin(x)")
+
+    def nonlinear2(x):
+        return x**3 + x
+    if check_candidate(nonlinear2, x_values):
+        print("Found valid nonlinear function: f(x) = x^3 + x")
+
+if __name__ == "__main__":
+    enumerate_candidates()
+```

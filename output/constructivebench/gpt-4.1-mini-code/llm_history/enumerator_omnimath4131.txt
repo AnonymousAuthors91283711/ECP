@@ -1,0 +1,38 @@
+[write_program]
+The problem asks to find the least positive integer \( n \) for which there exists a function \( a : \{0,\ldots,n-1\} \to \mathbb{N} \) with values in \( \{1,\ldots,15\} \) such that the sum of factorials \( \sum_{i=0}^{n-1} (a(i))! \) is congruent to 2001 modulo 10,000.
+
+To assist in conjecturing this least \( n \), the program will enumerate \( n \) starting from 1 and for each \( n \), try all possible vectors \( a \) of length \( n \) where each element is between 1 and 15, compute the sum of factorials modulo 10000, and print any successful matches. To keep computations tractable, the program will terminate early after several solutions or after reaching a maximum \( n \) threshold.
+
+We use memoization of factorials modulo 10,000 to speed up calculations.
+
+```python
+from math import factorial
+from itertools import product
+
+# Precompute factorials mod 10000 for 1..15
+fact_mod = [factorial(i) % 10000 for i in range(16)]
+target = 2001
+max_n = 5  # Limit n to keep runtime reasonable
+max_print = 10 # limit number of outputs printed
+
+found = 0
+print("Enumerating possible n and sequences a with sum of factorials ≡ 2001 mod 10000")
+for n in range(1, max_n + 1):
+    print(f"Trying n = {n}")
+    # product over values in [1..15]^n
+    # For large n, this explodes combinatorially, so max_n limited
+    for a in product(range(1,16), repeat=n):
+        s = sum(fact_mod[x] for x in a) % 10000
+        if s == target:
+            print(f"n={n}, a={a} sum ≡ {target} mod 10000")
+            found += 1
+            if found >= max_print:
+                break
+    if found >= max_print:
+        break
+if found == 0:
+    print("No solutions found up to n =", max_n)
+else:
+    print(f"Found {found} solutions up to n = {n}. Likely candidates for minimal n.")
+```
+

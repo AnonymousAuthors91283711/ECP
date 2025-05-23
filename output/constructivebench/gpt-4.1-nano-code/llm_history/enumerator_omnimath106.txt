@@ -1,0 +1,57 @@
+[write_program]
+The problem appears to involve finding the value of a certain function defined over matrices, where the function involves sums of powers, roots, and ratios. We want to determine the maximum value of the specified set, which depends on parameters `m`, `n`, `r`, and `s`. Since exact algebraic derivation is complex, an effective approach is to test small cases with particular parameters to observe the behavior and conjecture the maximal value.
+
+Given the structure: the set involves matrices with non-negative entries, not all zero, and a certain ratio of sums of powers, the extremum probably occurs under symmetric conditions, perhaps when all matrix entries are equal—common in such optimization problems. For small `m`, `n`, and sample values of `r`, `s`, we can enumerate potential maximums by iterating over candidate matrices with simple entries.
+
+Here is a code sketch that:
+- Selects small `m`, `n`, `r`, and `s`.
+- Constructs matrices with entries 0 or 1 (testing extremal configurations).
+- Calculates the set's value and tracks the maximum.
+- Prints each candidate value as it is found.
+
+```python
+import itertools
+import math
+
+def evaluate(m, n, r, s, matrix):
+    # Ensure matrix has non-negative entries, not all zero
+    if all(all(a >= 0 for a in row) for row in matrix) and any(any(a > 0 for a in row) for row in matrix):
+        sum_a_j_s = [sum((matrix[i][j]) ** s for i in range(m)) for j in range(n)]
+        numerator_sum = sum((sum_a_j_s[j]) ** (r / s) for j in range(n))
+        numerator = numerator_sum ** (1 / r)
+
+        sum_a_i_r = [sum((matrix[i][j]) ** r for j in range(n)) for i in range(m)]
+        denominator_sum = sum((sum_a_i_r[i]) ** (s / r) for i in range(m))
+        denominator = denominator_sum ** (1 / s)
+
+        return numerator / denominator
+    else:
+        return None
+
+# Small sample parameters for enumeration
+m_values = [2]
+n_values = [2]
+r_values = [1.5, 2]
+s_values = [2, 3]
+
+max_value = -math.inf
+max_config = None
+
+for m in m_values:
+    for n in n_values:
+        for r in r_values:
+            for s in s_values:
+                # Generate candidate matrices with entries 0 or 1
+                for entries in itertools.product([0,1], repeat=m*n):
+                    matrix = [list(entries[i*n:(i+1)*n]) for i in range(m)]
+                    val = evaluate(m, n, r, s, matrix)
+                    if val is not None:
+                        print(f"m={m}, n={n}, r={r}, s={s}, matrix={matrix}, value={val}")
+                        if val > max_value:
+                            max_value = val
+                            max_config = (matrix, m, n, r, s)
+# Printing the highest value found
+print(f"Maximum value = {max_value}")
+```
+
+This script enumerates simple matrices for small parameters, calculates the function, and streams the results immediately. It helps form conjectures—possibly toward symmetric matrices with entries 1—guiding further analysis.

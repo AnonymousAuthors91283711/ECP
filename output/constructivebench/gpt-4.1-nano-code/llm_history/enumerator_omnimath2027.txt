@@ -1,0 +1,85 @@
+[write_program]
+This problem involves a polynomial function \( p(x) = x^2 - x + 1 \) and the condition that applying \( p \) four times yields \( p^{(4)}(\alpha) = \alpha \). We need to compute the product:
+
+\[
+(p(\alpha) - 1) \times p(\alpha) \times p(p(\alpha)) \times p^{(4)}(\alpha)
+\]
+
+given that \( p^{(4)}(\alpha) = \alpha \). The core of the problem is to find possible values of \( p(\alpha) \) and \( p(p(\alpha)) \) under this cyclicity condition.
+
+Since \( p \) is quadratic, the iteration might produce a cycle of small length. We will:
+
+- Pick simple candidate values for \( \alpha \) that satisfy the cycle condition.
+- For each, compute the four terms.
+- Multiply them to find possible answers.
+- Use symbolic computation to find potential solutions.
+
+Note that the key is to analyze \( p \) iteratively, find \( p^{(4)}(\alpha) = \alpha \), and evaluate the product for those values.
+
+```python
+# The code attempts to find all alpha satisfying p^{(4)}(alpha) = alpha.
+# Then, for each, computes the product (p(alpha) - 1)*p(alpha)*p(p(alpha))*alpha.
+# Since p is quadratic, look for cycles of length dividing 4, starting from fixed points and cycles of length 2 or 4.
+import sympy as sp
+
+x = sp.symbols('x')
+p = lambda t: t**2 - t + 1
+
+# Find fixed points: solutions to p(alpha) = alpha
+fixed_pts = sp.solve(p(x) - x, x)
+
+# Find 2-cycles: p(p(alpha)) = alpha for alpha not fixed points
+# For cycles of length 4, check p^{(4)}(alpha) = alpha
+
+# gather solutions
+answers = []
+
+# Check fixed points
+for alpha in fixed_pts:
+    p_alpha = p(alpha)
+    p_p_alpha = p(p_alpha)
+    p4_alpha = p(p_p_alpha)
+    if sp.simplify(p4_alpha - alpha) == 0:
+        product = (p_alpha - 1) * p_alpha * p_p_alpha * alpha
+        print(f"Fixed point alpha={alpha}, product={product}")
+        answers.append(sp.N(product))
+
+# Check 2-cycle solutions: p(p(alpha)) = alpha, alpha not fixed points
+# For each candidate, verify p^{(4)}(alpha) = alpha
+# Because p is quadratic, possible cycles of length 2 can be tested numerically
+# Substituting numerical guesses:
+for guess in [0.5, 1.5, -0.5, 2]:
+    alpha = guess
+    # iterate p four times
+    val = alpha
+    for _ in range(4):
+        val = p(val)
+    if abs(val - alpha) < 1e-6:
+        p_alpha = p(alpha)
+        p_p_alpha = p(p_alpha)
+        product = (p_alpha - 1) * p_alpha * p_p_alpha * alpha
+        print(f"2-cycle approx alpha={alpha}, product={product}")
+        answers.append(sp.N(product))
+
+# Check for cycles of length 4 by sampling:
+# For simplicity, test some initial values and see if they lead to a 4-cycle
+# (more systematic approach can be used, but for illustration, sample points)
+test_points = [0, 0.5, 1, -1, 2]
+for point in test_points:
+    alpha = point
+    orbit = []
+    for _ in range(4):
+        alpha = p(alpha)
+        orbit.append(alpha)
+    # check if after four iterations, we return to start
+    if abs(alpha - orbit[0]) < 1e-6:
+        p_alpha = orbit[0]
+        p_p_alpha = orbit[1]
+        product = (p_alpha - 1) * p_alpha * p_p_alpha * alpha
+        print(f"4-cycle starting at {point}, product={product}")
+        answers.append(sp.N(product))
+
+# Print all found answers
+for ans in answers:
+    print(f"Possible answer: {ans}")
+```

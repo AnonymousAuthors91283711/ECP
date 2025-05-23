@@ -1,0 +1,79 @@
+[write_program]
+The problem seems to involve a function olympiadbench2904_answer from pairs of rational numbers to a rational number, with a specific theorem stating that for inputs A=1/9 and B=1/25, the function value is 3750. We don't know the function definition.
+
+I will write a Python program that tries small rational values near 1/9 and 1/25, evaluating some candidate expressions to potentially guess the formula or generate candidates and check whether it equals 3750 for A=1/9 and B=1/25.
+
+Since the original problem and function are not defined, I will set the program to enumerate pairs of rationals (a,b) near (1/9, 1/25), compute some rational expressions, and print those evaluations. This might help conjecture the formula and verify if 3750 is a special value.
+
+I'll generate pairs a = p/q and b = r/s with small denominators q,s <= 10, and compute some forms like (1/a)/(1/b), or a formula involving products and inverses.
+
+```python
+from fractions import Fraction
+
+# Enumerate small rationals near 1/9 and 1/25:
+target_A = Fraction(1,9)
+target_B = Fraction(1,25)
+
+# We'll try nearby fractions q in 7..11 denominators
+denom_range = range(7,12)
+
+print("Enumerate rational pairs (A,B) near (1/9,1/25) and compute candidates:")
+
+def candidates(a,b):
+    # Generate candidate expressions that are simple rational functions of a,b
+    # e.g. product inverses, sum inverses, scaled versions
+    exprs = []
+    # just for sample: (1/a - 1/b), (1/(a*b)), (a*b), (a+b), (a/(b)), (b/(a))
+    try:
+        exprs.append(("1/a - 1/b", 1/a - 1/b))
+    except ZeroDivisionError:
+        pass
+    try:
+        exprs.append(("1/(a*b)", 1/(a*b)))
+    except ZeroDivisionError:
+        pass
+    exprs.append(("a*b", a*b))
+    exprs.append(("a+b", a+b))
+    try:
+        exprs.append(("a/b", a/b))
+    except ZeroDivisionError:
+        pass
+    try:
+        exprs.append(("b/a", b/a))
+    except ZeroDivisionError:
+        pass
+    # try squared difference reciprocal
+    try:
+        val = 1/((a - b)**2)
+        exprs.append(("1/(a-b)^2", val))
+    except ZeroDivisionError:
+        pass
+    return exprs
+
+threshold = 4000
+found_vals = set()
+
+for qA in denom_range:
+    for pA in range(1, qA):
+        a = Fraction(pA, qA)
+        for qB in denom_range:
+            for pB in range(1, qB):
+                b = Fraction(pB, qB)
+                # only values near target to limit output:
+                if abs(a - target_A) <= Fraction(1,20) and abs(b - target_B) <= Fraction(1,30):
+                    for name, val in candidates(a,b):
+                        # print only values near 3750 to focus
+                        if isinstance(val, Fraction) and val.denominator != 0:
+                            # print exact fractions and decimal approx
+                            dec = float(val)
+                            if 0 < dec < threshold:
+                                # Avoid too many outputs: only print values near 3750 ± 2000
+                                if abs(dec - 3750) < 2000:
+                                    key = (val, name)
+                                    if key not in found_vals:
+                                        found_vals.add(key)
+                                        print(f"A={a} B={b} Expr={name} Value={val} ≈ {dec:.1f}")
+
+print("Candidates near target value 3750 identified.")
+```
+

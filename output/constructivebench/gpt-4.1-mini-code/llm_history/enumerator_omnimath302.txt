@@ -1,0 +1,75 @@
+[write_program]
+The problem involves finding the greatest integer \( m \) such that for a given \( n > 1 \), there exists a family \( T \) of \( 2n \) subsets of a set \( S_m \) with \( |S_m| = m \cdot n \), each subset of size \( m \), with pairwise intersections of size at most 1, and each element of \( S_m \) belonging to exactly two subsets from \( T \).
+
+To explore this, I'll enumerate small values of \( n \) (starting from 2) and try values of \( m \) up to some reasonable bound (e.g. 5), checking the conditions directly by combinatorial enumeration of possible subsets of the appropriate set. I'll print the feasible \( m \) for each \( n \).
+
+This brute-force approach will help conjecture the form of the answer function \( \mathrm{omnimath302\_answer}(n) \).
+
+```python
+from itertools import combinations
+
+def satisfies_conditions(n, m):
+    # We want:
+    # - S of size m*n
+    # - T: collection of 2n subsets of S, each of size m
+    # - |t1 ∩ t2| <= 1 for distinct t1, t2 in T
+    # - each element in S is in exactly 2 subsets of T
+    
+    S = set(range(m*n))
+    # All m-subsets of S
+    m_subsets = list(combinations(S, m))
+    # We need to find 2n subsets from m_subsets satisfying conditions.
+    
+    # Try all 2n-subset families from m_subsets.
+    # To reduce search space, filter subsets sharing too much intersection will be handled inside checks.
+    from itertools import combinations as comb2
+
+    # Early pruning: minimum number of subsets needed to cover each element twice:
+    # Each element belongs to exactly 2 subsets,
+    # total subsets = 2n,
+    # total elements = m*n,
+    # total element memberships = m * 2n (each subset has m elements)
+    # but total element memberships = 2 * (m*n) (each element counted twice)
+    # Thus count matches: m*2n == 2*m*n, true always.
+    # So no info gained here.
+
+    for T_candidate in comb2(m_subsets, 2*n):
+        # Check pairwise intersections <= 1
+        valid = True
+        Tsets = [set(t) for t in T_candidate]
+        for i in range(len(Tsets)):
+            for j in range(i+1, len(Tsets)):
+                if len(Tsets[i].intersection(Tsets[j])) > 1:
+                    valid = False
+                    break
+            if not valid:
+                break
+        if not valid:
+            continue
+        # Check each element in S appears in exactly two sets in T
+        count_per_element = [0]*(m*n)
+        for tset in Tsets:
+            for x in tset:
+                count_per_element[x] +=1
+        if all(c==2 for c in count_per_element):
+            return True
+    return False
+
+def main():
+    max_n = 4  # small n samples
+    max_m = 5  # reasonable upper bound for m for enumeration
+    for n in range(2, max_n+1):
+        print(f"n={n}")
+        found = []
+        for m in range(1, max_m+1):
+            if satisfies_conditions(n,m):
+                print(f"  feasible m={m}")
+                found.append(m)
+        if found:
+            print(f"  greatest m up to {max_m}: {max(found)}")
+        else:
+            print("  no feasible m found up to limit.")
+
+if __name__ == "__main__":
+    main()
+```

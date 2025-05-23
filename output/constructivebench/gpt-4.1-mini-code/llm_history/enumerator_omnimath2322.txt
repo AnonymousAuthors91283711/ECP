@@ -1,0 +1,75 @@
+[write_program]
+The problem asks to find the least integer \( n > 101 \) such that the rightmost nonzero digit of \( n! \) equals that of \( 101! \).
+
+We can enumerate \( n > 101 \) by computing the rightmost nonzero digit of \( n! \) and compare it with that of \( 101! \).
+
+We will:
+- Compute the rightmost nonzero digit of \( 101! \).
+- For \( n = 102, 103, \ldots \), compute similarly and print matching candidates.
+- Print each candidate when found, and stop after some limit or after enumerating to a certain number (e.g., 150) to keep output short.
+- At the end, print the minimal such \( n \).
+
+The main difficulty is efficient computation of rightmost nonzero digit in factorial. A known approach is to strip trailing zeros by repeatedly dividing by 10 (remove factors of 2 and 5), and then modulo 10.
+
+We will use a method optimized to directly compute the rightmost nonzero digit using known techniques (like Legendre's formula for counting factors of 5, and adjusting for factors of 2) to compute rightmost nonzero digit for each factorial from 101 upwards without recomputing the entire factorial.
+
+```python
+# Compute the rightmost nonzero digit of n! efficiently
+def rightmost_nonzero_digit_factorial(n):
+    # Count factors of 5 in n!
+    def count_factors(n, p):
+        count = 0
+        while n > 0:
+            n //= p
+            count += n
+        return count
+    # Remove 5s and corresponding 2s to remove trailing zeros
+    # Compute product of numbers not divisible by 5 modulo 10, adjusting etc.
+    # Use a recursive approach or precompute for efficiency
+    # Known approach: https://math.stackexchange.com/questions/281854/how-to-find-the-last-non-zero-digit-of-n
+    def last_nonzero_digit(n):
+        if n < 10:
+            lookup = [1,1,2,6,4,2,2,4,2,8]
+            return lookup[n]
+        else:
+            q, r = divmod(n,5)
+            last = (last_nonzero_digit(q)*pow(last_nonzero_digit(4), q, 10)*last_nonzero_digit(r)) % 10
+            return last
+    # Multiply by 2^(count_2 - count_5) mod 10
+    count_5 = count_factors(n,5)
+    count_2 = 0
+    x = n
+    while x > 0:
+        count_2 += x//2
+        x//=2
+    exp = count_2 - count_5
+    # pow(2, exp, 10) cycle length is 4: 2^1=2,2^2=4,2^3=8,2^4=6 (mod 10)
+    def pow2mod10(e):
+        if e == 0:
+            return 1
+        r = e % 4
+        if r == 0: r = 4
+        lookup = [6,2,4,8]
+        return lookup[r-1]
+    r = last_nonzero_digit(n) * pow2mod10(exp) % 10
+    return r
+
+def main():
+    target_n = 101
+    target_digit = rightmost_nonzero_digit_factorial(target_n)
+    print(f"rightmost_nonzero_digit_factorial({target_n}) = {target_digit}")
+    candidates = []
+    # Search from 102 upwards
+    for n in range(target_n+1, target_n+51):
+        d = rightmost_nonzero_digit_factorial(n)
+        if d == target_digit:
+            print(f"n={n}, rightmost_nonzero_digit_factorial={d}")
+            candidates.append(n)
+    if candidates:
+        print("Minimal n >", target_n, "with same rightmost nonzero digit:", min(candidates))
+    else:
+        print("No n >", target_n, "within range found with same rightmost nonzero digit.")
+
+if __name__ == "__main__":
+    main()
+```

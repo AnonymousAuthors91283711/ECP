@@ -1,0 +1,55 @@
+[write_program]
+This problem involves finding the greatest number \( k \) of teams (sets) with vertex-color assignments such that teams are subsets of a set of colors, teams are bounded in size by \( t \), and there is an injection selecting exactly one vertex color from each team with all colors distinct.
+
+I'll enumerate small sample cases with different \( n \) (number of colors) and \( t \) (team size limit). For each, I'll consider all subsets of colors for teams, find all families of teams satisfying the conditions, and attempt to find the largest subset \( S \) with a distinct-color choice function \( f \). To maximize efficiency, I'll limit \( n \) and \( t \) to small numbers (up to 4) and print findings incrementally.
+
+```python
+from itertools import combinations, chain
+from collections import defaultdict
+
+def powerset(s):
+    "Return all subsets of set s."
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+def has_distinct_choice(teams):
+    # Check if there exists an assignment picking one color from each team with all choices distinct.
+    # Use backtracking to find such injection f: team -> color.
+    assigned = set()
+    def backtrack(i):
+        if i == len(teams):
+            return True
+        for c in teams[i]:
+            if c not in assigned:
+                assigned.add(c)
+                if backtrack(i+1):
+                    return True
+                assigned.remove(c)
+        return False
+    return backtrack(0)
+
+def enumerate_answers():
+    max_n = 4  # colors count
+    max_t = 4  # max team size
+    for n in range(1, max_n+1):
+        colors = tuple(range(n))
+        for t in range(1, min(max_t, n)+1):
+            all_teams = [set(c) for c in combinations(colors, t)]
+            best_k = 0
+            # Enumerate subsets of teams, check constraints and find max k with distinct choice function
+            # We do this in ascending size, print candidates when found
+            print(f"n={n}, t={t}")
+            for k in range(1, len(all_teams)+1):
+                candidates_found = False
+                for teams_subset in combinations(all_teams, k):
+                    # Check team size constraint (already all t-sized)
+                    # Teams are subset of colors by design
+                    if has_distinct_choice(teams_subset):
+                        print(f"k={k}, teams={teams_subset}")
+                        candidates_found = True
+                if candidates_found:
+                    best_k = k
+            print(f"omnimath72_answer({n}, {t}) >= {best_k}\n")
+
+if __name__ == "__main__":
+    enumerate_answers()
+```

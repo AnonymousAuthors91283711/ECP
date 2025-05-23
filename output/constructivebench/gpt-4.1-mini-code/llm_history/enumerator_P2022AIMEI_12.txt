@@ -1,0 +1,53 @@
+[write_program]
+This problem involves summing over all pairs of subsets of {0,...,n-1} that have equal size, and accumulating the size of their intersection. For large n (2021, 2022), direct enumeration is impossible. Instead, I will enumerate for small n to detect patterns, print partial results for those small n, and possibly conjecture a formula.
+
+The formula involves summing |A ∩ B| over all pairs (A,B) of subsets of size k for k=0..n. Using combinatorics:
+
+- Number of pairs (A,B) with |A|=|B|=k is C(n,k)^2.
+- For fixed k, the total sum of |A∩B| over all such pairs is k * C(n,k)^2 * (expected number of elements in intersection).
+
+Wait, better is to count it more directly:
+
+Since we have symmetry, maybe sum over k=0..n:
+
+S(n) = ∑_{k=0}^n ∑_{|A|=k} ∑_{|B|=k} |A∩B|
+
+We can try to express S(n) in closed form. Alternatively, computing S(n) for small n and comparing values may help find a direct formula.
+
+I will write a program computing S(n) directly for n up to 6, print the values, then compute gcd(S(2022), S(2021)) approximately or symbolically.
+
+```python
+from math import comb
+from math import gcd
+
+# Compute S(n) = sum over all pairs of subsets A,B of {0,...,n-1} with |A|=|B|, of |A ∩ B|.
+
+def S(n):
+    total = 0
+    for k in range(n+1):  # size of A and B
+        cnk = comb(n, k)
+        # sum over all pairs (A,B) with |A|=|B|=k
+        # For fixed k, the number of pairs (A,B) is cnk^2
+        # The sum of |A ∩ B| over all such pairs can be computed as:
+        # For each element in the n elements, count how many pairs (A,B) of size k both contain that element.
+        # Number of subsets of size k containing a particular element is comb(n-1,k-1).
+        # So number of pairs (A,B) containing the element is comb(n-1,k-1)^2
+        # Since each element contributes that count to |A∩B|, total intersection summed is:
+        intersection_sum = n * comb(n-1, k-1)**2 if k > 0 else 0
+        total += intersection_sum
+    return total
+
+# Print S(n) for small n to detect pattern
+for n in range(7):
+    val = S(n)
+    print(f"S({n}) = {val}")
+
+# Now compute gcd and reduced sum for 2022 and 2021
+p = S(2022)
+q = S(2021)
+d = gcd(p, q)
+print(f"p = S(2022) = {p}")
+print(f"q = S(2021) = {q}")
+print(f"gcd(p, q) = {d}")
+print(f"(p//d + q//d) % 1000 = {(p//d + q//d) % 1000}")
+```

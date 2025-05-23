@@ -1,0 +1,39 @@
+[write_program]
+The problem asks for the sum over all complex solutions \( z \) satisfying \( \exists y \) such that \( z + y = 1 \) and \( z^{20} + y^{20} = 20 \), of the real part of \( z^2 + (1-y)^2 \). Because \( y = 1 - z \), the problem reduces to solving for \( z \) satisfying \( z^{20} + (1-z)^{20} = 20 \), then summing the real part of \( z^2 + (1-z)^2 \) over all solutions.
+
+We observe the symmetry: substituting \( y = 1 - z \) simplifies the problem. The key is to find all solutions \( z \) of \( z^{20} + (1-z)^{20} = 20 \), for each such \( z \), compute \( \operatorname{Re}(z^2 + (1-z)^2) \), and sum these up.
+
+Since the polynomial \( z^{20} + (1-z)^{20} = 20 \) is symmetric regarding roots, especially with the symmetry \( z \to 1 - z \), solutions often come in pairs \( z \) and \( 1 - z \).
+
+Let's code this by sampling candidate solutions for \( z \) on the unit circle at roots of unity, check the equation, store solutions, and sum the required expression.
+
+```python
+import numpy as np
+
+# Number of sample points on the unit circle
+num_samples = 500
+
+# Using roots of unity sampling to find solutions approximately
+candidate_z = []
+for k in range(num_samples):
+    theta = 2 * np.pi * k / num_samples
+    z = np.cos(theta) + 1j * np.sin(theta)
+    val = z**20 + (1 - z)**20
+    # Check if close to 20 (with tolerance)
+    if np.abs(val - 20) < 0.5:
+        candidate_z.append(z)
+
+# Remove duplicates considering symmetry
+solutions = []
+for z in candidate_z:
+    if not any(np.isclose(z, s, atol=1e-3) or np.isclose(z, 1 - s, atol=1e-3) for s in solutions):
+        solutions.append(z)
+
+total_sum = 0.0
+for z in solutions:
+    val = z**2 + (1 - z)**2
+    total_sum += val.real
+    print("Solution z:", z, "Re part of z^2 + (1 - z)^2:", val.real)
+
+print("Sum over all solutions:", total_sum)
+```

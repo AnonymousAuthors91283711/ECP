@@ -1,0 +1,91 @@
+[write_program]
+The problem describes a functional equation involving real functions \( f : \mathbb{R} \to \mathbb{R} \) satisfying
+\[ f(\lfloor x \rfloor \cdot y) = f(x) \cdot \lfloor f(y) \rfloor \]
+for all real \( x, y \). The goal is to characterize all such functions \( f \).
+
+To assist in conjecturing and understanding possible solutions, the Python program below:
+- Samples a range of simple functions \( f \).
+- Tests the equation for a grid of sample points \( x, y \).
+- Prints functions that satisfy the equation for these samples.
+
+Due to infinite domain, this enumeration and testing approach can only generate candidate solutions for further theoretical investigation. This approach prioritizes exact expressions and simple function forms, like constant, identity, scaling, and integer floor/ceiling modifications.
+
+```python
+import math
+
+# Candidate functions to test, represented as (name, function)
+# We'll try constants, identity, integer floor, and scaled versions
+def const_c(c):
+    return lambda x: c
+
+def identity(x):
+    return x
+
+def floor_fn(x):
+    return math.floor(x)
+
+def scaled_identity(a):
+    return lambda x: a * x
+
+def scaled_floor(a):
+    return lambda x: a * math.floor(x)
+
+# Points to test: small integers and rationals
+test_x = [-2.5, -1, 0, 1, 2.3]
+test_y = [-1.7, 0, 1, 2.5]
+
+# Tolerance for approximate equality to handle numerical issues
+tol = 1e-10
+
+# Functions to test
+candidates = [
+    ("const_0", const_c(0)),
+    ("const_1", const_c(1)),
+    ("identity", identity),
+    ("floor", floor_fn),
+    ("scaled_identity_2", scaled_identity(2)),
+    ("scaled_identity_0.5", scaled_identity(0.5)),
+    ("scaled_floor_2", scaled_floor(2)),
+]
+
+def check_equation(f):
+    # Check equation for all sample points
+    # f(⌊x⌋ * y) == f(x) * ⌊ f(y) ⌋
+    for x in test_x:
+        for y in test_y:
+            lhs = f(math.floor(x) * y)
+            fy = f(y)
+            rhs = f(x) * math.floor(fy)
+            # Avoid type errors by rounding floats
+            if abs(lhs - rhs) > tol:
+                return False
+    return True
+
+print("Testing candidate functions for f(⌊x⌋*y) = f(x)*⌊f(y)⌋")
+
+for name, f in candidates:
+    if check_equation(f):
+        print(f"Candidate function passes: {name}")
+    else:
+        print(f"Candidate function fails: {name}")
+
+# Also try integer translations f(x) = floor(x)+c for c in small integers
+for c in range(-1, 2):
+    def f(x, c=c): 
+        return math.floor(x) + c
+    # Check approximate equality
+    passed = True
+    for x in test_x:
+        for y in test_y:
+            lhs = f(math.floor(x)*y)
+            fy = f(y)
+            rhs = f(x) * math.floor(fy)
+            if abs(lhs - rhs) > tol:
+                passed = False
+                break
+        if not passed:
+            break
+    if passed:
+        print(f"Candidate function passes: floor(x)+{c}")
+```
+This enumerator will stream candidate functions consistent with the equation on small test points, aiding the identification of functional forms to rigorously prove or disprove.

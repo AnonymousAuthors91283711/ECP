@@ -1,0 +1,64 @@
+[write_program]
+The problem involves finding natural numbers \(n\) such that for every \(m\) coprime to \(n\), there exists a permutation \(\pi\) of \(\{0, 1, \ldots, n-1\}\) where \(\pi^2(k) \equiv m k \pmod n\). This is a deep number-theoretic property related to permutation representations modulo \(n\).
+
+To investigate, I will:
+
+- Enumerate small values of \(n\),
+- For each \(n\), check all \(m\) with \(\gcd(m,n)=1\),
+- For each \(m\), attempt to find a permutation \(\pi\) of \(\{0, \ldots, n-1\}\) such that \(\pi(\pi(k)) \equiv m k \pmod n\) for all \(k\).
+
+Since permutations of size \(n\) can be large, I will focus on verifying the functional condition \(\pi^2(k) = m k \pmod n\) via the order and cycle structure. Importantly, \(\pi^2\) corresponds to the function "multiplication by \(m\)" modulo \(n\).
+
+A key observation: applying \(\pi\) twice corresponds to \(m\) times the identity modulo \(n\). So \(\pi\) is effectively a "square root" of the multiplication-by-\(m\) permutation.
+
+I will:
+
+- For each \(n\), verify existence of such a \(\pi\) for all coprime \(m\),
+- Print candidate \(n\) values that satisfy the condition.
+
+This should suggest which \(n\) are in `omnimath3264_answer`.
+
+```python
+from math import gcd
+from itertools import permutations
+
+def is_valid_pi(pi, m, n):
+    # Check if pi^2(k) ≡ m*k mod n for all k
+    for k in range(n):
+        first = pi[k]
+        second = pi[first]
+        if second != (m * k) % n:
+            return False
+    return True
+
+def check_n(n):
+    # Get all units modulo n
+    units = [m for m in range(1, n) if gcd(m, n) == 1]
+    # For each unit m, try to find a pi s.t. pi^2(k) = m*k mod n
+    for m in units:
+        # Try permutations of range(n)
+        # Limit n<=7 for feasibility in this brute force approach
+        found = False
+        for pi in permutations(range(n)):
+            if is_valid_pi(pi, m, n):
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+def main():
+    print("Testing n for the property:")
+    for n in range(1, 8):  # limit for computation feasibility
+        if n == 1:
+            print(f"n={n}, trivially true")
+            continue
+        res = check_n(n)
+        if res:
+            print(f"n={n} satisfies the condition")
+        else:
+            print(f"n={n} does NOT satisfy the condition")
+
+if __name__ == "__main__":
+    main()
+```

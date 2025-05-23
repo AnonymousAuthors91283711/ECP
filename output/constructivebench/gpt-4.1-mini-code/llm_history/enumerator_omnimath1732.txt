@@ -1,0 +1,91 @@
+[write_program]
+The problem is to find all integer triples \((a,b,c)\) such that the set \(\left\{\frac{a + b}{2} + c, \frac{a + c}{2} + b, \frac{b + c}{2} + a \right\} = \{42, 13, 37\}\).
+
+We can rewrite the three expressions as:
+- \(x_1 = \frac{a+b}{2} + c = \frac{a+b+2c}{2}\)
+- \(x_2 = \frac{a+c}{2} + b = \frac{a+2b+c}{2}\)
+- \(x_3 = \frac{b+c}{2} + a = \frac{2a+b+c}{2}\)
+
+The problem reduces to finding integer \((a,b,c)\) such that the set \(\{x_1,x_2,x_3\} = \{42,13,37\}\) (as sets, order does not matter).
+
+We want to enumerate all integer solutions \((a,b,c)\).
+
+Approach:
+- Since the \(x_i\) depend linearly on \(a,b,c\), and each \(x_i\) is half an integer, \(a+b+2c\), etc. must be even for \(x_i\) to be integer.
+- Enumerate all permutations of \(\{42,13,37\}\) assigned to \((x_1,x_2,x_3)\).
+- For each permutation, write down equations and solve for \(a,b,c\). Since \(a,b,c\) integer, solutions must satisfy divisibility constraints.
+- We expect a finite number of solutions.
+
+The program will enumerate all such integer triples \((a,b,c)\) yielding the set \(\{42,13,37\}\) in any order.
+
+```python
+from itertools import permutations
+
+target_set = {42, 13, 37}
+
+# For each permutation of target_set assigned to (x1,x2,x3)
+for vals in permutations(target_set, 3):
+    x1, x2, x3 = vals
+    # Given
+    # x1 = (a + b + 2c)/2
+    # x2 = (a + 2b + c)/2
+    # x3 = (2a + b + c)/2
+    # Solve for a,b,c:
+    # Multiply both sides by 2:
+    # a + b + 2c = 2*x1
+    # a + 2b + c = 2*x2
+    # 2a + b + c = 2*x3
+
+    # System:
+    # a +  b + 2c = 2*x1
+    # a + 2b +  c = 2*x2
+    # 2a+  b +  c = 2*x3
+
+    # Solve the system:
+    # From eq1: a = 2*x1 - b - 2c
+    # Substitute into eq2:
+    # (2*x1 - b - 2c) + 2b + c = 2*x2
+    # 2*x1 - b - 2c + 2b + c = 2*x2
+    # 2*x1 + b - c = 2*x2
+    # => b - c = 2*x2 - 2*x1  ... (A)
+    #
+    # Substitute a into eq3:
+    # 2*(2*x1 - b - 2c) + b + c = 2*x3
+    # 4*x1 - 2b - 4c + b + c = 2*x3
+    # 4*x1 - b - 3c = 2*x3
+    # => -b - 3c = 2*x3 - 4*x1
+    # => b + 3c = 4*x1 - 2*x3  ... (B)
+    #
+    # From (A) and (B):
+    # b - c = d1 = 2*x2 - 2*x1
+    # b + 3c = d2 = 4*x1 - 2*x3
+    #
+    # Add:
+    # 2b + 2c = d1 + d2
+    # => b + c = (d1 + d2)/2
+    #
+    # Subtract (B - A):
+    # (b + 3c) - (b - c) = d2 - d1
+    # 4c = d2 - d1 => c = (d2 - d1)/4
+    #
+    # Then b = c + d1
+
+    d1 = 2*x2 - 2*x1
+    d2 = 4*x1 - 2*x3
+
+    # Check c integer:
+    if (d2 - d1) % 4 != 0:
+        continue
+    c = (d2 - d1)//4
+
+    b = c + d1
+
+    # Now a = 2*x1 - b - 2c
+    a = 2*x1 - b - 2*c
+
+    # Check integrality is guaranteed
+    # Verify that the set {x1,x2,x3} matches target_set
+    xs = {(a + b)//2 + c, (a + c)//2 + b, (b + c)//2 + a}
+    if xs == target_set:
+        print(f"a={a}, b={b}, c={c}, x-values={vals}")
+```

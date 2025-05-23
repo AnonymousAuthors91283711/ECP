@@ -1,0 +1,63 @@
+[write_program]
+The problem involves finding the greatest natural number \( n \in [1,6] \) such that for every function \( \text{bob\_moves}: \mathbb{N} \to [1,6] \), there exists a function \( \text{alex\_moves}: \mathbb{N} \to [1,6] \) and an index \( m \in \mathbb{N} \) satisfying certain sum constraints related to the number 30.
+
+We will attempt to enumerate possible \( n \) values from 1 to 6 and try to experimentally determine which values satisfy the property using a brute-force approach on small move sequences to get insight and conjecture the greatest \( n \).
+
+```python
+# enumerator.py
+# Enumerate n in [1..6], simulate some bob_moves and try to find alex_moves to satisfy the conditions
+# Print each n and whether we found satisfying moves for some samples.
+
+from itertools import product
+
+def check_n(n, max_moves=4):
+    # bob_moves: map N -> [1..6], we try all bob_moves sequences of length up to max_moves
+    # alex_moves similarly. We check if for all bob_moves sequences there exists alex_moves and m 
+    # with sums matching the conditions
+    values = list(range(1,7))
+    # Generate all bob_moves sequences of length up to max_moves
+    # For feasibility limit max_moves=3 to keep output compact
+    for length in range(1, max_moves+1):
+        bob_sequences = product(values, repeat=length)
+        for bseq in bob_sequences:
+            found_alex = False
+            # Try all alex_sequences of same length or one longer (since m can be length or length-1)
+            for m in range(length):
+                # m is index for summation, so alex_moves needs m+1 moves
+                max_a_len = m+1
+                alex_sequences = product(values, repeat=max_a_len)
+                for aseq in alex_sequences:
+                    sum_bob_alex = sum(bseq[:m]) + sum(aseq[:m])
+                    total_sum = sum_bob_alex + n
+                    cond1 = (total_sum == 30)
+                    cond2 = (total_sum + aseq[m] == 30 if m < len(aseq) else False)
+                    if cond1 and cond2:
+                        # condition met for this sequence and m
+                        found_alex = True
+                        break
+                if found_alex:
+                    break
+            if not found_alex:
+                # for this bob sequence no alex sequence satisfies conditions
+                print(f"n={n} fails at bob_moves={bseq!r}")
+                return False
+    print(f"n={n} passes tested cases.")
+    return True
+
+def main():
+    candidates = []
+    for n in range(1,7):
+        print(f"Testing n={n} ...")
+        if check_n(n):
+            candidates.append(n)
+
+    if candidates:
+        max_n = max(candidates)
+        print(f"Candidates passing tests: {candidates}")
+        print(f"Greatest candidate n = {max_n}")
+    else:
+        print("No candidates passed the test.")
+
+if __name__ == "__main__":
+    main()
+```

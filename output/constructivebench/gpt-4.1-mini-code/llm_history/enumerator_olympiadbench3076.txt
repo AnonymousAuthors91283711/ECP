@@ -1,0 +1,79 @@
+[write_program]
+The problem seeks the coefficient of \(X^{10}\) in the polynomial 
+\[
+P(Q(X)) = (X + X^2 + X^4 + X^8 + X^{16} + X^{32}) \text{ composed with } (X + X^2 + X^4 + X^8 + X^{16} + X^{32})
+\]
+which means:
+\[
+P(Q(X)) = P(X + X^2 + X^4 + X^8 + X^{16} + X^{32}) = \sum_{k \in \{1,2,4,8,16,32\}} Q(X)^k
+\]
+where
+\[
+Q(X) = X + X^2 + X^4 + X^8 + X^{16} + X^{32}.
+\]
+
+To find the coefficient of \(X^{10}\) in \(P(Q(X))\), we need to sum the coefficients of \(X^{10}\) in each \(Q(X)^k\) for \(k \in \{1,2,4,8,16,32\}\).
+
+Since \(Q(X)\) is a polynomial with terms only of exponents in that set, we can write a program to enumerate the coefficients of powers of \(Q(X)\). For large powers, the polynomial grows exponentially, so we will only consider powers up to the point where terms with exponent 10 can still appear.
+
+Implementing a polynomial exponentiation and counting the coefficient of \(X^{10}\). Because the exponents are multiples of powers of 2, and 10 is small, the only powers \(k\) up to 10 matter since \(Q(X)^{16}\) and \(Q(X)^{32}\) would have minimal exponent \(16\) and \(32\) respectively.
+
+We will print coefficients of \(X^{10}\) in \(Q(X)^k\) for relevant \(k\) values, and sum them to get the final answer.
+
+```python
+# Enumerate the coefficient of X^10 in P(Q(X)) = sum_{k in {1,2,4,8,16,32}} Q(X)^k,
+# where Q(X) = X + X^2 + X^4 + X^8 + X^16 + X^32.
+
+# We'll represent polynomials as dicts: exponent -> coefficient.
+
+Q_terms = [1, 2, 4, 8, 16, 32]
+target = 10
+
+def poly_mul(p1, p2):
+    """Multiply two polynomials represented as dicts."""
+    res = {}
+    for e1, c1 in p1.items():
+        for e2, c2 in p2.items():
+            e = e1 + e2
+            if e > target:
+                continue  # We ignore exponents > target (prune)
+            res[e] = res.get(e, 0) + c1 * c2
+    return res
+
+def poly_pow(poly, power):
+    """Compute polynomial power with pruning to exponent <= target."""
+    result = {0:1}  # polynomial "1"
+    base = poly
+    p = power
+    while p > 0:
+        if p & 1:
+            result = poly_mul(result, base)
+        base = poly_mul(base, base)
+        p >>= 1
+    return result
+
+# Define Q(X)
+Q = {e:1 for e in Q_terms}
+
+# Powers to consider
+powers = [1, 2, 4, 8, 16, 32]
+
+coeffs = []
+
+print("Enumerating coefficients of X^10 in Q(X)^k:")
+for k in powers:
+    # If minimum exponent in Q is 1, minimum exponent in Q^k is k*1 = k
+    # If k > 10, no X^10 term possible (exponent too small)
+    if k > target:
+        print(f"k={k} -> coefficient=0 (degree too high)")
+        coeffs.append((k,0))
+        continue
+    polyk = poly_pow(Q, k)
+    c = polyk.get(target, 0)
+    print(f"k={k} -> coefficient={c}")
+    coeffs.append((k,c))
+
+answer = sum(c for _, c in coeffs)
+print("Sum of coefficients =", answer)
+```
+This program enumerates the coefficients of \(X^{10}\) in each term \(Q(X)^k\) efficiently by pruning poly multiplication beyond exponent 10, then sums the coefficients for all \(k\). It prints partial results to help conjecture the final coefficient.

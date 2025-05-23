@@ -1,0 +1,62 @@
+[write_program]
+The problem involves a predicate relating odd integers m > 1, divisibility conditions involving powers of m, and a special function `omnimath43_answer r` that depends only on r. We want to explore values of r and k in small ranges to enumerate possible k for which there exists such an m and n.
+
+We will:
+1. Try small values of r (0 to 3).
+2. For each r, try k up to a certain upper bound.
+3. For each pair (r,k), try small odd m > 1 (e.g., 3,5,7,...).
+4. Check if k divides m^(2^r)-1.
+5. Try n in a reasonable small range, to check if m divides n^((m^(2^r)-1)/k)+1.
+6. Print all (r,k) pairs where such m,n exist.
+7. We expect for each r a unique such k (the theorem states an iff).
+8. Print candidate values of k per r and conjecture the answer.
+
+We try to keep output short and print as soon as found.
+
+```python
+# Enumerate candidates for the omnimath43 problem.
+# For r in [0..3] and k in [1..30], try small odd m>1
+# and n in [0..10], check conditions and print results.
+
+def is_odd(x): return x % 2 == 1
+
+def divides(a,b): return b % a == 0
+
+def main():
+    max_r = 3
+    max_k = 30
+    max_m = 19      # sufficiently small odd integers >1
+    max_n = 10
+
+    for r in range(max_r+1):
+        p = lambda m: pow(m, 2**r) - 1
+        print(f"r={r}")
+        found_ks = []
+        for k in range(1, max_k+1):
+            for m in range(3, max_m+1, 2):
+                val = p(m)
+                if not divides(k, val):
+                    continue
+                exp = val // k
+                # Try n in small range
+                for n in range(max_n+1):
+                    power_mod = pow(n, exp, m)
+                    # Check if m divides n^exp + 1, equivalently (n^exp) mod m = m-1
+                    if power_mod == m - 1:
+                        print(f"  k={k}: found m={m}, n={n}")
+                        found_ks.append(k)
+                        break
+                else:
+                    continue
+                break
+        found_ks = sorted(set(found_ks))
+        print(f"Candidate k values for r={r}: {found_ks}")
+        if found_ks:
+            extremal = min(found_ks)
+            print(f" -> Conjectured omnimath43_answer({r}) = {extremal}\n")
+        else:
+            print(" -> No candidates found\n")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,51 @@
+[write_program]
+This problem involves finding a recurrence relation for the sum of powers of roots of a cubic polynomial. We'll write a Python program to:
+1. Find the roots of the polynomial x³ - 5x² + 8x - 13
+2. Compute the sums of powers of these roots
+3. Find coefficients a, b, c that satisfy the recurrence relation
+4. Calculate a + b + c
+
+We'll use numerical approximations since exact roots are complex, but we'll print them with high precision.
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+
+# Define the polynomial: x^3 - 5x^2 + 8x - 13
+p = Polynomial([-13, 8, -5, 1])
+
+# Find the roots
+roots = p.roots()
+
+# Function to compute sum of roots to the nth power
+def s(n):
+    return sum(r**n for r in roots)
+
+# Compute s values for n=0 to 5 to set up equations
+s_values = [s(n) for n in range(6)]
+
+# Set up linear system to solve for a, b, c
+# Using s(k+1) = a*s(k) + b*s(k-1) + c*s(k-2) for k=2,3,4
+A = np.array([
+    [s_values[2], s_values[1], s_values[0]],
+    [s_values[3], s_values[2], s_values[1]],
+    [s_values[4], s_values[3], s_values[2]]
+])
+b = np.array([s_values[3], s_values[4], s_values[5]])
+
+# Solve the system
+a, b, c = np.linalg.solve(A, b)
+
+# Print the recurrence coefficients
+print(f"Recurrence coefficients: a={a:.15f}, b={b:.15f}, c={c:.15f}")
+
+# Compute and print a + b + c
+result = a + b + c
+print(f"a + b + c = {result:.15f}")
+
+# Verification: check if the recurrence holds for higher terms
+for k in range(2, 6):
+    lhs = s(k+1)
+    rhs = a*s(k) + b*s(k-1) + c*s(k-2)
+    print(f"k={k}: {lhs:.15f} ≈ {rhs:.15f} (diff={abs(lhs-rhs):.2e})")
+```

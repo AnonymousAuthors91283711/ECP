@@ -1,0 +1,51 @@
+[write_program]
+This problem involves finding the coefficient B of a 6th-degree polynomial with positive integer roots. We'll enumerate possible roots and compute the corresponding polynomial coefficients.
+
+The approach:
+1. Find all combinations of 6 positive integers (roots)
+2. For each combination, expand (x-r1)(x-r2)...(x-r6) to get coefficients
+3. Match the known coefficients (x^6 term is 1, x^5 term is -10, constant term is 16)
+4. Output valid B coefficients found
+
+```python
+import itertools
+from math import prod
+from collections import defaultdict
+
+def main():
+    # We know sum of roots is 10 (from x^5 coefficient)
+    # Product of roots is 16 (from constant term)
+    # Find all 6-tuples of positive integers with sum 10 and product 16
+    max_root = 8  # since 2^4*1^2=16 and sum would be <= 4*2+2*1=10
+    
+    # Generate all possible combinations with sum 10 and product 16
+    valid_roots = []
+    for roots in itertools.combinations_with_replacement(range(1, max_root+1), 6):
+        if sum(roots) == 10 and prod(roots) == 16:
+            # Need to consider all permutations of the roots
+            # Use a set to avoid duplicate orderings
+            valid_roots.append(roots)
+    
+    # For each unique root combination, compute polynomial coefficients
+    B_values = set()
+    for roots in valid_roots:
+        # Compute elementary symmetric polynomials
+        # We only need the x^3 coefficient (B)
+        # Using Vieta's formulas:
+        sum_pair_triple = 0
+        n = len(roots)
+        for triple in itertools.combinations(roots, 3):
+            sum_pair_triple += prod(triple)
+        B = sum_pair_triple
+        
+        print(f"Roots: {roots}, B: {B}")
+        B_values.add(B)
+    
+    if len(B_values) == 1:
+        print(f"\nUnique B value found: {B_values.pop()}")
+    else:
+        print(f"\nMultiple B values found: {B_values}")
+
+if __name__ == "__main__":
+    main()
+```

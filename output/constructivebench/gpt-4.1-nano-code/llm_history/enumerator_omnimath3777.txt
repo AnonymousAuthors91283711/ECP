@@ -1,0 +1,75 @@
+[write_program]
+The problem involves finding the greatest natural number n such that there exists a k with certain properties related to prime sums and inequalities. Specifically, for all m < n, the inequality k + m + 1 > 25 holds, and for each such m, there are two distinct primes p and q with p + q = k + m + 1.
+
+Key points:
+- For each m < n, k + m + 1 > 25
+- For each m < n, there are primes p, q with p + q = k + m + 1, p ≠ q
+- We seek the greatest such n
+
+Since the constraints involve prime sums greater than 25, and for all m < n, the inequality must hold, the smallest value of k can be derived as follows:
+- The smallest sum p + q for two distinct primes cannot be less than 5 (since 2+3=5).
+- The sum p + q must be greater than 25, meaning p + q ≥ 27 (since sums are integers).
+
+Let's choose sample prime sums starting from 27 upwards, verify which can be written as sums of two distinct primes, and determine the maximum n satisfying the property.
+
+To do this efficiently:
+- Generate all prime sums ≥ 27.
+- For each sum, check if it can be written as p + q with p ≠ q,
+- For each such sum, determine the maximum number of m (below n) for which k + m + 1 matches these sums.
+
+Here's a Python code that searches for the maximum n based on these conditions:
+
+```python
+import itertools
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5)+1):
+        if n % i == 0:
+            return False
+    return True
+
+# Generate primes up to a certain limit for sums
+primes = [p for p in range(2, 50) if is_prime(p)]
+
+# Generate possible prime sums >= 27
+prime_sums = set()
+for p, q in itertools.combinations(primes, 2):
+    s = p + q
+    if s >= 27:
+        prime_sums.add(s)
+
+# For each k, check how many m can satisfy the conditions
+max_n = 0
+k_candidate = None
+
+# Assume k >= 0, start from minimal possible to some limit
+for k in range(0, 50):
+    valid = True
+    # We want the maximum n such that for all m < n:
+    # k + m + 1 >= 27 and can be written as sum of two distinct primes
+    # The minimal sum in the sequence is at m=0: k + 1
+    # For the condition to hold at m=0: k + 1 >= 27 => k >= 26
+    if k < 26:
+        continue  # No need to check, since minimal sum doesn't fulfill >25
+
+    # For m starting from 0 upwards, check if sum = k + m + 1
+    # is in the prime_sums set
+    n = 0
+    while True:
+        s = k + n + 1
+        if s >= 27 and s in prime_sums:
+            n += 1
+        else:
+            break
+    # n is the maximum such that for all m < n, properties hold
+    if n > max_n:
+        max_n = n
+        k_candidate = k
+
+# The greatest n found
+print(max_n)
+```
+
+This code enumerates possible values systematically, completes when sums no longer match the criteria, and prints the maximal n satisfying the constraints.

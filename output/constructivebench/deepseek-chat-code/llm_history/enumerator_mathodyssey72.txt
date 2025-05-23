@@ -1,0 +1,39 @@
+[write_program]
+This problem asks for the number of functions f from {0,...,9} to itself that are involutions (f∘f = id) and satisfy |f(i)-i| = 2 for all i. We'll enumerate all possible such functions by considering valid pairings of elements where each element is mapped to either i+2 or i-2 (with wraparound for edge cases).
+
+```python
+from itertools import combinations
+
+def is_valid_involution(pairs, n=10):
+    # Check if all pairs satisfy |x-y| ≡ 2 mod n and form an involution
+    used = set()
+    for a, b in pairs:
+        if a in used or b in used:
+            return False
+        if (b - a) % n not in {2, n-2}:
+            return False
+        used.add(a)
+        used.add(b)
+    return True
+
+def count_involutions(n=10):
+    elements = list(range(n))
+    count = 0
+    
+    # Try all possible ways to pair elements where |x-y| ≡ 2 mod 10
+    for k in range(0, n//2 + 1):
+        # Try all combinations of k pairs (each pair represents a 2-cycle)
+        for pairs in combinations([(i, (i+2)%n) for i in range(n)], k):
+            # Check if these pairs form a valid involution
+            if is_valid_involution(pairs, n):
+                # The remaining elements must be fixed points (but |f(i)-i|=2 requires no fixed points)
+                # So we can only have perfect pairings (n must be even)
+                if 2*k == n:
+                    count += 1
+                    print(f"Found valid involution: {pairs}")
+    return count
+
+print("Counting valid involutions for n=10...")
+result = count_involutions(10)
+print(f"Total number of valid involutions: {result}")
+```

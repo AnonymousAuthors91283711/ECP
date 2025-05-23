@@ -1,0 +1,54 @@
+[write_program]
+# The problem involves finding a 4-digit number with sorted digits that form two pairs of equal digits, all digits between 0-9, ages between 1-9 (distinct, max age 9), divisible by all ages, and the last two digits equal to one of the ages.
+# We enumerate all such 4-digit numbers and 8 distinct ages satisfying conditions and print candidates found.
+
+```python
+from itertools import combinations, permutations
+
+def digits_two_pairs(digs):
+    # Check if digits form two pairs
+    # sorted digits expected: d0 <= d1 <= d2 <= d3
+    d0,d1,d2,d3 = digs
+    return (d0==d1 and d2==d3) or (d0==d2 and d1==d3) or (d0==d3 and d1==d2)
+
+digits_range = range(10)
+ages_range = range(1,10)
+
+def main():
+    # Ages distinct 8 ages from 1..9, max age 9 must be present
+    # For each ages combination and order, digits sorted and form pairs, number divisible by all ages, last two digits in ages.
+    # Enumerate digits with sorted and two pairs condition
+    print("Enumerating candidates...")
+    digits_candidates = []
+    for d0 in range(10):
+        for d1 in range(d0,10):
+            for d2 in range(d1,10):
+                for d3 in range(d2,10):
+                    digs = (d0,d1,d2,d3)
+                    if digits_two_pairs(digs):
+                        digits_candidates.append(digs)
+
+    # Enumerate distinct ages length 8 from 1..9 with 9 present
+    ages_candidates = []
+    for ages_set in combinations(ages_range,8):
+        if 9 not in ages_set:
+            continue
+        for ages_perm in permutations(ages_set):
+            # Check max age is 9 at some i (condition met by definition)
+            # last two digits = father's age (one of the ages)
+            # number divisible by all ages
+            digits = digits_candidates
+            for digs in digits_candidates:
+                number = digs[0]*1000 + digs[1]*100 + digs[2]*10 + digs[3]
+                if number < 1000:
+                    continue
+                if any(number % a != 0 for a in ages_perm):
+                    continue
+                last_two = number % 100
+                if last_two not in ages_perm:
+                    continue
+                print(f"Possible number: {number}, digits: {digs}, ages: {ages_perm}")
+
+if __name__ == "__main__":
+    main()
+```

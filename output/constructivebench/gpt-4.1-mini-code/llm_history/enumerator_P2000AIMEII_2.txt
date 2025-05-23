@@ -1,0 +1,49 @@
+[write_program]
+The problem is to find the number of integer pairs \((x,y) \in \mathbb{Z}^2\) such that \(x^2 - y^2 = 2000^2\).
+
+Key idea: 
+Rewrite as \((x-y)(x+y) = 2000^2\). For integer solutions, both \(x-y\) and \(x+y\) must be integer divisors of \(2000^2\), and the sum and difference must have the same parity to ensure \(x,y\) are integers.
+
+We enumerate pairs of divisors \((d,e)\) of \(2000^2\) with \(d \times e = 2000^2\), check parity and produce the corresponding solution if any, counting distinct \((x,y)\).
+
+We will print all such pairs \((d,e)\), computed \((x,y)\), and total count.
+
+```python
+from math import gcd
+N = 2000**2
+
+def divisors(n):
+    divs = []
+    i = 1
+    while i*i <= n:
+        if n % i == 0:
+            divs.append(i)
+            if i*i != n:
+                divs.append(n//i)
+        i += 1
+    return sorted(divs)
+
+divs = divisors(N)
+count = 0
+seen = set()
+print(f"Enumerating integer solutions to x^2 - y^2 = {N}")
+
+for d in divs:
+    e = N // d
+    # x = (d+e)//2, y = (e - d)//2 must be integers:
+    if (d + e) % 2 == 0 and (e - d) % 2 == 0:
+        x = (d + e) // 2
+        y = (e - d) // 2
+        # Count distinct integer pairs (x,y):
+        # Also include (-x,y), (x,-y), (-x,-y) if distinct. 
+        # But note (x,y) and (-x,-y) correspond to same solution because squaring
+        # We'll count all four variations, but ensure no duplicates.
+        for sx in [x, -x]:
+            for sy in [y, -y]:
+                if (sx, sy) not in seen:
+                    seen.add((sx, sy))
+                    count += 1
+                    print(f"Solution #{count}: (x,y)=({sx},{sy}) from divisors (d,e)=({d},{e})")
+
+print(f"Total number of integer solutions: {count}")
+```

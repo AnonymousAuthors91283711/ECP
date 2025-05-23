@@ -1,0 +1,55 @@
+[write_program]
+This appears to be a functional equation problem on integer lattice points. The function \( f: \mathbb{Z} \times \mathbb{Z} \to [0,1] \) satisfies \( f(x,y) = \frac{f(x-1,y) + f(x,y-1)}{2} \) for all integers \(x,y\).
+
+To gain insight, we will enumerate possible functions on a small grid, respecting the averaging condition and range. We fix sample values on the boundaries to trigger the recursion. This approach helps conjecture the family of solutions.
+
+```python
+# Enumerate functions f: ZxZ -> [0,1] satisfying f(x,y) = (f(x-1,y) + f(x,y-1))/2
+# on a small grid x,y in {0,1,2}, with boundaries f(0,y) and f(x,0) given in {0,0.5,1}.
+# Print each candidate function as a 3x3 grid.
+
+import itertools
+
+def avg_eq(f, x, y):
+    return abs(f[(x,y)] - (f[(x-1,y)] + f[(x,y-1)])/2) < 1e-8
+
+def valid_function(bound_x, bound_y):
+    # bound_x: dict x->value for f(x,0)
+    # bound_y: dict y->value for f(0,y)
+    f = {}
+    # Set borders
+    for x in range(3):
+        f[(x,0)] = bound_x[x]
+    for y in range(3):
+        f[(0,y)] = bound_y[y]
+    # Compute inner values by averaging equations
+    for x in range(1,3):
+        for y in range(1,3):
+            f[(x,y)] = (f[(x-1,y)] + f[(x,y-1)])/2
+            if not (0 <= f[(x,y)] <=1):
+                return None
+    # Verify all points satisfy the equation and [0,1] bounds
+    for x in range(3):
+        for y in range(3):
+            if not (0 <= f[(x,y)] <=1):
+                return None
+            if x>0 and y>0 and not avg_eq(f,x,y):
+                return None
+    return f
+
+vals = [0, 0.5, 1]
+count = 0
+print("Enumerated candidate functions on grid {0,1,2}x{0,1,2} with boundary values in {0,0.5,1}:")
+for bound_x_vals in itertools.product(vals, repeat=3):
+    for bound_y_vals in itertools.product(vals, repeat=3):
+        f = valid_function(dict(enumerate(bound_x_vals)), dict(enumerate(bound_y_vals)))
+        if f is not None:
+            count += 1
+            print(f"Candidate {count}:")
+            for y in range(3):
+                row = [f[(x,y)] for x in range(3)]
+                print(" ".join(f"{v:.3f}" for v in row))
+            print()
+print(f"Total candidates found: {count}")
+```
+

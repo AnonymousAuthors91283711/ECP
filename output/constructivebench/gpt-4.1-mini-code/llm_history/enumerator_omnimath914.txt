@@ -1,0 +1,50 @@
+[write_program]
+The problem asks about integers \( a \) in the interval [2,101] such that the sequence \( (a^{2^n} \bmod 100) \) eventually stabilizes, i.e., becomes constant from some \( N \) onwards. We want to enumerate such \( a \) and find how many there are.
+
+Key observations:
+- We can try each \( a \in [2, 101] \).
+- For each \( a \), compute powers \( a^{2^n} \bmod 100 \) until repetition or stabilization.
+- Check if there's some \( N \) so that from \( N \) on, the residues stabilize.
+- Print candidate \( a \).
+- Finally print the count.
+
+We'll limit up to a reasonable \( n \) because \( 2^n \) grows fast. We can check up to, say, \( n=10 \).
+
+```python
+# Enumerate a in [2..101], find all where a^{2^n} mod 100 stabilizes for some N>=1.
+# Print each candidate immediately, then print total count.
+
+def modpow(base, exp, mod):
+    result = 1
+    cur = base % mod
+    e = exp
+    while e > 0:
+        if e & 1:
+            result = (result * cur) % mod
+        cur = (cur * cur) % mod
+        e >>= 1
+    return result
+
+def sequence_stabilizes(a, mod=100, max_steps=15):
+    vals = []
+    for n in range(max_steps):
+        exp = 2 ** n
+        val = modpow(a, exp, mod)
+        vals.append(val)
+    # Check if from some N, vals[N:] are all equal
+    for N in range(1, max_steps):
+        if all(v == vals[N] for v in vals[N:]):
+            return True
+    return False
+
+def main():
+    count = 0
+    for a in range(2, 102):
+        if sequence_stabilizes(a):
+            print(a)
+            count += 1
+    print("Total count:", count)
+
+if __name__ == "__main__":
+    main()
+```

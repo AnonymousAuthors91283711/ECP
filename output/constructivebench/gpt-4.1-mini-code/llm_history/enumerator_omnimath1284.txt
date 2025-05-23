@@ -1,0 +1,48 @@
+[write_program]
+The problem involves counting triples \((y_1, y_2, y_3)\) in \(\{1,\dots,6\}^3\) and \(x \in \{1,\dots,20\}\) such that \(x > y_1 + y_2 + y_3\). We want to compute the sum of such occurrences divided by total triples \(20 \times 6^3\). The goal is to enumerate the numerator values for each \(x\) over the sum ranges, print partial results, and then print the final fraction.
+
+```python
+# Enumerate sum counts of triples with sides in [1..6] and count x in [1..20] satisfying x > sum(y)
+def main():
+    from fractions import Fraction
+
+    side_min, side_max = 1, 6
+    x_min, x_max = 1, 20
+    total_triples = (side_max - side_min + 1) ** 3
+    total_x = x_max - x_min + 1
+    total_pairs = total_x * total_triples
+
+    # First compute frequency of each possible sum y1+y2+y3
+    sum_freq = {}
+    for y1 in range(side_min, side_max + 1):
+        for y2 in range(side_min, side_max + 1):
+            for y3 in range(side_min, side_max + 1):
+                s = y1 + y2 + y3
+                sum_freq[s] = sum_freq.get(s, 0) + 1
+
+    # Precompute cumulative count of sums less than x
+    sums = sorted(sum_freq)
+    cum_freq = []
+    running = 0
+    idx = 0
+
+    # For each x, count sum of frequencies for sums < x
+    partial_sum = 0
+    total_count = 0
+    print("Partial counts for x > sum:")
+    for x in range(x_min, x_max + 1):
+        # Increase running sum for sums < x
+        while idx < len(sums) and sums[idx] < x:
+            running += sum_freq[sums[idx]]
+            idx += 1
+        partial_sum = running  # Number of triples with sum < x
+        print(f"x={x}, count={partial_sum}")
+        total_count += partial_sum
+
+    # Print final normalized fraction
+    result = Fraction(total_count, total_pairs)
+    print(f"Result fraction: {result} ≈ {float(result):.6f}")
+
+if __name__ == "__main__":
+    main()
+```

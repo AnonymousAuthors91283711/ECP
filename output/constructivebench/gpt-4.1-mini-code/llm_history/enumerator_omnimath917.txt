@@ -1,0 +1,49 @@
+[write_program]
+The problem counts the number of functions \(f: \{0,1,\ldots,2001\} \to \mathbb{Z}\) with values in \([1,2002]\) such that consecutive values differ by at most 2 (circularly). To conjecture a pattern, I'll enumerate smaller cases \(n\)-length sequences with values in \([1,n]\) satisfying the same condition, and print counts.
+
+```python
+# Enumerate the number of sequences of length n, values in [1,n], 
+# with consecutive differences ≤ 2 (circular), and print counts.
+# This is a circular condition: |f[i]-f[(i+1) mod n]| ≤ 2.
+
+def count_sequences(n):
+    # dp[i][v]: number of sequences of length i, ending at value v
+    # We'll keep track of sequences for the first n-1 elements,
+    # then check the circle condition on the last element and first element.
+    from collections import defaultdict
+    
+    if n == 1:
+        # Only sequences of length 1 with values 1..1, difference condition trivial.
+        print(f"n=1, count=1")
+        return 1
+
+    vals = range(1,n+1)
+    dp = [defaultdict(int) for _ in range(n)]
+    # Base case, sequences of length 1
+    for v in vals:
+        dp[0][v] = 1
+
+    for i in range(1,n):
+        for v in vals:
+            # v can follow any u where |u - v| ≤ 2
+            total = 0
+            for u in range(max(1, v - 2), min(n, v + 2) + 1):
+                total += dp[i-1][u]
+            dp[i][v] = total
+
+    # Now sum dp[n-1][v] where final v completes circle: |v - first| ≤ 2
+    total_count = 0
+    # First element candidates
+    for first in vals:
+        for last in vals:
+            if abs(last - first) <= 2:
+                total_count += dp[n-1][last] if n == 1 else dp[n-1][last]
+
+    print(f"n={n}, count={total_count}")
+    return total_count
+
+# Test small values and print counts to conjecture formula
+for n in range(1,7):
+    count_sequences(n)
+```
+

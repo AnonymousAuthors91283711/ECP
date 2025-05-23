@@ -1,0 +1,66 @@
+[write_program]
+The problem establishes a least natural number \( n \) such that there are three disjoint finite subsets \( s_1, s_2, s_3 \) of natural numbers, covering all divisors of \( n \), with the sums of elements in each subset being equal. The goal is to find the minimal such \( n \).
+
+Key observations:
+- The subsets partition the divisors of \( n \).
+- Each subset's sum of elements is equal.
+- Divisors of \( n \) include 1 and \( n \).
+- The smallest divisors are 1 and primes; to keep sums balanced, symmetrical arrangements are simpler.
+
+To solve efficiently, we'll:
+- Test small values of \( n \)—checking their divisors.
+- For each \( n \), generate all divisor partitions into three disjoint sets covering all divisors.
+- Check if partitioned sums are equal.
+- Stop at the first (smallest) \( n \) satisfying these conditions.
+
+Here's the Python program to automise this search:
+
+```python
+import itertools
+import math
+
+def divisors(n):
+    # Generate all divisors of n
+    divs = set()
+    for i in range(1, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            divs.add(i)
+            divs.add(n // i)
+    return sorted(divs)
+
+def check_partition(divs, partition):
+    # Verify if all divisors are covered and sums are equal
+    assigned_sets = [set(), set(), set()]
+    for d, p in zip(divs, partition):
+        if p not in (0, 1, 2):
+            return False
+        assigned_sets[p].add(d)
+    # Check coverage
+    if set.union(*assigned_sets) != set(divs):
+        return False
+    # Check sums
+    sums = [sum(s) for s in assigned_sets]
+    return len(set(sums)) == 1
+
+def main():
+    n = 2
+    while True:
+        divs = divisors(n)
+        if len(divs) >= 3:  # Need at least three divisors to partition
+            # Generate all possible partitions into 3 subsets
+            for partition in itertools.product([0,1,2], repeat=len(divs)):
+                # Check if the partition covers all divisors
+                if check_partition(divs, partition):
+                    print(f"Found n={n}")
+                    print(f"Divisors: {divs}")
+                    print("Partitioning into 3 subsets with equal sums:")
+                    for i in range(3):
+                        subset = [d for d, p in zip(divs, partition) if p == i]
+                        print(f"s_{i+1}: {subset}")
+                    print("Sums:", [sum(subset) for subset in [[d for d, p in zip(divs, partition) if p == i] for i in range(3)]])
+                    return
+        n += 1
+
+if __name__ == "__main__":
+    main()
+```

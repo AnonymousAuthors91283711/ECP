@@ -1,0 +1,72 @@
+[write_program]
+This problem involves counting the number of axis-aligned squares whose vertices lie in a specific set P_n (which includes (0,0) and all integer points (x,y) where x²+y² is a power of 2 up to 2^n). The squares must have exactly 4 vertices and be defined by a center point p and direction vector d.
+
+We'll write a Python program to enumerate such squares for small values of n, counting how many exist for each n. The program will:
+1. Generate all points in P_n for a given n
+2. Check all possible 4-point combinations to see if they form a square
+3. Count valid squares for each n up to a reasonable threshold
+
+```python
+import itertools
+from math import isqrt
+
+def is_power_of_two(m):
+    return (m & (m - 1)) == 0 and m != 0
+
+def generate_Pn(n):
+    """Generate all points (x,y) where x² + y² is a power of 2 ≤ 2^n"""
+    max_coord = isqrt(2**n) + 1
+    points = set()
+    points.add((0, 0))
+    
+    for x in range(-max_coord, max_coord + 1):
+        for y in range(-max_coord, max_coord + 1):
+            s = x*x + y*y
+            if is_power_of_two(s) and s <= 2**n:
+                points.add((x, y))
+    return points
+
+def is_square(p1, p2, p3, p4):
+    """Check if four points form a square"""
+    points = [p1, p2, p3, p4]
+    dists = []
+    for i in range(4):
+        for j in range(i+1, 4):
+            dx = points[i][0] - points[j][0]
+            dy = points[i][1] - points[j][1]
+            dists.append(dx*dx + dy*dy)
+    
+    if len(set(dists)) != 2:  # Squares have 2 distinct distances (side and diagonal)
+        return False
+    
+    # Check right angles
+    for i in range(4):
+        vectors = []
+        for j in range(4):
+            if j != i:
+                dx = points[j][0] - points[i][0]
+                dy = points[j][1] - points[i][1]
+                vectors.append((dx, dy))
+        
+        # Check if two vectors are perpendicular and same length
+        if len(vectors) == 3:
+            for a, b in itertools.combinations(vectors, 2):
+                dot = a[0]*b[0] + a[1]*b[1]
+                if dot == 0 and (a[0]*a[0] + a[1]*a[1]) == (b[0]*b[0] + b[1]*b[1]):
+                    return True
+    return False
+
+def count_squares(n):
+    Pn = generate_Pn(n)
+    squares = set()
+    
+    for quad in itertools.combinations(Pn, 4):
+        if is_square(*quad):
+            # Store sorted to avoid duplicates
+            squares.add(frozenset(quad))
+    
+    return len(squares)
+
+for n in range(1, 6):
+    print(f"n={n}: {count_squares(n)} squares")
+```

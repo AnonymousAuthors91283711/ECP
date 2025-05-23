@@ -1,0 +1,75 @@
+[write_program]
+The problem defines a sequence \( a_n \) as follows:
+- \( a_0 = 1 \),
+- \( a_n = 2^{a_{n-1}} \) for \( n \geq 1 \).
+
+We want to find the last digit of \( a_{15} \), i.e., \( a_{15} \mod 10 \).
+
+To analyze this sequence modulo 10 directly is complicated because the numbers are huge. However, due to modular arithmetic periodicities (especially powers modulo 10), the last digit of such power towers often cycles.
+
+We will compute \( a_n \mod 10 \) for \( n=0 \) to \( n=15 \), using properties of modular arithmetic and the cycle length of powers of 2 modulo 10. Because exponents are huge, we will also track \( a_n \mod 4 \) or modulo the cycle of powers, as powers of 2 modulo 10 have a period of 4.
+
+This approach helps to avoid computing huge numbers directly.
+
+```python
+# Compute a_n = 2^(a_{n-1}), with a0=1, then find a_15 % 10
+# Use modular arithmetic cycles:
+# - Powers of 2 mod 10 cycle through [2,4,8,6] with length 4
+# - Use exponent mod 4 to find power modulo 10
+
+def mod_exp_2(last_exp_mod_4):
+    # Computes 2^(exp) mod 10 where exp % 4 = last_exp_mod_4
+    cycle = [6,2,4,8]  # 2^1=2, 2^2=4, 2^3=8, 2^4=6 repeated
+    return cycle[last_exp_mod_4 % 4]
+
+def mod_exp_2_mod_4(exp_mod_cycle_length):
+    # Compute exponent modulo cycle length for the next step,
+    # i.e., a_n mod 4, since powers of 2 mod 10 repeat every 4 powers.
+    # Powers of 2 mod 4 cycle:
+    # 2^1 = 2 mod 4, 2^2=0 mod4, 2^3=0 mod4, so for n>=2 -> 0 mod4
+    # However, since a_n = 2^{a_{n-1}}, and a_{n-1} grows large,
+    # a_n mod 4 = 0 for n>=2 except when exponent is 1.
+    # But we will track a_n mod 4 explicitly.
+    # Because 2^0=1 mod4; 2^{anything>=2} = 0 mod4
+    # The pattern is:
+    # If exponent == 0 mod 2 -> 0 mod 4; else 2 mod4
+
+    # It's easier to track a_n mod 4 by computing exponent mod 2:
+    # if exponent even => 0 mod4
+    # else 2 mod4
+    if exp_mod_cycle_length % 2 == 0:
+        return 0
+    else:
+        return 2
+
+# Start from a0 = 1
+a_mod_10 = [1]  # Store a_n mod 10
+a_mod_4 = [1]   # Store a_n mod 4
+
+for n in range(1,16):
+    # Compute exponent modulo 4 (from previous a_mod_4)
+    exp_mod_4 = a_mod_4[-1]
+    # Compute a_n mod 10 using exponent mod 4
+    val_mod_10 = mod_exp_2(exp_mod_4)
+    a_mod_10.append(val_mod_10)
+
+    # Compute new a_n_mod_4 for next iteration:
+    # a_n = 2^{a_{n-1}}, so to find a_n mod 4 we check if exponent (a_{n-1}) is even or odd
+    exp = a_mod_10[-2]  # previous a_{n-1} mod10 approximates parity but we need exact parity
+    # Actually, parity depends on a_{n-1} itself, which grows huge,
+    # But a_{n-1} always >=1, and since it's power of 2 sequences,
+    # All a_{n} for n>=1 are even because 2^{some positive integer} is even.
+    # So a_{n-1} >= 2, so exponent even => a_n mod4 = 0
+    if n ==1:
+        # a_0=1 (odd), so exponent=1 (odd)
+        a_mod_4.append(2)
+    else:
+        # For n>=2, exponent even
+        a_mod_4.append(0)
+
+    # Print intermediate results
+    print(f"a_{n} mod 10 = {val_mod_10}")
+
+# Print final answer
+print(f"Answer: a_15 mod 10 = {a_mod_10[15]}")
+```

@@ -1,0 +1,81 @@
+[write_program]
+The problem describes two sequences: a geometric sequence starting at 10 with ratio 1/2, and an arithmetic sequence starting at 10 with difference d. It requires finding all values of d such that:
+
+(geometric_seq 6 / geometric_seq 4) = (arithmetic_seq 6 / arithmetic_seq 4)
+
+This simplifies to an equation in d, and we want to enumerate possible d values. We will:
+
+- Compute geometric_seq(6)/geometric_seq(4)
+- Compute arithmetic_seq(6)/arithmetic_seq(4) = (10 + 6d)/(10 + 4d)
+- Enumerate several d values in a reasonable range and print those for which these two ratios are equal (or close).
+- Print exact matches (for small integer or rational d), or numerical approximations if exact is not possible.
+
+```python
+from fractions import Fraction
+
+def geometric(n):
+    # geometric_seq(0) = 10, ratio 1/2
+    return Fraction(10) * Fraction(1, 2) ** n
+
+def arithmetic(n, d):
+    # arithmetic_seq(0) = 10, difference d
+    return Fraction(10) + Fraction(d) * n
+
+def check_ratio(d):
+    # compute ratios as Fractions if possible
+    g_num = geometric(6)
+    g_den = geometric(4)
+    if g_den == 0:
+        return False  # Avoid division by zero
+    g_ratio = g_num / g_den  # geometric(6)/geometric(4)
+
+    a_num = arithmetic(6, d)
+    a_den = arithmetic(4, d)
+    if a_den == 0:
+        return False  # Avoid division by zero
+    a_ratio = a_num / a_den  # arithmetic(6)/arithmetic(4)
+
+    return g_ratio == a_ratio, g_ratio, a_ratio
+
+print("Enumerating d values for which (g(6)/g(4)) = (a(6)/a(4)):")
+
+# The geometric ratio:
+g_ratio = geometric(6) / geometric(4)  # constant
+print(f"geometric_seq(6)/geometric_seq(4) = {g_ratio}")
+
+# Solve analytically:
+# g_ratio = (10*(1/2)^6) / (10*(1/2)^4) = (1/2)^2 = 1/4
+# So g_ratio = 1/4
+
+# So we want (10 + 6d)/(10 + 4d) = 1/4
+# Cross-multiplied: 4*(10 + 6d) = 10 + 4d
+# 40 + 24d = 10 + 4d
+# 20d = -30
+# d = -30/20 = -3/2 = -1.5
+
+print("\nSearching numerically near the solution d = -1.5:")
+
+# Check d in small range around -1.5 and print exact or float matches
+# We use Fraction for exactness
+from fractions import Fraction
+
+candidates = []
+for numerator in range(-30, 31):
+    for denominator in range(1, 21):
+        d = Fraction(numerator, denominator)
+        equal, g_val, a_val = check_ratio(d)
+        if equal:
+            print(f"d = {d} satisfies: geometric_ratio = {g_val}, arithmetic_ratio = {a_val}")
+            candidates.append(d)
+
+print("\nCandidates found:")
+for d in candidates:
+    print(f"d = {d}")
+
+if candidates:
+    print(f"\nMinimum d among candidates: {min(candidates)}")
+    print(f"Maximum d among candidates: {max(candidates)}")
+else:
+    print("No exact rational candidate found in the searched range.")
+```
+

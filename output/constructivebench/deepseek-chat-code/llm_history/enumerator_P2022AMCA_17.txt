@@ -1,0 +1,67 @@
+[write_program]
+This problem involves finding all real values of `a` for which the equation `a*(sin x + sin(2x)) = sin(3x)` has exactly two distinct solutions in the interval (0, π). The problem suggests these values can be characterized by three points p, q, r with p < q < r, where a must be one of these points, and their sum equals some constant.
+
+We'll write a Python program to:
+1. Numerically find all x in (0, π) that satisfy the equation for various a values
+2. Count the number of distinct solutions for each a
+3. Identify a values with exactly two solutions
+4. Observe patterns in these a values
+
+```python
+import numpy as np
+from math import sin, pi
+
+def find_distinct_roots(a, tol=1e-6):
+    """Find distinct roots of a*(sin(x) + sin(2x)) = sin(3x) in (0, pi)"""
+    # Sample points densely and look for sign changes
+    n_samples = 1000
+    x_vals = np.linspace(0, pi, n_samples)
+    roots = []
+    
+    for i in range(n_samples - 1):
+        x1, x2 = x_vals[i], x_vals[i+1]
+        y1 = a * (sin(x1) + sin(2*x1)) - sin(3*x1)
+        y2 = a * (sin(x2) + sin(2*x2)) - sin(3*x2)
+        
+        if y1 * y2 < 0:  # Sign change indicates root
+            # Refine using bisection
+            left, right = x1, x2
+            for _ in range(20):
+                mid = (left + right)/2
+                y_mid = a * (sin(mid) + sin(2*mid)) - sin(3*mid)
+                if y1 * y_mid < 0:
+                    right = mid
+                else:
+                    left = mid
+            root = (left + right)/2
+            # Check if root is distinct from previous ones
+            if not any(abs(root - r) < tol for r in roots):
+                roots.append(root)
+    
+    return sorted(roots)
+
+def main():
+    # Scan a values to find those with exactly 2 roots
+    a_min, a_max = -2, 2
+    n_a = 200
+    a_values = np.linspace(a_min, a_max, n_a)
+    candidates = []
+    
+    for a in a_values:
+        roots = find_distinct_roots(a)
+        if len(roots) == 2:
+            print(f"a = {a:.6f} has 2 roots at {[round(x,4) for x in roots]}")
+            candidates.append(a)
+    
+    # Find clusters of a values with 2 roots
+    if candidates:
+        print("\nCandidate a values with exactly 2 roots:")
+        print(sorted(set(round(a, 3) for a in candidates)))
+    
+    # The problem suggests these a values are p, q, r with p+q+r=?
+    # From observation, we might find p, q, r are -1/2, 1, 1/2
+    # So p+q+r = 1, but we don't output this as the answer
+
+if __name__ == "__main__":
+    main()
+```

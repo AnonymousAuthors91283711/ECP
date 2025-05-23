@@ -1,0 +1,57 @@
+[write_program]
+This problem involves finding the greatest natural number `s` that can be expressed in terms of two sequences `a` and `b` with specific conditions. The sequence `a` is non-decreasing, `b` is defined as the smallest index where `a` reaches at least each value, `a(19)=85`, and `s` is a sum involving both sequences.
+
+We'll approach this by:
+1. Enumerating possible non-decreasing sequences `a` of length 20 (indices 0-19) where `a[19]=85`
+2. For each valid `a`, compute the corresponding `b` sequence
+3. Calculate the sum `s` and track the maximum value found
+
+```python
+def main():
+    max_s = 0
+    # We'll generate non-decreasing sequences a where a[19]=85
+    # Using backtracking with pruning for efficiency
+    def backtrack(a, pos):
+        nonlocal max_s
+        if pos == 19:
+            if a[pos] != 85:
+                return
+            # Compute b sequence
+            b = []
+            m = 1
+            while True:
+                # Find smallest n where a[n] >= m
+                found = None
+                for n in range(20):
+                    if a[n] >= m:
+                        found = n
+                        break
+                if found is None:
+                    break
+                b.append(found)
+                m += 1
+                if m > 100:  # Safety limit
+                    break
+            
+            # Compute the sum s
+            sum_a = sum(a[1:20])  # a[1] to a[19]
+            sum_b = sum(b[:85])   # b[1] to b[85] (0-indexed as b[0]=b1)
+            s = sum_a + sum_b
+            if s > max_s:
+                max_s = s
+                print(f"New max s: {s} with a={a}")
+            return
+        
+        # Generate next element in sequence
+        start_val = a[pos] if pos > 0 else 0
+        for val in range(start_val, 86):
+            a[pos+1] = val
+            backtrack(a, pos+1)
+    
+    a = [0]*20
+    backtrack(a, -1)
+    print(f"Final maximum s: {max_s}")
+
+if __name__ == "__main__":
+    main()
+```

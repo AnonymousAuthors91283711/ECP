@@ -1,0 +1,57 @@
+[write_program]
+The problem involves the equation:
+\[
+\frac{\log(3^{20})}{\log(2^x)} = \frac{\log(3^{2020})}{\log(2^{x+3})}
+\]
+
+with \(x = \frac{m}{n}\) a reduced positive rational number, \(m,n \in \mathbb{N}\), \(\gcd(m,n)=1\).
+
+Rewrite logs and simplify, then enumerate candidates for \((m,n)\) coprime pairs and check which satisfy the equation exactly or closely. Output each candidate \((m, n)\) with \(m+n\), and finally the pair with minimal \(m+n\).
+
+We test \(m, n \leq 50\) for efficiency and coverage.
+
+```python
+from math import gcd, log
+
+# Since log base and real logs cancel, rewrite:
+# log(3^20)/log(2^x) = log(3^2020)/log(2^{x+3})
+# => 20*log3 / (x*log2) = 2020*log3 / ((x+3)*log2)
+# => 20/x = 2020/(x+3)  (log3 and log2 cancel since positive)
+# => 20(x+3) = 2020 x
+# => 20x + 60 = 2020 x
+# => 2000 x = 60
+# => x = 60/2000 = 3/100
+
+# So exact solution is x = 3/100, in lowest terms (3 and 100 coprime).
+# But let's verify by enumerating coprime pairs.
+
+max_denom = 50
+
+print("Enumerating coprime pairs (m, n) with n <= 50 and checking if")
+print("20/n == 2020/(n + 3*m/n) equivalent. Simplified solution x = m/n.")
+
+log3 = log(3)
+log2 = log(2)
+
+candidates = []
+for n in range(1, max_denom+1):
+    for m in range(1, max_denom+1):
+        if gcd(m, n) == 1:
+            x = m / n
+            # Compute lhs and rhs exactly:
+            lhs = 20 / x
+            rhs = 2020 / (x + 3)
+            if abs(lhs - rhs) < 1e-12:
+                s = m + n
+                candidates.append((m, n, s))
+                print(f"Found exact solution: m={m}, n={n}, m+n={s}")
+
+# Print the minimal sum candidate explicitly
+if candidates:
+    candidates.sort(key=lambda t: t[2])
+    min_m, min_n, min_sum = candidates[0]
+    print(f"\nMinimal sum m+n: {min_sum} with m={min_m}, n={min_n}")
+else:
+    print("No exact solutions found among tested pairs.")
+```
+

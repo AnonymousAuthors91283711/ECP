@@ -1,0 +1,61 @@
+[write_program]
+The problem asks for the greatest rational number \(r\) such that there exist integers \(a,b,c\) with \(1 \le a,b,c \le 100\) and a nonzero rational root \(x\) of the quadratic \(a x^2 + b x + c = 0\) equal to \(r\).
+
+We want to enumerate all such rational roots \(x\) for all \(a,b,c\), then find the maximum \(r\).
+
+By the Rational Root Theorem, any rational root \(x = \frac{p}{q}\) (in lowest terms) satisfies that \(p\) divides \(c\) and \(q\) divides \(a\).
+
+We can loop over \(a,b,c\), find \(x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}\), check if \(x \in \mathbb{Q}\), \(x \neq 0\), and if it satisfies the conditions.
+
+We print each rational root found, then print the maximum at the end.
+
+We will keep denominators and numerators exact using fractions, check if the discriminant is a perfect square.
+
+We use ranges for \(a,b,c\) from 1 to 100.
+
+Let's implement efficiently, skipping \(x=0\).
+
+```python
+from math import isqrt
+from fractions import Fraction
+
+def is_perfect_square(n):
+    if n < 0:
+        return False
+    r = isqrt(n)
+    return r*r == n
+
+def enumerate_roots():
+    max_root = None
+    for a in range(1, 101):
+        for c in range(1, 101):
+            # Possible numerators divide c
+            # For b, try all 1..100
+            for b in range(1, 101):
+                D = b*b - 4*a*c
+                if D < 0 or not is_perfect_square(D):
+                    continue
+                sqrtD = isqrt(D)
+                # Roots: (-b ± sqrtD) / (2a)
+                for sign in [-1,1]:
+                    numerator = -b + sign*sqrtD
+                    denom = 2*a
+                    if numerator == 0:
+                        continue  # skip zero roots
+                    frac = Fraction(numerator, denom)
+                    # check reduced form roots
+                    # numerator divides c, denom divides a for rational roots, check these conditions:
+                    # Actually by formula roots are rational if D is perfect square.
+                    # Just print all such roots
+                    # Root must be nonzero rational, already ensured
+                    r = frac
+                    # Filter to roots within reasonable range or print all
+                    print(r)
+                    if max_root is None or r > max_root:
+                        max_root = r
+    if max_root is not None:
+        print("Maximum root found:", max_root)
+
+if __name__ == "__main__":
+    enumerate_roots()
+```

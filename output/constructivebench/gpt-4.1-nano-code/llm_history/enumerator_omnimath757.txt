@@ -1,0 +1,56 @@
+[write_program]
+The problem is about finding the maximum size of a subset \( s \) of the grid \( \{0,1,2,3,4,5\} \times \{0,1,2,3,4,5\} \) with certain constraints: no two points \( p, q \) in the subset satisfy \( p_1 - q_1 = p_2 - q_2 \) or \( p_1 - q_1 = q_2 - p_2 \). We want to find the maximum \( n \), the number of points, and the number \( k \) of such sets of that size, such that \( n + k = 74 \). Here, I will generate candidate values for \( n \) and \( k \), checking possible maximum sizes, and enumerate suitable sets accordingly.
+
+Since the problem involves small finite sets, I will try to approximate bounds by enumerating possible subset sizes and checking the constraints.
+
+```python
+import itertools
+
+# The grid size
+grid_size = 6
+points = [(x, y) for x in range(grid_size) for y in range(grid_size)]
+
+# Function to check if a set satisfies the constraints
+def valid_set(s):
+    for p, q in itertools.combinations(s, 2):
+        dx = p[0] - q[0]
+        dy = p[1] - q[1]
+        if dx != 0 and dy != 0:
+            if dx == dy or dx == -dy:
+                return False
+    return True
+
+# Enumerate all sets of size from maximum downward
+max_size = 0
+solutions = []
+
+for size in range(len(points), 0, -1):
+    found_in_this_size = False
+    for subset in itertools.combinations(points, size):
+        s = list(subset)
+        if valid_set(s):
+            # Since we are looking for the maximum size and the count of such sets,
+            # Record the size and the count of solutions
+            solutions.append((size, 1))
+            if size > max_size:
+                max_size = size
+            found_in_this_size = True
+    if found_in_this_size:
+        # Only need to check the maximum size sets
+        break
+
+# Count how many solutions of maximum size
+max_size_solutions = [s for s in solutions if s[0] == max_size]
+k = len(max_size_solutions)
+n = max_size
+
+# Sum of n and k
+print(f"Maximum size n: {n}")
+print(f"Number of such maximum sets k: {k}")
+print(f"Sum n + k: {n + k}")
+
+# For illustration, print one example set
+if max_size_solutions:
+    example_set = list(itertools.combinations(points, max_size))[0]
+    print(f"Example set: {example_set}")
+```

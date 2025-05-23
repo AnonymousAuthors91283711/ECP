@@ -1,0 +1,52 @@
+[write_program]
+The problem is to find all quadruples \((p,q,a,b)\) of natural numbers (with given conditions) such that \(p^a = 1 + 5 q^b\), where \(p\) and \(q\) are primes, \(a > 1\), and \(p,q,a,b > 0\).
+
+We'll scan over small primes \(p, q\), small exponents \(a, b\), check the relation and print all solutions found. This helps conjecture the true characterization or solution set of these quadruples.
+
+```python
+import math
+
+# Check if n is prime (simple, efficient for small numbers)
+def is_prime(n):
+    if n < 2: return False
+    if n in (2,3): return True
+    if n % 2 == 0: return False
+    r = int(n**0.5)+1
+    for i in range(3, r, 2):
+        if n % i == 0:
+            return False
+    return True
+
+# Enumerate primes up to limit
+def primes_up_to(limit):
+    return [x for x in range(2, limit+1) if is_prime(x)]
+
+# Parameters: search over small primes and small exponents
+p_limit = 50    # primes p <= 50
+q_limit = 50    # primes q <= 50
+a_limit = 10    # exponent a <= 10, a>1
+b_limit = 10    # exponent b <=10
+
+primes_p = primes_up_to(p_limit)
+primes_q = primes_up_to(q_limit)
+
+print("Enumerating (p,q,a,b) with p^a = 1+5*q^b, p,q primes, a>1, b>0:")
+for p in primes_p:
+    for q in primes_q:
+        for a in range(2, a_limit+1):
+            # Compute p^a once
+            p_pow = p**a
+            # Rearrange: p^a - 1 = 5 * q^b => (p^a - 1)/5 = q^b should be integer power of q
+            val = p_pow - 1
+            if val % 5 != 0:
+                continue
+            rhs = val // 5
+            # Try b from 1 to b_limit to see if rhs == q^b
+            for b in range(1, b_limit+1):
+                q_pow = q**b
+                if q_pow == rhs:
+                    # Found a quadruple
+                    print(f"p={p}, q={q}, a={a}, b={b} -> {p}^{a} = 1 + 5*{q}^{b} = {p_pow} = {1+5*q_pow}")
+                    break
+
+```

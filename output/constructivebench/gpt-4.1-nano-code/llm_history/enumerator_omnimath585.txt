@@ -1,0 +1,69 @@
+[write_program]
+This problem involves enumerating specific hands from a deck of 52 cards, considering constraints on card types and point values. Our goal is to compute the ratio of the number of hands that meet certain high-level criteria: having four face cards (10, J, Q, K) and a point value of at least 13, over all hands with exactly four face cards.
+
+Here's how we approach it:
+- We select small sample values to limit computation and demonstrate the enumeration process.
+- We'll explicitly enumerate all possible hands with the desired properties within reasonable bounds.
+- The code filters and counts these hands, printing each qualifying hand as it is found.
+- To simplify, we assume the small sample deck contains only four suits (hearts, diamonds, clubs, spades) with known indices per card rank.
+- For efficiency, we avoid generating all 52-card combinations directly; instead, we generate combinations of indices representing the cards within our sample.
+- We compute and print the ratio of the count of qualifying hands over total 4-face-card hands.
+
+```python
+from itertools import combinations
+
+# Define small sample deck: 4 suits, each with 13 cards
+# Cards indexed from 0 to 51, suits grouped in blocks of 13
+deck = list(range(52))
+# Map each card to its rank (0-12)
+def rank(c):
+    return c % 13
+
+# Generate all 4-card combinations
+total_hands = 0
+qualifying_hands = 0
+
+# To keep enumeration manageable, we enumerate all combinations of 4 face cards (rank >= 10)
+# For brevity, we consider only the face cards with ranks 10 (J), 11 (Q), 12 (K), 0 (A)
+# But as per condition, face cards are those with rank >= 10, i.e., J, Q, K, A
+# The problem’s condition: hand.filter (lambda c => c % 13 ≥ 10).card = 4 indicates all four face cards are J, Q, K, or possibly A if included
+# The description mentions 10-13, but 13 is not a rank; likely 10, J(11),Q(12),K(13).
+# Adjust accordingly: ranks >=10 for face cards.
+
+face_ranks = list(range(10, 13+1))  # ranks 10,11,12,13, but 13 doesn't exist, so adjust to 10,11,12
+# Actually, ranks are 0..12; ranks 10 (J),11(Q),12(K)? Let's assume J=10,Q=11,K=12. Ace=0.
+face_ranks = [10, 11, 12]
+
+# Create list of all face cards in the sample deck
+face_cards = [c for c in deck if rank(c) in face_ranks]
+
+# Enumerate all combinations of 4 face cards
+for hand in combinations(face_cards, 4):
+    total_hands += 1
+    hand_set = set(hand)
+    # Check if hand meets the condition: (hand.filter (λ c => c % 13 ≥ 10)).card = 4
+    count_face_cards = sum(1 for c in hand if rank(c) in face_ranks)
+    if count_face_cards == 4:
+        # Check if pointValue >=13
+        # pointValue: 4*Aces + 3*Kings + 2*Queens + 1*Jacks
+        # Map rank to point value
+        def point_value(c):
+            r = rank(c)
+            if r == 0:
+                return 4
+            elif r == 12:
+                return 3
+            elif r == 11:
+                return 2
+            elif r == 10:
+                return 1
+            else:
+                return 0
+        total_points = sum(point_value(c) for c in hand)
+        if total_points >= 13:
+            qualifying_hands += 1
+            print(f"Qualifying hand: {hand}, Point value: {total_points}")
+
+# Print the ratio as a float
+print("Ratio:", qualifying_hands / total_hands if total_hands else 0)
+```

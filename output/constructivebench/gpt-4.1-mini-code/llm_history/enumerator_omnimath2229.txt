@@ -1,0 +1,85 @@
+[write_program]
+The problem involves a polynomial \( P \) with integer coefficients between 0 and 99 inclusive, satisfying \( P(10) = 331633 \) and \( P(-10) = 273373 \). We want to find \( P(1) \).
+
+We can enumerate the coefficients \( a_n \) (each \( 0 \le a_n < 100 \)) such that the evaluation constraints hold, then print the corresponding \( P(1) = \sum a_n \).
+
+To keep search feasible, note \( P(10) = \sum a_n \cdot 10^n = 331633 \), so degree \( d \le 5 \) (since \( 10^6=1,000,000 >331k \)). We'll try degrees 0 to 5 and find coefficients fitting both constraints.
+
+Print all possible \( P(1) \) as we find them — this helps detect if unique or multiple answers occur.
+
+```python
+# Enumerate polynomials P with coeffs in [0,99], degree <=6 (since 10^6 > 331633)
+# satisfying P(10)=331633 and P(-10)=273373, then print P(1)=sum of coeffs.
+# We test degrees 0..6 (max 7 coeffs), use backtracking on coeffs.
+
+def eval_poly(coeffs, x):
+    res = 0
+    xp = 1
+    for c in coeffs:
+        res += c * xp
+        xp *= x
+    return res
+
+def search(deg, pos, coeffs, val10, valn10):
+    # pos: current coeff index
+    # coeffs: current coefficient list
+    # val10, valn10: running sums P(10), P(-10)
+    if pos == deg + 1:
+        if val10 == 331633 and valn10 == 273373:
+            p1 = sum(coeffs)
+            print(p1)
+        return
+    # For the next coeff, try 0..99
+    # Max coeff 99; prune impossible values
+    # val10 + c*10^pos <=331633
+    base10 = 10**pos
+    base_n10 = (-10)**pos
+    min_c = 0
+    max_c = 99
+    # prune c to fit val10 in range
+    # val10 + c*base10 <=331633 => c <= (331633 - val10)//base10
+    max_c = min(max_c, (331633 - val10)//base10 if base10 != 0 else 99)
+    # valn10 + c*base_n10 <=273373, but base_n10 can be negative, so careful
+    # To satisfy equality at the end, just rely on exact matching after full coeffs
+    # So no extra prune on valn10 for speed
+    for c in range(min_c, max_c +1):
+        new_val10 = val10 + c*base10
+        new_valn10 = valn10 + c*base_n10
+        # Prune if partial sums deviate much (simple check)
+        if new_val10 > 331633 + 99*base10:  # over max possible
+            continue
+        search(deg, pos+1, coeffs+[c], new_val10, new_valn10)
+
+def main():
+    # Try degrees 0 to 6, print solutions
+    # Using a set to avoid duplicate P(1) printing per degree
+    printed = set()
+    for deg in range(7):
+        print(f"Degree {deg}")
+        # We'll capture printed P(1) for this degree to avoid repeats
+        current_found = []
+        def search_wrap(degree):
+            def inner(pos, coeffs, val10, valn10):
+                if pos == degree + 1:
+                    if val10 == 331633 and valn10 == 273373:
+                        p1 = sum(coeffs)
+                        if p1 not in printed:
+                            print(p1)
+                            printed.add(p1)
+                    return
+                base10 = 10**pos
+                base_n10 = (-10)**pos
+                min_c = 0
+                max_c = 99
+                max_c = min(max_c, (331633 - val10)//base10 if base10 !=0 else 99)
+                for c in range(min_c, max_c+1):
+                    new_val10 = val10 + c*base10
+                    new_valn10 = valn10 + c*base_n10
+                    # Optional pruning could be added here
+                    inner(pos+1, coeffs+[c], new_val10, new_valn10)
+            inner(0, [], 0, 0)
+        search_wrap(deg)
+
+if __name__ == "__main__":
+    main()
+```

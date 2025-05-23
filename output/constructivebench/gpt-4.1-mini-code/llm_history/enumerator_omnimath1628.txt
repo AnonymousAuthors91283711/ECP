@@ -1,0 +1,95 @@
+[write_program]
+This problem involves finding coefficients \( a_i \) for \( i=0,1,2,3,4 \) such that for \( k = 1,2,3,4,5 \),
+
+\[
+\sum_{i=0}^{4} \frac{a_i}{k^2 + i} = \frac{1}{k^2}.
+\]
+
+We want to determine the value of
+
+\[
+\sum_{i=0}^4 \frac{a_i}{37 + i}.
+\]
+
+We can treat the problem as a linear system \( M a = b \), where
+
+\[
+M_{k, i} = \frac{1}{k^2 + i}, \quad b_k = \frac{1}{k^2}.
+\]
+
+We will write a Python script that:
+
+1. Constructs the matrix \( M \) and vector \( b \).
+2. Solves for the vector \( a \).
+3. Prints the exact fraction values for \( a_i \) using fractions to avoid floating-point errors.
+4. Computes and prints the sum \(\sum_{i=0}^4 \frac{a_i}{37+i}\).
+5. Prints all intermediate data for insight.
+
+We use the `fractions` module for exact fractions. The output will help conjecture the exact value of the requested sum.
+
+```python
+from fractions import Fraction
+
+def rational_matrix_vector():
+    # k ranges from 1 to 5
+    k_vals = list(range(1,6))
+    i_vals = list(range(5))
+
+    # Build matrix M and vector b with Fraction
+    M = []
+    b = []
+    for k in k_vals:
+        row = [Fraction(1, k*k + i) for i in i_vals]
+        M.append(row)
+        b.append(Fraction(1, k*k))
+    return M, b
+
+def gauss_solve(M, b):
+    # Solve M a = b for exact rational a by Gaussian elimination
+    n = len(b)
+    # Forward elimination
+    for i in range(n):
+        # Partial pivot
+        pivot = i
+        for r in range(i+1, n):
+            if abs(M[r][i]) > abs(M[pivot][i]):
+                pivot = r
+        if pivot != i:
+            M[i], M[pivot] = M[pivot], M[i]
+            b[i], b[pivot] = b[pivot], b[i]
+
+        # Normalize row i
+        pivot_val = M[i][i]
+        for c in range(i, n):
+            M[i][c] /= pivot_val
+        b[i] /= pivot_val
+
+        # Eliminate below
+        for r in range(i+1, n):
+            f = M[r][i]
+            for c in range(i, n):
+                M[r][c] -= f * M[i][c]
+            b[r] -= f * b[i]
+
+    # Back substitution
+    x = [Fraction(0)]*n
+    for i in reversed(range(n)):
+        x[i] = b[i]
+        for c in range(i+1,n):
+            x[i] -= M[i][c]*x[c]
+    return x
+
+def main():
+    M, b = rational_matrix_vector()
+    a = gauss_solve(M, b)
+    print("Coefficients a_i:")
+    for i, val in enumerate(a):
+        print(f"a_{i} = {val}")
+    # Compute sum a_i / (37 + i)
+    s = sum(val / Fraction(37 + i) for i, val in enumerate(a))
+    print("\nSum ∑ a_i/(37+i):")
+    print(s)
+
+if __name__ == "__main__":
+    main()
+```

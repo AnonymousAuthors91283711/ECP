@@ -1,0 +1,45 @@
+[write_program]
+This problem involves finding a real number x (with certain constraints) and positive coprime integers m, n such that a logarithmic equation holds, and then computing m+n. We'll write a Python program to search for possible x values and corresponding m, n pairs.
+
+The approach will:
+1. Iterate through possible x values in a reasonable range (avoiding the excluded points)
+2. For each x, compute both sides of the logarithmic equation
+3. Find rational approximations to match the equation
+4. Check for coprime m, n pairs that satisfy the condition
+
+```python
+import math
+from fractions import Fraction
+
+def find_solutions():
+    # We'll search x in (0,1) excluding 1/20 and 1/2, with small steps
+    step = 0.0001
+    for i in range(1, 10000):
+        x = i * step
+        if abs(x - 1/20) < 1e-6 or abs(x - 1/2) < 1e-6:
+            continue
+            
+        try:
+            # Compute left side of equation: log_{20x}(22x)
+            lhs = math.log(22 * x) / math.log(20 * x)
+            
+            # Find rational approximation for right side
+            # We'll try denominators up to 1000
+            for denom in range(1, 1001):
+                numer = round(lhs * denom)
+                if numer <= 0:
+                    continue
+                
+                # Check if approximation is close enough
+                if abs(lhs - numer/denom) < 1e-6:
+                    # Simplify fraction
+                    f = Fraction(numer, denom)
+                    m, n = f.numerator, f.denominator
+                    if math.gcd(m, n) == 1:
+                        print(f"x = {x:.5f}, m = {m}, n = {n}, m+n = {m+n}")
+                        return  # Stop after first valid solution found
+        except ValueError:
+            continue  # Skip invalid log domains
+
+find_solutions()
+```

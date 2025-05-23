@@ -1,0 +1,55 @@
+[write_program]
+This problem asks for the smallest positive integer n such that every positive integer m can be expressed as the sum of n 2015th powers of integers. This is related to Waring's problem. We'll write a program to find the minimal n by testing possible values.
+
+The approach:
+1. For each candidate n starting from 1 upwards
+2. For each m starting from 1 upwards
+3. Check if m can be expressed as sum of n 2015th powers
+4. If we find an m that can't be expressed, break and try next n
+5. The first n where all m up to a threshold work is our candidate
+
+Since 2015th powers grow very rapidly, we'll use a small threshold for m (like 100) since higher m will likely require more terms.
+
+```python
+def is_expressible(m, n, k=2015, max_tries=100):
+    """Check if m can be expressed as sum of n kth powers."""
+    # Base case: n=1, check if m is a perfect kth power
+    if n == 1:
+        root = round(m ** (1/k))
+        return root ** k == m
+    
+    # Try all possible first terms a1 where a1^k <= m
+    max_a = int(m ** (1/k)) + 1
+    for a in range(max_a, -1, -1):
+        remaining = m - a**k
+        if remaining < 0:
+            continue
+        if remaining == 0 and n == 1:
+            return True
+        if remaining > 0 and n > 1:
+            if is_expressible(remaining, n-1, k, max_tries-1):
+                return True
+        if max_tries <= 0:
+            break
+    return False
+
+def find_min_n(k=2015, max_m=100):
+    """Find minimal n such that all 1..max_m are sums of n kth powers."""
+    n = 1
+    while True:
+        works_for_all = True
+        for m in range(1, max_m+1):
+            if not is_expressible(m, n, k):
+                works_for_all = False
+                break
+        if works_for_all:
+            print(f"n={n} works up to m={max_m}")
+            return n
+        n += 1
+        if n > 20:  # Prevent infinite loops
+            print("Stopped after n=20")
+            return None
+
+if __name__ == "__main__":
+    find_min_n()
+```

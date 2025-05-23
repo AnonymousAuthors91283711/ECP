@@ -1,0 +1,106 @@
+[write_program]
+The problem asks to find the number of real solutions \(\theta \in [0, 2\pi]\) satisfying
+\[
+\log(\sin(3\theta)) + \log(\cos(2\theta)) = 0,
+\]
+which is equivalent to
+\[
+\sin(3\theta) \cdot \cos(2\theta) = 1.
+\]
+
+Since \(\sin(3\theta) \in [-1,1]\) and \(\cos(2\theta) \in [-1,1]\), the product equals 1 only when both factors are ±1 with the same sign. We must consider the domain restrictions where both \(\sin(3\theta)\) and \(\cos(2\theta)\) are positive (to keep the logs defined) and check for all \(\theta\) in [0, 2\pi] satisfying \(\sin(3\theta)\cos(2\theta) = 1\).
+
+To conjecture the number of such \(\theta\), the program enumerates small steps over the interval, filtering for exact or close-to-1 values where both \(\sin(3\theta)\) and \(\cos(2\theta)\) are positive, and prints candidate solutions.
+
+```python
+import math
+
+# Enumerate θ in [0, 2π] with a fine grid to find all solutions to sin(3θ)*cos(2θ)=1
+# We print θ exactly when sin(3θ)*cos(2θ) == 1 approximately within a tolerance
+# Priority to exact values where sin(3θ)=1 and cos(2θ)=1 or both -1
+
+tol = 1e-9
+results = []
+
+pi2 = 2 * math.pi
+
+def is_close(a, b, tol=tol):
+    return abs(a - b) < tol
+
+# Check critical points where sin(3θ) = ±1 or cos(2θ) = ±1 since product =1
+# sin(3θ) = 1 when 3θ = π/2 + 2kπ => θ = (π/2 + 2kπ)/3
+# cos(2θ) = 1 when 2θ = 2kπ => θ = kπ
+
+# sin(3θ) = -1 when 3θ = 3π/2 + 2kπ => θ = (3π/2 + 2kπ)/3
+# cos(2θ) = -1 when 2θ = π + 2kπ => θ = (π + 2kπ)/2
+
+# We consider all k such that θ is in [0, 2π]
+
+candidates = set()
+
+# sin(3θ) = 1
+for k in range(-1,5):
+    theta = (math.pi/2 + 2*math.pi*k) / 3
+    if 0 <= theta <= pi2:
+        candidates.add(theta)
+
+# sin(3θ) = -1
+for k in range(-1,5):
+    theta = (3*math.pi/2 + 2*math.pi*k) / 3
+    if 0 <= theta <= pi2:
+        candidates.add(theta)
+
+# cos(2θ) = 1
+for k in range(0,5):
+    theta = math.pi * k
+    if 0 <= theta <= pi2:
+        candidates.add(theta)
+
+# cos(2θ) = -1
+for k in range(0,5):
+    theta = (math.pi + 2 * math.pi * k) / 2
+    if 0 <= theta <= pi2:
+        candidates.add(theta)
+
+# Check candidates and print those where product approx 1 and sin,cos positive since log defined:
+# log requires sin(3θ) > 0 and cos(2θ) > 0
+
+for theta in sorted(candidates):
+    s = math.sin(3*theta)
+    c = math.cos(2*theta)
+    product = s * c
+    if product > 0 and is_close(product, 1):
+        print(f"Exact candidate θ = {theta:.12f}, sin(3θ)={s:.12f}, cos(2θ)={c:.12f}, product=1")
+        results.append(theta)
+
+# Now do a finer grid search to find approximate solutions missed by above:
+step = 0.0001
+approx_results = []
+
+t = 0.0
+while t <= pi2:
+    s = math.sin(3*t)
+    c = math.cos(2*t)
+    if s > 0 and c > 0:
+        product = s * c
+        if abs(product - 1) < tol:
+            print(f"Approx candidate θ ≈ {t:.4f}, sin(3θ)={s:.6f}, cos(2θ)={c:.6f}, product≈1")
+            approx_results.append(t)
+    t += step
+
+# Remove duplicates between exact and approx within tolerance
+def close_to_any(x, arr, tol=tol):
+    return any(abs(x - y) < tol for y in arr)
+
+unique_approx = [x for x in approx_results if not close_to_any(x, results, tol)]
+
+# Print unique approximate solutions
+for t in unique_approx:
+    print(f"Unique approx θ ≈ {t:.4f}")
+
+# Summary
+print(f"Total exact candidates found: {len(results)}")
+print(f"Total unique approximate candidates found: {len(unique_approx)}")
+print(f"Conjectured number of solutions on [0, 2π]: {len(results) + len(unique_approx)}")
+```
+This enumeration helps identify all possible \(\theta\) satisfying the equation in the defined domain.

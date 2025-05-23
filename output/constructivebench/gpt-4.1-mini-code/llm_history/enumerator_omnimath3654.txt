@@ -1,0 +1,71 @@
+[write_program]
+The problem is about finding, for a given n, the greatest cardinality k of a set C of pairs of natural numbers such that there exists a unique subset T of size n inside C consisting of pairs with distinct first and second components pairwise (i.e., T is a size-n matching with distinct row and column indices).
+
+We want to enumerate possible values for k = |C| for small n, and try to understand the pattern.
+
+We will:
+- For some small n (1 to 4),
+- Generate candidate sets C of pairs from a small grid (e.g., pairs with coordinates ≤ m),
+- For increasing k = |C|,
+- Check if there is a unique n-subset T in C satisfying the distance conditions: elements have distinct first and second coordinates and form a 'matching',
+- Print such k and parameters,
+- Then focus on the maximum such k.
+
+This is computationally heavy, so we will keep the coordinate grid and n small.
+
+```python
+# Enumerate sets C of pairs (i,j) and subsets T to examine uniqueness of n-sized matchings.
+
+from itertools import combinations, product
+
+def is_matching(subset):
+    # Check distinct first and second coordinates
+    rows = set()
+    cols = set()
+    for (r,c) in subset:
+        if r in rows or c in cols:
+            return False
+        rows.add(r)
+        cols.add(c)
+    return True
+
+def unique_matching(C, n):
+    # Among n-subsets of C, find those that form matchings
+    found = []
+    for T in combinations(C, n):
+        if is_matching(T):
+            found.append(T)
+            if len(found) > 1:
+                return False  # More than one matching found
+    return len(found) == 1
+
+def enumerator():
+    print("Enumerating for small n:")
+    for n in range(1, 5):
+        print(f"n = {n}")
+        max_k = 0
+        # Try grid size m=n to n+1 (to have enough coords)
+        m = n + 1
+        universe = [(i,j) for i in range(m) for j in range(m)]
+        # We try increasing k from n up to maximum possible (m*m)
+        max_possible = m*m
+        for k in range(n, max_possible+1):
+            # Check all subsets C of universe with size k
+            # to keep runtime sane, break early after first found
+            found_any = False
+            # Instead of all subsets, sample some subsets by combinations sorted by sum indices
+            for C in combinations(universe, k):
+                if unique_matching(C, n):
+                    print(f"  Found k={k} with C sample starting at {C[0]} and unique matching T")
+                    found_any = True
+                    if k > max_k:
+                        max_k = k
+                    break
+            if k - n > 3 and not found_any:
+                # No larger sets found beyond n+3, stop for this n to save time
+                break
+        print(f"Max k found for n={n}: {max_k}")
+
+if __name__ == "__main__":
+    enumerator()
+```

@@ -1,0 +1,53 @@
+[write_program]
+This problem asks for the largest natural number n such that there exists a finite set V of size n and a relation E on V satisfying certain tournament-like conditions. We'll write a Python program to enumerate small values of n and check the conditions.
+
+The key observation is that the condition requires that for any three distinct vertices A,B,C, exactly one of the three possible directed edges between them exists (either A→B, B→C, or C→A). This is similar to a tournament property.
+
+```python
+from itertools import product, combinations
+
+def is_valid_tournament(n, edges):
+    """Check if the tournament satisfies the given condition for all triples."""
+    vertices = range(n)
+    for a, b, c in combinations(vertices, 3):
+        ab = (a, b) in edges
+        bc = (b, c) in edges
+        ca = (c, a) in edges
+        # Exactly one of the three conditions must be true
+        valid = (ab and not bc and not ca) or \
+                (not ab and bc and not ca) or \
+                (not ab and not bc and ca)
+        if not valid:
+            return False
+    return True
+
+def check_max_n(max_n=7):
+    """Check all tournaments up to size max_n to find the largest valid n."""
+    max_valid = 0
+    for n in range(1, max_n + 1):
+        found = False
+        # Generate all possible tournaments on n vertices
+        for edges in product([False, True], repeat=n*(n-1)//2):
+            # Convert to edge set representation
+            edge_set = set()
+            idx = 0
+            for i in range(n):
+                for j in range(i+1, n):
+                    if edges[idx]:
+                        edge_set.add((i, j))
+                    else:
+                        edge_set.add((j, i))
+                    idx += 1
+            if is_valid_tournament(n, edge_set):
+                print(f"Found valid tournament for n = {n}")
+                found = True
+                break
+        if found:
+            max_valid = n
+        else:
+            print(f"No valid tournament found for n = {n}")
+    print(f"Largest valid n found: {max_valid}")
+
+# Check tournaments up to size 7 (reasonable for demonstration)
+check_max_n(7)
+```

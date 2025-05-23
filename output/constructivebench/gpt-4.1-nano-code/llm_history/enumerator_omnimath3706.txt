@@ -1,0 +1,75 @@
+[write_program]
+The problem seems to involve finding the smallest integer \(k \ge 2\) such that for every finite set of real numbers with size \(k\), there exist two distinct points with difference less than \(1/n\) or greater than \(n\). 
+
+This resembles a combinatorial extremal problem about distances in finite real sets, balancing between close points and large gaps.
+
+To assist conjecture, I'll generate minimal \(k\) values satisfying the constraints for small \(n\), exploring various \(k\). Since the problem involves inequalities over all sets, enumerate sets of size \(k\) for small \(k\), and check the conditions.
+
+Here's the plan:
+- For fixed \(n\) and candidate \(k\), generate some sample finite sets of size \(k\).
+- Check if in all these sets, the property holds.
+- Find the minimal \(k\) for which the property holds for all tested sets.
+- Always output progress immediately upon finding a candidate.
+
+Due to the complexity, I'll pick small \(n\) (say 2, 3, 4) and small \(k\). For the enumeration, generate sets with points spaced evenly or with small perturbations.
+
+```python
+import itertools
+import math
+
+def check_property(k, n, points):
+    # Check if for every pair of distinct points, the condition holds
+    for x, y in itertools.combinations(points, 2):
+        diff = abs(x - y)
+        if not (diff < 1/n or diff > n):
+            return False
+    return True
+
+# For each n, find minimal k ≥ 2 such that property holds for many tested sets
+# We'll test k from 2 up to 10
+results = {}
+for n in [2, 3, 4]:
+    minimal_k = None
+    for k in range(2, 11):
+        # Generate sample sets of size k
+        # Use points spaced uniformly between 0 and max(n*2, 10) for variety
+        max_point = max(n*2, 10)
+        found_counterexample = False
+        for pattern_type in ['uniform', 'cluster', 'random']:
+            if pattern_type == 'uniform':
+                for start in [0, max_point/2]:
+                    points = [start + i*(max_point/(k-1)) for i in range(k)]
+                    if not check_property(k, n, points):
+                        found_counterexample = True
+                        print(f"n={n}, k={k}, pattern={pattern_type}, points={points} => fails")
+            elif pattern_type == 'cluster':
+                center = max_point/2
+                points = [center + (i - k//2)*0.1 for i in range(k)]
+                if not check_property(k, n, points):
+                    found_counterexample = True
+                    print(f"n={n}, k={k}, pattern={pattern_type}, points={points} => fails")
+            elif pattern_type == 'random':
+                import random
+                for _ in range(5):
+                    points = [random.uniform(0, max_point) for _ in range(k)]
+                    if not check_property(k, n, points):
+                        found_counterexample = True
+                        print(f"n={n}, k={k}, pattern={pattern_type}, points={points} => fails")
+            if found_counterexample:
+                # For this n and k, property does not hold for all sets
+                break
+        else:
+            # No counterexamples found in tested sets, assume property holds
+            if minimal_k is None:
+                print(f"n={n}, minimal k found: {k}")
+                minimal_k = k
+            # Store or record if needed
+        # Stop if minimal_k is found
+        if minimal_k is not None:
+            break
+    results[n] = minimal_k
+
+# Output final minimal ks for each n
+for n, k in results.items():
+    print(f"n={n}: minimal k = {k}")
+```

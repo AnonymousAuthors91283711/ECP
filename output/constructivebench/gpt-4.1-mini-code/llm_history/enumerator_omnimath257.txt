@@ -1,0 +1,64 @@
+[write_program]
+The problem concerns integers \(a(k)\) nonzero for all \(k\), such that for given \(n\), \(\sum_{i=0}^{n-1} (i+1) a((i+1)k) = 0\) for all \(k\in \mathbb{N}\). We need to find all such \(n\) for which such an \(a\) exists.
+
+To assist, I will check small \(n\) values (say up to 10), and try to find a nonzero integer sequence \(a\) fulfilling these linear constraints, for all \(k\). The constraints resemble convolution or divisibility properties of \(a\).
+
+One approach to find candidates: For fixed \(n\), try to construct some \(a\) with integer nonzero values such that the given sums vanish. Since the condition holds for all \(k\), the sums impose many constraints, so likely the structure of \(a\) is highly constrained.
+
+To proceed numerically:
+- For fixed \(n\), treat the equations for \(k=1..M\) (say \(M=n\)) as finite linear constraints on values \(a(m)\) for \(m=1..L\) for some \(L\) (say \(n^2\)).
+- Then search for integer sequences \(a(1..L)\) with all entries nonzero satisfying these equations approximately.
+- To limit search, restrict \(a(m)\) to small integers, e.g. in \([-2,2]\setminus \{0\}\).
+- Print any valid \(n\) found and a corresponding \(a\).
+
+Below is a Python program attempts this enumeration.
+
+```python
+# Enumerate candidate n for which there exists a function a: N->Z\{0} satisfying:
+# For all k, sum_{i=0}^{n-1} (i+1)*a((i+1)*k) = 0
+# We'll test for n=2..10, and search for a over a finite range (1..n^2)
+# With a(m) in {-2,-1,1,2} to keep search manageable.
+# We test first M=k=1..n constraints only (partial check)
+from itertools import product
+
+def check_a(n,a_vals,M):
+    # Check the sum condition for k=1..M
+    for k in range(1,M+1):
+        s = 0
+        for i in range(1,n+1):
+            idx = i*k
+            if idx > len(a_vals):
+                return False
+            s += i*a_vals[idx-1]
+        if s != 0:
+            return False
+    return True
+
+def main():
+    # possible values for a(m) except 0
+    vals = [-2,-1,1,2]
+
+    max_n = 10
+    for n in range(2,max_n+1):
+        L = n*n  # length of a to consider
+        M = n    # number of k constraints
+        print(f"Trying n={n} with sequence length {L} and constraints k=1..{M}")
+        found = False
+        # due to combinatorial explosion, only sample a small subset
+        # Random sampling could be done, but we do small brute force for small n
+        # For bigger n, skip.
+        if L > 8:  # limit brute force length to 8 for speed
+            print(f"Skipping n={n} due to large length {L}")
+            continue
+        for a_vals in product(vals, repeat=L):
+            if all(x != 0 for x in a_vals):
+                if check_a(n,a_vals,M):
+                    print(f"Found for n={n}, a={a_vals}")
+                    found = True
+                    break
+        if not found:
+            print(f"No sequence found for n={n} in tested range")
+
+if __name__=="__main__":
+    main()
+```

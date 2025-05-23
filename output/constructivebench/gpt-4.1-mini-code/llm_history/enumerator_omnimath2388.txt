@@ -1,0 +1,103 @@
+[write_program]
+The problem counts functions from a 16-element domain to pairs of coordinates in a 4×4 grid, with these constraints:
+- The function is injective.
+- The image includes every point of the grid except (0, 0).
+- The image starts and ends at (0, 0).
+- Consecutive points in the image are adjacent horizontally or vertically.
+
+This describes Hamiltonian paths on a 4×4 grid starting and ending at (0, 0), visiting all other points exactly once.
+
+We'll enumerate possible such paths to conjecture the count. The problem is complex (finding Hamiltonian cycles); however, we can attempt smaller grids and path lengths to get data.
+
+```python
+# Enumerate all simple paths of length n on a w x h grid,
+# starting and ending at (0,0), visiting all distinct points in the image,
+# where consecutive points differ by 1 in either coordinate (not diagonal),
+# and the image cover all points except (0,0).
+# For 4x4 and n=16, full Hamiltonian cycle length is 16.
+
+from collections import deque
+
+w, h, n = 4, 4, 16
+start = (0, 0)
+
+# We want to enumerate paths f: [0..15] -> grid points
+# with f(0) = f(15) = (0,0), all points distinct except (0,0) appearing twice,
+# and neighbors differ by 1 step in horizontal or vertical direction,
+# and range includes all points except (0,0)
+
+# We'll do a DFS with pruning to enumerate, stopping early to print partial solutions.
+
+neighbors_cache = {}
+def neighbors(p):
+    if p in neighbors_cache:
+        return neighbors_cache[p]
+    x,y = p
+    nbrs = [(x+dx,y+dy) for dx,dy in [(1,0),(-1,0),(0,1),(0,-1)] 
+            if 0<=x+dx<w and 0<=y+dy<h]
+    neighbors_cache[p] = nbrs
+    return nbrs
+
+def print_path(path):
+    # Print path as sequence of points
+    print(path)
+
+def backtrack(path, visited):
+    i = len(path)
+    if i == n:
+        # check end condition: last point == start
+        if path[-1] == start:
+            # Check coverage: must include all points besides (0,0)
+            cover = set(path)
+            # Since start=(0,0) repeats twice, it is in cover
+            if cover == {(x,y) for x in range(w) for y in range(h)}:
+                print_path(path)  # print solution
+        return
+    curr = path[-1]
+    for nxt in neighbors(curr):
+        # next position must be distinct unless it's the last step and equals start
+        if nxt == start and i == n-1:
+            # allow revisiting start at the end
+            backtrack(path + [nxt], visited)
+        elif nxt != start and nxt not in visited:
+            backtrack(path + [nxt], visited | {nxt})
+
+if __name__ == "__main__":
+    # We'll run on smaller settings for tractability
+    print("Parameters: grid=4x4, path length=16")
+    print("Starting enumeration (may be very slow for full 4x4)...")
+    # Uncomment next line to run full backtracking (likely very slow)
+    # backtrack([start], {start})
+
+    # Instead enumerate a smaller example to get insight:
+    # Grid 3x3, path length 9 (Hamiltonian cycle 8 steps + start again)
+    w_small, h_small, n_small = 3,3,9
+    print(f"Parameters: grid={w_small}x{h_small}, path length={n_small}")
+    start_small = (0,0)
+    neighbors_cache.clear()
+    def neighbors_small(p):
+        if p in neighbors_cache:
+            return neighbors_cache[p]
+        x,y = p
+        nbrs = [(x+dx,y+dy) for dx,dy in [(1,0),(-1,0),(0,1),(0,-1)] 
+                if 0<=x+dx<w_small and 0<=y+dy<h_small]
+        neighbors_cache[p] = nbrs
+        return nbrs
+    def backtrack_small(path, visited):
+        i = len(path)
+        if i == n_small:
+            if path[-1] == start_small:
+                cover = set(path)
+                if cover == {(x,y) for x in range(w_small) for y in range(h_small)}:
+                    print(path)
+            return
+        curr = path[-1]
+        for nxt in neighbors_small(curr):
+            if nxt == start_small and i == n_small-1:
+                backtrack_small(path + [nxt], visited)
+            elif nxt != start_small and nxt not in visited:
+                backtrack_small(path + [nxt], visited | {nxt})
+
+    backtrack_small([start_small], {start_small})
+```
+This program enumerates all Hamiltonian cycles on smaller grids (3x3) to get insight into counts before tackling the 4x4 problem. It prints each valid cycle immediately. Uncommenting the large 4x4 call is expensive.

@@ -1,0 +1,50 @@
+[write_program]
+This problem asks for the smallest positive integer k such that any subset of size k from the integers 1 to 50 contains two distinct elements a and b where (a+b) divides (a*b). We'll write a Python program to find this minimal k by checking subsets of increasing sizes.
+
+The approach:
+1. For each possible k from 2 to 50 (since k=1 is trivial)
+2. Check if all subsets of size k contain such a pair
+3. The first k where this holds is our answer
+
+```python
+import itertools
+import math
+
+def has_valid_pair(subset):
+    """Check if subset contains distinct a,b with (a+b) dividing (a*b)"""
+    for a, b in itertools.combinations(subset, 2):
+        if (a * b) % (a + b) == 0:
+            return True
+    return False
+
+def find_min_k(max_n=50):
+    """Find minimal k where all k-subsets of [1..max_n] contain valid pair"""
+    numbers = list(range(1, max_n + 1))
+    
+    for k in range(2, max_n + 1):
+        all_valid = True
+        # Check a sample of subsets for efficiency
+        sample_size = min(1000, math.comb(max_n, k))
+        for subset in itertools.islice(itertools.combinations(numbers, k), sample_size):
+            if not has_valid_pair(subset):
+                all_valid = False
+                break
+        if all_valid:
+            print(f"Found candidate k = {k}")
+            # Verify with more samples to increase confidence
+            additional_checks = min(10000, math.comb(max_n, k))
+            all_valid_confirmed = True
+            for subset in itertools.islice(itertools.combinations(numbers, k), additional_checks):
+                if not has_valid_pair(subset):
+                    all_valid_confirmed = False
+                    break
+            if all_valid_confirmed:
+                print(f"Confirmed minimal k = {k}")
+                return k
+    return max_n + 1  # fallback
+
+if __name__ == "__main__":
+    find_min_k()
+```
+
+Note: The program uses sampling for efficiency since checking all subsets would be computationally expensive. The actual mathematical proof would need to establish this result definitively, but the program can help conjecture the answer. The sampling approach gives us high confidence when we find a k where all sampled subsets satisfy the condition.

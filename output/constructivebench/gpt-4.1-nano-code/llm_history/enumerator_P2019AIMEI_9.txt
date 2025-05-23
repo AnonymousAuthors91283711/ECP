@@ -1,0 +1,186 @@
+[write_program]
+Let's analyze the problem. The goal is to find a list of six natural numbers `ns` such that:
+
+- `ns.length = 6`
+- `ns` is sorted in non-decreasing order
+- For each `n` in `ns`, `(number_of_divisors(n) + number_of_divisors(n+1)) = 7`
+- `s = sum of the elements in ns`
+- The overall parameter `s` is the least such sum
+
+Given the divisor sum condition, for a number `n`, `(divisors.count + (n+1).divisors.count) = 7`. Since common divisor counts are small integers for small `n`, and the divisor function is multiplicative.
+
+We can enumerate all `n` with low divisor counts and see what pairs `(divisors.count, (n+1).divisors.count)` sum to 7:
+
+Possible pairs:
+- (1, 6)
+- (6, 1)
+- (2, 5)
+- (5, 2)
+- (3, 4)
+- (4, 3)
+
+Numbers with divisor counts:
+- 1: 1 (divisors: 1)
+- 2: divisors: 1,2 (2)
+- 3: divisors: 1,3 (2)
+- 4: divisors: 1,2,4 (3)
+- 5: divisors: 1,5 (2)
+- 6: divisors: 1,2,3,6 (4)
+- 8: divisors: 1,2,4,8 (4)
+- 9: divisors: 1,3,9 (3)
+- 10: divisors: 1,2,5,10 (4)
+
+We see that numbers with divisor counts 1, 2, 3, 4, 5, 6 are manageable.
+
+Let's find candidates matching the divisor count patterns:
+
+Pairs:
+- For divisor count of n being 1 (n=1), then `(n+1)` must have divisor count 6 → no number with count 6 less than or equal to 10. No such `(n, n+1)` pair.
+
+Similarly, for divisor count 2, `(n+1)` requires divisor count 5 → no small candidates for count 5 with n+1 <= 10.
+
+The feasible pairs with small n are:
+- (2, 5): for n with divisors=2 and n+1 with divisors=5
+- (3,4): for n with divisors=3 and n+1 with divisors=4
+
+Check:
+- divisor count 2: n = 2, 3, 5, 10
+- divisor count 3: n=4, 9
+- divisor count 4: n=6, 8, 10
+- divisor count 5: n=16, 31, 60, etc.
+
+Within small numbers, candidates are:
+
+`n` with 2 divisors: 2,3,5,10.
+
+`n+1` with 5 divisors: 16, 31, 60, ... (but these are large).
+
+Check for the (3,4) pair:
+- n=4 (divisors=3), n+1=5 (divisors=2) ? no, sum=3+2=5 ≠7
+- n=9 (divisors=3), n+1=10 (divisors=4) sum=3+4=7 **OK**
+
+Similarly, for pair (2,5):
+- n=2 (divisors=2), n+1=3 (divisors=2) sum=4
+- n=3 (divisors=2), n+1=4 (divisors=3): sum= 2+3=5
+
+No.
+
+So only `n=9`, `n+1=10` works for the pair (3,4), sum=7.
+
+Now, to minimize the total sum over 6 such numbers, we **prefer the smallest** eligible candidates.
+
+From above, `n=9`, `n+1=10`.
+
+Check for others:
+
+- For divisor count 1: only n=1 (divisors=1), then (n+1) must have 6 divisors, which are 1,2,3,4,6,8,10,... no.
+
+- For divisor count 4: n=6,8,10. But `6+1=7`, divisors=2, sum=4+2=6 not 7; `8+1=9`, divisors=3, sum=4+3=7 OK; similarly for 10+1=11, divisors=2 → sum 4+2=6 not good.
+
+So only `n=8` with `divisors=4` and `n+1=9` with divisors=3` works.
+
+Total sum candidates:
+
+- 8 and 9 are both small. Let's find other such pairs with minimal values.
+
+So constructed candidate numbers:
+
+- From earlier analysis, promising candidates are:
+
+`(8, 9)`
+
+Now, to form six numbers satisfying the divisor count conditions - the main challenge is to find 6 numbers satisfying `(n's divisor count + (n+1)'s divisor count) = 7`.
+
+Given the small explorations, perhaps the simplest set with minimal total sum is repeating small such pairs.
+
+Suppose we try to include:
+
+- 8 (divisors=4), 9 (div=3)
+- For pairing, we need zeros, but only 6 total numbers, and with more combinations.
+
+Alternatively, considering that the problem probably aims at the minimal sum, using multiple 8 or 9 or similar small candidates.
+
+Possible candidate list:
+
+- 8 (div=4), next 9 (div=3), total sum=17
+
+Repeat 8 and 9 multiple times:
+
+- Since the pairs are independent, picking several 8's and 9's in the list.
+
+To minimize total sum, prefer smaller numbers with counts 2 or 3; so 8 and 9.
+
+Hence, an example of 6 numbers: [8,8,8,8,8,8], all have divisor counts=4, n+1 also 8+1=9 (div=3), sum=4+3=7 satisfied.
+
+Check each:
+
+- For each 8, n=8 divisor count=4.
+
+- For n+1=9, divisor count=3, sum=4+3=7.
+
+In list, all 8's, sum = 8*6=48.
+
+But if we include the mixture:
+
+- 8s and 9s in the list.
+
+So, perhaps:
+
+List: [8,8,8,9,9,9]
+
+Sum: 8*3 + 9*3 = 24 + 27 = 51.
+
+Is sum smaller? Well, 48 with all 8's.
+
+Since the goal is minimal total sum, the minimal solution is with all small numbers satisfying the divisor conditions.
+
+The minimal such sets are:
+
+- All 8's (sum=48), because 8 has divisors=4, and 9 has divisors=3, the pairs satisfy the sum condition.
+
+Thus, the minimal sum s=48 achieved by ns = [8,8,8,8,8,8].
+
+**In code,** we can generate:
+
+- All numbers n where `(divisors.count(n) + divisors.count(n+1)) = 7`.
+
+- For small n, check the divisor counts.
+
+- Pick the six smallest such `n`.
+
+Let's write the code accordingly.
+
+---
+
+```python
+# Enumerate small integers with specific divisor counts and find the minimal sum
+import math
+
+def divisors_count(n):
+    count = 0
+    for i in range(1, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            count += 1 if i * i == n else 2
+    return count
+
+# Collect candidates for n where (divisors_count(n) + divisors_count(n+1))=7
+candidates = []
+for n in range(1, 100):
+    dc = divisors_count(n)
+    dc_next = divisors_count(n + 1)
+    if dc + dc_next == 7:
+        candidates.append(n)
+
+# Sort candidates to find smallest
+candidates = sorted(set(candidates))
+# We want to select six such numbers to minimize sum
+# Choose the six smallest
+ns = candidates[:6]
+
+# Print each number immediately
+for n in ns:
+    print(n)
+
+# Compute and print sum
+print("Total sum:", sum(ns))
+```

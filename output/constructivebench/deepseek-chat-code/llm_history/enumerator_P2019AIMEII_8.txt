@@ -1,0 +1,44 @@
+[write_program]
+This problem involves finding the value of f(1) modulo 1000 for a specific complex polynomial f. The polynomial has coefficients a, b, c bounded by 2019, and satisfies a condition at a particular complex point. We'll write a program to enumerate possible (a,b,c) triples and check the conditions.
+
+The approach:
+1. The given point is a primitive 12th root of unity (ω = e^(πi/6))
+2. We'll use the fact that ω^12 = 1 and ω^6 = -1 to simplify the equation
+3. We'll iterate through possible a,b,c values ≤ 2019
+4. Check if they satisfy the given condition f(ω) = 2015 + 2019√3 i
+5. For valid triples, compute f(1) = a + b + c and return modulo 1000
+
+```python
+import math
+import cmath
+
+def solve():
+    # The complex point is ω = (1 + √3 i)/2, a primitive 12th root of unity
+    omega = (1 + math.sqrt(3)*1j)/2
+    # Precompute ω powers we'll need: ω^2016, ω^2017, ω^2018
+    # Using ω^12 = 1, so exponents can be reduced modulo 12
+    omega_2016 = omega**(2016 % 12)  # ω^0 = 1
+    omega_2017 = omega**(2017 % 12)  # ω^1 = ω
+    omega_2018 = omega**(2018 % 12)  # ω^2
+    
+    target = 2015 + 2019*math.sqrt(3)*1j
+    
+    # Iterate through possible a, b, c values
+    max_coeff = 2019
+    for a in range(max_coeff + 1):
+        for b in range(max_coeff + 1):
+            # Solve for c in the equation a*ω^2 + b*ω + c = target
+            lhs = a*omega_2018 + b*omega_2017
+            c_complex = (target - lhs)/omega_2016
+            # c must be real and an integer
+            if abs(c_complex.imag) > 1e-9:
+                continue
+            c = round(c_complex.real)
+            if 0 <= c <= max_coeff:
+                f1 = a + b + c
+                print(f"Found valid (a,b,c)=({a},{b},{c}), f(1)={f1}")
+                print(f"f(1) mod 1000 = {f1 % 1000}")
+                return  # We can stop after first valid solution since problem implies uniqueness
+
+solve()
+```

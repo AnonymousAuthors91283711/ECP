@@ -1,0 +1,45 @@
+[write_program]
+The problem is to find the greatest natural number \( n \) such that there exists an injective function \( f: \text{Fin } n \to \text{Fin } 55 \) with no pair of distinct indices \( i \neq j \) where the difference between the images \( f(i) \) and \( f(j) \) is exactly 4 (in either direction).
+
+This is equivalent to finding the largest subset \( S \subseteq \{0, \dots, 54\} \) with no two elements differing by exactly 4, and \( n = |S| \).
+
+We enumerate subsets by using a backtracking-like approach and verify the difference condition, aiming to find large subsets. To keep complexity reasonable, we'll use a greedy-style enumeration.
+
+```python
+# Enumerate large subsets of {0,...,54} with no two elements differing by 4
+# Print subsets sizes found and try to maximize size
+
+def valid_add(s, x):
+    # Check no existing element in s differs from x by 4
+    for y in s:
+        if abs(x - y) == 4:
+            return False
+    return True
+
+# We'll try a backtracking with a forward check to build large subsets
+# To control output, we only print subsets of large size as candidates
+
+max_n = 0
+max_s = set()
+
+def backtrack(start, s):
+    global max_n, max_s
+    if len(s) > max_n:
+        max_n = len(s)
+        max_s = s.copy()
+        print(f"Found subset of size {max_n}: {sorted(max_s)}")
+    if start > 54:
+        return
+    # Try adding elements from start to 54
+    for x in range(start, 55):
+        if valid_add(s, x):
+            s.add(x)
+            backtrack(x + 1, s)
+            s.remove(x)
+
+if __name__ == "__main__":
+    # Run backtracking starting empty
+    backtrack(0, set())
+    print(f"Maximum subset size with no difference 4 is {max_n}.")
+```
+This will print each larger subset found immediately. The largest subset size printed at the end is the candidate answer.

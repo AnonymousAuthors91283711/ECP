@@ -1,0 +1,114 @@
+[write_program]
+The problem appears to be about counting the number of functions \( t : \mathrm{Fin}\ 2014 \to \mathbb{N} \) that satisfy certain properties related to an auxiliary function \( f : \mathbb{N} \to \mathbb{N} \). The functions \(f\) satisfy:
+
+- \( f(1) = 1 \),
+- Monotonic: \( a \leq b \Rightarrow f(a) \leq f(b) \),
+- Doubling property: \( f(2a) = f(a) + 1 \).
+
+The goal is to determine the size of the set of such functions \( t \), which are restrictions of \(f\) to initial segments indexed by \(i.1\) of elements in \(\mathrm{Fin}\ 2014\).
+
+I will analyse the problem by simulating possible functions \(f\) that meet these constraints, identify their behaviors, and count the total number of such functions restricted to the domain \(\{0, 1, ..., 2013\}\). The key is understanding the structure introduced by the doubling property and the monotonicity.
+
+Here's the reasoning:
+- \(f(1) = 1\)
+- For \(a\ge1\), the doubling property relates \(f(2a)\) to \(f(a)\): \(f(2a) = f(a) + 1\).
+- Monotonicity constrains how \(f\) behaves when increasing arguments.
+
+By analyzing these, I observe \(f\) is determined by its values on powers of 2 and the monotonic increments. The pattern resembles counting functions where at each doubling step, the function increases by 1, and between these points, the function can increase gradually.
+
+Our task is to enumerate all functions \(f\) satisfying these constraints, then restrict to the initial segment \(\{0, ..., 2013\}\), and count how many such \(t\) arise.
+
+The Python code below executes this reasoning:
+
+- Enumerates possible values of \(f\) at each relevant point (powers of 2),
+- Extends \(f\) monotonically between these points,
+- Counts all consistent functions within the range,
+- Restricts to the first 2014 points.
+
+This will yield the number of such functions (set cardinality).
+
+```python
+import itertools
+
+# The key is to count how many functions f : N -> N satisfy:
+# f(1)=1, f is non-decreasing, and f(2a)=f(a)+1.
+# These properties imply that f can be reconstructed from its values at powers of 2,
+# and between these points, f can increase arbitrarily (up to the monotonicity constraints).
+
+# Generate all possible values at powers of 2 up to a certain limit, given the constraints.
+# For 0 to 2013, find all possible f(n) consistent with the properties.
+
+# Since f(1)=1, and for a power of 2, f(2^k) = f(2^{k-1}) + 1, so f(2^k) = 1 + k.
+# For numbers between powers of 2, f can vary monotonically with potential increases.
+
+# Approach:
+# 1. For each level k, f(2^k) = 1 + k.
+# 2. For numbers between 2^{k-1} and 2^{k}, f can take values between f(2^{k-1}) and f(2^k), non-decreasing.
+# 3. For each interval, count the non-decreasing sequences from f(2^{k-1}) to f(2^k).
+
+# Implementation:
+def count_functions(limit=2014):
+    # Determine maximum power of 2 within limit
+    max_pow = 0
+    while 2 ** max_pow < limit:
+        max_pow += 1
+    # For each interval between powers of two, count sequences
+    total = 1
+    prev_val = 1  # f(1) = 1
+    for k in range(1, max_pow + 1):
+        start = 2 ** (k - 1)
+        end = min(2 ** k, limit)
+        length = end - start
+        # f at start = prev_val
+        # f at end = 1 + k
+        # For each position, f can increase monotonically
+        # Number of non-decreasing sequences from prev_val to 1 + k over 'length' steps
+        if length == 0:
+            continue
+        # Count non-decreasing sequences:
+        # Number of solutions to: f_i >= prev_val, f_{i+1} >= f_i, and f_{length} <= 1 + k
+        # This is count of weakly increasing sequences from prev_val to 1 + k over 'length' steps
+        # The number of such sequences:
+        # Comb with repetition: C((1 + k) - prev_val + length - 1, length)
+        # because each step increase can be at most (1 + k) - prev_val
+        min_increase = prev_val
+        max_increase = 1 + k
+        # The total number of sequences:
+        # Number of compositions with sum = total increase over steps:
+        total_increase = max_increase - min_increase
+        # Distribute total_increase across length steps:
+        ways = itertools.combinations_with_replacement(range(total_increase + 1), length)
+        count = sum(1 for _ in ways)
+        total *= count
+        prev_val = max_increase
+    return total
+
+# However, itertools.combinations_with_replacement generate huge, so we use combinatorial formula:
+from math import comb
+
+def count_non_decreasing_sequences(low, high, length):
+    # Number of non-decreasing sequences of length 'length' from values in [low, high]
+    # Number of solutions to f_i in [low, high], f_{i+1} >= f_i, sum of (f_i - low) over i = total_increase
+    total_increase = high - low
+    # Number of ways to distribute total_increase over length positions:
+    return comb(total_increase + length, length)
+
+def total_functions(limit=2014):
+    max_pow = 0
+    while 2 ** max_pow < limit:
+        max_pow += 1
+    total = 1
+    prev_val = 1
+    for k in range(1, max_pow + 1):
+        start = 2 ** (k - 1)
+        end = min(2 ** k, limit)
+        length = end - start
+        if length == 0:
+            continue
+        count = count_non_decreasing_sequences(prev_val, 1 + k, length)
+        total *= count
+        prev_val = 1 + k
+    return total
+
+print("Number of functions f satisfying conditions restricted to first 2014 points:", total_functions())
+```

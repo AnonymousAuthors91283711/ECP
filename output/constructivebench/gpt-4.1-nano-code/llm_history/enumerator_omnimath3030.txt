@@ -1,0 +1,65 @@
+[write_program]
+The problem explores matrices of size 5x5 with specific properties related to their entries being true or false, with row and column sums equal to 3. We need to determine the minimal `k` for which there exists a matrix `M'` differing from `M` in exactly `k` positions, where `M'` also has row and column sums equal to 3.
+
+This resembles a combinatorial design problem with bipartite properties and symmetric differences. To find the minimal `k`, we consider all possible configurations where each row and column in `M'` sums to 3, starting from an initial matrix with 15 true entries (since 3×5=15) and 10 false entries.
+
+Here's an approach:
+- Fix a sample matrix with exactly 15 entries true and 10 false.
+- Generate configurations of changing a minimal number of entries to maintain the 3 per row/column property.
+- Record the minimal number of such changes (`k`) that satisfy these conditions.
+
+Below is a Python script enumerating candidate configurations. It searches small perturbations around a standard 15-true-entry matrix by flipping entries while maintaining the row and column sum constraints.
+
+```python
+import itertools
+
+# Generate starting matrix with 15 true entries (3 per row)
+# For simplicity, start with a matrix where each row has true in positions i, (i+1)%5, (i+2)%5
+def generate_base_matrix():
+    matrix = [[False]*5 for _ in range(5)]
+    for i in range(5):
+        for j in [(i), (i+1)%5, (i+2)%5]:
+            matrix[i][j] = True
+    return matrix
+
+# Check if matrix has each row and column sum exactly 3
+def valid(matrix):
+    for row in matrix:
+        if sum(row) != 3:
+            return False
+    for col in zip(*matrix):
+        if sum(col) != 3:
+            return False
+    return True
+
+# Compute the symmetric difference size between two matrices
+def difference_size(m1, m2):
+    diff = 0
+    for i in range(5):
+        for j in range(5):
+            if m1[i][j] != m2[i][j]:
+                diff +=1
+    return diff
+
+base = generate_base_matrix()
+
+# Generate all matrices differing by k entries, with k <= 8
+# For computational feasibility, limit to small k.
+found_k_values = set()
+
+for k in range(1, 10):
+    # Generate all combinations of k positions to flip
+    positions = list(itertools.product(range(5), range(5)))
+    for flips in itertools.combinations(positions, k):
+        candidate = [row[:] for row in base]
+        for (i,j) in flips:
+            candidate[i][j] = not candidate[i][j]
+        if valid(candidate):
+            diff = difference_size(base, candidate)
+            if diff == k:
+                print(f"k={k} found with difference {diff}")
+                found_k_values.add(k)
+
+# Output the minimal k found
+print(f"Minimal k satisfying the conditions: {min(found_k_values) if found_k_values else 'None found'}")
+```

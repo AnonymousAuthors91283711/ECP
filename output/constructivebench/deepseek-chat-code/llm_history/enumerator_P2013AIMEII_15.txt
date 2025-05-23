@@ -1,0 +1,154 @@
+[write_program]
+This problem is from the 2013 AIME II competition (Problem 15). It asks for angles A, B, C of a triangle (summing to π) with positive cosines, where one cosine has a specific radical form (p + q√r)/s with conditions on p, q, r, s (coprime numerator/denominator, squarefree r, r not a perfect square). The final answer is the sum p+q+r+s.
+
+We'll write a program to search for valid (p,q,r,s) combinations that satisfy all conditions, focusing on small integer values since the competition expects a reasonable answer.
+
+```python
+import math
+from fractions import gcd
+from math import isqrt
+
+def is_squarefree(n):
+    if n == 1:
+        return False
+    for i in range(2, isqrt(n) + 1):
+        if n % (i*i) == 0:
+            return False
+    return True
+
+def is_coprime(a, b):
+    return gcd(a, b) == 1
+
+max_s = 30  # Reasonable upper bound for competition problem
+
+for s in range(1, max_s + 1):
+    for r in range(1, 100):
+        if not is_squarefree(r) or isqrt(r)**2 == r:
+            continue
+        max_q = int((s - 1) / math.sqrt(r)) + 2
+        for q in range(1, max_q + 1):
+            max_p = s - q * math.sqrt(r)
+            for p in range(1, int(max_p) + 2):
+                if p + q * math.sqrt(r) >= s:
+                    continue
+                if not is_coprime(p + q * r, s):  # Simplified coprime check
+                    continue
+                cosA = (p + q * math.sqrt(r)) / s
+                if not 0 < cosA < 1:
+                    continue
+                A = math.acos(cosA)
+                # Now find B,C such that A+B+C=pi and all angles positive
+                # We'll try B=A for simplicity (isosceles case)
+                B = A
+                C = math.pi - 2*A
+                if C > 0:
+                    print(f"Found: p={p}, q={q}, r={r}, s={s}, sum={p+q+r+s}")
+                    print(f"Angles: A={math.degrees(A):.2f}°, B={math.degrees(B):.2f}°, C={math.degrees(C):.2f}°")
+                    print(f"cosA = ({p} + {q}√{r})/{s}")
+                    print("-----")
+```
+[refine_program]
+### Explanation of Judgement
+
+The original program attempts to solve a problem involving finding real numbers A, B, C and integers p, q, r, s that satisfy several conditions, including trigonometric relationships and number-theoretic properties. However, there are several issues with the program:
+
+1. **Incorrect Coprime Check**: The program checks `is_coprime(p + q * r, s)` but the problem requires `IsCoprime (p + q) s`. This is a significant deviation from the problem statement.
+
+2. **Squarefree Check**: While the squarefree check is implemented correctly, the program also needs to ensure that r is not a perfect square (`∀ k : ℕ, r ≠ k^2`), which is correctly checked.
+
+3. **Angle Constraints**: The program assumes an isosceles triangle (B = A) to simplify the search, but this might miss valid solutions where all three angles are distinct.
+
+4. **Empty Output**: The program produces no output, suggesting either the search space is too restricted or the conditions are too stringent.
+
+5. **Parameter Selection**: The bounds for s (30) and r (100) might be too small to find valid solutions.
+
+### Verdict
+
+<<<False>>>
+
+### Corrected Program
+
+```python
+import math
+from math import gcd, isqrt
+
+def is_squarefree(n):
+    if n == 1:
+        return False
+    for i in range(2, isqrt(n) + 1):
+        if n % (i*i) == 0:
+            return False
+    return True
+
+def is_coprime(a, b):
+    return gcd(a, b) == 1
+
+max_s = 100  # Increased upper bound
+min_cos = -1  # Allowing negative cosine values for generality
+max_cos = 1
+
+for s in range(1, max_s + 1):
+    for r in range(1, 200):
+        if not is_squarefree(r) or isqrt(r)**2 == r:
+            continue
+        max_q = int((s * max_cos) / math.sqrt(r)) + 2
+        for q in range(0, max_q + 1):
+            max_p = s * max_cos - q * math.sqrt(r)
+            min_p = s * min_cos - q * math.sqrt(r)
+            for p in range(max(1
+[refine_program]
+Judgement:
+The problem is a mathematical theorem statement from Lean (a proof assistant) about finding real numbers A, B, C and natural numbers p, q, r, s satisfying certain conditions, including trigonometric relationships and number-theoretic properties. The "program" section is empty, and there are no enumerated answers. This is clearly insufficient as it doesn't provide any computational approach to the problem.
+
+Since the problem involves finding specific numerical values satisfying complex mathematical conditions, a Python program should be written to search for valid combinations of p, q, r, s that satisfy all constraints, particularly focusing on the cosine equation and the coprimality/squarerfree conditions.
+
+The program should:
+1. Search for small integer values of p, q, r, s
+2. Verify the conditions (coprimes, squarefree, etc.)
+3. Compute the corresponding angles A, B, C
+4. Check if they sum to π
+5. Output valid combinations
+
+<<<False>>>
+
+Here's a corrected program that implements this search:
+
+```python
+import math
+from fractions import gcd
+from itertools import count
+
+def is_squarefree(n):
+    if n % 4 == 0:
+        return False
+    max_test = int(math.sqrt(n)) + 1
+    for i in range(2, max_test):
+        if n % (i*i) == 0:
+            return False
+    return True
+
+def is_coprime(a, b):
+    return gcd(a, b) == 1
+
+max_s = 100  # reasonable search limit
+found = False
+
+for s in range(1, max_s + 1):
+    for r in range(1, s):
+        if not is_squarefree(r):
+            continue
+        if int(math.sqrt(r))**2 == r:
+            continue
+        sqrt_r = math.sqrt(r)
+        for q in range(1, s):
+            for p in range(1, s):
+                numerator = p + q * sqrt_r
+                if numerator <= 0:
+                    continue
+                cosA = numerator / s
+                if -1 <= cosA <= 1:
+                    A = math.acos(cosA)
+                    remaining = math.pi - A
+                    # Try to find B and C that sum to remaining
+                    # This part is complex and would need more constraints
+                    # For now just print potential (p,q,r,s)

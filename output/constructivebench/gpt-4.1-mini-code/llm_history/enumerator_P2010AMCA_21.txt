@@ -1,0 +1,83 @@
+[write_program]
+This problem involves finding real numbers \(a, b, c\) and three distinct roots \(x_1, x_2, x_3\) such that
+\[
+x_i^6 - 10x_i^5 + 29x_i^4 - 4x_i^3 + a x_i^2 = b x_i + c
+\]
+for \(i=1,2,3\), and for all other \(x\), the polynomial difference
+\[
+x^6 - 10x^5 + 29x^4 - 4x^3 + a x^2 - (b x + c) > 0.
+\]
+
+This means the polynomial
+\[
+f(x) = x^6 - 10x^5 + 29x^4 - 4x^3 + a x^2 - b x - c
+\]
+has exactly three distinct real roots \(x_1, x_2, x_3\), and is positive elsewhere. Since it is a degree 6 polynomial, the shape is likely "above" the line \(b x + c\) except touching it at those three points.
+
+We want to find the maximum of the roots \(x_i\).
+
+To assist in conjecturing, let's enumerate triples \((x_1,x_2,x_3)\) of roots on some small integer or rational values, determine \(a,b,c\) accordingly, and check the positivity condition approximately.
+
+We'll try simple integer triples \(x_1 < x_2 < x_3\) from a small range, solve for \(a,b,c\) such that the polynomial matches the line at those points, then verify the positivity on a grid. For computational feasibility and output length, a tiny range is used.
+
+The program prints candidate triples and the corresponding maximum root found.
+
+```python
+import numpy as np
+
+# The fixed polynomial part except a,b,c terms
+def base_poly(x):
+    return x**6 - 10*x**5 + 29*x**4 - 4*x**3
+
+# Given roots x1,x2,x3 (distinct), solve for a,b,c from the system:
+# f(x_i) = base_poly(x_i) + a x_i^2 - b x_i - c = 0 for i=1..3
+def solve_abc(x1,x2,x3):
+    A = np.array([
+        [x1**2, -x1, -1],
+        [x2**2, -x2, -1],
+        [x3**2, -x3, -1]
+    ])
+    rhs = np.array([-base_poly(x1), -base_poly(x2), -base_poly(x3)])
+    try:
+        a,b,c = np.linalg.solve(A,rhs)
+        return a,b,c
+    except np.linalg.LinAlgError:
+        return None
+
+# Check positivity of f(x) elsewhere with a,b,c:
+# f(x) = base_poly(x) + a x^2 - b x - c
+# We check over a grid excluding roots, f(x) > 0
+def is_positive_outside_roots(a,b,c,xroots):
+    xs = np.linspace(min(xroots)-1, max(xroots)+1, 200)
+    for x in xs:
+        # Skip near roots to avoid equality
+        if any(abs(x - r) < 1e-5 for r in xroots):
+            continue
+        val = base_poly(x) + a*x**2 - b*x - c
+        if val <= 0:
+            return False
+    return True
+
+def main():
+    candidates = []
+    # Try integer triples with distinct values from 0 to 5
+    for x1 in range(0,6):
+        for x2 in range(x1+1,6):
+            for x3 in range(x2+1,6):
+                abc = solve_abc(x1,x2,x3)
+                if abc is None:
+                    continue
+                a,b,c = abc
+                if is_positive_outside_roots(a,b,c,(x1,x2,x3)):
+                    max_root = max(x1,x2,x3)
+                    print(f"Roots: {(x1,x2,x3)}, a={a:.3f}, b={b:.3f}, c={c:.3f}, max root={max_root}")
+                    candidates.append(max_root)
+    if candidates:
+        print(f"Maximum of max roots found: {max(candidates)}")
+    else:
+        print("No valid triple found.")
+
+if __name__ == "__main__":
+    main()
+```
+This code enumerates possible integer triples of roots, computes parameters, and checks positivity condition numerically, printing each valid solution immediately.

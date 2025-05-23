@@ -1,0 +1,67 @@
+[write_program]
+The problem involves expressing a fixed complex number z = -142 + 333√5 i as the product of two complex numbers of the form (a + b√5 i) and (c + d√5 i), with positive integers a,b,c,d. We want to find the minimum of (a+b) and (c+d) among all such factorizations.
+
+A natural approach is to:
+- Iterate over small positive integers a,b,c,d within sensible bounds,
+- Check if (a + b√5 i)*(c + d√5 i) equals z,
+- Print the values of (a,b,c,d) and the minimum sum,
+- Keep track of the smallest minimum sum found.
+
+Since z is fixed at (-142, 333), and a,b,c,d > 0, and the product is:
+(a + b√5 i)*(c + d√5 i) = (ac - 5bd) + (ad + bc)√5 i
+which must equal -142 + 333√5 i.
+
+We get two equations:
+ac - 5bd = -142
+ad + bc = 333
+
+We can attempt to find integer solutions by enumerating a,b,c,d. To limit search, try a,b,c,d up to 20 or so, printing any solution found.
+
+```python
+# Enumerate integer quadruples (a,b,c,d) with positive a,b,c,d
+# satisfying (a + b*sqrt(5)*i)*(c + d*sqrt(5)*i) == -142 + 333*sqrt(5)*i
+# i.e., ac - 5bd = -142 and ad + bc = 333
+# For each solution, print a,b,c,d and min(a+b, c+d)
+# Finally, print the minimum minimum found.
+
+def main():
+    z_real = -142
+    z_imag = 333
+    max_val = 20  # search bound
+    best_min_sum = None
+    best_solutions = []
+
+    for a in range(1, max_val+1):
+        for b in range(1, max_val+1):
+            for c in range(1, max_val+1):
+                # From first eq: ac -5bd = -142 -> d = (ac +142)/(5b)
+                # d must be positive integer
+                numerator = a*c + 142
+                denom = 5*b
+                if numerator % denom != 0:
+                    continue
+                d = numerator // denom
+                if d <= 0 or d > max_val:
+                    continue
+                # Check second eq: ad + bc == 333
+                if a*d + b*c == z_imag:
+                    min_sum = min(a + b, c + d)
+                    print(f"Solution: a={a}, b={b}, c={c}, d={d}, min(a+b,c+d)={min_sum}")
+                    if best_min_sum is None or min_sum < best_min_sum:
+                        best_min_sum = min_sum
+                        best_solutions = [(a,b,c,d)]
+                    elif min_sum == best_min_sum:
+                        best_solutions.append((a,b,c,d))
+
+    if best_min_sum is not None:
+        print(f"Minimum min(a+b, c+d) found: {best_min_sum}")
+        print("Solutions achieving minimum:")
+        for sol in best_solutions:
+            a,b,c,d = sol
+            print(f" a={a}, b={b}, c={c}, d={d}")
+    else:
+        print("No solutions found within search bound.")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,73 @@
+[write_program]
+The problem is to factor 27000001 into four prime factors \( p, q, r, s \) and then find the sum \( p+q+r+s \). Since 27000001 is quite large, I'll try to factor it by testing primes up to a certain limit and then attempt to find combinations of four primes producing the product. I'll print discovered prime factorizations immediately, then print their sums to support conjecture.
+
+```python
+import math
+
+N = 27000001
+
+def is_prime(n):
+    if n < 2:
+        return False
+    if n in (2,3):
+        return True
+    if n % 2 == 0:
+        return False
+    r = int(math.sqrt(n)) + 1
+    for i in range(3, r, 2):
+        if n % i == 0:
+            return False
+    return True
+
+def primes_up_to(limit):
+    sieve = [True]*(limit+1)
+    sieve[0] = sieve[1] = False
+    for i in range(2, int(limit**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i, limit+1, i):
+                sieve[j] = False
+    return [p for p in range(2, limit+1) if sieve[p]]
+
+primes = primes_up_to(int(N**0.25)+1000)  # primes up to ~5000, heuristically enough
+
+# We want p*q*r*s = N with p,q,r,s prime.
+# Enumerate p <= q <= r <= s to avoid duplicates.
+# Break early if product exceeds N.
+
+count = 0
+for i, p in enumerate(primes):
+    if p**4 > N:
+        break
+    if N % p != 0:
+        continue
+    N1 = N // p
+    for j in range(i, len(primes)):
+        q = primes[j]
+        if p*q**3 > N1:
+            break
+        if N1 % q != 0:
+            continue
+        N2 = N1 // q
+        for k in range(j, len(primes)):
+            r = primes[k]
+            if p*q*r**2 > N:
+                break
+            if N2 % r != 0:
+                continue
+            s = N2 // r
+            if s < r:
+                continue
+            if is_prime(s):
+                # Found primes p,q,r,s with product N
+                S = p+q+r+s
+                print(f"Found primes: {p}, {q}, {r}, {s} product = {p*q*r*s}, sum = {S}")
+                count += 1
+                if count >= 10:
+                    break
+        if count >= 10:
+            break
+    if count >= 10:
+        break
+
+# The output lists possible 4-prime factorizations and their sums to guess the final answer.
+```

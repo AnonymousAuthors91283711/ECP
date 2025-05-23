@@ -1,0 +1,70 @@
+[write_program]
+This problem involves finding all real polynomials P that satisfy a given functional equation. We'll approach it by testing polynomial candidates of increasing degrees, evaluating the condition on sample values to filter potential solutions.
+
+The strategy is:
+1. Test constant polynomials (degree 0)
+2. Test linear polynomials (degree 1)
+3. Test quadratic polynomials (degree 2)
+4. Verify the condition holds for each candidate
+
+We'll use small non-zero x,y,z values satisfying 2xyz = x+y+z to test the condition.
+
+```python
+import numpy as np
+from numpy.polynomial.polynomial import Polynomial
+
+def test_polynomial(P):
+    # Test cases where 2xyz = x+y+z
+    test_cases = [
+        (1, 1, 1),  # Doesn't satisfy 2xyz=x+y+z
+        (1, 2, -3),  # 2*1*2*(-3)=-12, 1+2-3=0 → doesn't satisfy
+        (1, 1, 0.5), # 2*1*1*0.5=1, 1+1+0.5=2.5 → doesn't satisfy
+        (1, 2, 3/10), # 2*1*2*0.3=1.2, 1+2+0.3=3.3 → doesn't satisfy
+        (1, -1, 1/2), # 2*1*(-1)*0.5=-1, 1-1+0.5=0.5 → doesn't satisfy
+        (1, 1/2, -2/3) # 2*1*0.5*(-2/3)=-2/3, 1+0.5-0.666...≈0.833 → doesn't satisfy
+    ]
+    
+    # Find valid (x,y,z) cases where 2xyz = x+y+z and none are zero
+    valid_cases = []
+    for x in [0.5, 1, 2, -1, -2]:
+        for y in [0.5, 1, 2, -1, -2]:
+            for z in [0.5, 1, 2, -1, -2]:
+                if x*y*z != 0 and abs(2*x*y*z - (x+y+z)) < 1e-6:
+                    valid_cases.append((x,y,z))
+    
+    if not valid_cases:
+        return False
+    
+    for x,y,z in valid_cases:
+        left = P(x)/(y*z) + P(y)/(z*x) + P(z)/(x*y)
+        right = P(x-y) + P(y-z) + P(z-x)
+        if abs(left - right) > 1e-6:
+            return False
+    return True
+
+# Test constant polynomials P(x) = c
+print("Testing constant polynomials:")
+for c in [0, 1, -1, 2, 0.5]:
+    P = Polynomial([c])
+    if test_polynomial(P):
+        print(f"Found constant solution: P(x) = {c}")
+
+# Test linear polynomials P(x) = a*x + b
+print("\nTesting linear polynomials:")
+for a in [0, 1, -1, 2]:
+    for b in [0, 1, -1]:
+        P = Polynomial([b, a])
+        if test_polynomial(P):
+            print(f"Found linear solution: P(x) = {a}x + {b}")
+
+# Test quadratic polynomials P(x) = a*x^2 + b*x + c
+print("\nTesting quadratic polynomials:")
+for a in [0, 1, -1, 0.5]:
+    for b in [0, 1, -1]:
+        for c in [0, 1, -1]:
+            P = Polynomial([c, b, a])
+            if test_polynomial(P):
+                print(f"Found quadratic solution: P(x) = {a}x^2 + {b}x + {c}")
+
+print("\nNote: The zero polynomial P(x) = 0 is always a solution.")
+```

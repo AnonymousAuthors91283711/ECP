@@ -1,0 +1,56 @@
+[write_program]
+The problem asks for the least natural number \( n \) such that we can find \( n \) rational-coefficient polynomials \( f_i \) satisfying the identity \( x^2 + 7 = \sum_{i=0}^{n-1} (f_i(x))^2 \) for all rational \( x \).
+
+We want to enumerate possible values of \( n \) by trying to represent \( x^2 + 7 \) as a sum of \( n \) squared polynomials with rational coefficients. We will try \( n = 1, 2, 3, 4 \) with polynomials of degree up to 1 or 2 (since \( x^2+7 \) is degree 2). For each \( n \), we attempt to find polynomial tuples \(f_i\) with unknown coefficients to match the identity.
+
+We should output every candidate \( n \) for which a representation is found, along with an example set \( f_i \). This helps conjecture the least \( n \).
+
+```python
+# Enumerate possible minimal n for representing x^2+7 as sum of squares of n rational polynomials
+from sympy import symbols, Eq, solve, Poly, Rational
+
+x = symbols('x')
+
+# Attempt to represent x^2 + 7 = sum (f_i(x))^2 for i in range n
+# We restrict f_i to degree at most 1 for efficiency: f_i(x) = a_i x + b_i
+
+# We'll try n from 1 up to 4
+max_n = 4
+
+target_poly = x**2 + 7
+
+def try_n(n):
+    # construct variables for coefficients: a_0, b_0, ..., a_{n-1}, b_{n-1}
+    coeff_vars = []
+    for i in range(n):
+        coeff_vars.append(symbols(f'a{i} b{i}'))
+    # sum of squares
+    sum_squares = 0
+    for (a_i, b_i) in coeff_vars:
+        poly_i = a_i * x + b_i
+        sum_squares += poly_i**2
+    # equation to match target polynomial
+    eq_poly = Poly(sum_squares - target_poly, x)
+    # gather coefficients for x^2, x, and constant term
+    coefs = eq_poly.all_coeffs()
+    # coefs are ordered highest degree first: [coeff_x^2, coeff_x^1, coeff_const]
+    eqs = [Eq(c, 0) for c in coefs]
+    # Solve for all coeff vars
+    sol = solve(eqs, sum(coeff_vars, ()), dict=True, rational=True)
+    if sol:
+        # Found one or more solutions
+        for s in sol:
+            # Print the solution nicely:
+            polys = []
+            for i in range(n):
+                a_i = s.get(coeff_vars[i][0], 0)
+                b_i = s.get(coeff_vars[i][1], 0)
+                polys.append(f"({a_i})*x + ({b_i})")
+            print(f"Representation for n={n}: sum of squares of polynomials {polys} equals x^2+7")
+    else:
+        print(f"No representation found for n={n}")
+
+print("Trying representations for x^2+7 as sum of squares of n linear polynomials:")
+for n in range(1, max_n+1):
+    try_n(n)
+```

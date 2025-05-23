@@ -1,0 +1,93 @@
+[write_program]
+The problem asks for the greatest value of \(d = x_{76} - x_{16}\) for a nondecreasing sequence \(x_1 \le x_2 \le \cdots \le x_{100}\) of rational numbers satisfying \(\sum |x_i| = 1\) and \(\sum x_i = 0\).
+
+To explore this, the plan is:
+- Enumerate candidate sequences \(x\) with rational values for a smaller dimension \(n\) (e.g. 10) to get a feel for the structure.
+- For simplicity, choose \(x_i\) from discrete sets, check conditions (nondecreasing, sum zero, sum abs=1), and compute \(d = x_{k} - x_{j}\) for indices \(k > j\).
+- Investigate how large the difference \(d\) can get under these constraints.
+
+Since \(n=100\) is large, try smaller values like \(n=10\), and vary \(j,k\) accordingly, then output promising values of \(d\).
+
+```python
+# Enumerate sequences x_0 <= x_1 <= ... <= x_{n-1} with rational entries 
+# sum |x_i| = 1, sum x_i = 0
+# For small n=10, discrete values from multiples of 0.1 between -1 and 1
+# For each, print d = x_k - x_j for some k > j (e.g. k=7, j=3)
+# Goal: Observe maximum possible d.
+
+from fractions import Fraction
+
+def fractions_range(start, stop, step):
+    # Generate fractions from start to stop stepping by step
+    vals = []
+    current = start
+    while current <= stop:
+        vals.append(current)
+        current += step
+    return vals
+
+def is_non_decreasing(lst):
+    return all(lst[i] <= lst[i+1] for i in range(len(lst)-1))
+
+def abs_sum(lst):
+    return sum(abs(x) for x in lst)
+
+def sum_vals(lst):
+    return sum(lst)
+
+def main():
+    n = 10
+    # candidate values 0, ±1/10, ±2/10, ..., ±1 (21 values)
+    base_vals = [Fraction(i,10) for i in range(-10,11)]
+    # To reduce search space, generate nondecreasing sequences by nested loops
+    # Use a simple backtracking approach
+
+    max_d = None
+    best_seq = None
+
+    # We fix indices j=3, k=7 (0-based)
+    j = 3
+    k = 7
+
+    # To limit search: limit choice of x_i from -1.0 to 1.0 stepping 0.5 increments
+    from itertools import product
+
+    vals = [Fraction(i,10) for i in range(-10,11)]  # finer steps
+
+    # Since nondecreasing, enforce x_0 <= x_1 <= ... <= x_9
+    # Generate all combinations with nondecreasing order
+    # Implement a recursive generation with pruning
+
+    def generate(seq):
+        if len(seq) == n:
+            # Check conditions sum zero and sum abs 1
+            if sum_vals(seq) == 0 and abs_sum(seq) == 1:
+                d = seq[k] - seq[j]
+                print(f"d={float(d):.3f} exact={d} seq={seq}")
+                nonlocal max_d, best_seq
+                if max_d is None or d > max_d:
+                    max_d = d
+                    best_seq = seq
+            return
+        else:
+            start = seq[-1] if seq else Fraction(-10,10)  # at least last element or -1
+            for v in vals:
+                if v >= start:
+                    # Early pruning:
+                    # sum so far
+                    partial_seq = seq + [v]
+                    # sum abs so far max 1?
+                    if abs_sum(partial_seq) > 1:
+                        continue
+                    generate(partial_seq)
+
+    generate([])
+
+    if max_d is not None:
+        print(f"Max d found = {max_d} approx {float(max_d):.3f}")
+        print(f"Sequence: {best_seq}")
+
+if __name__ == "__main__":
+    main()
+```
+

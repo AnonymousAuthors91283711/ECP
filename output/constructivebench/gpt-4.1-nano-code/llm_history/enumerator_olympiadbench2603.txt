@@ -1,0 +1,76 @@
+[write_program]
+This problem involves finding the least natural number n > 0 such that the number of divisors of 214 * n equals the number of divisors of 2014 * n.
+
+Given 214 = 2 * 107 (prime factors)
+2014 = 2 * 19 * 53
+
+We want to explore how divisor counts change with n, focusing on the prime factorizations, and find the minimal n satisfying the equality.
+
+Here's a plan:
+- Consider n's prime factorization involving primes 2, 19, 53, and 107.
+- For each n, compute the number of divisors of 214 * n and 2014 * n.
+- Identify the minimal n > 0 where they are equal.
+
+Since the involved primes are small, limit factor exponents up to a small bound, e.g., 5.
+
+```python
+# Enumerate small n by their prime exponents for factors 2, 19, 53, 107
+import math
+
+# Prime bases involved
+primes = [2, 19, 53, 107]
+
+# Limit exponents for enumeration
+max_exp = 5
+
+def divisor_count(exps):
+    """Calculate the number of divisors given exponents of primes."""
+    count = 1
+    for e in exps:
+        count *= (e + 1)
+    return count
+
+least_n = None
+answer = None
+
+for e2 in range(max_exp + 1):
+    for e19 in range(max_exp + 1):
+        for e53 in range(max_exp + 1):
+            for e107 in range(max_exp + 1):
+                # Construct n's prime exponents
+                n_exps = [e2, e19, e53, e107]
+                # Calculate divisors of 214 * n:
+                # 214 = 2^1 * 107^1
+                # So exponent for 2 becomes e2+1 if prime 2 included, else e2
+                # For 214 * n, exponents sum:
+                div_214_n = [
+                    e2 + 1 if 2 == 2 else e2,  # actually, better to think:
+                    # For 214 * n: exponents of 2 and 107 increases by 1 if primes 2 or 107 are present
+                ]
+                # emulate the above:
+                exp_214_n = [
+                    e2 + 1,  # since 214 has 2^1
+                    e19,     # no change for 19
+                    e53,
+                    e107 + 1 # since 214 includes 107^1
+                ]
+                # For 2014 = 2^1 * 19^1 * 53^1
+                exp_2014_n = [
+                    e2 + 1,
+                    e19 + 1,
+                    e53 + 1,
+                    e107
+                ]
+                div_214n = divisor_count(exp_214_n)
+                div_2014n = divisor_count(exp_2014_n)
+                if div_214n == div_2014n:
+                    # Record the minimal n
+                    # Compute n from exponents: product of primes^exponent
+                    n = 1
+                    for base, e in zip(primes, n_exps):
+                        n *= base ** e
+                    if least_n is None or n < least_n:
+                        least_n = n
+                        answer = n
+                        print(f"n={n}: divisor count of 214*n = {div_214n}, 2014*n = {div_2014n}")
+```

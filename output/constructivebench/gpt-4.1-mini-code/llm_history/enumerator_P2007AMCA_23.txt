@@ -1,0 +1,59 @@
+[write_program]
+The problem involves points on curves defined parametrically by logarithmic functions with base \( a \). We want to test various bases \( a \) and points \( A, B, C \) such that the given geometric conditions hold, particularly focusing on \( A, B, C \) with coordinates \((x, k \log_a x)\) for \(k=1,2,3\).
+
+I'll enumerate possible \( a \) values (positive and not 1) and \( A_1, B_1, C_1 \) coordinates to check the conditions. We'll verify the constraints and print candidates where conditions hold or nearly hold, focusing on exact values when possible.
+
+```python
+import math
+
+def logb(a, x):
+    return math.log(x)/math.log(a)
+
+def dist(p, q):
+    return math.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2)
+
+def dot(u, v):
+    return u[0]*v[0] + u[1]*v[1]
+
+# Try sample values for a (not 1, >0)
+a_values = [0.5, 2, math.e, 10]
+# For each a, try samples for A_1 and B_1 (B_1 > A_1), C_1 based on conditions
+# Given AB // x-axis means A_2 == B_2
+# So A_2 = logb a A_1, B_2 = 2 * logb a B_1, need B_2 - A_2 =0 => logb a B_1 = 0.5 logb a A_1
+
+# We use this to guess B_1 for a given A_1, then pick C_1 > B_1 and check perpendicularity + distances.
+
+print("a, A, B, C, dist_AB, dist_BC, conditions")
+
+for a in a_values:
+    if a <=0 or a ==1:
+        continue
+    for A1 in [1,2,3,4,5]:
+        logA = logb(a, A1)
+        # B_2 - A_2 = 0 => 2*logb(a,B1) - logb(a,A1) =0 => logb(a,B1)=0.5 * logb(a,A1)
+        # so B1 = a**(0.5*logb(a,A1)) = sqrt(A1)
+        B1 = math.sqrt(A1)
+        logB = logb(a,B1)
+        if abs(logB - 0.5*logA) > 1e-9:
+            continue
+        A = (A1, logA)
+        B = (B1, 2*logB)
+        # Try C such that AB perpendicular BC and dists conditions
+        # Vector AB = (B1 - A1, B2 - A2)
+        AB = (B1 - A1, B[1] - A[1])
+        for C1 in [B1+1,B1+2,B1+3]:
+            C2 = 3*logb(a,C1)
+            BC = (C1 - B1, C2 - B[1])
+            dotp = dot(AB, BC)
+            distAB = dist(A,B)
+            distBC = dist(B,(C1,C2))
+            if abs(dotp) < 1e-6 and abs(distAB - distBC) < 1e-6:
+                print(f"a={a:.4f}, A=({A1:.4f},{A[1]:.4f}), B=({B1:.4f},{B[1]:.4f}), C=({C1:.4f},{C2:.4f}), distAB={distAB:.4f}, distBC={distBC:.4f}, dot(AB,BC)={dotp:.4e}")
+                # Check if distAB^2=36
+                distAB2 = distAB**2
+                print(f"--> distAB^2={distAB2:.4f}, (distAB^2=36)? {abs(distAB2-36)<1e-6}")
+
+# Special check for exact squared distance 36 and a values
+
+```
+This enumerates candidates for \(a, A, B, C\), checking the key conditions. The remainder \(P2007AMCA_23_answer\) will emerge through noticing which \(a\) values yield the distance squared 36 under these constraints.

@@ -1,0 +1,68 @@
+[write_program]
+The problem involves finding the value of \(8x + y\) given two linear equations with variables \(x, y, z \in \mathbb{R}\):
+\[
+\begin{cases}
+x + 2y - 3z = 7 \\
+2x - y + 2z = 6
+\end{cases}
+\]
+We want to enumerate possible real solutions \((x,y,z)\) and corresponding values of \(8x + y\). Since these are linear equations, the system will yield a linear family of solutions or a unique solution. I will write a Python program to solve the system symbolically, then print exact values of \(8x + y\) for parametrized solutions if needed.
+
+```python
+from sympy import symbols, Eq, solve, Rational
+
+# Define variables
+x, y, z, t = symbols('x y z t', real=True)
+
+# Given equations
+eq1 = Eq(x + 2*y - 3*z, 7)
+eq2 = Eq(2*x - y + 2*z, 6)
+
+# Solve equivalently with one parameter, express z = t free parameter
+sol = solve([eq1, eq2], (x, y), dict=True)
+# The general solution depends on z. Let's find x,y in terms of z.
+
+# Instead solve treating z as parameter:
+#  x + 2y = 7 + 3z
+#  2x - y = 6 - 2z
+# Solve linear system in x,y for parametric z:
+# Coefficients matrix:
+# [1  2] [x]= 7 + 3z
+# [2 -1] [y]= 6 - 2z
+
+# Let's get explicit expressions for x,y:
+# Using sympy linear solve
+from sympy import Matrix
+
+A = Matrix([[1, 2],[2, -1]])
+b = Matrix([7 + 3*z, 6 - 2*z])
+# Solve Ax = b
+sol_xy = A.LUsolve(b)
+x_expr, y_expr = sol_xy[0], sol_xy[1]
+
+print("Parametric solutions for x,y in terms of z:")
+print(f"x = {x_expr}")
+print(f"y = {y_expr}")
+print(f"Parameter z is free.")
+
+# Now compute 8x + y:
+eight_x_plus_y = 8*x_expr + y_expr
+print("\nExpression for 8*x + y in terms of z:")
+print(eight_x_plus_y)
+
+# Since z is free, plug some sample integer values to enumerate possible values.
+print("\nEnumerate 8*x + y for z from -3 to 3:")
+for val in range(-3, 4):
+    expr_val = eight_x_plus_y.subs(z, val)
+    # Simplify to exact fraction if possible
+    expr_val = expr_val.simplify()
+    print(f"z={val}: 8*x + y = {expr_val}")
+```
+
+This program:
+- Symbolically solves for \(x,y\) in terms of \(z\).
+- Computes \(8x + y\) in terms of \(z\).
+- Enumerates values for integer \(z\) in \([-3,3]\) to show possible values of \(8x + y\).
+- Prints exact symbolic expressions immediately after computing.
+
+Run with `python enumerator.py`.

@@ -1,0 +1,59 @@
+[write_program]
+To investigate the problem, we observe that it involves a function \(f : \mathbb{Q} \to \mathbb{Q}\) satisfying certain functional equations, and conditions on the set \( \{k \in \mathbb{Q} \mid \exists r: k = f(r) + f(-r)\} \). The goal is to find an integer constant \(c\) that bounds the size of this set in a minimal sense.
+
+Because the problem appears highly structural and involves functional equations that resemble linear or additive properties, a typical approach would examine simple candidate functions—like affine functions—and analyze the resultant set sizes.
+
+I will write a Python script that:
+- Tests candidate functions \(f(x) = ax + b\) with small integer parameters.
+- Checks the functional equation \(f(x + f y) = f x + y\) or \(f(f x + y) = x + f y\).
+- Computes the set \(\{f(r) + f(-r) \mid r \in \mathbb{Q}\}\), which simplifies for affine functions.
+- Records the size (cardinality) of this set for various small rational parameters.
+
+This is a rough enumeration to help guess the minimal \(c\).
+
+```python
+import itertools
+from fractions import Fraction
+
+# Generate small rational numbers within a small range for testing
+test_vals = [Fraction(n, d) for n in range(-3, 4) for d in range(1, 4)]
+
+# Candidate functions: linear with small integer slopes and intercepts
+candidate_params = [(a, b) for a in range(-2, 3) for b in range(-2, 3)]
+
+def func(a, b, x):
+    return a * x + b
+
+def check_function(a, b):
+    # Check the functional equations for various samples
+    for x in test_vals:
+        for y in test_vals:
+            left1 = func(a, b, x + func(a, b, y))
+            right1 = func(a, b, x) + y
+            left2 = func(a, b, func(a, b, x) + y)
+            right2 = x + func(a, b, y)
+            if not (left1 == right1 or left2 == right2):
+                return False
+    return True
+
+# Store results for functions passing the equation checks
+results = []
+
+for a, b in candidate_params:
+    if check_function(a, b):
+        # Compute the set of sums for r in test_vals
+        s = set()
+        for r in test_vals:
+            val = func(a, b, r) + func(a, b, -r)
+            s.add(val)
+        results.append({'a': a, 'b': b, 'set_size': len(s), 'set': s})
+
+# For each candidate, print the function parameters and the size of the set
+for res in results:
+    print(f"f(x) = {res['a']}*x + {res['b']}, set size = {res['set_size']}")
+
+# The minimal set size found
+if results:
+    min_size = min(r['set_size'] for r in results)
+    print(f"Minimal set size among candidates: {min_size}")
+```

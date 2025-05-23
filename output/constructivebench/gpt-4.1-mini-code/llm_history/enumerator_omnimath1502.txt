@@ -1,0 +1,74 @@
+[write_program]
+The problem is to find the smallest degree \( d \) of a primitive integer polynomial \( f \) (content 1) such that for every natural number \( n \), \( f(n) \) is divisible by 85. Since 85 = 5 * 17, \( f(n) \) is divisible by both 5 and 17 for all \( n \).
+
+A polynomial divisible by 5 for all integer inputs is divisible by 5 when evaluated at any integer, suggesting a certain structure. Similarly for 17.
+
+One straightforward type of polynomial with this property is a multiple of \((X(X-1)(X-2)...(X-(k-1)))\) times constants, as it takes integer values divisible by factorials.
+
+I will write a program that checks each degree \( d \) from 0 up to a small bound (say 10 or 15), and tries to find integer polynomials \( f \) of degree \( d \) with content 1 such that \( f(n) \) is divisible by 85 for all integers \( n \). Since we cannot check infinite integers, I can check \( n=0 \) to \( n=d \) to deduce divisibility and use polynomial interpolation ideas.
+
+Given divisibility for all \( n \), the polynomial coefficients must be structured to ensure this.
+
+In particular, the polynomial values at \( n=0,1,...,d \) are multiples of 85.
+
+Because the problem is quite challenging, I try to enumerate possible degrees \( d \) and verify the simplest polynomial \( f(X) = c \prod_{k=0}^{d-1} (X-k) \) scaled so that the values \( f(n) \) are divisible by 85 for all \( n \), checking the smallest \( d \) that satisfies this.
+
+I also check constant and linear polynomials quickly.
+
+Here's the program to enumerate degree \( d \) from 0 to 10 and test a particular polynomial inspired by the factorial polynomial \( f(X) = 85 \cdot \binom{X}{d} \), which evaluates to an integer divisible by 85 for all integer \( n \ge d \). We can check values for \( n=0,...,d \) for full integer domain by polynomial properties.
+
+We print each candidate degree \( d \) with a polynomial that meets the condition, noting that it is primitive (content 1).
+
+```python
+# Enumerate smallest degree d of integer primitive polynomial f with f(n) divisible by 85 for all n
+# We'll try f(X) = 85 * binomial(X, d) = 85 * X*(X-1)*...*(X-d+1)/d!
+# But to have integer coefficients, polynomial should be multiplied by d!
+# So try f(X) = 85 * (X*(X-1)*...*(X-d+1)) / d! * d! = 85 * X*(X-1)*...*(X-d+1)
+# That's with coefficients scaled, but content can be factored out.
+# Let's check content and print degrees where content is 1 after removing gcd of coefficients.
+
+from math import gcd
+from math import factorial
+
+def content(coeffs):
+    g = 0
+    for c in coeffs:
+        g = gcd(g, c)
+    return abs(g)
+
+def poly_coeffs_binomial(d):
+    # coefficients of falling factorial polynomial X*(X-1)*...*(X-d+1)
+    # These are known as "signed Stirling numbers of the first kind" or can be computed by convolution
+    # Here we compute the polynomial coefficient from degree d down to constant term
+    # Use closed form by multiplication
+    coeffs = [0]*(d+1)  # coeffs[i] is coefficient for x^i
+    coeffs[d] = 1
+    for k in range(d):
+        # multiply poly by (X - k)
+        for i in range(d, 0, -1):
+            coeffs[i] = coeffs[i]*1 - coeffs[i-1]*k
+        coeffs[0] = coeffs[0]*1
+    return coeffs
+
+print("Enumerating potential degrees d and primitive polynomials f with f(n) divisible by 85:")
+
+for d in range(0, 12):
+    coeffs = poly_coeffs_binomial(d)  # integer coefficients for falling factorial
+    # Multiply by 85 to get multiples of 85 at integer points
+    coeffs_85 = [85*c for c in coeffs]
+
+    c = content(coeffs_85)
+    # content divides 85*c(d coeff content)
+    # For polynomial primitive, we divide by gcd
+
+    prim_coeffs = [c_ // c for c_ in coeffs_85]
+
+    # check divisibility of f(n) for n=0..d by 85 trivially holds,
+    # as f(n) = 85 * n*(n-1)*...(n-d+1)
+    # check content equals 1 to be primitive
+    if content(prim_coeffs) == 1:
+        print(f"Degree {d}: primitive polynomial with f(n) divisible by 85 found.")
+        print(f"Coefficients: {prim_coeffs}")
+```
+
+The program prints candidate degrees \( d \) and their polynomials with needed property and content = 1 (primitive). This helps identify the minimal such \( d \).

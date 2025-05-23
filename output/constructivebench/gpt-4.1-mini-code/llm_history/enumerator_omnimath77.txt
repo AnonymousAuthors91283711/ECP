@@ -1,0 +1,76 @@
+[write_program]
+This problem involves characterizing functions \( f:\mathbb{N} \to \mathbb{N} \) that satisfy the functional equation
+\[
+f(m \cdot \varphi(n^3)) = f(m) \cdot \varphi(n^3)
+\]
+for all positive integers \( m, n \) with \( m \ge n \), where \(\varphi\) denotes Euler's totient function.
+
+To assist in conjecture, our program will:
+- Compute \(\varphi(n^3)\) for small \( n \).
+- For small \( n, m \) (with \( m \ge n \)) enumerate tuples \((m, n)\).
+- Enumerate candidate functions \( f \) defined on a small domain (like the first few natural numbers).
+- Check the equation for each candidate \( f \).
+- Print exact function values and confirm which satisfy the equation for sampled values.
+
+Because the function domain and codomain are infinite, we'll restrict to functions defined on small initial segments of \(\mathbb{N}\) and try some natural function candidates (like identity, constant, multiplicative with prime powers, etc.) and output immediate results.
+
+```python
+from math import gcd
+from sympy import totient
+
+# Define small domain and range to test candidate functions
+MAX_N = 5  # max n in dom(n), as n^3 will be computed
+MAX_M = 7  # max m in domain of f to test
+
+# Candidate functions f on {1,..., MAX_M}
+# We'll try:
+# 1) identity f(x)=x
+# 2) constant function f(x)=1
+# 3) f(x)=c*x for c=2 (homothety)
+# 4) f(x) = totient(x) (if defined on range)
+# 5) f(x) = 1 if x=1 else 0 (simple, to check)
+# 6) f multiplicative-like: f(p^k) = p^k or 1
+
+def candidate_functions():
+    # Identity
+    yield ("identity", lambda x: x)
+    # Constant 1
+    yield ("const_1", lambda x: 1)
+    # Double
+    yield ("double", lambda x: 2*x)
+    # totient (for small x)
+    def f_tot(x):
+        if x==0: return 0
+        return totient(x)
+    yield ("totient", f_tot)
+    # zero except at 1
+    yield ("one_at_1_zero_else", lambda x: 1 if x==1 else 0)
+
+def check_equation(f):
+    # Check for all n,m with 1<=n<=MAX_N, n<=m<=MAX_M and n,m>0
+    # Equation: f(m*phi(n^3)) = f(m)*phi(n^3)
+    # Print each check output
+    passed_all = True
+    for n in range(1, MAX_N+1):
+        phi = totient(n**3)
+        for m in range(n, MAX_M+1):
+            lhs = f(m*phi)
+            rhs = f(m)*phi
+            if lhs != rhs:
+                print(f"Fail at m={m}, n={n}: f({m}*φ({n}^3))={lhs} != f({m})*φ({n}^3)={rhs}")
+                passed_all = False
+            else:
+                print(f"Pass at m={m}, n={n}: f({m}*{phi})={lhs} = f({m})*{phi}={rhs}")
+    return passed_all
+
+print(f"Testing functional equation f(m*φ(n^3))=f(m)*φ(n^3) for m≥n>0 up to n={MAX_N}, m={MAX_M}\n")
+
+for name, f in candidate_functions():
+    print(f"Testing candidate function '{name}':")
+    all_good = check_equation(f)
+    if all_good:
+        print(f"Function '{name}' satisfies the equation for tested inputs.\n")
+    else:
+        print(f"Function '{name}' does NOT satisfy the equation for all tested inputs.\n")
+```
+

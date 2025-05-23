@@ -1,0 +1,67 @@
+[write_program]
+The problem involves finding the smallest positive integer \( n \) such that for all positive integers \( a \), \( 2021 \) divides \(\sum_{d \mid a^n} d - 1 \), and that the sum of the prime factors of \( n \) equals \( n \) itself.
+
+To explore this, we will:
+
+- Iterate over small candidates for \( n \), say up to 50.
+- For each \( n \), test several small values of \( a \) (like 1 to 20).
+- For each \( a \), compute \( \sum_{d|a^n} d - 1 \) and check divisibility by 2021.
+- If the condition holds for all tested \( a \), print \( n \).
+- Also check if sum of prime factors of \( n \) equals \( n \) (so \( n \) is sum of its distinct prime factors).
+
+Since 2021 = 43 * 47, divisors might have special properties.
+
+We keep output minimal and streaming as answers are found.
+
+```python
+import math
+
+def divisors(num):
+    divs = set()
+    for i in range(1, int(math.isqrt(num)) +1):
+        if num % i == 0:
+            divs.add(i)
+            divs.add(num//i)
+    return divs
+
+def prime_factors(n):
+    factors = set()
+    x = n
+    for p in range(2, int(math.isqrt(n))+1):
+        while x % p == 0:
+            factors.add(p)
+            x //= p
+    if x > 1:
+        factors.add(x)
+    return factors
+
+def sum_divisors(n):
+    return sum(divisors(n))
+
+def test_n(n, amax=20):
+    """Test for all a in [1..amax] if 2021 divides sum of divisors of a^n minus 1."""
+    MOD = 2021
+    for a in range(1, amax+1):
+        val = sum_divisors(pow(a,n)) - 1
+        if val % MOD != 0:
+            return False
+    return True
+
+def sum_prime_factors_eq_n(n):
+    return sum(prime_factors(n)) == n
+
+def main():
+    print("Testing n from 1 to 50 with a up to 20...")
+    candidates = []
+    for n in range(1, 51):
+        if test_n(n):
+            print(f"n = {n} satisfies divisibility condition")
+            if sum_prime_factors_eq_n(n):
+                print(f"  sum of prime factors equals n: {n}")
+                candidates.append(n)
+    if candidates:
+        print(f"Minimum such n: {min(candidates)}")
+
+if __name__ == "__main__":
+    main()
+```

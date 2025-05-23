@@ -1,0 +1,82 @@
+[write_program]
+The problem suggests investigating, for given integers n and k ≤ n, the maximum size y of the intersection of a k-dimensional subspace V of ℝⁿ (functions Fin n → ℝ) with the set Z of 0-1 vectors in ℝⁿ. We want to find (and conjecture) the maximum number of such 0-1 vectors in any k-dimensional subspace.
+
+We will enumerate small values of n and k, list all k-dimensional subspaces (via their bases), check which 0-1 vectors lie inside, and record the maximum intersection size found.
+
+Due to complexity, we'll only sample small values (like n=3, k=1 or 2).
+
+Instead of enumerating all subspaces, we will generate candidate bases as combinations of 0-1 vectors or small integer vectors to approximate the search.
+
+Below is a Python program that prints parameters used, then enumerates some subspaces, and prints sizes of intersections immediately found, enabling conjecture of omnimath3257_answer(k).
+
+```python
+# We explore small n, k≤n to conjecture maximum number of 0-1 vectors in k-dim subspaces of R^n.
+import itertools
+import numpy as np
+
+def zero_one_vectors(n):
+    # All 0-1 vectors in {0,1}^n
+    for bits in itertools.product([0,1], repeat=n):
+        yield np.array(bits)
+
+def is_in_span(v, basis):
+    # Check if vector v is in span of basis vectors (columns)
+    # Solve basis_matrix x = v
+    if not basis:
+        # Empty basis
+        return np.all(v == 0)
+    B = np.array(basis).T  # shape (n, k)
+    try:
+        # Use least squares to check exact solution
+        # If exact solution with zero residual exists, vector is in span
+        sol, residuals, rank, s = np.linalg.lstsq(B, v, rcond=None)
+        # residuals may be empty if system is exact
+        if residuals.size == 0:
+            # Check if B @ sol == v exactly
+            if np.allclose(B @ sol, v, atol=1e-10):
+                return True
+            else:
+                return False
+        # residuals is sum of squared residuals
+        return residuals[0] < 1e-12
+    except np.linalg.LinAlgError:
+        return False
+
+def construct_candidate_bases(n, k):
+    # To reduce search, consider bases of 0-1 vectors (or small integer vectors)
+    # We return all k-subsets of zero-one vectors (excluding zero vector)
+    vectors = list(zero_one_vectors(n))
+    vectors = [v for v in vectors if np.any(v)]  # exclude zero vector
+    # To avoid degenerate sets, filter full rank
+    for base in itertools.combinations(vectors, k):
+        B = np.array(base).T
+        if np.linalg.matrix_rank(B) == k:
+            yield base
+
+def max_intersection(n, k):
+    print(f"n={n}, k={k}")
+    Z = list(zero_one_vectors(n))
+    max_y = 0
+    for base in construct_candidate_bases(n, k):
+        count = 0
+        for v in Z:
+            if is_in_span(v, base):
+                count += 1
+        print(f"Subspace basis (k={k} vectors): count of 0-1 in subspace = {count}")
+        if count > max_y:
+            max_y = count
+        # Limit enumeration for brevity: max 10 subspaces per (n,k)
+        if max_y == 2**k:  # cannot exceed 2^k as subspace of dim k can have at most 2^k 0-1 vectors if closed under vector sum mod 2 (approx)
+            break
+    print(f"Max intersection size for (n={n},k={k}): {max_y}")
+
+def main():
+    # Sample small values for n and k
+    for n in [2,3]:
+        for k in range(1, n+1):
+            max_intersection(n, k)
+
+if __name__ == "__main__":
+    main()
+```
+

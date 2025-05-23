@@ -1,0 +1,82 @@
+[write_program]
+The problem is to count triples (a,b,c) of positive integers with a ≤ b ≤ c, gcd(a,b,c) = 1, and a*b*c = 6^2020. We want the count modulo 1000.
+
+Key points:
+- 6 = 2 * 3, so 6^2020 = 2^{2020} * 3^{2020}.
+- Each of a,b,c factors into powers of 2 and 3 only.
+- gcd(a,b,c) = 1 means that for each prime, at least one of (a,b,c) has exponent zero in that prime.
+- We want to count ordered triples with ordering a ≤ b ≤ c.
+- The exponent triples sum to 2020 for primes 2 and 3.
+
+The number of triples (a,b,c) with a*b*c = 6^{2020} corresponds to distributing exponents of prime 2 and 3 among a,b,c so exponents sum to 2020 each. GCD=1 means min exponent for each prime among a,b,c is zero.
+
+We can iterate possible splits of exponents (for primes 2 and 3), filter those meeting gcd=1 and ordering conditions, and count.
+
+We'll try small exponent values to conjecture the pattern; printing counts for smaller exponents to guess the formula for larger ones.
+
+Output all results and then summarize with the last result modulo 1000 as 'answer_mod_1000'.
+
+```python
+from math import gcd
+from functools import lru_cache
+
+# Enumerate triples (a,b,c) with a<=b<=c, a*b*c = 6^E where a,b,c are prime powers with primes 2,3.
+# Conditions:
+#  - For each prime, a_exp + b_exp + c_exp = E
+#  - min of (a_exp,b_exp,c_exp) = 0 for gcd=1 condition (because gcd(a,b,c)=1).
+#  - a<=b<=c, order by the numeric value (2^{a_exp2} * 3^{a_exp3}).
+
+def prime_energy(E):
+    # Count triples (x,y,z) nonnegative, sum x+y+z=E
+    # with min(x,y,z)=0
+    # and ordered under the full numeric ordering combined from powers of 2 and 3.
+    # Due to 2 and 3 independent, we consider exponent triples for each prime and combine:
+    # Final (a,b,c) = (2^{a2}*3^{a3}, ...), sort triples with a<=b<=c.
+    # We'll generate all exponent triples satisfying gcd=1 for primes separately then combine.
+
+    # Enumerate exponent triples with sum=E and min=0
+    exp_triples = []
+    for x in range(E+1):
+        for y in range(E+1 - x):
+            z = E - x - y
+            if min(x,y,z) == 0:
+                exp_triples.append((x,y,z))
+    return exp_triples
+
+def value_of(exp2, exp3):
+    # Returns integer value 2^exp2 * 3^exp3
+    return (2**exp2) * (3**exp3)
+
+def is_ordered(a,b,c):
+    return a <= b <= c
+
+def main():
+    maxE = 6  # Small max exponent for testing patterns; larger E require more time.
+    print("Exponent E, Count mod 1000")
+    for E in range(1, maxE+1):
+        primes_exp_triples = prime_energy(E)
+        # We'll create dict mapping triple to unique id or value
+        # For prime 2 and 3 separately
+        prime2_triples = primes_exp_triples
+        prime3_triples = primes_exp_triples
+
+        count = 0
+        # Combine prime2 and prime3 triples for (a,b,c)
+        for (a2,b2,c2) in prime2_triples:
+            for (a3,b3,c3) in prime3_triples:
+                a = value_of(a2,a3)
+                b = value_of(b2,b3)
+                c = value_of(c2,c3)
+                if is_ordered(a,b,c):
+                    count += 1
+        print(f"E={E} Count={count} Count%1000={count%1000}")
+
+    # For large E=2020, printing all combinations impossible.
+    # But conjecture from small E: count mod 1000 may follow pattern.
+    # Let's print final placeholder for E=2020 mod 1000:
+    # (in reality solution requires advanced combinatorics or formula)
+    print("For E=2020, count mod 1000 = (to be conjectured based on above)")
+
+if __name__ == '__main__':
+    main()
+```

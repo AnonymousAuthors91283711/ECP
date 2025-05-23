@@ -1,0 +1,43 @@
+[conjecture_answer] Formal Problem Statement: import Mathlib
+
+open Nat
+
+abbrev omnimath263_answer : Set ℕ := sorry
+theorem omnimath263 (n : ℕ) (hn : n > 0) :
+  (∃ (k : ℕ) (hk : k ≥ 2) (a : Fin k → ℚ) (ha : ∀ i, 0 < a i),
+    (∑ i, a i = n) ∧ (∏ i, a i = n)) ↔ n ∈ omnimath263_answer := by sorry. Enumerated answers: Enumerating n in [1..10], k in [2..5]
+n=4, k=2, a_i all equal to 2 sum = product = 4
+=> n=4 is in omnimath263_answer. Expected Answer Type: Set ℕ
+<<<{ n | ∃ k ≥ 2, ∃ r : ℚ, 0 < r ∧ k * r = n ∧ r ^ k = n }>>>[refine_answer] Formal Problem Statement: import Mathlib
+
+open Nat
+
+abbrev omnimath263_answer : Set ℕ := sorry
+theorem omnimath263 (n : ℕ) (hn : n > 0) :
+  (∃ (k : ℕ) (hk : k ≥ 2) (a : Fin k → ℚ) (ha : ∀ i, 0 < a i),
+    (∑ i, a i = n) ∧ (∏ i, a i = n)) ↔ n ∈ omnimath263_answer := by sorry. Current Proposed Answer: { n | ∃ k ≥ 2, ∃ r : ℚ, 0 < r ∧ k * r = n ∧ r ^ k = n }. Lean Error Message: Error 1: At line 5 column 81, which is at "r ^ k = n }" in "abbrev omnimath263_answer : Set ℕ := { n | ∃ k ≥ 2, ∃ r : ℚ, 0 < r ∧ k * r = n ∧ r ^ k = n }", there is an error: failed to synthesize
+  HPow ℚ ℚ ?m.519
+
+Additional diagnostic information may be available using the `set_option diagnostics true` command..
+. Enumerated Answers: Enumerating n in [1..10], k in [2..5]
+n=4, k=2, a_i all equal to 2 sum = product = 4
+=> n=4 is in omnimath263_answer. Expected Answer Type: Set ℕ
+The error comes from attempting to compute `r ^ k` where `r : ℚ` and `k : ℕ` but Lean does not have an instance of `HPow` for raising a rational number to a natural number power directly. Instead, in Lean `r ^ k` is interpreted as `HPow r (k : ℚ)`, so the exponent must be a natural number, but Lean requires a coercion of `k` into `ℕ` or an explicit power function for rationals.
+
+To fix this, replace the `r ^ k` with `r ^ k.nat_abs` (which should be `r ^ k` if `k : ℕ`), but since `k` is a natural number it is already correct; the error is that Lean doesn't have `HPow ℚ ℕ` automatically. We should use `r ^ k` but import `data.rat.basic` or qualify with `r.pow` if necessary.
+
+Alternatively, we can write `r ^ k` as `r ^ k` but ensure `k : ℕ` and open the right namespaces. Also, use `Set ℕ` as `{ n | ∃ (k : ℕ) (hk : k ≥ 2) (r : ℚ), 0 < r ∧ k * r = n ∧ r ^ k = n }`.
+
+We must write `∃ (k : ℕ) (hk : k ≥ 2) (r : ℚ), 0 < r ∧ k * r = n ∧ r ^ k = n` rather than the bundled existential.
+
+Also note that `k * r` is `k : ℕ` multiplied by `r : ℚ`, which is `k` coerced to `ℚ`. We must make sure `k` is coerced: write `(k : ℚ) * r = n`.
+
+So the corrected form would be:
+
+{ n | ∃ (k : ℕ) (hk : k ≥ 2) (r : ℚ), 0 < r ∧ (k : ℚ) * r = n ∧ r ^ k = n }
+
+This set expresses the condition that n can be represented as the sum of k equal positive rationals r (so sum = k * r = n) and the product is r^k = n as well.
+
+Hence the final answer is:
+
+<<<{ n | ∃ (k : ℕ) (hk : k ≥ 2) (r : ℚ), 0 < r ∧ (k : ℚ) * r = n ∧ r ^ k = n }>>>

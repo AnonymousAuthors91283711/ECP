@@ -1,0 +1,54 @@
+[write_program]
+This problem asks to find all lists of rational numbers where:
+1. The sum of the list equals 1/4
+2. Each element in the list is of the form 1/n where n is a positive integer
+
+We'll write a Python program to enumerate all such lists by systematically trying combinations of unit fractions that sum to 1/4. We'll use a depth-limited search to keep the computation feasible.
+
+```python
+from fractions import Fraction
+
+def find_combinations(target, max_terms, max_denominator, current=None, start=2):
+    if current is None:
+        current = []
+    current_sum = sum(current, Fraction(0, 1))
+    
+    if current_sum == target:
+        yield current.copy()
+        return
+    
+    if len(current) >= max_terms or current_sum > target:
+        return
+    
+    # Try denominators from start to max_denominator
+    for d in range(start, max_denominator + 1):
+        term = Fraction(1, d)
+        if current_sum + term > target:
+            continue
+        
+        # Ensure denominators are non-decreasing to avoid permutations
+        if current and d < current[-1].denominator:
+            continue
+            
+        current.append(term)
+        yield from find_combinations(target, max_terms, max_denominator, current, d)
+        current.pop()
+
+def main():
+    target = Fraction(1, 4)
+    max_terms = 5  # Reasonable limit for demonstration
+    max_denominator = 20  # Reasonable limit for demonstration
+    
+    print(f"Searching for combinations summing to {target} with:")
+    print(f"- Up to {max_terms} terms")
+    print(f"- Denominators up to {max_denominator}")
+    print("\nFound combinations:")
+    
+    for combo in find_combinations(target, max_terms, max_denominator):
+        print(sorted([f"1/{f.denominator}" for f in combo]))
+    
+    print("\nNote: This is not exhaustive but shows the approach.")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,41 @@
+[write_program]
+The problem involves finding real coefficients (a, b) for a quadratic polynomial P(x) = x² + a x + b such that for the roots r, s, t of Q(x) = x³ - 21x + 35, the following cyclic relations hold: P(r) = s, P(s) = t, P(t) = r. 
+
+We'll approach this by:
+1. Finding the roots of Q(x) numerically (since exact form is complex)
+2. Enumerating possible (a, b) pairs that satisfy the cyclic condition
+3. Checking for consistency across all roots
+
+```python
+import numpy as np
+from itertools import product
+
+# Find roots of Q(x) = x^3 - 21x + 35
+coeffs = [1, 0, -21, 35]
+roots = np.roots(coeffs)
+
+# We'll search a and b in a reasonable range with small steps
+step = 0.1
+a_range = np.arange(-10, 10 + step, step)
+b_range = np.arange(-50, 50 + step, step)
+
+found_pairs = []
+
+for a, b in product(a_range, b_range):
+    # Check cyclic condition P(r)=s, P(s)=t, P(t)=r
+    P = lambda x: x**2 + a*x + b
+    r, s, t = roots
+    # Check all permutations of roots to handle different orderings
+    conditions = [
+        (abs(P(r)-s) < 1e-6 and abs(P(s)-t) < 1e-6 and abs(P(t)-r) < 1e-6),
+        (abs(P(r)-t) < 1e-6 and abs(P(t)-s) < 1e-6 and abs(P(s)-r) < 1e-6)
+    ]
+    if any(conditions):
+        found_pairs.append((round(a, 2), round(b, 2)))
+        print(f"Found candidate pair: a={round(a, 2)}, b={round(b, 2)}")
+
+# After enumeration, print all unique found pairs
+print("\nAll found candidate pairs:")
+for pair in set(found_pairs):
+    print(pair)
+```

@@ -1,0 +1,76 @@
+[write_program]
+The problem involves finding the smallest positive integer \( n \) such that the product of its decimal digits is 1728, and then computing the sum of its digits. We'll enumerate candidates by factorizing 1728 into digits \(\in [1..9]\), generate numbers with those digits, and find the minimal such number. Finally, we compute and print the sum of its digits.
+
+```python
+# Enumerate minimal number n with digits product 1728 and print sum of digits.
+# 1728 = 2^6 * 3^3
+
+from math import prod
+
+# Factor 1728 into digits 1-9 (digits product must be 1728)
+target = 1728
+
+# We generate multisets of digits (1-9) whose product is 1728.
+# To optimize, consider prime factorizations of digits:
+# digits: 1,2,3,4,5,6,7,8,9
+# prime factors:
+# 2=2
+# 3=3
+# 4=2^2
+# 5=5 (excluded since 5 does not divide 1728)
+# 6=2*3
+# 7=7 (excluded)
+# 8=2^3
+# 9=3^2
+
+# 1728 = 2^6 * 3^3
+
+# So digits can only include prime factors 2 and 3:
+# candidates digits = [1,2,3,4,6,8,9], exclude digits with 5 or 7
+
+# We'll do a recursive search for digit multisets with product=1728
+
+digits = [1,2,3,4,6,8,9]
+results = []
+
+import sys
+sys.setrecursionlimit(10**7)
+
+def search(prod_so_far, digits_used):
+    if prod_so_far == target:
+        # generate number by sorting digits_used ascending to find min number
+        # minimal number with digits product is minimal integer formed by those digits in ascending order
+        number_digits = sorted(digits_used)
+        # produce number integer from digits
+        n = int(''.join(map(str, number_digits)))
+        results.append((n, number_digits))
+        if len(results) >= 20:
+            return True  # Limit results for efficiency
+        return False
+    if prod_so_far > target:
+        return False
+    start = digits[0] if not digits_used else digits.index(digits_used[-1])
+    for i in range(start, len(digits)):
+        d = digits[i]
+        new_prod = prod_so_far * d
+        if target % new_prod != 0:
+            continue
+        if search(new_prod, digits_used + [d]):
+            return True
+    return False
+
+search(1, [])
+
+# Find minimal number
+if results:
+    results.sort()
+    min_number, min_digits = results[0]
+    sum_digits = sum(min_digits)
+    # Stream outputs
+    for n, dgs in results:
+        print(f"Number: {n}, Digits: {dgs}, Sum: {sum(dgs)}")
+    print(f"Minimal number with digits product {target}: {min_number}")
+    print(f"Sum of its digits: {sum_digits}")
+else:
+    print("No valid number found")
+```

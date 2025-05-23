@@ -1,0 +1,45 @@
+[write_program]
+The problem involves the sum \( S = \sum_{i=0}^{10} \frac{1}{\sin(8 \cdot 2^i)} \) and asks to express it in the form \(\frac{1}{\sin(a)}\) for some angle \(a\). We want to explore the values of the sum numerically for these powers to conjecture \(a\).
+
+The code below computes the sum for given angles \(8 \cdot 2^i\) (in degrees, converting to radians for Python's math.sin), prints the partial sums, and also tries to find an angle \(a\) in degrees such that \(\sin(a)\) is approximately the reciprocal of the sum. We print approximate candidate angles and exact values as we discover them.
+
+```python
+import math
+
+# Convert degrees to radians
+def deg2rad(deg):
+    return deg * math.pi / 180
+
+# sum of 1/sin(8 * 2^i)
+def compute_sum():
+    s = 0.0
+    for i in range(11):
+        angle_deg = 8 * (2 ** i)
+        angle_rad = deg2rad(angle_deg % 360)  # mod 360 for periodicity
+        sin_val = math.sin(angle_rad)
+        if abs(sin_val) < 1e-15:
+            print(f"sin({angle_deg}°) too close to zero, skipping term")
+            continue
+        term = 1 / sin_val
+        s += term
+        print(f"i={i}, angle={angle_deg}°, 1/sin={term:.9f}, partial sum={s:.9f}")
+    return s
+
+def find_angle_for_reciprocal(s):
+    recip = 1 / s
+    # search angles from 0° to 360° with fine steps:
+    # sine is periodic with period 360°
+    for angle_deg in range(360):
+        sin_val = math.sin(deg2rad(angle_deg))
+        if abs(sin_val - recip) < 1e-6 or abs(sin_val + recip) < 1e-6:
+            sign = '+' if abs(sin_val - recip) < 1e-6 else '-'
+            print(f"sin({angle_deg}°) = {sin_val:.9f} close to {sign}1/S = {recip:.9f}")
+
+if __name__ == "__main__":
+    print("Computing sum S = sum 1/sin(8*2^i) for i=0 to 10:")
+    S = compute_sum()
+    print(f"Sum S = {S:.9f}")
+    print("Trying to find angle a such that sin(a) = 1/S or -1/S ...")
+    find_angle_for_reciprocal(S)
+```
+This enumerates partial sums, prints them immediately, then attempts to find an integer degree \(a\) that produces \(\sin(a) \approx \pm \frac{1}{S}\). This helps conjecture the \(a\) in the theorem.

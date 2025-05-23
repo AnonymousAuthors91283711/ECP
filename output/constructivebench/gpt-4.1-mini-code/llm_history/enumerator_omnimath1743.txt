@@ -1,0 +1,86 @@
+[write_program]
+The problem involves the number of divisors of 2014! and then taking the logarithm and rounding it. Since computing the exact number of divisors for 2014! is enormous, we can't compute the exact divisor count easily; however, we can compute the number of divisors of n! in general since the exponent of each prime in n! is known.
+
+The number of divisors of n! is the product over primes p ≤ n of (exponent_p(n!) + 1), where exponent_p(n!) = sum of floor(n/p^k) over k≥1.
+
+Since 2014! is huge, directly computing the value is not practical here.
+
+We can instead write a program which for small values of n computes the number of divisors of n!, takes its logarithm, and print the rounded value.
+
+Thus, we can:
+
+1. Compute primes up to n (using a sieve).
+
+2. Compute exponent_p(n!) = sum floor(n/p^k).
+
+3. The number of divisors of n! = product (exponent_p + 1).
+
+Since the divisor count gets huge, we should work with logarithms to avoid overflow:
+
+log(number_of_divisors(n!)) = sum over primes p ≤ n of log(exponent_p(n!) + 1)
+
+So we can sum over all primes p ≤ n, the log(exponent_p + 1), then round this sum.
+
+The program will:
+
+- Work for selected n values: say n = 10, 20, 50, 100, 500, 1000.
+
+- For each, print n and the rounded log number of divisors of n!.
+
+- For n=2014, do the same, though enumeration of primes ≤ 2014 is manageable.
+
+- From that, conjecture the rounded log of divisor count for 2014!.
+
+Now, exact computation of number_of_divisors(2014!) is too huge to store explicitly, but since we only do log sum, we can calculate it efficiently.
+
+Additionally, we'll do prime sieve for 2014 max.
+
+We will print results as we go.
+
+Because of token limit, we only pick selected values, and the final answer for 2014.
+
+```python
+# Enumerate rounded logs of divisor counts of n! for sample n, including n=2014.
+
+import math
+
+def sieve(n):
+    """Sieve of Eratosthenes to list primes up to n."""
+    sieve = [True]*(n+1)
+    sieve[0], sieve[1] = False, False
+    for i in range(2,int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i,n+1,i):
+                sieve[j] = False
+    return [p for p in range(2,n+1) if sieve[p]]
+
+def exponent_p_in_factorial(n, p):
+    """Compute exponent of prime p in n! as sum floor(n/p^k)."""
+    exp = 0
+    power = p
+    while power <= n:
+        exp += n // power
+        power *= p
+    return exp
+
+def log_num_divisors_factorial(n, primes):
+    """Calculate log of number of divisors of n! = sum log(exp_p+1)."""
+    total = 0.0
+    for p in primes:
+        e = exponent_p_in_factorial(n, p)
+        # e+1 > 1 always
+        total += math.log(e+1)
+    return total
+
+def main():
+    ns = [10, 20, 50, 100, 500, 1000, 2014]
+    max_n = max(ns)
+    primes = sieve(max_n)
+    for n in ns:
+        lg = log_num_divisors_factorial(n, [p for p in primes if p <= n])
+        rounded = round(lg)
+        print(f"n={n}, rounded log(#divisors({n}!)) = {rounded}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,75 @@
+[write_program]
+This problem defines a set involving injective functions from Fin m to a 4-tupleed structure over Fin n, with a property related to no set of size n being injectively mapped under a certain projection. Our goal is to find the maximal such m for a fixed n, given n > 0, and provide an algorithmic enumeration to assist in conjecture.
+
+Approach:
+- For small n (e.g., n=1,2,3), enumerate candidate m from 1 up to a reasonable threshold (say 10).
+- For each m, generate all injective functions from Fin m to the set of all 4-tuples over Fin n.
+- For each injective function, check if the property holds: no subset of c of size n maps injectively into some coordinate tuple (which would violate the set-injectivity condition).
+- When the maximum m is found, output it; for others, output the found values to help conjecture.
+
+This implementation is a simplified model, capturing the core enumeration idea.
+
+```python
+import itertools
+from math import factorial
+
+def generate_injective_functions(n, m):
+    # Generate all injective functions from Fin m to tuples over Fin n
+    domain = list(range(m))
+    codomain = list(itertools.product(range(n), repeat=4))
+    for image in itertools.permutations(codomain, m):
+        yield dict(zip(domain, image))
+
+def check_property(n, m, func):
+    # For each subset c of size n, check the property
+    c_subsets = itertools.combinations(func.keys(), n)
+    for c in c_subsets:
+        c_set = set(c)
+        # For all s, d, w in Fin n
+        for s in range(n):
+            for d in range(n):
+                for w in range(n):
+                    # Check if there exists g in c with specified properties
+                    exists_g = False
+                    for g in c:
+                        (fix_obj,) = [func[g]]
+                        s_g, (d_g, (w_g, _)) = fix_obj
+                        if s_g == s and d_g == d and w_g == w:
+                            exists_g = True
+                            break
+                    if not exists_g:
+                        # Did not find such g, property holds for this choice
+                        continue
+                    # If all g in c satisfy the property, it's a violation
+                    # But we need to confirm for all g in c: the property is satisfied
+                    # Actually, the definition states: the set of c should not have all attributes
+                    # Let's check: if for all g in c, (guests g).1 = s, .2.1 = d, .2.2.1=w, then property fails
+                    all_satisfied = True
+                    for g in c:
+                        (fix_obj,) = [func[g]]
+                        s_g, (d_g, (w_g, _)) = fix_obj
+                        if not (s_g == s and d_g == d and w_g == w):
+                            all_satisfied = False
+                            break
+                    if all_satisfied:
+                        return False  # Property fails
+    return True
+
+max_m_found = -1
+n = 3  # example small n
+threshold = 10
+
+print(f"Enumerating for n={n} up to m={threshold}")
+for m in range(1, threshold + 1):
+    found_any = False
+    for func in generate_injective_functions(n, m):
+        if check_property(n, m, func):
+            print(f"Candidate m={m} with injective function: {func}")
+            found_any = True
+    if not found_any:
+        print(f"No valid functions found for m={m}")
+    # Track maximum m
+    if found_any:
+        max_m_found = m
+print(f"Maximum m satisfying conditions: {max_m_found}")
+```

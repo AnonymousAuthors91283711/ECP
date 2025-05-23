@@ -1,0 +1,63 @@
+[write_program]
+This problem is about finding two rational polynomials \( p, q \) of degree ≤ 2 such that for \( n=1,2,3,4,5 \), \(\frac{p(n)}{q(n)} = n^3\) and also determining the value at 0, \(\frac{p(0)}{q(0)}\).
+
+To explore this, we can parametrize \(p(x) = a_2 x^2 + a_1 x + a_0\), \(q(x) = b_2 x^2 + b_1 x + b_0\), compute the conditions for \(n=1,...,5\), and try to solve or enumerate rational \(a_i, b_i\). Since the polynomials have many coefficients, we'll try to eliminate degrees or guess a form like \(p(x) = x^3 q(x)\) restricted to degree ≤ 2, searching for rational approximations, or search for all integer coefficient polynomials with small integer coefficients to see if any satisfy these constraints exactly.
+
+We'll enumerate small integer coefficients in some range (say -5 to 5) and test the functional equation for n=1..5, then if successful, print the ratio at 0. Because \(q(0)\) must not be zero (since we evaluate at 0), we avoid zero denominators.
+
+This brute force search helps conjecture the answer or spot candidate solutions.
+
+```python
+# Enumerate rational polynomials p,q degree ≤ 2 with integer coefficients from -5 to 5
+# and check if p(n)/q(n) = n^3 for n=1..5, then print p(0)/q(0).
+
+def eval_poly(coeffs, x):
+    return coeffs[2]*x*x + coeffs[1]*x + coeffs[0]
+
+from fractions import Fraction
+
+coeff_range = range(-5,6)
+solutions = []
+print("Searching for integer polynomials p,q with coefficients in [-5..5]...")
+
+for a0 in coeff_range:
+    for a1 in coeff_range:
+        for a2 in coeff_range:
+            if a0 == a1 == a2 == 0:
+                continue  # p=0 not interesting
+            p = (a0,a1,a2)
+            for b0 in coeff_range:
+                if b0 == 0:
+                    continue  # avoid zero denominator at 0
+                for b1 in coeff_range:
+                    for b2 in coeff_range:
+                        q = (b0,b1,b2)
+                        # Check p(n)*q(n)==n^3*q(n)^2 denominator cleared
+                        # Instead, check p(n)/q(n) = n^3 exactly at n=1..5
+                        valid = True
+                        for n in range(1,6):
+                            pn = eval_poly(p, n)
+                            qn = eval_poly(q, n)
+                            if qn == 0 or pn*1 != n**3 * qn:
+                                # Use fractions for exact comparison:
+                                left = Fraction(pn, qn)
+                                right = Fraction(n**3,1)
+                                if left != right:
+                                    valid = False
+                                    break
+                        if valid:
+                            val0 = Fraction(eval_poly(p,0), eval_poly(q,0))
+                            # print only distinct solutions
+                            sol = (p,q,val0)
+                            if sol not in solutions:
+                                solutions.append(sol)
+                                print(f"p={p}, q={q}, p(0)/q(0)={val0}")
+
+# Print minimal and maximal p(0)/q(0) among found
+if solutions:
+    vals = [s[2] for s in solutions]
+    print(f"Minimum p(0)/q(0)={min(vals)}")
+    print(f"Maximum p(0)/q(0)={max(vals)}")
+else:
+    print("No solutions found in this range.")
+```

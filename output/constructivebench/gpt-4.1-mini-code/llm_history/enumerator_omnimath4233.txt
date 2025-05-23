@@ -1,0 +1,65 @@
+[write_program]
+The problem describes polynomials \( f \) over \(\mathbb{R}\) such that for every real \(x\),
+\[
+f(x) \cdot f(2x^2) = f(2x^3 + x).
+\]
+To explore solutions, I'll write a program to enumerate polynomials up to a small degree (e.g. degree 3), with integer coefficients from \(-2\) to \(2\), and check the identity at several sample points. Since the identity must hold for all real \(x\), testing multiple points will help conjecture candidates.
+
+The program will print each candidate polynomial immediately when verified to satisfy the relation at all test points.
+
+```python
+# We explore polynomials f(x) = a3*x^3 + a2*x^2 + a1*x + a0,
+# with integer coefficients in -2..2.
+# For each, we check if f(x)*f(2*x^2) == f(2*x^3 + x) holds
+# for sample x values. If so, print polynomial.
+
+from sympy import symbols, Poly
+
+x = symbols('x')
+
+# Sample points to check the functional equation
+test_points = [-2, -1, 0, 0.5, 1, 2]
+
+def poly_str(coeffs):
+    terms = []
+    deg = len(coeffs)-1
+    for i, c in enumerate(coeffs):
+        power = deg - i
+        if c == 0:
+            continue
+        term = ''
+        if c < 0:
+            term += '-'
+        elif terms:
+            term += '+'
+        if abs(c) != 1 or power == 0:
+            term += str(abs(c))
+        if power > 0:
+            term += 'x'
+            if power > 1:
+                term += f'^{power}'
+        terms.append(term)
+    return ''.join(terms) if terms else '0'
+
+# Check all polynomials degree up to 3 with coeffs in -2..2
+for a3 in range(-2,3):
+    for a2 in range(-2,3):
+        for a1 in range(-2,3):
+            for a0 in range(-2,3):
+                coeffs = [a3,a2,a1,a0]
+                # Skip zero polynomial
+                if all(c == 0 for c in coeffs):
+                    continue
+                p = Poly(a3*x**3 + a2*x**2 + a1*x + a0, x)
+                # Check the condition at all test points
+                valid = True
+                for val in test_points:
+                    lhs = p.eval(val)*p.eval(2*val**2)
+                    rhs = p.eval(2*val**3 + val)
+                    if abs(lhs - rhs) > 1e-10:
+                        valid = False
+                        break
+                if valid:
+                    print(f"Satisfies condition: f(x) = {poly_str(coeffs)}")
+```
+

@@ -1,0 +1,91 @@
+[write_program]
+The problem involves exploring values of a certain expression over nonnegative matrices \(a\) of size \(m \times n\), with parameters \(m,n\) (integers >1) and real parameters \(0<r<s\). The expression is
+
+\[
+f = \frac{\left(\sum_{j} \big(\sum_{i} a_{ij}^s \big)^{r/s}\right)^{1/r}}{\left(\sum_{i} \big(\sum_{j} a_{ij}^r \big)^{s/r}\right)^{1/s}}.
+\]
+
+The goal: For fixed \(m,n,r,s\), to find the greatest value of \(f\) over all nonzero nonnegative matrices \(a\).
+
+I will enumerate matrices with integer entries 0 to some small max (say, up to 3), for small \(m,n\) (like \(2,2\)) and sample \(r,s\) with \(0<r<s\) (like \(1,2\) or \(1,3\)), and print the values \(f\). This will help conjecture the maximal value and how it depends on parameters.
+
+To maximize efficiency, I will test matrices with at least one positive entry, and compute exactly (using Python's `fractions` or floats). Because raising to non-integer powers is involved, I will use `math.pow`.
+
+I will stream output printing parameter sets and matrices yielding distinct values of \(f\).
+
+```python
+# Enumerate matrices a in NxM size with entries 0..max_val, at least one >0
+# Compute f(a; r,s), print results and max found.
+
+import math
+
+def f_of_a(a, m, n, r, s):
+    # Compute numerator: sum_j (sum_i a[i][j]^s)^{r/s} all^{1/r}
+    col_sums = []
+    for j in range(n):
+        s_sum = 0
+        for i in range(m):
+            s_sum += a[i][j]**s
+        col_sums.append(s_sum)
+    numerator_base = sum(pow(c, r/s) for c in col_sums)
+    numerator = pow(numerator_base, 1/r) if numerator_base>0 else 0
+
+    # Compute denominator: sum_i (sum_j a[i][j]^r)^{s/r} all^{1/s}
+    row_sums = []
+    for i in range(m):
+        r_sum = 0
+        for j in range(n):
+            r_sum += a[i][j]**r
+        row_sums.append(r_sum)
+    denominator_base = sum(pow(r_, s/r) for r_ in row_sums)
+    denominator = pow(denominator_base, 1/s) if denominator_base>0 else 0
+
+    if denominator==0:
+        return None
+    return numerator/denominator
+
+def nonzero_matrix(m,n,max_val):
+    # yield all matrices m x n with entries in 0..max_val with at least one >0
+    from itertools import product
+    entries = list(range(max_val+1))
+    for flat in product(entries, repeat=m*n):
+        if any(x>0 for x in flat):
+            a = [list(flat[i*n:(i+1)*n]) for i in range(m)]
+            yield a
+
+def main():
+    # sample parameters m,n,r,s
+    samples = [
+        (2,2,1.0,2.0),
+        (2,3,1.0,3.0),
+        (3,2,1.5,2.5),
+        (2,2,0.5,1.2) # r < s positive
+    ]
+    max_val = 3
+    for (m,n,r,s) in samples:
+        print(f"Parameters: m={m}, n={n}, r={r}, s={s}")
+        best = -1
+        best_matrices = []
+        seen_values = set()
+        for a in nonzero_matrix(m,n,max_val):
+            val = f_of_a(a,m,n,r,s)
+            if val is None:
+                continue
+            # round val to 6 decimals to reduce duplicates
+            val_r = round(val,6)
+            if val_r not in seen_values:
+                seen_values.add(val_r)
+                print(f"Matrix: {a} -> f={val_r}")
+            if val>best:
+                best = val
+                best_matrices = [a]
+            elif abs(val-best)<1e-12:
+                best_matrices.append(a)
+        print(f"Best f approx: {best:.6f}")
+        print("Example best matrix (one):", best_matrices[0])
+        print()
+
+if __name__=="__main__":
+    main()
+```
+

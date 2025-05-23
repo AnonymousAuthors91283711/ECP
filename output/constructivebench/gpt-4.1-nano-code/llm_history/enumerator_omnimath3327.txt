@@ -1,0 +1,67 @@
+[write_program]
+The problem models a scenario with trucks and cars moving at different speeds. We're asked to find a unique speed \( v \) greater than zero such that when trucks and cars move at speed \( v \), the number of cars passing each truck equals 2.
+
+Key quantities:
+- Truck speed: 60 mph
+- Car speed: 75 mph
+- Truck spacing: 1/4 mile
+- Car time spacing: 3 seconds
+- Car distance spacing calculation
+- Relative speeds
+- Time between trucks passing a point
+- Number of cars passing each truck
+
+We want to find the unique \( v \) satisfying:
+\[ 
+\frac{\text{truck spacing}}{\text{relative speed of trucks}} = 2 \times \frac{\text{car distance}}{\text{relative speed of cars}}
+\]
+
+This simplifies to a quadratic in \( v \). We can brute-force over \( v \in (0, 200] \) with small steps to find candidates where the equality holds approximately. We prioritize exact matches, but since it's a problem, approximations will guide us.
+
+```python
+# Enumerate values of v from just above 60 to, say, 200 in small steps
+# and check where the relation holds approximately.
+# We seek the specific v that makes cars_passed_per_truck == 2.
+
+truck_speed = 60
+car_speed = 75
+truck_spacing = 0.25  # miles
+car_time_spacing = 3  # seconds
+
+# Convert car time spacing to distance:
+# distance = speed * time; speeds in mph, time in hours
+# time in hours = seconds / 3600
+def car_distance_spacing(v):
+    return car_speed * (car_time_spacing / 3600)
+
+# Relative speeds
+def rel_speed_truck(v):
+    return v - truck_speed
+
+def rel_speed_car(v):
+    return v - car_speed
+
+# Number of cars passing per truck
+def cars_passed_per_truck(v):
+    rel_truck = rel_speed_truck(v)
+    rel_car = rel_speed_car(v)
+    if rel_truck <= 0 or rel_car <= 0:
+        return None
+    time_between_trucks = truck_spacing / rel_truck
+    car_distance = car_distance_spacing(v)
+    cars_passed = time_between_trucks / (car_distance / rel_car)
+    return cars_passed
+
+# Search for v in a reasonable range
+found_candidates = []
+for v in [i/100.0 for i in range(int((60+1200)*100))]:  # from 0.6 to 130 in steps of 0.01
+    if v <= 60:
+        continue
+    cpt = cars_passed_per_truck(v)
+    if cpt is not None:
+        # Check if approximately equal to 2 within some tolerance
+        if abs(cpt - 2) < 0.01:
+            print(f"Candidate v: {v:.2f} mph, cars_passed: {cpt:.4f}")
+            found_candidates.append(v)
+# Output the candidate(s) found.
+```

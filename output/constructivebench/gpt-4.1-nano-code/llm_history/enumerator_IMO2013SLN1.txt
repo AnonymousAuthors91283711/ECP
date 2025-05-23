@@ -1,0 +1,75 @@
+[write_program]
+This problem appears to be a typical functional equation question, often encountered in math competitions. The goal is to find all functions \(f:\mathbb{N} \to \mathbb{N}\) such that
+
+\[ \forall m,n \in \mathbb{N}, \quad m^2 + f(n) \mid m \cdot f(m) + n. \]
+
+A common approach is to look for constant solutions or solutions involving linear functions. To assist conjecturing, we'll systematically test candidate functions for small values, especially focusing on constant or linear functions, since they are common in such problems. We'll generate functions like \(f(n) = c\) (constant), \(f(n) = kn + c\), and others as needed.
+
+Here's an enumeration strategy:
+- Test constant functions \(f(n) = c\) for small \(c\).
+- Test linear functions \(f(n) = kn + c\) for small \(k,c\).
+- For each candidate, verify whether the divisibility condition holds for small \(m,n \le 10\), noting any patterns.
+
+This helps in identifying probable solutions, which can be conjectured as the complete set.
+
+```python
+# Enumerate constant functions f(n) = c for c in 0..20
+# For each candidate, verify the divisibility condition for small m,n.
+# Also try some linear functions: f(n) = k*n + c, with small k,c.
+# Immediately print candidates that satisfy the conditions for all tested small pairs.
+
+max_c = 20
+max_k = 3
+max_c_linear = 10
+max_m = 10
+max_n = 10
+
+def check_constant(c):
+    for m in range(1, max_m+1):
+        for n in range(1, max_n+1):
+            lhs = m**2 + c
+            rhs = m * c + n
+            if rhs % lhs != 0:
+                return False
+    return True
+
+def check_linear(k, c):
+    for m in range(1, max_m+1):
+        for n in range(1, max_n+1):
+            lhs = m**2 + (k*n + c)
+            rhs = m * (k*m + c) + n
+            if rhs % lhs != 0:
+                return False
+    return True
+
+print("Constant functions f(n)=c that hold for small test cases:")
+for c in range(max_c+1):
+    if check_constant(c):
+        print(f"f(n) = {c}")
+
+print("\nLinear functions f(n)=k*n + c that hold for small test cases:")
+for k in range(max_k+1):
+    for c in range(max_c_linear+1):
+        if check_linear(k, c):
+            print(f"f(n) = {k}*n + {c}")
+
+# Try some special functions, e.g., f(n)=n, f(n)=0, f(n)=n+1, etc.
+special_functions = [
+    ("f(n)=n", lambda n: n),
+    ("f(n)=0", lambda n:0),
+    ("f(n)=n+1", lambda n: n+1),
+]
+for desc, f in special_functions:
+    valid = True
+    for m in range(1, max_m+1):
+        for n in range(1, max_n+1):
+            lhs = m**2 + f(n)
+            rhs = m * f(m) + n
+            if rhs % lhs != 0:
+                valid = False
+                break
+        if not valid:
+            break
+    if valid:
+        print(f"{desc} satisfies the divisibility condition for small m,n.")
+```

@@ -1,0 +1,64 @@
+[write_program]
+To investigate the supremum of the expression \( S = \frac{b}{a} + \frac{c}{b} + \frac{a}{c} \) under the conditions \(0 < a \le b \le c \le 2a\), we enumerate rational triples \((a,b,c)\) with small denominators enclosed by these inequalities.
+
+We print values as we find them, then track the maximum found. This helps conjecture the greatest possible value.
+
+```python
+import fractions
+
+# Enumerate possible rational triples (a,b,c) with denominators up to max_den
+# such that 0 < a <= b <= c <= 2a
+max_den = 4
+
+def frange(start, stop, denom):
+    # Generate fractions from start to stop inclusive with denominator denom
+    # assuming start and stop are fractions or floats.
+    step = fractions.Fraction(1, denom)
+    current = fractions.Fraction(start).limit_denominator(denom)
+    stop_frac = fractions.Fraction(stop).limit_denominator(denom)
+    while current <= stop_frac:
+        yield current
+        current += step
+
+max_S = None
+max_tuple = None
+
+print("Enumerating (a,b,c) with denominators <= 4 and checking S = b/a + c/b + a/c")
+
+# Use fractions to avoid approximation
+for da in range(1, max_den+1):
+    for na in range(1, 2*da+1):  # a in (0, ... 2) with denom da
+        a = fractions.Fraction(na, da)
+        # enforce positive a
+        if a <= 0:
+            continue
+        # b in [a, c]
+        for db in range(1, max_den+1):
+            for nb in range(na, 2*db+1):
+                b = fractions.Fraction(nb, db)
+                if b < a:
+                    continue
+                # c in [b, 2a]
+                for dc in range(1, max_den+1):
+                    # c >= b, c <= 2a
+                    start_c = max(b, fractions.Fraction(1, dc))  # to be safe positive
+                    # Generate possible c with denom dc between b and 2*a
+                    nat_c_min = nb if dc == db else 1 # start c numerator at least nb if same denom
+                    n_min = int(b * dc) if b.denominator==dc else int(b * dc) + 1
+                    n_min = max(n_min, 1)
+                    n_max = int(2 * a * dc)
+                    for nc in range(n_min, n_max+1):
+                        c = fractions.Fraction(nc, dc)
+                        if c < b or c > 2 * a:
+                            continue
+                        # Compute S = b/a + c/b + a/c
+                        S = b / a + c / b + a / c
+                        print(f"a={a}, b={b}, c={c}, S={S}")
+                        if (max_S is None) or (S > max_S):
+                            max_S = S
+                            max_tuple = (a,b,c)
+
+print()
+print(f"Maximum S found: {max_S} at a,b,c = {max_tuple}")
+```
+

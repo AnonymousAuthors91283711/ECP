@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for pairs of natural numbers (m,n) representing degrees of monic polynomials P and Q such that P(Q(t)) ≠ Q(P(t)) for all real t. We'll write a Python program to enumerate small degree pairs and check this condition.
+
+The approach:
+1. Generate monic polynomials of degrees m and n with small integer coefficients
+2. Check if P(Q(t)) ≠ Q(P(t)) for several test points t
+3. Output valid (m,n) pairs where the condition holds
+
+```python
+import numpy as np
+from itertools import product
+
+def generate_monic_polys(degree, max_coeff=2):
+    """Generate monic polynomials of given degree with small integer coefficients"""
+    coeffs = product(range(-max_coeff, max_coeff+1), repeat=degree)
+    for c in coeffs:
+        yield [1] + list(c)  # Ensure monic (leading coefficient = 1)
+
+def check_condition(P, Q, test_points=np.linspace(-2, 2, 10)):
+    """Check if P(Q(t)) != Q(P(t)) for all test points"""
+    for t in test_points:
+        val_PQ = np.polyval(P, np.polyval(Q, t))
+        val_QP = np.polyval(Q, np.polyval(P, t))
+        if abs(val_PQ - val_QP) < 1e-6:  # Account for floating point errors
+            return False
+    return True
+
+max_degree = 4
+found_pairs = set()
+
+print(f"Searching for degree pairs (m,n) up to {max_degree}...")
+for m in range(1, max_degree+1):
+    for n in range(1, max_degree+1):
+        # Generate sample polynomials
+        for P in generate_monic_polys(m):
+            for Q in generate_monic_polys(n):
+                if check_condition(P, Q):
+                    found_pairs.add((m, n))
+                    print(f"Found pair: {(m,n)}")
+                    break  # Found one example for this degree pair
+            else:
+                continue
+            break
+
+print("\nValid degree pairs found:")
+for pair in sorted(found_pairs):
+    print(pair)
+```

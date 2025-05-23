@@ -1,0 +1,80 @@
+[write_program]
+The problem is to find the smallest number \( k \) such that there's a list \( l \) of positive integers with exactly one element repeated 10 times, no element repeated more than 10 times, and \( l \) contains \( k \) distinct elements.
+
+The conditions:
+
+- Exactly one number appears 10 times.
+- No number appears more than 10 times.
+- All elements are positive.
+- \( k \) is the number of distinct elements in the list.
+
+We want the minimal \( k \) such that such an \( l \) exists.
+
+To explore this, I'll enumerate possible multisets satisfying conditions up to some size threshold, focusing on the distinctness count \( k \), and print candidates and their parameters.
+
+```python
+# Enumerate lists of positive integers with exactly one element repeated 10 times,
+# all counts ≤ 10, and output possible distinct element counts k.
+
+from collections import Counter
+from itertools import combinations_with_replacement, product
+
+def multiset_candidates(max_distinct=6):
+    # We'll try k from 1 up to max_distinct and find lists l satisfying:
+    # - Exactly one element appears 10 times
+    # - No element appears more than 10 times
+    # - All appear at least once
+    # For fixed k, find all possible multisets counts with one count=10 and others ≤10
+
+    # Since we want minimal k, start from k=1 upwards
+    for k in range(1, max_distinct + 1):
+        # For k distinct elements, counts is a tuple of length k
+        # Exactly one count is 10, others in [1..10], no other 10s allowed
+        # So one element count=10, others counts in [1..9]
+        # Generate all such tuples
+        others_ranges = [range(1,10) for _ in range(k-1)] if k>1 else []
+        # Positions to put count=10
+        for pos_10 in range(k):
+            if k==1:
+                # Only one element, count=10
+                counts = (10,)
+                yield counts
+                continue
+            # Other elements counts combinations
+            for others_counts in product(*others_ranges):
+                # Insert 10 at pos_10
+                counts = others_counts[:pos_10] + (10,) + others_counts[pos_10:]
+                # Check condition: exactly one 10, no other 10s - guaranteed by construction
+                yield counts
+
+def main():
+    print("Finding minimal k with a list l where exactly one element repeated 10 times, others ≤10 and positive counts")
+    found = False
+    for k in range(1, 7):
+        # Enumerate candidates:
+        for counts in multiset_candidates(k):
+            # Construct a representative list l for counts
+            # Use distinct elements 1,...,k
+            l = []
+            for i, c in enumerate(counts, 1):
+                l.extend([i]*c)
+            # Check the uniqueness of 10 count
+            count_counter = Counter(l)
+            tens = sum(1 for v in count_counter.values() if v ==10)
+            if tens != 1:
+                continue
+            # Check no count > 10
+            if any(v>10 for v in count_counter.values()):
+                continue
+            # l.toFinset.card == k -- distinct count
+            if len(count_counter) != k:
+                continue
+            print(f"k={k} -> counts={counts} -> list length={len(l)}")
+            found = True
+        if found:
+            print(f"Minimal k candidate found at k={k}")
+            break
+
+if __name__=="__main__":
+    main()
+```

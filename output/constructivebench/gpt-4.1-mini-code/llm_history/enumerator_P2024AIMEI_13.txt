@@ -1,0 +1,47 @@
+[write_program]
+The problem asks to find the smallest prime \( p \) such that \( p^2 \mid n^4 + 1 \) for some positive integer \( n \), and then to find the smallest such \( n \) for \( p=17 \). The program below enumerates primes and tests divisibility to assist in conjecturing the minimal prime and minimal \( n \). It prints each candidate prime and the corresponding \( n \), along with minimal solutions found.
+
+```python
+from sympy import primerange, isprime
+
+def fourth_power_plus_one(n):
+    return n**4 + 1
+
+def test_prime(p, max_n=1000):
+    # For a given prime p, test n=1..max_n for n^4+1 divisible by p^2
+    p2 = p*p
+    for n in range(1, max_n+1):
+        val = fourth_power_plus_one(n)
+        if val % p2 == 0:
+            print(f"Prime {p} with n={n} satisfies {p}^2 divides n^4+1 = {val}")
+            return n
+    return None
+
+def main():
+    max_prime = 50  # limit for efficiency
+    primes = list(primerange(2, max_prime+1))
+    candidates = []
+    for p in primes:
+        res = test_prime(p)
+        if res is not None:
+            candidates.append((p, res))
+            print(f"Candidate prime: {p} with minimal n={res}")
+            # Stop after finding the first (smallest prime) candidate
+            # to find the minimal p later
+    if candidates:
+        min_p, _ = min(candidates, key=lambda x: x[0])
+        print(f"Minimal prime p with p^2|n^4+1 for some n is {min_p}")
+        # Now find minimal n for p=17 if it was found or test anyway
+        p_test = 17
+        print(f"Testing minimal n for prime {p_test}:")
+        n17 = test_prime(p_test, max_n=10000)
+        if n17 is not None:
+            print(f"Minimal n for p=17 is {n17}, with 17^2 dividing {n17}^4+1={fourth_power_plus_one(n17)}")
+        else:
+            print(f"No n ≤ 10000 found with 17^2 dividing n^4+1")
+    else:
+        print("No primes p ≤ 50 found with p^2 dividing n^4+1.")
+
+if __name__ == "__main__":
+    main()
+```

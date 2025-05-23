@@ -1,0 +1,49 @@
+[write_program]
+The problem gives a system of linear equations defining values \(a,b,c,d\), and asks about the value of \(a + 16b + 81c + 256d\) expressed as a reduced fraction \(\frac{m}{n}\), and the sum \(m+n\).
+
+We can solve the linear system numerically, then find exact fractions, then check the coprimality and print \(m,n,m+n\). To find rational exact values, we'll solve the system symbolically, but since Python has no built-in symbolic solver, I will use numpy to solve for floating values, then convert to fractions.
+
+We'll enumerate over fractions \(m/n\) near the computed value as a guess, but here direct solve and convert is best.
+
+```python
+from fractions import Fraction
+import numpy as np
+from math import gcd
+
+# Coefficients matrices for system a,b,c,d
+# Equations:
+# a + b + c + d = 1
+# a + 2b + 3c + 4d = 10
+# a + 4b + 9c + 16d = 100
+# a + 8b + 27c + 64d = 1000
+A = np.array([
+    [1,1,1,1],
+    [1,2,3,4],
+    [1,4,9,16],
+    [1,8,27,64]
+], dtype=float)
+
+b = np.array([1,10,100,1000], dtype=float)
+
+# Solve linear system
+sol = np.linalg.solve(A,b)
+a,b_,c,d = sol
+print(f"Solution: a={a}, b={b_}, c={c}, d={d}")
+
+# Compute target value: a + 16b + 81c + 256d
+val = a + 16*b_ + 81*c + 256*d
+print(f"Target value (approx.) = {val}")
+
+# Convert to fraction with limited denominator for exactness discovery
+f = Fraction(val).limit_denominator(10**6)
+m, n = f.numerator, f.denominator
+
+# Reduce fraction (should already be reduced)
+g = gcd(m,n)
+m //= g
+n //= g
+
+print(f"Fractional value = {m}/{n}")
+print(f"Sum m+n = {m+n}")
+```
+This enumerates exact numerator, denominator candidates for the target and prints the final answer sum.

@@ -1,0 +1,75 @@
+[write_program]
+The problem is to find all triples \((a,b,c)\) of natural numbers such that 
+\[
+\sqrt{a} + \sqrt{b} + \sqrt{c} = \sqrt{2014}.
+\]
+Since 2014 is fixed, and square roots of natural numbers are irrational in general, the equation is quite restrictive. We want to enumerate candidates and print those that satisfy the equation exactly if possible.
+
+We can square both sides:
+\[
+(\sqrt{a} + \sqrt{b} + \sqrt{c})^2 = 2014,
+\]
+which expands to
+\[
+a + b + c + 2(\sqrt{ab} + \sqrt{bc} + \sqrt{ca}) = 2014.
+\]
+
+For the sum of the roots to be rational (since the right side is \(\sqrt{2014}\)), the cross terms should combine nicely. One way to ensure that is if \(a,b,c\) are perfect squares of integers, and the square roots are integers — but the right side is \(\sqrt{2014}\), which is not an integer.
+
+Alternatively, we can try to express \(\sqrt{2014}\) as the sum of three terms of form \(\sqrt{k^2 m}\). But since 2014 is 2*19*53, maybe it can be expressed as \(\sqrt{x} + \sqrt{y} + \sqrt{z}\) with certain relations between \(x,y,z\).
+
+A brute force approach is feasible by enumerating triples with \(a,b,c \leq 2014\). In that brute force:
+
+- Compute sum_sqrt = sqrt(a)+sqrt(b)+sqrt(c)
+- Check if sum_sqrt == sqrt(2014)
+
+Given floating errors, we want exact equality. So rewrite the equation as
+\[
+(\sqrt{a} + \sqrt{b} + \sqrt{c})^2 = 2014,
+\]
+so
+\[
+a + b + c + 2(\sqrt{ab}+\sqrt{bc}+\sqrt{ca})=2014,
+\]
+which implies the cross terms must be nice numbers involving square roots, so the sum could be rational.
+
+Since direct brute force with sqrt comparisons is problematic, let's try to check the numeric approximation with some tolerance.
+
+We'll enumerate \(a,b,c\) up to 2014, filter those where the sum of sqrt's is close to sqrt(2014).
+
+To reduce complexity, since the problem is symmetric in \(a,b,c\), we can enforce \(a \leq b \leq c\) to avoid repetitions.
+
+We will print all solutions found, along with the parameters tested.
+
+Because the output limits are tight, we will test \(a,b,c\) up to a smaller threshold, say 100, to see if anything pops up.
+
+```python
+import math
+
+# We attempt to find triples (a,b,c) of natural numbers ≤ limit such that:
+# sqrt(a) + sqrt(b) + sqrt(c) == sqrt(2014) approximately
+# We allow small floating tolerance
+target = math.sqrt(2014)
+tolerance = 1e-9
+limit = 100  # smaller scan limit to keep output reasonable
+
+print(f"Target sqrt(2014) ≈ {target:.12f}")
+print(f"Enumerating triples (a,b,c) with 1 ≤ a ≤ b ≤ c ≤ {limit}")
+
+found = 0
+for a in range(1, limit+1):
+    sqrt_a = math.sqrt(a)
+    for b in range(a, limit+1):
+        sqrt_b = math.sqrt(b)
+        for c in range(b, limit+1):
+            sqrt_c = math.sqrt(c)
+            s = sqrt_a + sqrt_b + sqrt_c
+            if abs(s - target) < tolerance:
+                print(f"Found triple: a={a}, b={b}, c={c}, sum_sqrt={s:.12f}")
+                found += 1
+if found == 0:
+    print("No triples found in this range.")
+else:
+    print(f"Total {found} triples found with sum_sqrt close to sqrt(2014) within tolerance {tolerance}")
+```
+

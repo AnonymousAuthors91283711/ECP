@@ -1,0 +1,54 @@
+[write_program]
+The problem defines a sequence \( a_n \) over natural numbers with initial values \( a_1 = 1 \), \( a_9 = 7 \), and a recursive relation for \( n \geq 2 \):
+
+\[
+a_{n+1} = \frac{a_n^2 - a_{n-1} + 2a_n}{a_{n-1} + 1}
+\]
+
+We want to find the value of \( a_5 \) consistent with these conditions.
+
+Since \( a_9 = 7 \) and \( a_1=1 \) are fixed but \( a_2 \) is not given explicitly, we can try to enumerate possible initial values \( a_2 \) and generate sequences to check which yield \( a_9=7 \). Then we report the corresponding \( a_5 \).
+
+Below is a Python script to attempt reasonable floating initial values for \( a_2 \) from 0 to 10 with small steps (e.g. 0.1), compute all terms up to \( a_9 \), check if \( a_9 \approx 7 \) within a small tolerance, and print the found \( a_5 \).
+
+```python
+# Enumerate possible a_2 values, generate sequence with recursion,
+# check for a_9 close to 7, and print corresponding a_5.
+
+def sequence_vals(a2):
+    a = [1, a2]  # a_1=1, a_2 variable
+    for n in range(2, 9):  # compute up to a_9 (index 8)
+        prev = a[n-2]
+        curr = a[n-1]
+        numerator = curr**2 - prev + 2*curr
+        denominator = prev + 1
+        if abs(denominator) < 1e-12:  # avoid division by zero
+            return None
+        next_val = numerator / denominator
+        a.append(next_val)
+    return a
+
+eps = 1e-6
+found = []
+
+for i in range(0, 101):  # 0, 0.1, ..., 10
+    a2 = i / 10.0
+    seq = sequence_vals(a2)
+    if seq is None:
+        continue
+    a9 = seq[8]
+    if abs(a9 - 7) < eps:
+        a5 = seq[4]
+        print(f'a_2 = {a2:.2f}, a_5 = {a5}, a_9 = {a9}')
+        found.append((a2, a5, a9))
+
+if found:
+    # Print extremal values for a_5 found
+    a5_vals = [x[1] for x in found]
+    print(f'Min a_5 found: {min(a5_vals)}')
+    print(f'Max a_5 found: {max(a5_vals)}')
+else:
+    print('No a_2 in [0,10] yields a_9 close to 7.')
+```
+
+Run this by `python enumerator.py`. It prints each candidate immediately, allowing inspection. The code balances coverage with output length. Adjust the search range or step if no candidates found.

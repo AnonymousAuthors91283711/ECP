@@ -1,0 +1,50 @@
+[write_program]
+The problem defines a 3D region Ω, the indicator function f(x,y,z) counting the number of integer grid cubes intersecting the sphere centered at (x,y,z) with radius 1, within the region Ω. We want to compute the average value of f over Ω.
+
+To approximate and analyze this numerically:  
+- We'll discretize the domain Ω into small grid points with a fixed step size (e.g., 0.1).  
+- For each (x,y,z), count the number of integer grid cubes intersecting the sphere (i.e., cubes that contain points satisfying the sphere equation within their volume).  
+- Sum over all sampled points and normalize by the total number of samples to estimate the integral.
+
+This approach is an enumeration-friendly approximation that can guide conjecturing about the true value, and respects execution constraints.
+
+```python
+import numpy as np
+
+# Parameters: sampling resolution
+step = 0.1
+points_per_axis = int(1 / step) + 1
+
+# Generate grid points in [0,1]
+coords = np.linspace(0, 1, points_per_axis)
+
+total_sum = 0
+count_points = 0
+
+# Precompute integer cube centers in the range [-1, 2] to cover possible sphere intersections
+cube_centers = np.array([-1, 0, 1, 2])
+
+for x in coords:
+    for y in coords:
+        for z in coords:
+            # Count intersecting cubes
+            intersection_count = 0
+            for i in cube_centers:
+                for j in cube_centers:
+                    for k in cube_centers:
+                        # Check if sphere intersects this cube
+                        # Cube corners at (i, j, k)
+                        # Sphere center (x,y,z), radius 1
+                        # Approximated by checking center point
+                        cube_center = np.array([i + 0.5, j + 0.5, k + 0.5])
+                        dist = np.linalg.norm(cube_center - np.array([x, y, z]))
+                        # Sphere intersects the cube if the distance from center of cube to sphere center <= radius + half-diagonal
+                        half_diagonal = np.sqrt(3)/2
+                        if dist - half_diagonal <= 1:
+                            intersection_count += 1
+            total_sum += intersection_count
+            count_points += 1
+
+average_value = total_sum / count_points
+print(f"Estimated average value of f over Ω: {average_value}")
+```

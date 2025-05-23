@@ -1,0 +1,70 @@
+[write_program]
+This problem involves a functional inequality depending on a parameter \( x \neq 0 \) and a variable \( y \). We want to identify all possible functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying:
+\[
+f(x^2 + y) \ge \left(\frac{1}{x} + 1\right) f(y)
+\]
+for all \( x \neq 0 \) and all \( y \).
+
+To gain insight, I will:
+- Enumerate simple functions \( f \), including constants, polynomials, exponentials.
+- Fix some sample \( x \neq 0 \) values, rational and irrational, to check the inequality for a range of \( y\).
+- Try \( y \) as some sample values.
+- Stream the functions \( f \) that satisfy the inequality on these sampled points (partial verification).
+  
+This might help identify candidates for the exact solution and possibly guess the form of \( f \).
+
+```python
+# Enumerate candidate functions f and check the inequality for sample x,y to find candidates.
+
+import math
+
+def candidate_functions():
+    # Yield simple function lambdas with descriptions
+    yield (lambda y: 0, "f(y)=0")
+    yield (lambda y: 1, "f(y)=1")
+    yield (lambda y: y, "f(y)=y")
+    yield (lambda y: -y, "f(y)=-y")
+    yield (lambda y: y**2, "f(y)=y^2")
+    yield (lambda y: -y**2, "f(y)=-y^2")
+    yield (lambda y: math.exp(y), "f(y)=exp(y)")
+    yield (lambda y: math.exp(-y), "f(y)=exp(-y)")
+    yield (lambda y: 1/(1+y**2) if y != -1 else 0, "f(y)=1/(1+y^2)")
+    # A piecewise function: f(y)=0 if y<0 else 1
+    def piecewise(y):
+        return 0 if y < 0 else 1
+    yield (piecewise, "f(y)=0 if y<0 else 1")
+
+def check_inequality(f, x_values, y_values):
+    # Check f(x^2 + y) >= (1/x + 1)*f(y)
+    for x in x_values:
+        if x == 0:
+            continue
+        left_right_pairs = []
+        for y in y_values:
+            lhs = f(x**2 + y)
+            rhs = (1/x + 1)*f(y)
+            # Use exact eval if possible or float comparison with tolerance
+            try:
+                if lhs < rhs - 1e-12:
+                    return False
+            except Exception:
+                return False
+    return True
+
+def main():
+    x_samples = [1, -1, 2, -2, 0.5, -0.5]
+    y_samples = [-2, -1, 0, 1, 2]
+
+    print("Testing candidate functions f for the inequality f(x^2 + y) >= (1/x + 1)*f(y):")
+    for f, desc in candidate_functions():
+        try:
+            if check_inequality(f, x_samples, y_samples):
+                # Output candidate functions meeting the inequality on the sample grid
+                print("Possible candidate function:", desc)
+        except Exception:
+            # Ignore functions failing at any point
+            pass
+
+if __name__ == '__main__':
+    main()
+```

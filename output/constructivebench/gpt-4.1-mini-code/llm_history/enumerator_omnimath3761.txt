@@ -1,0 +1,43 @@
+[write_program]
+The problem seems to concern polynomials \( P \) and \( Q \) of degree at most \( n \) satisfying a functional equation:
+\[
+(P \cdot X^{n+1} + Q \cdot (X+1)^{n+1})(x) = 1 \quad \text{for all } x,
+\]
+and asks for the evaluation \(\operatorname{eval}_{-1/2}(Q)\).
+
+We can try to numerically construct such \(P,Q\) for small \(n\), solve for their coefficients, and compute \(Q(-1/2)\) to conjecture the closed form \(\text{omnimath3761\_answer}(n)\).
+
+```python
+from sympy import symbols, Poly, solve, Rational, simplify
+
+x = symbols('x')
+max_n = 6  # test n=0..6
+
+for n in range(max_n+1):
+    # Define coefficients of P and Q as unknowns
+    p_coeffs = symbols(f'p0:{n+1}')
+    q_coeffs = symbols(f'q0:{n+1}')
+    
+    # Build polynomials P and Q
+    P = sum(p_coeffs[i]*x**i for i in range(n+1))
+    Q = sum(q_coeffs[i]*x**i for i in range(n+1))
+    
+    # Build the polynomial from condition:
+    # P * x^{n+1} + Q * (x+1)^{n+1} == 1 for all x
+    poly_eq = Poly(P*x**(n+1) + Q*(x+1)**(n+1) - 1, x)
+    
+    # Extract coefficients and form equations=0 for all powers
+    eqs = [poly_eq.coeff_monomial(x**k) for k in range(2*n+2)]
+    
+    # Solve for p_i, q_i
+    sol = solve(eqs, p_coeffs+q_coeffs, dict=True)
+    if not sol:
+        print(f"n={n}: No solution found")
+        continue
+    sol = sol[0]
+    # Evaluate Q(-1/2)
+    q_expr = Q.subs(sol)
+    val = simplify(q_expr.subs(x, Rational(-1,2)))
+    print(f"n={n}, Q(-1/2) = {val}")
+```
+This code enumerates \(n=0\) to 6, constructing and solving the system for coefficients, and prints the exact rational (or simplified) value of \(Q(-1/2)\) for each \(n\). This helps find or conjecture a closed form.

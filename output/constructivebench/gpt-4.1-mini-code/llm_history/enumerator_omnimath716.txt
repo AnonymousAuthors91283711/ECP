@@ -1,0 +1,69 @@
+[write_program]
+The problem concerns counting pairs of rational coefficients (rs.1, rs.2) for cubic polynomials \( P = x^3 + 10x^2 + r_1 x + r_2 \) such that there are infinitely many primes \( p \) dividing polynomial values at integer points \( a, b, c \) with certain inequalities and divisibility conditions.
+
+To enumerate potential answers, we:
+- Fix some small integer triples (a < b < c) with \( c < p/3 \) for some primes p.
+- Iterate over small candidate values \( r_1, r_2 \) rational with small denominators.
+- For these candidates, check polynomial values at integers a, b, c.
+- Attempt to find primes dividing all those values to detect candidate infinite primes dividing values.
+- Print results immediately.
+- Use sample primes up to a small bound to simulate conditions.
+
+```python
+from math import gcd
+from sympy import symbols, Poly, divisors, primerange
+
+# Enumerate possible answers by checking small denominators and numerators for r1, r2
+# and triples (a, b, c) meeting conditions, checking primes dividing polynomial values
+
+x = symbols('x')
+
+def eval_poly_at(P, val):
+    # Evaluate polynomial P at integer val, return numerator and denominator
+    val_rat = val
+    p_val = P.eval(val_rat)
+    if p_val.is_rational:
+        return p_val.numerator, p_val.denominator
+    return None, None
+
+def is_integer(val):
+    return val.is_integer or (hasattr(val, 'denominator') and val.denominator == 1)
+
+def test_candidates():
+    # We try small integer values for r1, r2 ranging from -10 to 10 integer only (rationals with denominator=1)
+    # and triples (a,b,c) with 0 ≤ a < b < c < 10 (small)
+    max_r = 10
+    primes = list(primerange(2, 50))  # small primes to test divisibility
+    for r1_num in range(-max_r, max_r+1):
+        for r2_num in range(-max_r, max_r+1):
+            P = Poly(x**3 + 10*x**2 + r1_num*x + r2_num, x, domain='QQ')
+            # For a,b,c satisfying 0 ≤ a < b < c < p/3:
+            # since p < 50, p/3 < ~16. We test a,b,c in range 0..15
+            for a in range(0, 15):
+                for b in range(a+1, 15):
+                    for c in range(b+1, 15):
+                        # For each prime p, p divides values at a,b,c and p prime
+                        # We check if there's any prime p dividing all P(a), P(b), P(c)
+                        values = []
+                        for val in (a,b,c):
+                            val_eval = P.eval(val)
+                            if not val_eval.is_rational or val_eval.as_numer_denom()[1] != 1:
+                                break
+                            values.append(int(val_eval))
+                        else:
+                            # All integer values
+                            common_divisors = set(divisors(abs(values[0])))
+                            for v in values[1:]:
+                                common_divisors &= set(divisors(abs(v)))
+                            # filter primes dividing all three
+                            common_primes = [d for d in common_divisors if d in primes]
+                            if common_primes:
+                                # Check if c < p/3 for some p dividing all three values
+                                for p in common_primes:
+                                    if c < p/3:
+                                        print(f"r1={r1_num}, r2={r2_num}, a={a}, b={b}, c={c}, prime={p}")
+                                        break
+
+test_candidates()
+```
+

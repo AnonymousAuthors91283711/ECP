@@ -1,0 +1,73 @@
+[write_program]
+The problem relates to placing \( K \) knights on an infinite integer lattice so they don't attack each other, and finding a queen position attacking none of them but different from all knights. The goal is to find the maximum such \( K \).
+
+I will enumerate small values of \( K \), test configurations of knights and possible queen positions on a small grid (like 7x7), check knight attack constraints and queen attack conditions, then print feasible \( K \) found and sample solutions.
+
+```python
+# Enumerate configurations of knights and queen positions for small K,
+# find the maximal K allowing a queen position attacking no knight.
+# Knights do not attack each other by knight moves.
+# Queen position attacks no knight by queen moves and differs from knights.
+
+from itertools import combinations, product
+
+# Knight moves offset (squared distance=5)
+knight_moves = [(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)]
+
+def attacks_knight(p, q):
+    dx, dy = p[0]-q[0], p[1]-q[1]
+    return dx*dx + dy*dy == 5 and (p != q)
+
+def attacks_queen(p, q):
+    dx, dy = p[0]-q[0], p[1]-q[1]
+    return p[0] == q[0] or p[1] == q[1] or abs(dx) == abs(dy)
+
+def knights_attack_each_other(knights):
+    for i in range(len(knights)):
+        for j in range(i+1, len(knights)):
+            if attacks_knight(knights[i], knights[j]):
+                return True
+    return False
+
+def queen_attacks_any(queen, knights):
+    for k in knights:
+        if attacks_queen(queen, k):
+            return True
+    return False
+
+def queen_is_knight(queen, knights):
+    return queen in knights
+
+# Grid range -7..7 to allow knight jumps
+GRID = list(range(-3,4))
+
+# Enumerate all sets of K knight positions on GRID
+# For efficiency, print results only for K=1..5 and stop early if no configs found.
+maxK_found = 0
+for K in range(1,8):
+    found_config = False
+    knight_positions = list(combinations(product(GRID, GRID), K))
+    # Limit number of combinations to keep output short
+    knight_positions = knight_positions[:1000]  # limit
+    for knights in knight_positions:
+        if knights_attack_each_other(knights):
+            continue
+        # Try all queen positions on GRID (not in knights)
+        for q in product(GRID, GRID):
+            if queen_is_knight(q, knights):
+                continue
+            if queen_attacks_any(q, knights):
+                continue
+            # Found a solution for this K
+            print(f"K={K}, knights={knights}, queen={q}")
+            found_config = True
+            break
+        if found_config:
+            break
+    if found_config:
+        maxK_found = K
+    else:
+        print(f"No solution found for K={K}, stop search")
+        break
+print(f"Maximal K found = {maxK_found}")
+```

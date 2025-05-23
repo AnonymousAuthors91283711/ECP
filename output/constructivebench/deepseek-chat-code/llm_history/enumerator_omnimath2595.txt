@@ -1,0 +1,60 @@
+[write_program]
+This problem involves calculating the average area covered by two half-unit squares placed within a unit square. The solution requires integrating over all possible positions of the two squares and computing their union area. We'll approximate this by discretizing the unit square into a grid and enumerating possible positions.
+
+```python
+import itertools
+
+def main():
+    # Discretization parameters
+    n = 20  # Number of divisions per dimension
+    step = 1.0 / n
+    
+    total_area = 0.0
+    count = 0
+    
+    # Enumerate all possible positions for two points in the grid
+    for x1, y1, x2, y2 in itertools.product(*[range(n+1)]*4):
+        # Convert to coordinates in [0,1]
+        p1 = (x1 * step, y1 * step)
+        p2 = (x2 * step, y2 * step)
+        
+        # Calculate the union of two 0.5×0.5 squares centered at p1 and p2
+        # First square boundaries
+        s1_left = max(p1[0] - 0.25, 0)
+        s1_right = min(p1[0] + 0.25, 1)
+        s1_bottom = max(p1[1] - 0.25, 0)
+        s1_top = min(p1[1] + 0.25, 1)
+        area1 = (s1_right - s1_left) * (s1_top - s1_bottom)
+        
+        # Second square boundaries
+        s2_left = max(p2[0] - 0.25, 0)
+        s2_right = min(p2[0] + 0.25, 1)
+        s2_bottom = max(p2[1] - 0.25, 0)
+        s2_top = min(p2[1] + 0.25, 1)
+        area2 = (s2_right - s2_left) * (s2_top - s2_bottom)
+        
+        # Calculate intersection area
+        int_left = max(s1_left, s2_left)
+        int_right = min(s1_right, s2_right)
+        int_bottom = max(s1_bottom, s2_bottom)
+        int_top = min(s1_top, s2_top)
+        
+        intersection = max(0, int_right - int_left) * max(0, int_top - int_bottom)
+        
+        union_area = area1 + area2 - intersection
+        total_area += union_area
+        count += 1
+        
+        # Print intermediate results occasionally
+        if count % 100000 == 0:
+            avg_area = total_area / count
+            print(f"After {count} samples: average area = {avg_area:.6f}")
+    
+    # Final result
+    avg_area = total_area / count
+    print(f"Final average area: {avg_area:.6f}")
+    print(f"Scaled result (×100): {avg_area*100:.2f}")
+
+if __name__ == "__main__":
+    main()
+```

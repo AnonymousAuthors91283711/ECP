@@ -1,0 +1,50 @@
+[write_program]
+The problem appears to involve finding a least natural number \( n \) satisfying certain voting conditions. Specifically, the conditions relate to distributing \( n \) votes among 27 candidates, with the total sum of votes equal to \( n \), and a certain inequality involving votes for each candidate.
+
+Given the pattern, it resembles a problem about the distribution of votes, proportions, and inequalities that arise in mathematical competitions such as the AIME. To help conjecture the answer, we'll enumerate possible \( n \) values starting from the smallest positive integers. For each candidate \( n \), we'll attempt to find a voting distribution and check the inequality.
+
+The key inequality:
+\[ \frac{100 \times \text{votes}_i}{n} < \text{votes}_i - 1 \]
+
+which can be rearranged to:
+\[ 100 \times \text{votes}_i < (\text{votes}_i - 1) \times n \]
+
+We will search for the minimal \( n \) that admits such a distribution.
+
+Here's a Python script that performs this enumeration efficiently, checking small \( n \) values and trying all feasible vote distributions, stopping once it finds the least such \( n \) with a valid distribution.
+
+```python
+# Enumerate n starting from 1 upwards to find the minimum n satisfying the conditions.
+# For each n, distribute votes among 27 candidates to satisfy the total votes and inequalities.
+from itertools import combinations_with_replacement
+
+def check_votes(n, num_candidates=27):
+    # Generate all possible votes distributions summing to n (heuristic: try promising patterns)
+    # To keep it feasible, we only check distributions where votes are not too large.
+    # For efficiency, limit max votes per candidate.
+    max_vote = n  # maximum votes per candidate cannot exceed n.
+    for votes in generate_votes(n, num_candidates, max_vote):
+        if all((100 * votes_i) < (votes_i -1)*n for votes_i in votes if votes_i > 0):
+            return True
+    return False
+
+def generate_votes(total, length, max_vote):
+    # Generate all combinations with replacement summing to total
+    # We use recursion with pruning for efficiency.
+    def backtrack(start, remaining, path):
+        if len(path) == length:
+            if remaining == 0:
+                yield tuple(path)
+            return
+        for v in range(max(0, remaining - (length - len(path) - 1)*max_vote), min(remaining, max_vote)+1):
+            backtrack(start+1, remaining - v, path + [v])
+    return backtrack(0, total, [])
+
+n = 1
+while True:
+    # For each n, check if distribution exists
+    if check_votes(n):
+        print(f"Found n={n}")
+        break
+    n += 1
+```

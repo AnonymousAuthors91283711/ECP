@@ -1,0 +1,99 @@
+[write_program]
+The problem involves finding six positive integers \(n_1, n_2, n_3, n_4, n_5, n_6\) satisfying a complex summation involving Fibonacci numbers. The summation is over indices \(i_1, i_2, i_3, i_4, i_5\) from 0 to 100 (inclusive), summing \(fib(i_1 + i_2 + i_3 + i_4 + i_5)\). On the right, there's a linear combination of Fibonacci numbers with coefficients following the pattern of binomial coefficients and alternating signs. The goal is to find these \(n_k\), all positive integers, to satisfy the equality and also the sum \(n_1 + \cdots + n_6\) equal to some value.
+
+The program below enumerates possible tuples \((n_1, ..., n_6)\) with small values up to a chosen threshold, tests the equality, and prints tuples as they are found. We will precompute the left-hand summation and use exact Fibonacci numbers for right-hand checking. Since the left sum involves 101^5 terms, which is huge, we use the formula to compute sum of Fibonacci numbers over intervals, using the fact that
+
+\[
+\sum_{k=0}^m fib(k) = fib(m+2) -1
+\]
+
+and that the sums of sums can be simplified by multinomial coefficient identities and known sums of indices. Actually, the problem resembles multinomial expansions of binomial coefficients, and these coefficients in the equation (1, -5, 10, -10, 5, -1) are binomial coefficients from (1 - 1)^5 expansion.
+
+Thus, the sum on the left likely equals \(fib(n - 4)\) or something like that using convolution formulas of Fibonacci numbers and powers of sums.
+
+For this enumeration, we fix \(n_k\) to small values between 1 and say 20 (due to runtime constraints), check the equality, and print candidates.
+
+```python
+# Enumerate tuples (n1,...,n6) with small positive integers (1..20),
+# check the equality:
+# sum_{i1..i5=0}^{100} fib(i1+i2+i3+i4+i5) == fib(n1) -5 fib(n2) +10 fib(n3) -10 fib(n4) +5 fib(n5) - fib(n6)
+# print solutions and their sums
+
+from math import comb
+
+MAX_N = 20
+MAX_I = 100
+
+# Precompute fib up to max needed index
+fib_cache = [0, 1]
+def fib(n):
+    while len(fib_cache) <= n:
+        fib_cache.append(fib_cache[-1] + fib_cache[-2])
+    return fib_cache[n]
+
+# Use formula for sum_{i1..i5=0}^{100} fib(i1+i2+i3+i4+i5)
+# The sum over i1..i5 sums over indices from 0 to 500
+# Number of occurrences of s = i1+...+i5 is number of (i1,...,i5) summing to s with 0≤ik≤100
+# Counting restricted compositions is complicated but the number of compositions without restriction is comb(s+5-1,5-1)= comb(s+4,4)
+# We can get counts via inclusion-exclusion or via generating functions.
+
+# Let's compute counts C_s = number of (i1..i5) with each in [0,100], sum s
+# Use inclusion-exclusion:
+# Number of nonnegative integer solutions to sum x_i = s with x_i ≤100 is:
+# sum_{j=0}^5 (-1)^j * comb(5,j) * comb(s - j*101 + 5 -1, 5 -1)
+# where comb(n,k)=0 if n<k or n<0
+
+def nCk(n,k):
+    if n<k or k<0:
+        return 0
+    return comb(n,k)
+
+def count(s):
+    total = 0
+    for j in range(6):
+        val = s - j*101
+        c = nCk(5,j) * nCk(val+4,4) if val>=0 else 0
+        total += (-1)**j * c
+    return total
+
+# Precompute counts
+counts = [count(s) for s in range(5* (MAX_I+1))] # from 0 to 500
+
+lhs_sum = 0
+for s, c in enumerate(counts):
+    lhs_sum += c * fib(s)
+
+print(f'Left-hand sum over i1..i5=0..{MAX_I}:', lhs_sum)
+
+# Now, enumerate n1..n6 in 1..MAX_N small positive integers
+# Check if fib(n1) -5 fib(n2) +10 fib(n3) -10 fib(n4) +5 fib(n5) - fib(n6) == lhs_sum
+# and print matches with sum=n1+..+n6
+
+print('Enumerating candidates (n1..n6) in 1..20...')
+found = []
+for n1 in range(1,MAX_N+1):
+    fn1 = fib(n1)
+    for n2 in range(1,MAX_N+1):
+        fn2 = fib(n2)
+        for n3 in range(1,MAX_N+1):
+            fn3 = fib(n3)
+            for n4 in range(1,MAX_N+1):
+                fn4 = fib(n4)
+                for n5 in range(1,MAX_N+1):
+                    fn5 = fib(n5)
+                    for n6 in range(1,MAX_N+1):
+                        fn6 = fib(n6)
+                        rhs = fn1 - 5*fn2 + 10*fn3 - 10*fn4 + 5*fn5 - fn6
+                        if rhs == lhs_sum:
+                            s = n1 + n2 + n3 + n4 + n5 + n6
+                            print(f'Solution: n1={n1}, n2={n2}, n3={n3}, n4={n4}, n5={n5}, n6={n6}, sum={s}')
+                            found.append((n1,n2,n3,n4,n5,n6,s))
+
+if found:
+    sums = [x[-1] for x in found]
+    min_sum = min(sums)
+    print('Minimum sum found:', min_sum)
+else:
+    print('No solution found with n_k in range 1..20')
+```
+

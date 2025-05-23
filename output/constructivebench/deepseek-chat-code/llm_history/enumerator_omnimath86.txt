@@ -1,0 +1,56 @@
+[write_program]
+This problem is about finding the smallest natural number n such that for any two sequences of integers a and b of length n, there exists another sequence x of length n where:
+1. At least one x_i is coprime with m (where m > 1)
+2. The dot products a·x and b·x are both congruent to 0 modulo m
+
+We'll write a Python program to enumerate possible values of n for small m values (2,3,4,5) to help conjecture the pattern.
+
+```python
+import math
+from itertools import product
+
+def is_coprime(a, b):
+    return math.gcd(a, b) == 1
+
+def check_condition(m, n):
+    # Generate all possible a and b vectors modulo m (since we only care about mod m)
+    # For efficiency, we limit to small m and n
+    possible_values = range(-m, m+1)
+    
+    # Try all possible a and b vectors (mod m)
+    for a in product(possible_values, repeat=n):
+        for b in product(possible_values, repeat=n):
+            found = False
+            # Try all possible x vectors (mod m)
+            for x in product(range(m), repeat=n):
+                # Check condition 1: at least one x_i coprime with m
+                has_coprime = any(is_coprime(xi, m) for xi in x)
+                if not has_coprime:
+                    continue
+                
+                # Check condition 2: both dot products ≡ 0 mod m
+                dot_a = sum(a[i] * x[i] for i in range(n)) % m
+                dot_b = sum(b[i] * x[i] for i in range(n)) % m
+                if dot_a == 0 and dot_b == 0:
+                    found = True
+                    break
+            
+            if not found:
+                return False
+    return True
+
+def find_min_n(m):
+    n = 1
+    while True:
+        if check_condition(m, n):
+            print(f"For m={m}, found minimal n={n}")
+            return n
+        n += 1
+        if n > 10:  # Safety limit
+            print(f"For m={m}, no solution found up to n=10")
+            return None
+
+# Test for small m values
+for m in [2, 3, 4, 5]:
+    find_min_n(m)
+```

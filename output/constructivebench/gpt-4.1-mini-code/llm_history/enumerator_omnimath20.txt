@@ -1,0 +1,84 @@
+[write_program]
+This problem involves non-increasing functions \(f:\mathbb{N}\to\mathbb{N}\) defined on the domain \(\{0, \ldots, 300\}\) with constraints on sums of \(f\), and another function \(g:\mathbb{N}\to\mathbb{N}\) related to sums of \(f\) evaluated on sums of 20-tuples of natural numbers. The objective is to maximize \(S = \sum_{k=0}^{6000} g(k)\).
+
+We cannot prove results directly but can attempt enumerations for small parameter values to get an idea of the constraints and potential values of sums.
+
+We will experiment with simpler analogous versions such as smaller ranges and smaller arities (e.g., 5 or 3 instead of 20), and try out sample non-increasing functions \(f\) to enumerate candidate sums for \(g\) and sums of \(g\).
+
+We use Python to:
+
+- Enumerate candidate non-increasing functions \(f\) on small ranges with sum constraints,
+- For each \(f\), compute feasible \(g(k)\) values based on the inequality constraint,
+- Calculate \(\sum g(k)\) on a smaller domain,
+- Print \(f\), \(g\), and sums to unveil patterns.
+
+```python
+# Enumerate possible sums S = sum g(k) with simplified parameters
+# due to complexity, we use smaller ranges and dimension=3 instead of 20.
+# f : [0..n], non-increasing, sum f(k) ≤ M, f(n) ≥ 0
+# g : [0..m], with g(sum(n_i)) ≤ sum f(n_i) for n_i in [0..n]^dim,
+# here n_i sum ≤ m. We take dim=3 and moderate sizes.
+
+def non_increasing_sequences(n, max_sum):
+    # Generate non-increasing sequences f of length n+1 with sum <= max_sum
+    # Entries are integers ≥ 0.
+    def helper(i, bound, remaining_sum, current):
+        if i > n:
+            yield current
+            return
+        for val in range(min(bound, remaining_sum) + 1):
+            yield from helper(i+1, val, remaining_sum - val, current + [val])
+    yield from helper(0, max_sum, max_sum, [])
+
+def sum_f_on_tuple(f, indices):
+    return sum(f[i] for i in indices)
+
+def possible_g_values(f, n, m, dim):
+    # For each k in [0..m], g(k) ≤ min over all n-tuples summing to k of sum f(n_i)
+    # We'll approximate by:
+    # For each k, collect minimum sum f(n_i) over all tuples (n_i) with sum n_i = k
+    # n_i ∈ [0..n]
+    from collections import defaultdict
+    # Precompute min sum_f for each sum k
+    min_sum_f = [10**9]*(m+1)
+    # enumerate tuples with dimension dim and sum = k ≤ m
+    # We do a DP approach:
+    dp = [set() for _ in range(m+1)]
+    dp[0].add(tuple())
+    for _ in range(dim):
+        new_dp = [set() for _ in range(m+1)]
+        for s in range(m+1):
+            for tup in dp[s]:
+                for x in range(n+1):
+                    ns = s + x
+                    if ns <= m:
+                        new_dp[ns].add(tup + (x,))
+        dp = new_dp
+    for k in range(m+1):
+        for tup in dp[k]:
+            val = sum_f_on_tuple(f, tup)
+            if val < min_sum_f[k]:
+                min_sum_f[k] = val
+    return min_sum_f
+
+def main():
+    n = 5  # reduce from 300 for enumeration possibility
+    m = 15 # max sum index for g
+    M = 10 # max sum f(k)
+    dim = 3 # instead of 20
+    print(f"Parameters: n={n}, m={m}, M={M}, dim={dim}")
+    count = 0
+    for f in non_increasing_sequences(n, M):
+        if sum(f) > M or f[-1] < 0:
+            continue
+        g_upper = possible_g_values(f, n, m, dim)
+        # sum g(k) ≤ sum g_upper(k) (since g(k) ≤ g_upper(k))
+        S = sum(g_upper)
+        print(f"f={f}, sum f={sum(f)}, sum g(k) ≤ {S}")
+        count += 1
+        if count >= 10:
+            break
+
+if __name__ == "__main__":
+    main()
+```

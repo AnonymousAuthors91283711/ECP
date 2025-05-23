@@ -1,0 +1,82 @@
+[write_program]
+The problem is about approximating a positive real vector \( C \) with sum 100 by a natural number vector \( N \) with sum 100, minimizing \( \sum |N_i - C_i| \).
+
+We'll enumerate over sampled vectors \( C \) with 5 entries summing to 100, then try to find integer vectors \( N \) summing to 100 to minimize the total absolute difference. This enumerates candidates for the minimal total absolute difference. We'll print \( C \), candidate \( N \), and total difference immediately when found, to assist conjecture about the minimal difference.
+
+```python
+from itertools import product
+from math import isclose
+
+def enumerate_C_samples():
+    # Sample C vectors of length 5 that sum to 100, entries positive multiples of 10
+    base = 10
+    results = []
+    for x1 in range(base, 100, base):
+        for x2 in range(base, 100, base):
+            for x3 in range(base, 100, base):
+                for x4 in range(base, 100, base):
+                    x5 = 100 - (x1+x2+x3+x4)
+                    if x5 >= base and x5 <= 90:
+                        C = [x1, x2, x3, x4, x5]
+                        results.append(C)
+                        if len(results) >= 5:  # limit sample size
+                            return results
+    return results
+
+def integer_vectors_sum_100(length):
+    # Generate all N in ℕ^length with sum 100.
+    # Since this is huge, only generate candidates near C
+    # We'll generate N such that each entry in [floor(C_i) - 1, ceil(C_i)+1],
+    # adjusted to sum to 100.
+    return None  # Placeholder; we'll implement per C vector
+
+def candidates_near_C(C):
+    # Since sum is 100, and entries positive,
+    # For simplicity, try rounding C_i to nearest integer, then adjust
+    from math import floor, ceil
+    approx = [round(x) for x in C]
+    s = sum(approx)
+    diff = 100 - s
+    # Adjust approx by adding/subtracting from entries to reach sum 100
+    candidates = []
+    # Try adding diff distributed among entries in +1/-1 steps
+    # Generate candidates by adding 0 or +-1 to each entry around approx within bounds
+    deltas = [-1,0,1]
+    length = len(C)
+    for delta_comb in product(deltas, repeat=length):
+        N = [approx[i]+delta_comb[i] for i in range(length)]
+        if any(x < 0 for x in N):
+            continue
+        if sum(N) == 100:
+            candidates.append(N)
+    # Remove duplicates
+    unique = []
+    seen = set()
+    for cand in candidates:
+        t = tuple(cand)
+        if t not in seen:
+            seen.add(t)
+            unique.append(cand)
+    return unique
+
+def total_abs_diff(N, C):
+    return sum(abs(N[i]-C[i]) for i in range(len(C)))
+
+def main():
+    Cs = enumerate_C_samples()
+    print("Enumerating for sample C vectors (length 5, sum 100):")
+    for C in Cs:
+        print("C =", C)
+        candidates = candidates_near_C(C)
+        min_diff = None
+        for N in candidates:
+            diff = total_abs_diff(N, C)
+            print(f"  N={N}, total |N_i - C_i| = {diff}")
+            if min_diff is None or diff < min_diff:
+                min_diff = diff
+        if min_diff is not None:
+            print(f"Minimal total absolute difference for this C ~ {min_diff}\n")
+
+if __name__ == "__main__":
+    main()
+```

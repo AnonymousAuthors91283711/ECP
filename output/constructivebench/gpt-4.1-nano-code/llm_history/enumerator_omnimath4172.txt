@@ -1,0 +1,51 @@
+[write_program]
+This Lean theorem aims to find a function `a` from six-element indices to natural numbers such that the pairwise gcds are in a specific prime set \( S \) (primes up to 26), and that each prime in \( S \) appears as a gcd of some pair. To assist in conjecturing and verifying solutions, I'll write a Python program that enumerates all possible 6-tuples of numbers with small factors (like primes up to 26), checking the specified gcd conditions. The program will:
+
+- Fix prime candidates (primes ≤ 26) for elements of the tuple.
+- Generate all possible 6-element lists with elements being products of primes ≤ 26.
+- For each tuple, verify the gcd conditions:
+  - All pairwise gcds are in \( S \).
+  - Every prime in \( S \) occurs as a gcd of some pair.
+- Immediately print solutions as they are found.
+
+This will help in spotting patterns or constructing specific examples.
+
+```python
+import itertools
+import math
+
+# Primes up to 26
+primes = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+# Generate candidate numbers as products of small primes (including itself)
+# for simplicity, limit to products of at most two primes to keep enumeration small
+candidate_numbers = set()
+for p in primes:
+    candidate_numbers.add(p)
+for p1 in primes:
+    for p2 in primes:
+        product = p1 * p2
+        if product <= 200 and product >= 2:
+            candidate_numbers.add(product)
+candidate_numbers = list(candidate_numbers)
+
+# Function to check if all pairwise gcds are in S, and each prime in S appears
+def check_tuple(tup, s_set):
+    gcds = []
+    for i in range(len(tup)):
+        for j in range(i+1, len(tup)):
+            g = math.gcd(tup[i], tup[j])
+            if g not in s_set:
+                return False
+            gcds.append(g)
+    # Check if every prime p in S appears as a gcd
+    gcd_primes = set(gcds)
+    return gcd_primes == s_set
+
+S = set(primes)  # set S
+
+# Enumerate all 6-tuples of candidate numbers
+for arrangement in itertools.product(candidate_numbers, repeat=6):
+    if check_tuple(arrangement, S):
+        print("Found tuple:", arrangement)
+```

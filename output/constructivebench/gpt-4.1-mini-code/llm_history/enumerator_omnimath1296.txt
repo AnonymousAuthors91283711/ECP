@@ -1,0 +1,61 @@
+[write_program]
+The problem is to find the greatest possible value of 
+\[
+s = \sum_{i=2}^{2003} (i-1) \cdot n(i)
+\]
+where \(n: \mathbb{N} \to \mathbb{N}\) satisfy
+\[
+\sum_{i=1}^{2003} i \cdot n(i) = 2003.
+\]
+
+We want to explore possible functions \(n\) that meet the linear constraint on the weighted sum and then compute \(s\), the weighted sum with weights \(i-1\) for \(i \geq 2\).
+
+Since \(n\) is zero outside \(\{1, \ldots, 2003\}\), and values are non-negative integers, the problem reduces to bounded integer partitions of 2003 with coefficients.
+
+We will enumerate possible \(n\) through limited search (or with small scaled-down parameters), printing candidates and identifying the maximum \(s\). We'll start with smaller values (like total 10 or 20 instead of 2003) due to computation limits, then conjecture maximum based on the pattern.
+
+---
+
+```python
+# Enumerate candidates for a smaller version of the problem and print s values.
+# Problem statement:
+# Given total = sum i*n(i) for i=1..M
+# Compute s = sum (i-1)*n(i) for i=2..M under the constraint.
+# Enumerate n(i) in N, sum i*n(i) = total.
+# Print candidate s values as found.
+
+def enumerate_solutions(M, total):
+    # We'll enumerate all combinations of n(i) with i in [1..M]
+    # with sum i*n(i) = total. To limit problem size, use up to 3 or 4 indices.
+    # We fix that only 1 or 2 of the n(i) can be nonzero to keep enumeration small.
+    max_s = None
+    print(f"Parameters: M={M}, total={total}")
+    # Try all pairs (a,b) with n(a)=x, n(b)=y, others zero, such that a*x + b*y = total
+    for a in range(1, M+1):
+        for b in range(a, M+1):
+            # For x,y in N, a*x + b*y = total
+            # Enumerate y from 0 to total//b
+            for y in range(total // b + 1):
+                rem = total - b*y
+                if rem < 0 or rem % a != 0:
+                    continue
+                x = rem // a
+                if x < 0:
+                    continue
+                # Compute s
+                # s = sum_{i=2}^M (i-1)*n(i)
+                s = 0
+                # n(a)=x, n(b)=y
+                if a >= 2:
+                    s += (a-1)*x
+                if b >= 2:
+                    s += (b-1)*y
+                print(f"n({a})={x}, n({b})={y} => s={s}")
+                if max_s is None or s > max_s:
+                    max_s = s
+    print(f"Maximum s found: {max_s}")
+
+if __name__ == "__main__":
+    # Small test to understand pattern
+    enumerate_solutions(M=10, total=20)
+```

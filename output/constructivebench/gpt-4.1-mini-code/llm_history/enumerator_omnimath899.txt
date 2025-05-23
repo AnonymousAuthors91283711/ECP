@@ -1,0 +1,72 @@
+[write_program]
+The problem involves finding the greatest possible sum \( s = \sum_{i=1}^{20} \sum_{j=1}^{20} \min(a(i), b(j)) \) where \(a\) and \(b\) are disjoint 20-element integer sequences whose ranges together exactly cover the integers 1 through 40. Let's try small samples and enumerate possible partitionings of \(\{1, \ldots, 40\}\) into two disjoint sets of size 20 each, compute the sum of minima, and print them. We'll attempt to find candidates for the maximum.
+
+```python
+from itertools import combinations
+
+# Since enumerating all sets of size 20 from 40 is huge, we sample
+# Let's try splitting {1..40} into two halves, and compute sum of min costs
+
+def compute_sum_min(a, b):
+    # Both a and b are lists of length 20
+    total = 0
+    for x in a:
+        for y in b:
+            total += min(x, y)
+    return total
+
+def main():
+    full_set = list(range(1, 41))
+    # We'll try these partitions: first half and second half, reversed halves, and some random samples
+    samples = []
+
+    # partition 1: first 20 and last 20
+    a1 = full_set[:20]
+    b1 = full_set[20:]
+    s1 = compute_sum_min(a1, b1)
+    print(f"Partition 1: A={a1[:5]}... B={b1[:5]}..., sum_min={s1}")
+
+    # partition 2: interleaved odds and evens
+    odds = full_set[0::2]
+    evens = full_set[1::2]
+    s2 = compute_sum_min(odds, evens)
+    print(f"Partition 2: Odds={odds[:5]}... Evens={evens[:5]}..., sum_min={s2}")
+
+    # partition 3: reversed halves
+    a3 = full_set[20:]
+    b3 = full_set[:20]
+    s3 = compute_sum_min(a3, b3)
+    print(f"Partition 3: A(rev)={a3[:5]}... B(rev)={b3[:5]}..., sum_min={s3}")
+
+    # random sample partition: e.g., all numbers congruent to 1 mod 3 in A, others in B
+    a4 = [x for x in full_set if x % 3 == 1]
+    others = [x for x in full_set if x % 3 != 1]
+    # Pad a4 or b4 to size 20 by adding smallest numbers not in a4 to a4 or b4
+    # Need to ensure both have size 20 and partition full_set exactly
+    if len(a4) > 20:
+        a4 = a4[:20]
+    if len(a4) < 20:
+        needed = 20 - len(a4)
+        # fill a4 with smallest from others
+        fill = sorted(others)[:needed]
+        a4 += fill
+        others = [x for x in others if x not in fill]
+    b4 = others[:20]
+
+    s4 = compute_sum_min(a4, b4)
+    print(f"Partition 4: A(mod3=1 + fill)={sorted(a4)[:5]}... B(others)={sorted(b4)[:5]}..., sum_min={s4}")
+
+    # heuristic maximal sum attempt: 
+    # to maximize min(a_i, b_j), put all large numbers on one side and small on other, e.g. a = {21..40}, b ={1..20}
+    a5 = list(range(21, 41))
+    b5 = list(range(1, 21))
+    s5 = compute_sum_min(a5, b5)
+    print(f"Partition 5: A(21..40), B(1..20), sum_min={s5}")
+
+    # maximal value
+    max_sum = max(s1, s2, s3, s4, s5)
+    print(f"Candidate max sum among samples: {max_sum}")
+
+if __name__ == '__main__':
+    main()
+```

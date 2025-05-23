@@ -1,0 +1,69 @@
+[write_program]
+This problem involves finding all natural numbers \( n \) such that there exists a coloring \( f: \text{Fin } n \to \{0,1\} \) (red or blue) for which the number of same-color triples \((x,y,z)\) with \(x+y+z \equiv 0 \pmod{n}\) is exactly 2007. The program below enumerates candidate \( n \) up to a small limit and tries all possible colorings (encoded as bitmasks) for each \( n \). For each coloring, it counts the triples meeting the condition and prints those \( (n, red\_count, blue\_count, total) \) where total = 2007. This aids conjecturing the structure of \( \text{olympiadbench1664\_answer} \).
+
+We limit \( n \leq 30 \) to keep computation reasonable.  
+The number of colorings \( 2^n \) restricts exhaustive search; since \( 30 \) is already large, consider stopping earlier if needed.
+
+```python
+# Enumerate n and all colorings, print when total=2007 found
+def count_same_color_triples(n, coloring):
+    # coloring: list of bool (True=red, False=blue)
+    red_indices = [i for i,c in enumerate(coloring) if c]
+    blue_indices = [i for i,c in enumerate(coloring) if not c]
+    red = len(red_indices)
+    blue = n - red
+    
+    # To count triples (x,y,z), x,y,z in [0,n-1], x+y+z ≡0 mod n
+    # with f(x)=f(y)=f(z)
+    # To be efficient, precompute frequency arrays
+    count = 0
+    
+    # Create sets for fast membership
+    red_set = set(red_indices)
+    blue_set = set(blue_indices)
+    
+    # For same color triples red:
+    # Iterate over triples (x,y,z) in red_set^3 with (x+y+z) % n == 0
+    # Similarly for blue
+    
+    # Naive triple nested loops would be O(n^3), but n max 30 is feasible.
+    # Checking faster approach is complex because of modular condition.
+    
+    # We'll do naive for clarity:
+    for x in red_set:
+        for y in red_set:
+            z = (- (x + y)) % n
+            if z in red_set:
+                count += 1
+    
+    for x in blue_set:
+        for y in blue_set:
+            z = (- (x + y)) % n
+            if z in blue_set:
+                count += 1
+    
+    return count
+
+def main():
+    target = 2007
+    max_n = 30  # limit for expediency
+    for n in range(1, max_n+1):
+        # All colorings: 2^n; skip if too large
+        if n > 20:
+            # Skip large n to avoid long compute
+            # or add heuristic random sampling here
+            continue
+        print(f"n={n}")
+        # Enumerate all colorings as bitmasks
+        limit = 1 << n
+        for mask in range(limit):
+            coloring = [(mask & (1 << i)) != 0 for i in range(n)]
+            total = count_same_color_triples(n, coloring)
+            if total == target:
+                red = sum(coloring)
+                blue = n - red
+                print(f"Found n={n}, red={red}, blue={blue}, total=2007")
+
+if __name__ == "__main__":
+    main()
+```

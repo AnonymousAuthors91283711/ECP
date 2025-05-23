@@ -1,0 +1,94 @@
+[write_program]
+The problem counts subsets \( s \) of size 31 from an 8x8 grid of points (so total 64 points), such that no two distinct points in \( s \) have squared Euclidean distance 5 (which corresponds to the standard "knight move" in chess: moves of (±1, ±2) or (±2, ±1)). We want to enumerate, or at least approximate, the number of such subsets \( s \).
+
+This is equivalent to counting the 31-subsets of the vertices of the 8x8 grid graph with the edges given by knight moves, that are independent sets (no two vertices connected by an edge).
+
+Since counting all such 31-subsets exactly is huge, let's try smaller sizes \( n \) and also smaller board sizes \( N \times N \), say \( 4 \times 4 \), and print all large independent sets, or enumerations for smaller cardinalities.
+
+The program enumerates independent sets (no edge between any two vertices in the selected subset) in the knight graph for small-board sizes, prints progress, and tries to find maximum independent set sizes as a hint. This approach helps explore the problem structure.
+
+```python
+# Enumerate independent sets of size k in the knight graph on an N x N board
+# and print the counts and some examples, focusing on sizes near maximum.
+
+def knight_moves(N):
+    moves = [(2,1),(1,2),(-1,2),(-2,1),(-2,-1),(-1,-2),(1,-2),(2,-1)]
+    graph = {}
+    for r in range(N):
+        for c in range(N):
+            nbrs = []
+            for dr, dc in moves:
+                nr, nc = r+dr, c+dc
+                if 0 <= nr < N and 0 <= nc < N:
+                    nbrs.append((nr,nc))
+            graph[(r,c)] = nbrs
+    return graph
+
+def to_idx(pos,N):
+    return pos[0]*N + pos[1]
+
+def from_idx(i,N):
+    return (i//N,i%N)
+
+def bitconflict(i,j,graph,N):
+    # do vertices i,j conflict via an edge?
+    pi, pj = from_idx(i,N), from_idx(j,N)
+    return pj in graph[pi]
+
+def enum_indep_sets(N,k):
+    graph = knight_moves(N)
+    size = N*N
+    # Represent sets as sorted lists of vertices indices
+    # We'll do backtracking with pruning
+    
+    results = []
+    def backtrack(start, chosen):
+        if len(chosen) == k:
+            results.append(chosen[:])
+            # print example immediately
+            print("Independent set size={} example: {}".format(k, [from_idx(x,N) for x in chosen]))
+            return
+        if start >= size:
+            return
+        for v in range(start,size):
+            # check no edge conflict with current chosen
+            conflict = False
+            for u in chosen:
+                if bitconflict(u,v,graph,N):
+                    conflict = True
+                    break
+            if not conflict:
+                chosen.append(v)
+                backtrack(v+1,chosen)
+                chosen.pop()
+    backtrack(0,[])
+    return results
+
+def max_indep_size_approx(N):
+    # approximate max independent set by greedy & print
+    graph = knight_moves(N)
+    size = N*N
+    degrees = [len(graph[from_idx(i,N)]) for i in range(size)]
+    vertices = list(range(size))
+    vertices.sort(key=lambda x: degrees[x])
+    chosen = []
+    used = [False]*size
+    for v in vertices:
+        if not used[v]:
+            chosen.append(v)
+            for w in graph[from_idx(v,N)]:
+                used[to_idx(w,N)] = True
+    print(f"Approx max independent set size on {N}x{N}: {len(chosen)} example:")
+    print([from_idx(x,N) for x in chosen])
+
+if __name__=="__main__":
+    # Small sample: N=5, enumerate some independent sets of size k=8 (intermediate)
+    N = 5
+    k = 8
+    print(f"Enumerating independent sets of size {k} on {N}x{N} knight graph (distance^2=5 forbidden):")
+    sets = enum_indep_sets(N,k)
+
+    # Approx max independent set size for N=8 and print example
+    max_indep_size_approx(8)
+```
+This script prints examples of independent sets avoiding distance-squared=5 edges on small boards and provides approximate maximum independent set sizes on 8x8 to guide understanding. Adjust N and k as desired.

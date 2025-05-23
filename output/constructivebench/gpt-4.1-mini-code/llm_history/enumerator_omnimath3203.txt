@@ -1,0 +1,71 @@
+[write_program]
+The problem involves finding nonnegative integers \( a, b \) and functions \(\text{row_ops}\), \(\text{col_ops}\) on \(\{0,1,2\}\) such that:
+
+\[
+M(i,j) = \text{row_ops}(i) + 2 \cdot \text{col_ops}(j)
+\]
+
+for the given matrix
+
+\[
+M = 
+\begin{bmatrix}
+7 & 1 & 5 \\
+9 & 3 & 7 \\
+8 & 2 & 6
+\end{bmatrix}
+\]
+
+with
+
+\[
+a = \sum_i \text{row_ops}(i), \quad b = \sum_j \text{col_ops}(j)
+\]
+
+and the goal is to minimize \( a + b \).
+
+The program enumerates all possible functions \(\text{row_ops}\) and \(\text{col_ops}\) with small values, verifies the equality condition, and outputs \(a, b, a+b\). This helps conjecture the minimal sum and the values of \(a,b\).
+
+```python
+# Enumerate nonnegative integer vectors row_ops and col_ops of length 3,
+# check M[i,j] == row_ops[i] + 2*col_ops[j].
+# Output each candidate a,b with verification, to seek minimal a+b.
+
+def main():
+    M = [[7,1,5],[9,3,7],[8,2,6]]
+    size = 3
+    max_val = 10  # Range limit to keep enumeration feasible
+
+    # Since M(i,j) = row_ops[i] + 2*col_ops[j],
+    # row_ops[i] = M(i,0) - 2*col_ops[0], must be consistent across j
+    for c0 in range(max_val+1):
+        row_ops = []
+        # Derive row_ops from column 0 values:
+        possible = True
+        for i in range(size):
+            val = M[i][0] - 2*c0
+            if val < 0:
+                possible = False
+                break
+            row_ops.append(val)
+        if not possible:
+            continue
+
+        # Now try col_ops[1] and col_ops[2], derive from row_ops and check consistency
+        for c1 in range(max_val+1):
+            # Check consistency for column 1:
+            ok1 = all(M[i][1] == row_ops[i] + 2*c1 for i in range(size))
+            if not ok1:
+                continue
+            for c2 in range(max_val+1):
+                ok2 = all(M[i][2] == row_ops[i] + 2*c2 for i in range(size))
+                if not ok2:
+                    continue
+
+                a = sum(row_ops)
+                b = c0 + c1 + c2
+                print(f"row_ops={row_ops}, col_ops=[{c0},{c1},{c2}], a={a}, b={b}, a+b={a+b}")
+
+if __name__ == "__main__":
+    main()
+```

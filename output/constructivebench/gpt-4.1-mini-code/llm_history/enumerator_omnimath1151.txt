@@ -1,0 +1,58 @@
+[write_program]
+The problem involves triples of permutations (f, g, h) on a 5-element set S = Fin 5 satisfying a system of functional equations. We want to enumerate all such triples and count them.
+
+Plan:
+- Represent S = {0,1,2,3,4}.
+- P = S₅ × S₅ × S₅ (triples of permutations).
+- For each triple (f,g,h), check the three sets of equations for all x in S.
+- Print each triple that satisfies the conditions immediately.
+- Finally, print the total count.
+
+Since |S₅|=120, total triples = 120³=1,728,000, which is large but feasible to filter with efficient checks and early pruning.
+
+We'll:
+- Use itertools.permutations to generate permutations.
+- Index permutations with arrays for O(1) lookups.
+- Break early if any x fails any condition.
+- Print each triple meeting the conditions as tuples of permutations.
+
+```python
+from itertools import permutations
+
+def compose(p, q):
+    # p(q(x)) for all x in 0..4
+    return [p[q[x]] for x in range(5)]
+
+def check_conditions(f, g, h):
+    # Check all x in 0..4 the system:
+    # (f(g(h(x))) == g(x)) and (h(g(f(x))) == g(x))
+    # (g(h(f(x))) == h(x)) and (f(h(g(x))) == h(x))
+    # (h(f(g(x))) == f(x)) and (g(f(h(x))) == f(x))
+    for x in range(5):
+        if not (f[g[h[x]]] == g[x] and h[g[f[x]]] == g[x]):
+            return False
+        if not (g[h[f[x]]] == h[x] and f[h[g[x]]] == h[x]):
+            return False
+        if not (h[f[g[x]]] == f[x] and g[f[h[x]]] == f[x]):
+            return False
+    return True
+
+def main():
+    elems = range(5)
+    perms = list(permutations(elems))  # all 120 permutations
+    count = 0
+    # Enumerate triples (f,g,h)
+    for f in perms:
+        for g in perms:
+            for h in perms:
+                if check_conditions(f, g, h):
+                    count += 1
+                    print("Valid triple #{}:".format(count))
+                    print("f =", f)
+                    print("g =", g)
+                    print("h =", h)
+    print("Total valid triples:", count)
+
+if __name__ == "__main__":
+    main()
+```

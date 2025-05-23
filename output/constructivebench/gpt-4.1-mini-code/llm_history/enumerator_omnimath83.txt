@@ -1,0 +1,61 @@
+[write_program]
+The problem involves a parameter \( n \geq 2 \) and an inequality involving sums of square roots of absolute values of real numbers \( a_i \) and a parameter \( b \). The task is to find the least real number \( L \) such that for all vectors \( a \in \mathbb{R}^n \) and real \( b \),
+\[
+L \sum_{i=1}^n \sqrt{|a_i - b|} + \sqrt{n \left|\sum_{i=1}^n a_i\right|} \geq \sum_{i=1}^n \sqrt{|a_i|}.
+\]
+
+To explore this, we can fix small values of \( n \) (like 2, 3, 4), enumerate various vectors \( a \) with integer or rational entries in a small range, vary \( b \) within a reasonable range, and then compute the minimal \( L \) needed to satisfy the inequality. For each tuple \( (a, b) \), we can rearrange to:
+\[
+L \geq \frac{\sum_i \sqrt{|a_i|} - \sqrt{n |\sum_i a_i|}}{\sum_i \sqrt{|a_i - b|}}.
+\]
+We only consider cases where the denominator is positive. By enumerating candidates and keeping track of the maximum of these lower bounds over all \( a, b \), we approximate the minimal valid \( L \) for fixed \( n \).
+
+The program:
+- Enumerates small integer vectors \( a \) with entries in \(-2 \ldots 2\).
+- Enumerates \( b \) over integer values in \(-2 \ldots 2\).
+- For each, computes the required \( L \).
+- Prints each found candidate \( L \).
+- Reports the maximal candidate lower bound for \( L \) per \( n \).
+
+We keep output manageable by limiting vector length and value range.
+
+```python
+import math
+from itertools import product
+
+def sqrt_abs(x):
+    return math.sqrt(abs(x))
+
+def candidates_L(n):
+    # Enumerate vectors a: each element in -2..2
+    # Exclude all zeros vector (trivial zero denominator)
+    domain = range(-2, 3)
+    max_lower_bound = 0
+    print(f"n = {n}")
+    for a in product(domain, repeat=n):
+        if all(x == 0 for x in a):
+            continue
+        sum_a = sum(a)
+        sqrt_sum_a = math.sqrt(n * abs(sum_a))
+        b_domain = [i/2 for i in range(-4,5)]  # b in -2 to 2 in steps of 0.5
+        for b in b_domain:
+            denom = sum(sqrt_abs(x - b) for x in a)
+            if denom == 0:
+                continue
+            numer = sum(sqrt_abs(x) for x in a) - sqrt_sum_a
+            L_candidate = numer / denom
+            # Only consider candidates where L_candidate >= 0
+            if L_candidate >= 0:
+                print(f"a={a}, b={b:.1f}, L≥{L_candidate:.5f}")
+                if L_candidate > max_lower_bound:
+                    max_lower_bound = L_candidate
+    print(f"Current maximal candidate L for n={n}: {max_lower_bound:.5f}\n")
+
+def main():
+    # Test for small n to conjecture behavior
+    for n in [2,3,4]:
+        candidates_L(n)
+
+if __name__ == "__main__":
+    main()
+```

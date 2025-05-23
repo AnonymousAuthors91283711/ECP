@@ -1,0 +1,69 @@
+[write_program]
+The problem is to find all real pairs \((x,y)\) satisfying the system
+\[
+\begin{cases}
+x^2 - x y + 8 = 0, \\
+x^2 - 8 x + y = 0.
+\end{cases}
+\]
+
+We can solve for \(y\) from the second equation: \(y = 8x - x^2\). Substitute in the first:
+
+\[
+x^2 - x(8x - x^2) + 8 = 0 \implies x^2 - 8x^2 + x^3 + 8 = 0 \implies x^3 - 7x^2 + 8 = 0.
+\]
+
+We can enumerate all real roots of \(x^3 - 7x^2 + 8=0\) in a reasonable range and compute \(y\). Print integer candidates first and also rational approximations for any roots found.
+
+```python
+import math
+
+def f(x):
+    return x**3 - 7*x**2 + 8
+
+def find_roots():
+    # Check integers in range -2 to 8 (because polynomial changes sign near these)
+    candidates = []
+    for x in range(-2, 9):
+        val = f(x)
+        if val == 0:
+            candidates.append(float(x))
+            print(f"Exact integer root found: x={x}")
+    # Check for sign changes to isolate roots for bisection
+    roots = []
+    intervals = []
+    for a in range(-2, 8):
+        if f(a)*f(a+1) < 0:
+            intervals.append((a, a+1))
+    # Bisection for roots in intervals
+    for (a,b) in intervals:
+        low, high = a, b
+        for _ in range(30):  # ~1e-9 precision
+            mid = (low+high)/2
+            if f(low)*f(mid) <=0:
+                high = mid
+            else:
+                low = mid
+        root = (low+high)/2
+        # check if root near integer already found
+        if not any(abs(root - c) < 1e-6 for c in candidates):
+            roots.append(root)
+            print(f"Approximate root found by bisection: x={root:.9f}")
+    return candidates + roots
+
+def main():
+    xs = find_roots()
+    for x in xs:
+        y = 8*x - x**2
+        # Check if (x,y) satisfies first equation closely
+        check = x**2 - x*y + 8
+        if abs(check) < 1e-6:
+            # Try to print exact values if x is integer or simple fraction
+            if abs(x - round(x)) < 1e-12 and abs(y - round(y)) < 1e-12:
+                print(f"Solution: x={int(round(x))}, y={int(round(y))}")
+            else:
+                print(f"Solution: x={x:.9f}, y={y:.9f}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,67 @@
+[write_program]
+This problem involves counting the number of 3x3 matrices with natural number entries satisfying specific conditions. The conditions are:
+1. Top-left entry is 1 (M[0][0] = 1)
+2. Bottom-right entry is 2009 (M[2][2] = 2009)
+3. All entries are positive
+4. For i,j < 2, M[i][j] divides both M[i][j+1] and M[i+1][j]
+
+We'll enumerate possible matrices by considering the divisors of 2009 (which factors as 7² × 41) and building valid matrices recursively.
+
+```python
+import math
+from itertools import product
+
+def factorize(n):
+    factors = {}
+    while n % 2 == 0:
+        factors[2] = factors.get(2, 0) + 1
+        n = n // 2
+    i = 3
+    while i * i <= n:
+        while n % i == 0:
+            factors[i] = factors.get(i, 0) + 1
+            n = n // i
+        i += 2
+    if n > 1:
+        factors[n] = factors.get(n, 0) + 1
+    return factors
+
+def get_divisors(factors):
+    divisors = [1]
+    for p, exp in factors.items():
+        temp = []
+        for d in divisors:
+            for e in range(exp + 1):
+                temp.append(d * (p ** e))
+        divisors = list(set(temp))
+    return sorted(divisors)
+
+def count_matrices():
+    target = 2009
+    factors = factorize(target)
+    divisors = get_divisors(factors)
+    
+    count = 0
+    
+    # We'll iterate through all possible values for M[0][1], M[1][0], M[1][1]
+    # that divide 2009 and satisfy the divisibility conditions
+    for a in divisors:  # M[0][1]
+        for b in divisors:  # M[1][0]
+            if 1 > a or 1 > b:  # M[0][0] must divide both
+                continue
+            # M[1][1] must be divisible by both a and b
+            valid_m11 = [d for d in divisors if d % math.gcd(a, b) == 0]
+            for c in valid_m11:  # M[1][1]
+                if a > c or b > c:
+                    continue
+                # Now check if c divides 2009
+                if 2009 % c != 0:
+                    continue
+                # All conditions satisfied
+                count += 1
+                print(f"Found matrix with values (1,{a},x), ({b},{c},y), (z,w,2009) - count: {count}")
+    
+    print(f"Total number of valid matrices: {count}")
+
+count_matrices()
+```

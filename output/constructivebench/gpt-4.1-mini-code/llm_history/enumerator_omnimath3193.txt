@@ -1,0 +1,59 @@
+[write_program]
+The problem asks to count the number of integers \( n \in [3, 12] \) for which there exists a commutative, idempotent, associative binary operation \( f : \{0, \dots, n-1\}^2 \to \{0, \dots, n-1\} \). Such an operation is a *commutative idempotent semigroup* operation on the finite set of size \( n \). Equivalently, these correspond to *semilattices* on an \( n \)-element set.
+
+Enumerating all possible binary operations would be huge, so we look for a simpler characterization or try small \( n \) to see which \( n \) admit such operations.
+
+A known fact: A semilattice on \( n \) elements is characterized by an idempotent, commutative, associative operation, which is the meet or join in a partial order. Hence the problem reduces to existence of nontrivial semilattices on \( n \)-element sets.
+
+The trivial semilattice is given by the operation \( f(a,b) = a \) or \( f(a,b) = b \), but \( f(a,a) = a \) always holds trivially.
+
+All sets admit trivial semilattices (take min or max on a total order), so such \( f \) exist for all \( n \). Hence the cardinality of the filtered set (the set of \( n \) that admit such \( f \)) from 3 to 12 is likely 10 (all numbers 3 through 12).
+
+However, the proof asks to count the elements of the set of \( n \in [3..12] \) satisfying those properties.
+
+To assist in conjecturing, the program will enumerate \( n = 3..12 \), attempt to construct a simple candidate operation (e.g. min, max), verify the conditions, and print which \( n \) admit such a function.
+
+We implement the enumeration for \( n \) in range 3..12. For each \( n \), define the min operation (modelling Fin n as integers 0..n-1), then check the three properties. Because min on a finite total order always satisfies these properties, all \( n \) yield true.
+
+We'll print each \( n \) with a candidate operation (min) and state verification success.
+
+```python
+# Enumerate n in 3..12, and for each construct the "min" operation on [0..n-1].
+# Check if this operation satisfies commutativity, idempotency, associativity.
+# The min operation on an integer total order satisfies these.
+# Print results streaming, then print the count of such n found.
+
+def is_commutative(f, n):
+    for a in range(n):
+        for b in range(n):
+            if f(a, b) != f(b, a):
+                return False
+    return True
+
+def is_idempotent(f, n):
+    for a in range(n):
+        if f(a, a) != a:
+            return False
+    return True
+
+def is_associative(f, n):
+    for a in range(n):
+        for b in range(n):
+            for c in range(n):
+                if f(f(a, b), c) != f(a, f(b, c)):
+                    return False
+    return True
+
+def main():
+    found = []
+    for n in range(3, 13):
+        # candidate operation: min
+        f = lambda a, b: a if a <= b else b
+        if is_commutative(f, n) and is_idempotent(f, n) and is_associative(f, n):
+            print(f"n={n}: min operation satisfies conditions")
+            found.append(n)
+    print(f"Number of n with such f from 3 to 12: {len(found)}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,65 @@
+[write_program]
+This problem asks to find all triples of prime numbers (p, q, r) that satisfy the equation 3*p^4 - 5*q^4 - 4*r^2 = 26. We'll write a Python program to search for such triples within reasonable bounds.
+
+The approach:
+1. Iterate through possible prime values for p, q, r up to a reasonable limit (since higher primes will make the left side too large)
+2. For each combination, check if it satisfies the equation
+3. Output valid triples as they're found
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+max_limit = 20  # Empirical upper bound found by testing
+print("Searching for prime triples (p, q, r) where 3*p^4 - 5*q^4 - 4*r^2 = 26")
+found = False
+
+for p in range(2, max_limit):
+    if not is_prime(p):
+        continue
+    for q in range(2, max_limit):
+        if not is_prime(q):
+            continue
+        p4 = p**4
+        q4 = q**4
+        # Calculate r^2 = (3*p^4 - 5*q^4 - 26)/4
+        numerator = 3*p4 - 5*q4 - 26
+        if numerator <= 0 or numerator % 4 != 0:
+            continue
+        r_squared = numerator // 4
+        if r_squared <= 0:
+            continue
+        r = int(math.isqrt(r_squared))
+        if r*r != r_squared:
+            continue
+        if is_prime(r):
+            print(f"Found solution: p={p}, q={q}, r={r}")
+            found = True
+
+if not found:
+    print("No solutions found in the search range")
+```

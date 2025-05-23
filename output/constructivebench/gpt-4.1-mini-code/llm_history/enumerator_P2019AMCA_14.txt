@@ -1,0 +1,59 @@
+[write_program]
+The problem concerns a quartic polynomial with complex coefficients depending on a parameter \( c \), and characterizes the values of \( c \) so that the polynomial has 4 distinct complex roots. We want to find the condition on \(|c|\) for that to happen, and its value.
+
+We'll write a python program to enumerate values of \( c \) and check when the polynomial
+\[
+f_c(x) = x^4 + (2 - 3i) x^3 + (5 - 6i) x^2 + (2 - 3i) x + c
+\]
+has 4 distinct roots, and look for patterns relating \(|c|\) to the property.
+
+We test many values of \( c \) on a grid in the complex plane, compute roots of \( f_c \), check that they are distinct, and print \(|c|\) when roots are distinct.
+
+We only sprinkle points to keep output short and enumerated results manageable.
+
+```python
+# enumerator.py
+import cmath
+import numpy as np
+
+# Polynomial coefficients depend on c:
+# f_c(x) = x^4 + (2 - 3i)*x^3 + (5 - 6i)*x^2 + (2 - 3i)*x + c
+
+def poly_roots(c):
+    coeffs = [1, complex(2, -3), complex(5, -6), complex(2, -3), c]
+    return np.roots(coeffs)
+
+def distinct_roots(roots, tol=1e-5):
+    # Check pairwise distances > tol
+    for i in range(len(roots)):
+        for j in range(i+1, len(roots)):
+            if abs(roots[i] - roots[j]) < tol:
+                return False
+    return True
+
+def main():
+    # We'll test points on a circle grid of radius r and within square for simplicity
+    # We try some complex values c on a grid for sampling
+    
+    # Sample radii to test
+    radii = np.linspace(0, 6, 13)  # 0,0.5,...6
+    angles = np.linspace(0, 2*np.pi, 12, endpoint=False)
+
+    tested_c = set()
+    # Enumerate c values = r * e^{i*theta}
+    for r in radii:
+        for theta in angles:
+            c = r * cmath.exp(1j * theta)
+            # avoid repeated c=0
+            if c in tested_c:
+                continue
+            tested_c.add(c)
+            roots = poly_roots(c)
+            if distinct_roots(roots):
+                # Print radius |c| and c itself for clarity
+                print(f"Distinct roots for |c|={abs(c):.3f}, c={c:.3f}")
+    # In observation we expect a specific radius for |c|
+
+if __name__ == "__main__":
+    main()
+```

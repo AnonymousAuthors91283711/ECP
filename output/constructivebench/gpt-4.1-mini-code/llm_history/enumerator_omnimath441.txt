@@ -1,0 +1,75 @@
+[write_program]
+The problem involves maximizing the sum of terms \( x_j^4 - x_j^5 \) over nonnegative vectors \(x\) summing to 1. To assist in conjecturing the answer, we'll enumerate feasible vectors \(x\) with small dimensions \(n\), focusing on vectors with entries being rational multiples of 1 (finer grids are costly). For each \(n\), we partition 1 into \(n\) parts and compute the sum to find maximal values.
+
+Constraints:
+- \(x_i \geq 0\)
+- \(\sum x_i =1\)
+
+We consider \(n=1,2,3\) and partition the range \([0,1]\) with steps of size 0.1 for efficiency. This is a numerical exploration that prints intermediate potential maxima for each \(n\).
+
+```python
+# Enumerate vectors x in dimension n with entries summing to 1,
+# compute sum_j (x_j^4 - x_j^5), and print candidates for max.
+# Use step=0.1 to keep output short. Handle n=1,2,3.
+
+def f(x):
+    return x**4 - x**5
+
+def enumerate_n1(step=0.1):
+    n = 1
+    max_val = None
+    print("n=1")
+    for x0 in [i*step for i in range(int(1/step)+1)]:
+        if abs(x0 - 1) > 1e-8:
+            continue
+        val = f(x0)
+        print(f"x: [{x0:.1f}], sum: {val:.6f}")
+        if (max_val is None) or (val > max_val):
+            max_val = val
+    print(f"Max sum for n=1: {max_val:.6f}")
+
+def enumerate_n2(step=0.1):
+    n = 2
+    max_val = None
+    print("n=2")
+    steps = int(1/step) + 1
+    for i in range(steps):
+        x0 = i * step
+        x1 = 1 - x0
+        val = f(x0) + f(x1)
+        print(f"x: [{x0:.1f}, {x1:.1f}], sum: {val:.6f}")
+        if (max_val is None) or (val > max_val):
+            max_val = val
+    print(f"Max sum for n=2: {max_val:.6f}")
+
+def enumerate_n3(step=0.2):
+    # coarser steps for three variables to limit output
+    n = 3
+    max_val = None
+    print("n=3")
+    s = step
+    # enumerate x0,x1,x2 with x0+x1+x2=1, x_i>=0
+    # pick x0,x1 in steps, x2=1 - x0 - x1 if >=0
+    vals = []
+    range_steps = int(1/s)+1
+    for i in range(range_steps):
+        x0 = i*s
+        for j in range(range_steps):
+            x1 = j*s
+            x2 = 1 - x0 - x1
+            if x2 < -1e-8 or x2 > 1:
+                continue
+            if x2 < 0:
+                continue
+            val = f(x0) + f(x1) + f(x2)
+            print(f"x: [{x0:.1f}, {x1:.1f}, {x2:.2f}], sum: {val:.6f}")
+            if (max_val is None) or (val > max_val):
+                max_val = val
+    print(f"Max sum for n=3: {max_val:.6f}")
+
+if __name__ == "__main__":
+    enumerate_n1()
+    enumerate_n2()
+    enumerate_n3()
+```
+

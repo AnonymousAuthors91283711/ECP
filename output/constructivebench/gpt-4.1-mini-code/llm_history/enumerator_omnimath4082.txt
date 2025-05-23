@@ -1,0 +1,63 @@
+[write_program]
+The problem characterizes all functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying:
+- For all \( x, y > 0 \), \( f(x + f(y)) = f(x + y) + f(y) \).
+- For all \( y > 0 \), \( f(y) > 0 \).
+
+We want to enumerate candidate functions on some positive inputs to conjecture the form of possible answers. We'll test some small positive values and check the functional equation, printing results for functions that satisfy the equations approximately.
+
+```python
+# Enumerate candidate functions f on positive reals, represented as dicts on sample inputs,
+# and print those that satisfy the functional equation on sample points.
+
+def test_function(fvals):
+    # fvals: dict mapping positive x to f(x)
+    # Check f(x + f(y)) = f(x+y) + f(y) for pairs x,y in fvals
+    keys = sorted(fvals.keys())
+    for x in keys:
+        for y in keys:
+            xv, yv = x, y
+            fy = fvals[y]
+            # Check domain for x + f(y)
+            arg = xv + fy
+            # Find closest key approx for arg:
+            candidates = [k for k in keys if abs(k - arg) < 1e-6]
+            if not candidates:
+                continue
+            val_lhs = fvals[candidates[0]]
+            val_rhs = fvals.get(xv + yv, None)
+            if val_rhs is None:
+                continue
+            val_rhs += fy
+            if abs(val_lhs - val_rhs) > 1e-5:
+                return False
+    return True
+
+# Test functions f on points 1,2,3,... with values from some simple classes
+x_points = [1,2,3,4]
+
+print("Testing candidates f values at points", x_points)
+
+# We'll try some prototypes:
+# 1) f(y) = y, then f(x + f(y)) = f(x + y) + f(y) -> f(x + y) + y = f(x + y) + y correct
+# 2) f(y) = c y for constant c>0
+# 3) f(y) = y + c for c>0
+# 4) f(y) = a y + b with positivity
+
+# Try linear f(y) = c*y for c in {0.5,1,2}
+for c in [0.5,1,2]:
+    fvals = {x:c*x for x in x_points}
+    if all(fvals[x]>0 for x in x_points) and test_function(fvals):
+        print(f"Candidate: f(y) = {c} * y with values {fvals}")
+
+# Try affine f(y) = y + d for d in {0.5,1,2}
+for d in [0.5,1,2]:
+    fvals = {x:x + d for x in x_points}
+    if all(fvals[x]>0 for x in x_points) and test_function(fvals):
+        print(f"Candidate: f(y) = y + {d} with values {fvals}")
+
+# Try constant f(y) = c for c in {0.5,1,2}
+for c in [0.5,1,2]:
+    fvals = {x: c for x in x_points}
+    if all(fvals[x]>0 for x in x_points) and test_function(fvals):
+        print(f"Candidate: f(y) = {c} with values {fvals}")
+```

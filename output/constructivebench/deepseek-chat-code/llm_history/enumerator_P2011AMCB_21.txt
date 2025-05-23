@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for the unique difference d between two distinct positive integers x and y where:
+1. Their arithmetic mean (am) is a 2-digit number (10 ≤ am < 100)
+2. Their geometric mean (gm) equals the reverse of am's digits
+3. d is the absolute difference |x-y|
+
+We'll write a Python program to enumerate all possible (x,y) pairs meeting these conditions and compute their differences.
+
+```python
+import math
+
+def reverse_digits(n):
+    return (n % 10) * 10 + (n // 10)
+
+def find_pairs():
+    results = []
+    for am in range(10, 100):  # 2-digit arithmetic means
+        gm = reverse_digits(am)
+        # From am = (x+y)/2 and gm = sqrt(xy), we get:
+        # x + y = 2*am
+        # xy = gm^2
+        # So x and y are roots of t^2 - 2*am*t + gm^2 = 0
+        discriminant = (2*am)**2 - 4*(gm**2)
+        if discriminant < 0:
+            continue
+        sqrt_discriminant = math.isqrt(discriminant)
+        if sqrt_discriminant * sqrt_discriminant != discriminant:
+            continue  # Not perfect square
+        
+        x1 = (2*am + sqrt_discriminant) // 2
+        x2 = (2*am - sqrt_discriminant) // 2
+        if x1 == x2:
+            continue  # x ≠ y required
+        
+        for x, y in [(x1, x2), (x2, x1)]:
+            if x > 0 and y > 0 and x != y:
+                d = abs(x - y)
+                print(f"Found pair: x={x}, y={y}, am={am}, gm={gm}, d={d}")
+                results.append(d)
+    
+    if results:
+        print("All differences found:", sorted(set(results)))
+        print("Unique difference:", results[0] if len(set(results)) == 1 else "Multiple differences found")
+    else:
+        print("No valid pairs found")
+
+find_pairs()
+```

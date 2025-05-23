@@ -1,0 +1,68 @@
+[write_program]
+This problem involves finding the greatest possible value `s` of a sum with certain constraints involving non-decreasing functions `a` and functions `b` related to their infimum. We need to enumerate candidate solutions for `s` by exploring possible values of `a`, `b`, and the sum structure under the given constraints.
+
+Given the constraints:
+- `a` is non-decreasing (`∀ n, a n ≤ a (n + 1)`).
+- `b m` is defined as the infimum of `{n | a n ≥ m}`.
+- `a 19 = 85`.
+- `s` is the sum of `a` over `0..18` plus the sum of `b` over `1..84`.
+
+To find the greatest possible `s`, we should consider the possible behaviors of `a` that maximize the sum, especially noting that `a 19 = 85` fixes the last value of `a`.
+
+For simplicity, we:
+
+- Generate candidate non-decreasing sequences `a` that start at some minimal value and reach 85 at `n=19`.
+- For each sequence, solve for `b`: `b m = inf{n | a n ≥ m}`.
+- Calculate `s`.
+
+We will iterate over possible starting points and increasing `a n` values, then compute the sums, and update our maximum as we go.
+
+```python
+# Enumerate plausible sequences for `a` with fixed a(19)=85, start at a(0)=v <= 85
+# and non-decreasing, with possible steps up to 85.
+# For each sequence, compute `b` and sum, then output if sum is maximal.
+
+# We attempt small starting values to limit complexity.
+max_s = -1
+max_sequence_info = None
+
+for start_val in range(1, 86):  # starting point of a, between 1 and 85
+    # Build a sequence a of length 20, last element fixed at 85
+    # For simplicity, try increasing steps: a_n = start_val + delta, where delta ≥ 0, up to 85
+    # To keep it manageable, generate sequences where each step increases by 0 or 1 only.
+    # Generate sequences where a[0] = start_val, and a[n+1] >= a[n]
+    sequence = [start_val]
+    for n in range(1, 20):
+        # to maximize sum of a, increase by 1 if possible
+        next_val = min(sequence[-1] + 1, 85)
+        sequence.append(next_val)
+    # Verify last element
+    sequence[-1] = 85
+    a_seq = sequence
+
+    # Compute b: b m = inf{n | a n ≥ m}
+    # For m in [1..84], find the first index where a[n] ≥ m
+    b_values = {}
+    for m in range(1, 85):
+        # find first n with a[n] ≥ m
+        for n_idx, val in enumerate(a_seq):
+            if val >= m:
+                b_values[m] = n_idx + 1  # 1-based index
+                break
+    # sum over a
+    sum_a = sum(a_seq[:19])  # a_{0..18}
+    # sum over b
+    sum_b = sum(b_values[m] for m in range(1, 85))
+    s = sum_a + sum_b
+
+    print(s)
+    if s > max_s:
+        max_s = s
+        max_sequence_info = (a_seq, b_values)
+
+# Output the maximum found sum and sequence for reference
+print("Maximum s:", max_s)
+print("Sequence a:", max_sequence_info[0])
+```
+
+This code explores varying sequences starting from different initial values, constructs non-decreasing `a` sequences ending at 85, computes the associated `b` functions, sums, and streams partial results via `print`. It maintains a maximum to help identify the greatest `s`. The approach balances exploration with efficiency, suitable for high school level conjecture reasoning.

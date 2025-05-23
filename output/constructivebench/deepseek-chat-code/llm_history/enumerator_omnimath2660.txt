@@ -1,0 +1,49 @@
+[write_program]
+The problem asks for the largest possible sum of a list of distinct primes less than 50, where each prime p in the list satisfies that p+1 equals a perfect power (a^k where k ≥ 2). We need to enumerate all such primes, then find all possible increasing sequences of these primes, and finally determine the sequence with the maximum sum.
+
+Here's the Python program to solve this:
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]:
+        if n % p == 0:
+            return n == p
+    return True
+
+def is_perfect_power_plus_one(p):
+    target = p + 1
+    max_k = int(math.log2(target)) + 1
+    for k in range(2, max_k + 1):
+        a = round(target ** (1/k))
+        if a ** k == target:
+            return True
+    return False
+
+# Find all primes <50 where p+1 is perfect power
+valid_primes = [p for p in range(2, 50) if is_prime(p) and is_perfect_power_plus_one(p)]
+print("Valid primes:", valid_primes)
+
+max_sum = 0
+best_sequence = []
+
+# Generate all increasing sequences and track maximum sum
+def backtrack(start, current, current_sum):
+    global max_sum, best_sequence
+    if current_sum > max_sum:
+        max_sum = current_sum
+        best_sequence = current.copy()
+        print("New best:", best_sequence, "Sum:", max_sum)
+    for i in range(start, len(valid_primes)):
+        if not current or valid_primes[i] > current[-1]:
+            current.append(valid_primes[i])
+            backtrack(i + 1, current, current_sum + valid_primes[i])
+            current.pop()
+
+backtrack(0, [], 0)
+print("Final maximum sum:", max_sum)
+print("Achieved by sequence:", best_sequence)
+```

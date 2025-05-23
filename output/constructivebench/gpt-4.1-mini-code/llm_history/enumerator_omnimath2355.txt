@@ -1,0 +1,57 @@
+[write_program]
+The problem involves finding the maximum number \( k \) of vertices with degree at least 3 in a connected graph on \( n \) vertices where between any two vertices there exists a unique path. Such a structure is a tree (since unique paths between vertices imply no cycles) and the task involves enumerating values of \( k \) for small \( n \).
+
+The program below:
+- Interprets the problem as enumerating all trees on \( n \) vertices for \( 2 \le n \le 6 \).
+- For each tree, counts vertices of degree at least 3.
+- Prints all possible \( k \) found for each \( n \).
+- Prints the maximum \( k \) found for each \( n \).
+
+This enumeration supports conjecturing the form of `omnimath2355_answer n` and its maximality.
+
+```python
+from itertools import combinations
+import sys
+
+def edges_to_adjlist(n, edges):
+    adj = {i: set() for i in range(n)}
+    for u,v in edges:
+        adj[u].add(v)
+        adj[v].add(u)
+    return adj
+
+def is_tree(n, edges):
+    if len(edges) != n-1:
+        return False
+    adj = edges_to_adjlist(n, edges)
+    visited = set()
+    def dfs(u):
+        visited.add(u)
+        for w in adj[u]:
+            if w not in visited:
+                dfs(w)
+    dfs(0)
+    return len(visited) == n
+
+def degree_count(adj):
+    # count vertices with degree >= 3
+    return sum(1 for v in adj if len(adj[v]) >=3)
+
+max_n = 6
+
+for n in range(2, max_n+1):
+    vertices = list(range(n))
+    all_edges = list(combinations(vertices, 2))
+    max_k = -1
+    k_values = set()
+    print(f"n = {n}")
+    for edges in combinations(all_edges, n-1):
+        if is_tree(n, edges):
+            adj = edges_to_adjlist(n, edges)
+            k = degree_count(adj)
+            k_values.add(k)
+            print(f"  found k = {k}")
+            if k > max_k:
+                max_k = k
+    print(f"max k for n={n}: {max_k}\n")
+```

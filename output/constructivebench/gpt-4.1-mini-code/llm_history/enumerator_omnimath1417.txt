@@ -1,0 +1,44 @@
+[write_program]
+The problem seeks complex numbers \( k \) for which there exist nonzero complex numbers \( a,b,c,d \) satisfying both
+\[
+a k^3 + b k^2 + c k + d = 0
+\]
+and
+\[
+b k^3 + c k^2 + d k + a = 0.
+\]
+We enumerate possibilities for \(k\) as roots of these polynomials for small integer choices of \(a,b,c,d\) normalized to avoid zeroes, and print candidates \(k\) satisfying both equalities approximately, to gain insight.
+
+```python
+from itertools import product
+import cmath
+
+# Small nonzero integer coefficients to test
+coeffs = [-2, -1, 1, 2]
+
+def approx_equal(x, y, eps=1e-9):
+    return abs(x - y) < eps
+
+print("Enumerating candidates k with small integer a,b,c,d ≠0...")
+
+for a, b, c, d in product(coeffs, repeat=4):
+    if 0 in (a,b,c,d):
+        continue
+    # Define two polynomials:
+    # P(k) = a k^3 + b k^2 + c k + d
+    # Q(k) = b k^3 + c k^2 + d k + a
+    # Find roots of P(k)
+    # For speed, we process only real trial values by scanning unit circle approximately:
+    # But better: solve cubic exactly: coeffs P = [a, b, c, d]
+    p_roots = []
+    # Coefficients in degree-descending order for numpy.roots
+    import numpy as np
+    p_coefs = [a, b, c, d]
+    roots = np.roots(p_coefs)
+    for k in roots:
+        # Check Q(k) ~ 0
+        val_q = b*k**3 + c*k**2 + d*k + a
+        if approx_equal(val_q, 0):
+            print(f"a={a},b={b},c={c},d={d} k={k}")
+```
+This enumerates candidate values \(k\) approximately satisfying the system for small integers \(a,b,c,d\), printing each match immediately. From these we conjecture about the set of all such \(k\).

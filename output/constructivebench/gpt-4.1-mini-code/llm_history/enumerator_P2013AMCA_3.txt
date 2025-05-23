@@ -1,0 +1,47 @@
+[write_program]
+The problem involves fractions of a total number of flowers, so we'll enumerate multiples of 10 for the total (to keep fractions exact) and compute the total carnations count. Let's print the total, pink, red, and total carnations for several values.
+
+```python
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+def simplify(n, d):
+    g = gcd(n, d)
+    return (n // g, d // g)
+
+def add_frac(n1, d1, n2, d2):
+    n = n1 * d2 + n2 * d1
+    d = d1 * d2
+    return simplify(n, d)
+
+def mul_frac(n1, d1, n2, d2):
+    n = n1 * n2
+    d = d1 * d2
+    return simplify(n, d)
+
+# We'll take total multiples of 10 for exact fractions
+for total in range(10, 101, 10):
+    pink_num, pink_den = mul_frac(6, 10, total, 1)  # pink = 6/10 * total
+    red_num, red_den = simplify(total * pink_den - pink_num, pink_den)  # red = total - pink
+
+    pinkRoses_num, pinkRoses_den = mul_frac(1, 3, pink_num, pink_den)
+    pinkCarnations_num, pinkCarnations_den = (pink_num * pink_den - pinkRoses_num * pinkCarnations_den if 'pinkCarnations_den' in locals() else None), None
+    # Actually it's easier to just subtract:
+    # pinkCarnations = pink - pinkRoses = (pink_num/pink_den) - (pinkRoses_num/pinkRoses_den)
+    # Let's compute that with add_frac(pink_num/pink_den, -pinkRoses_num/pinkRoses_den)
+    # So:
+    def frac_sub(n1,d1,n2,d2):
+        return simplify(n1*d2 - n2*d1, d1*d2)
+    pinkCarnations_num, pinkCarnations_den = frac_sub(pink_num, pink_den, pinkRoses_num, pinkRoses_den)
+
+    redCarnations_num, redCarnations_den = mul_frac(3, 4, red_num, red_den)
+
+    totalCarnations_num, totalCarnations_den = add_frac(pinkCarnations_num, pinkCarnations_den, redCarnations_num, redCarnations_den)
+
+    # Print result as fraction and decimal
+    decimal = totalCarnations_num / totalCarnations_den
+    print(f"total={total}, total_carnations={totalCarnations_num}/{totalCarnations_den} ≈ {decimal:.4f}")
+```
+

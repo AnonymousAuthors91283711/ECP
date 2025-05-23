@@ -1,0 +1,52 @@
+[write_program]
+The problem concerns numbers less than 4,300,000,000 that are either 1 or of the form \(2^k \times \prod F\), where \(F\) is a finite set of primes each equal to a Fermat prime \(2^{2^m} + 1\). The goal is to find the greatest such number under this bound.
+
+Known Fermat primes correspond to \(m = 0,1,2,3,4\), i.e., primes 3, 5, 17, 257, 65537. Their product combined with powers of two should be enumerated to find the maximum number below 4.3 billion.
+
+I will write a program that enumerates all such numbers by selecting subsets of these Fermat primes and exponents \(k\) for the power of two, printing all found numbers less than the bound, and then identifying the greatest one.
+
+```python
+# Enumerate numbers n < 4_300_000_000 of the form n=2^k * product_of_distinct_Fermat_primes,
+# where Fermat primes = [3,5,17,257,65537], or n=1.
+# Print all such n and track the maximum.
+
+Fermat_primes = [3,5,17,257,65537]
+BOUND = 4_300_000_000
+
+from itertools import combinations
+
+def prod(lst):
+    p = 1
+    for x in lst:
+        p *= x
+    return p
+
+print(1)  # n=1 is included
+
+max_n = 1
+
+# Enumerate all subsets of Fermat primes
+for r in range(len(Fermat_primes)+1):
+    for subset in combinations(Fermat_primes, r):
+        p = prod(subset)
+        if p == 0:
+            continue
+        # Find max k with 2^k * p < BOUND
+        max_k = 0
+        # Compute max_k efficiently via bit shifts
+        # We find max k with p * 2^k < BOUND => 2^k < BOUND/p
+        # k < log2(BOUND/p)
+        from math import floor, log2
+        limit = BOUND / p
+        if limit < 1:
+            continue
+        max_k = floor(log2(limit))
+        for k in range(max_k+1):
+            n = (1 << k)*p
+            if n < BOUND:
+                print(n)
+                if n > max_n:
+                    max_n = n
+
+print("Maximum found:", max_n)
+```

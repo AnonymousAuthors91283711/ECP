@@ -1,0 +1,76 @@
+[write_program]
+The problem counts subsets \( s \) of size 99 in the 19x19 grid points such that any two distinct points in \( s \) differ by at least 2 in the x-coordinate or at least 2 in the y-coordinate. In other words, no two points are adjacent horizontally or vertically or diagonally (no two points can be immediate neighbors in the grid).
+
+Our task here is to write a Python program that enumerates or counts such subsets, or at least helps to conjecture the structure or count of such sets (possibly maximal independent sets in the king's graph on a 19x19 grid). The full enumeration is huge, but we can start with smaller grids and print results to gain insight.
+
+We'll:
+- Try small grid sizes (like 4x4, 5x5).
+- Enumerate subsets of a certain size (or all maximal sets) satisfying the spacing condition.
+- Print the count of such sets or print some example sets.
+- This aids in conjecturing the answer function or behavior as a function of grid size.
+
+Because full enumeration is impossible for 19x19, let's start with smaller sizes and enumerate all feasible subsets to gather data.
+
+```python
+# enumerator.py
+from itertools import combinations
+
+def is_valid_subset(points):
+    pts = list(points)
+    n = len(pts)
+    for i in range(n):
+        for j in range(i+1, n):
+            x1, y1 = pts[i]
+            x2, y2 = pts[j]
+            if abs(x1 - x2) <= 1 and abs(y1 - y2) <= 1:
+                return False
+    return True
+
+def enumerate_subsets(m, n, size):
+    grid_points = [(x, y) for x in range(m) for y in range(n)]
+    count = 0
+    # For small grids to keep runtime reasonable
+    for subset in combinations(grid_points, size):
+        if is_valid_subset(subset):
+            print(f"Valid subset for grid {m}x{n} of size {size}: {subset}")
+            count += 1
+    print(f"Total valid subsets in {m}x{n} grid of size {size}: {count}")
+
+def max_independent_set_size(m, n):
+    # The no-adjacency condition corresponds to the king's graph on grid.
+    # A known lower bound is ceiling(m*n / 4).
+    # We'll find maximum size by checking decreasing sizes from floor(m*n/2) down.
+    grid_points = [(x, y) for x in range(m) for y in range(n)]
+    max_size = 0
+    for size in range(m*n, 0, -1):
+        found = False
+        for subset in combinations(grid_points, size):
+            if is_valid_subset(subset):
+                print(f"Max independent set size candidate in {m}x{n}: {size}")
+                max_size = size
+                found = True
+                break
+        if found:
+            break
+    if max_size == 0:
+        print(f"No valid subsets found in {m}x{n} grid")
+    else:
+        print(f"Maximum independent set size in {m}x{n} grid: {max_size}")
+
+if __name__ == "__main__":
+    # Sample small grids to gather info
+    for m, n in [(4,4), (5,5)]:
+        print(f"Enumerating on grid {m}x{n}")
+        max_independent_set_size(m, n)
+        # For example, print all valid subsets of size 4 in 4x4 grid
+        if m == 4 and n == 4:
+            enumerate_subsets(m, n, 4)
+```
+
+This program:
+- Defines `is_valid_subset` to check the spacing condition.
+- Defines `enumerate_subsets` to list all valid subsets of a given size.
+- Defines `max_independent_set_size` to attempt to find max size subsets.
+- Runs the procedure on small grids 4x4 and 5x5 and prints found results immediately.
+
+This will help conjecture the maximum size and count of such subsets for the 19x19 grid.

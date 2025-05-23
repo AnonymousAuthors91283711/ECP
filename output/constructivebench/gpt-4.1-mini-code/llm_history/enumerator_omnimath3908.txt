@@ -1,0 +1,55 @@
+[write_program]
+The problem involves finding the greatest value of \(\frac{x}{y}\) under the constraints:
+
+- \(x, y, z, u \in \mathbb{Z}\), all positive,
+- \(x \ge y\),
+- \(x + y = z + u\),
+- \(2xy = zu\).
+
+We want to enumerate positive integer quadruples \((x,y,z,u)\) satisfying these relations and compute \(\frac{x}{y}\) to guess the greatest value.
+
+We'll try small values for \(x, y\), derive \(z, u\) from the equations, verify integrality and positivity, then print \(\frac{x}{y}\). Since the system is symmetric and the constraints constrain \(z, u\), we scan reasonably small values to find candidates.
+
+```python
+# Enumerate positive integers x,y with x >= y, find integers z,u > 0 matching:
+# x + y = z + u
+# 2*x*y = z*u
+# Print x/y for all found solutions.
+
+def enumerator():
+    max_ratio = 0
+    max_tuple = None
+    # Limit search for x,y to small values to keep output short
+    LIMIT = 30
+    for y in range(1, LIMIT+1):
+        for x in range(y, LIMIT+1):
+            s = x + y  # sum z+u
+            p = 2 * x * y  # product z*u
+            # z,u are positive integers solving z+u = s and z*u = p
+            # For integer z,u positive: z,u are roots of t^2 - s t + p = 0
+            # Discriminant:
+            D = s*s - 4*p
+            if D < 0:
+                continue
+            root = int(D**0.5)
+            if root*root != D:
+                continue
+            # Two possible roots for z,u:
+            z1 = (s + root)//2
+            z2 = (s - root)//2
+            # Check if both are positive integers
+            if (z1 > 0 and z2 > 0 and
+                z1 + z2 == s and z1 * z2 == p and
+                isinstance(z1, int) and isinstance(z2, int)):
+                ratio = x / y
+                print(f"x={x}, y={y}, z={z1}, u={z2}, ratio={ratio}")
+                if ratio > max_ratio:
+                    max_ratio = ratio
+                    max_tuple = (x, y, z1, z2)
+    if max_tuple:
+        x, y, z, u = max_tuple
+        print(f"\nGreatest ratio found: x/y = {x}/{y} = {max_ratio} with (x,y,z,u)=({x},{y},{z},{u})")
+
+if __name__ == "__main__":
+    enumerator()
+```

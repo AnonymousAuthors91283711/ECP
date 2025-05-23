@@ -1,0 +1,113 @@
+[write_program]
+The problem concerns counting the maximum number \( L \) of ways to separate a finite set \( S \subseteq \mathbb{R}^2 \) of size \( n \) into two disjoint subsets \( A, B \) using a linear inequality (a strict linear separator). Equivalently, we want to find the maximum number of linearly separable bipartitions of \( S \).
+
+This is a classic problem related to counting the number of ways to dichotomize or label points by linear classifiers in 2D. For example, given \( n \) points in general position in 2D, the number of linear separations is well-known to be at most \( n(n-1)+2 \), but can be less based on configuration.
+
+To experimentally enumerate and conjecture \( \text{omnimath3230\_answer}(n) \), I will:
+
+- For small \( n \),
+- Generate configurations of \( n \) points (e.g., random points or simple arrangements),
+- Enumerate all possible labelings (bipartitions) of \( S \) (except trivial all-empty sets),
+- Count the subsets \( (A,B) \) which are linearly strictly separable, i.e., exist \( (a,b,c) \) (nonzero \( (a,b) \)) so that
+  \( a x + b y + c < 0 \) for all points in \( A \) and
+  \( a x + b y + c > 0 \) for all points in \( B \),
+- Print found counts,
+- Compare counts for different configurations,
+- Deduce the maximal possible \( L \) for given \( n \).
+
+To keep the enumeration simple and efficient within token limits, I will use a simple test set (e.g., points on a circle or polygon vertices), enumerate labelings, use a linear program or computational geometry to check feasibility of linear separation, and print the maximal count found.
+
+```python
+# Counts max number L of linearly separable bipartitions of a set S in R^2 of size n.
+# We'll try n=1..5, points on unit circle for general position, enumerate labelings,
+# check linear separability, print max count for each n.
+
+import itertools
+import math
+
+def linearly_separable(A, B):
+    # Return True if exists (a,b,c), (a,b) != (0,0), s.t.
+    # a*x + b*y + c <0 for all (x,y) in A
+    # a*x + b*y + c >0 for all (x,y) in B
+    # Equivalent to linear feasibility:
+    # For all p in A: a*p[0] + b*p[1] + c < 0
+    # For all q in B: a*q[0] + b*q[1] + c > 0
+    # We relax strict inequalities by small margin epsilon=1e-8:
+    # a*p[0] + b*p[1] + c <= -epsilon for p in A
+    # a*q[0] + b*q[1] + c >= epsilon for q in B
+    # Solve by linear programming feasibility.
+
+    EPS = 1e-8
+    if not A or not B:
+        return False  # both sets must be nonempty for separation
+
+    # Setup LP for variables (a,b,c)
+    # Constraints:
+    # For p in A: a*p[0] + b*p[1] + c <= -EPS
+    # For q in B: a*q[0] + b*q[1] + c >= EPS
+    # Also constraint: a^2 + b^2 >= some positive small value to avoid zero vector.
+    # But LP can't enforce quadratic. Instead, try to fix norm or try normalization or try multiple guesses.
+    # Strategy: fix a^2 + b^2 =1 by parametrize angle or try guesses for (a,b).
+    # Instead, try to solve LP for c given fixed (a,b) directions sampled on unit circle.
+
+    # If exist (a,b) with norm=1 s.t. linear constraints on c feasible, separation holds.
+
+    # Try sampling directions for (a,b):
+    for angle_deg in range(0, 180, 5):  # half circle suffices as negation flips sides
+        a = math.cos(math.radians(angle_deg))
+        b = math.sin(math.radians(angle_deg))
+
+        c_min = max( a*p[0] + b*p[1] + EPS for p in A )  # c <= -max(...)
+        c_max = min( a*q[0] + b*q[1] - EPS for q in B )  # c >= min(...)
+
+        # We want c such that c <= -max_A and c >= min_B for strict inequality:
+        # This means interval: [-max_A, min_B], intersection if -max_A >= min_B
+        # Actually inequalities for c:
+        # For p in A: a*p[0]+b*p[1] + c <= -EPS => c <= -EPS - a*p[0]-b*p[1]
+        # So max c allowed: min over p of ( -EPS - a*p[0]-b*p[1]) = -EPS - max over p (a*p[0]+b*p[1])
+        max_A = max(a*p[0]+b*p[1] for p in A)
+        min_B = min(a*q[0]+b*q[1] for q in B)
+        max_c = -EPS - max_A
+        min_c = EPS - min_B
+        if max_c >= min_c:
+            # feasible c in [min_c, max_c]
+            return True
+    return False
+
+def all_bipartitions(points):
+    n = len(points)
+    # enumerate all pairs of subsets A,B with A∩B=empty, A∪B subset of points, exclude cases where A or B empty
+    # Represent labeling by a ternary mask: for each point: 0=none,1=A,2=B
+    # Exclude points unlabeled as "none".
+    # But problem states A ∪ B = S, so all points are labeled either A or B.
+    # Hence, labelings correspond to sequences in {1,2}^n
+    for labeling in itertools.product([1,2], repeat=n):
+        A = [points[i] for i in range(n) if labeling[i] == 1]
+        B = [points[i] for i in range(n) if labeling[i] == 2]
+        if A and B:
+            yield A,B
+
+def test_points_on_circle(n):
+    # Simple general position: points on unit circle spaced evenly
+    pts = [(math.cos(2*math.pi*i/n), math.sin(2*math.pi*i / n)) for i in range(n)]
+    return pts
+
+def main():
+    print("Testing maximum linearly separable bipartitions L for n=1..5")
+    for n in range(1, 6):
+        pts = test_points_on_circle(n)
+        max_L = 0
+        count_found = 0
+        # enumerate all bipartitions:
+        # Total bipartitions: 2^n but only ones with both A,B nonempty allowed: 2^n - 2
+        # for n=5: 30 labelings - feasible within 400 token output
+        count_OK = 0
+        for A,B in all_bipartitions(pts):
+            if linearly_separable(A,B):
+                count_OK += 1
+                print(f"n={n}, found separable bipartition #{count_OK}")
+        print(f"n={n}, total separable bipartitions: {count_OK}\n")
+
+if __name__ == "__main__":
+    main()
+```

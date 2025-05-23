@@ -1,0 +1,53 @@
+[write_program]
+The problem involves finding the minimal natural number \( n \) such that for every pair of functions \( a, b : \{0, \dots, n-1\} \to \mathbb{Z} \), there is a vector \( x : \{0, \dots, n-1\} \to \mathbb{Z} \) with at least one component coprime to \( m \) satisfying certain modular linear equations. To explore this, we fix some small values of \( m \), and enumerate increasing values of \( n \). For each \( n \), we try to find \( a, b \) functions that fail the condition (or verify all pass), giving conjectures for the minimal \( n \). Due to complexity, we limit the enumeration to small \( m \) and \( n \), and print out candidate \( n \).
+
+```python
+from math import gcd
+from itertools import product
+
+def is_coprime_to_m(x, m):
+    return gcd(x, m) == 1
+
+def check_condition(m, n):
+    # For all a,b: Fin n -> Z within small ranges
+    # Check if exists x: Fin n -> Z with:
+    # 1) at least one x[i] coprime to m
+    # 2) sum_i a[i]*x[i] ≡ 0 mod m
+    # 3) sum_i b[i]*x[i] ≡ 0 mod m
+    # We test the existential condition by brute force over small x's in range [-m,m]
+    # If for any a,b no such x exists, condition fails for this n
+    R = range(-m,m+1)
+    for a in product(range(-1,2), repeat=n):
+        for b in product(range(-1,2), repeat=n):
+            if all(ai==0 for ai in a) and all(bi==0 for bi in b):
+                # trivial a,b=0,0 always satisfied with x=0
+                continue
+            # Try all possible x in R^n
+            found = False
+            for x in product(R, repeat=n):
+                if not any(is_coprime_to_m(xi, m) for xi in x):
+                    continue
+                sum1 = sum(a[i]*x[i] for i in range(n)) % m
+                sum2 = sum(b[i]*x[i] for i in range(n)) % m
+                if sum1 == 0 and sum2 == 0:
+                    found = True
+                    break
+            if not found:
+                # Counterexample a,b found, condition fails
+                return False
+    # Condition holds for all tested a,b
+    return True
+
+def main():
+    ms = [2,3]  # small samples for m>1
+    for m in ms:
+        print(f"Checking m={m}")
+        # Search n from 1 up to a small limit
+        for n in range(1,5):
+            if check_condition(m, n):
+                print(f"Candidate minimal n for m={m}: {n}")
+                break
+
+if __name__ == "__main__":
+    main()
+```

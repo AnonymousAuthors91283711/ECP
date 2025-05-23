@@ -1,0 +1,70 @@
+[write_program]
+The problem is about finding the smallest natural number \( n \geq 5 \) such that there exists an injective function from \( \text{Fin}\ n \) to pairs of integers modulo 4, satisfying a closure condition under addition modulo 4. The function maps indices to pairs \((x,y)\) with \(1 \leq x,y \leq 4\). We want to find the minimal size of such a set with closure under pairwise addition modulo 4.
+
+I'll write a Python program to enumerate possible sets of size \(n\) for \(n=5,6,7,8\) using pairs \((x,y)\) where \(x,y \in \{1,2,3,4\}\), and check whether the closure condition holds:
+
+- For all \(i,j\), there must exist \(k\) with 
+  \[
+  (x_i + x_j - x_k) \equiv 0 \pmod{4}
+  \]
+  and
+  \[
+  (y_i + y_j - y_k) \equiv 0 \pmod{4}.
+  \]
+
+This means \( x_k \equiv x_i + x_j \pmod{4} \), \( y_k \equiv y_i + y_j \pmod{4} \).
+
+We'll generate candidate sets of size \(n\) without repetition and check the property, printing any that satisfy it immediately.
+
+Since the total number of pairs is 16 and \( \binom{16}{n} \) can be large, we test only up to \(n=8\) to keep the output short, and stop after some results or finding minimum \(n\).
+
+```python
+# Enumerate minimal n >=5 for which exists an injective mapping Fin n → pairs (x,y) with x,y in [1..4]
+# satisfying closure under addition modulo 4 in each coordinate.
+# i.e. set P of pairs satisfies: for all a,b in P, (a+b) mod 4 is in P (mod 4 coordinates).
+# We print sets found for n=5..8 and print minimal such n.
+
+from itertools import combinations
+
+MOD = 4
+
+# All pairs (x,y) with 1 <= x,y <=4
+all_pairs = [(x,y) for x in range(1,5) for y in range(1,5)]
+
+def mod4_pair_sum(a,b):
+    # Compute (a+b) mod 4, keeping result in {1,2,3,4}
+    return ((a[0]+b[0]-1) % MOD + 1, (a[1]+b[1]-1) % MOD + 1)
+
+def is_closed(pairs):
+    s = set(pairs)
+    for a in pairs:
+        for b in pairs:
+            c = mod4_pair_sum(a,b)
+            if c not in s:
+                return False
+    return True
+
+min_n = None
+
+for n in range(5,9):
+    print(f"Trying sets of size n={n}")
+    found = 0
+    # Enumerate combinations of pairs of size n
+    for combo in combinations(all_pairs, n):
+        if is_closed(combo):
+            print("Found closed set:", combo)
+            found += 1
+            if min_n is None or n < min_n:
+                min_n = n
+            if found >= 5:
+                # Print up to 5 examples to avoid flooding
+                break
+    if found > 0:
+        print(f"Minimal n found so far: {n}")
+        # We can stop at first found minimal n
+        break
+if min_n is not None:
+    print("Minimal n with required property:", min_n)
+else:
+    print("No closed sets found for n in [5..8]")
+```

@@ -1,0 +1,62 @@
+[write_program]
+This problem is about finding natural numbers a, b, c, d > 0 such that the given equation holds. We'll write a program to enumerate small values of a, b, c, d and check the condition.
+
+The approach is:
+1. Iterate through possible sums s = a+b+c+d up to a reasonable limit
+2. For each s, iterate through possible a+b values (from 2 to s-2)
+3. For each a+b, iterate through possible a values (from 1 to a+b-1)
+4. Similarly for c+d and c
+5. Check if the equation holds for these values
+
+```python
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+def lcm(a, b):
+    return a * b // gcd(a, b)
+
+def check_condition(a, b, c, d):
+    # Left side: a*b/(a+b) + c*d/(c+d)
+    # Right side: (a+b)*(c+d)/(a+b+c+d)
+    # We compare them as fractions to avoid floating point inaccuracies
+    s = a + b + c + d
+    ab = a + b
+    cd = c + d
+    
+    # Left side terms
+    term1_num = a * b
+    term1_den = ab
+    term2_num = c * d
+    term2_den = cd
+    
+    # Common denominator for left side
+    left_den = lcm(term1_den, term2_den)
+    left_num = term1_num * (left_den // term1_den) + term2_num * (left_den // term2_den)
+    
+    # Right side
+    right_num = ab * cd
+    right_den = s
+    
+    # Cross multiply to compare
+    return left_num * right_den == right_num * left_den
+
+max_sum = 50  # Reasonable upper bound for enumeration
+solutions = set()
+
+for s in range(4, max_sum + 1):
+    for ab in range(2, s - 1):
+        cd = s - ab
+        if cd < 2:
+            continue
+        for a in range(1, ab):
+            b = ab - a
+            for c in range(1, cd):
+                d = cd - c
+                if check_condition(a, b, c, d):
+                    solutions.add(s)
+                    print(f"Found solution with s={s}: a={a}, b={b}, c={c}, d={d}")
+
+print("\nObserved possible sums s:", sorted(solutions))
+```

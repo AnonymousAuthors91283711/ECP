@@ -1,0 +1,67 @@
+[write_program]
+I'll create a Python program to enumerate small grid sizes (m,n) and determine which can be tiled by disjoint hooks. A hook is a row plus a column minus their intersection point. The program will check all possible hook arrangements for small grids.
+
+```python
+def is_hook(points, m, n):
+    """Check if a set of points forms a valid hook in m x n grid"""
+    if not points:
+        return False
+    # Find the corner (intersection point)
+    min_row = min(p[0] for p in points)
+    min_col = min(p[1] for p in points)
+    corner = (min_row, min_col)
+    
+    # Check all points are in the same row or column as corner
+    for (r, c) in points:
+        if r != corner[0] and c != corner[1]:
+            return False
+    
+    # Check the hook has at least one point in row and column
+    has_row = any(p[0] == corner[0] for p in points)
+    has_col = any(p[1] == corner[1] for p in points)
+    return has_row and has_col
+
+def can_tile_with_hooks(m, n, used=None, remaining=None):
+    """Recursively check if grid can be tiled with disjoint hooks"""
+    if used is None:
+        used = set()
+        remaining = {(i, j) for i in range(m) for j in range(n)}
+    
+    if not remaining:
+        return True
+    
+    # Try all possible hooks starting from remaining points
+    for start in remaining:
+        # Try horizontal then vertical
+        for direction in ['row', 'col']:
+            # Try all possible hook sizes
+            for size_row in range(1, m - start[0] + 1):
+                for size_col in range(1, n - start[1] + 1):
+                    # Create hook points
+                    hook = set()
+                    for i in range(size_row):
+                        hook.add((start[0] + i, start[1]))
+                    for j in range(size_col):
+                        hook.add((start[0], start[1] + j))
+                    
+                    # Check if valid and disjoint
+                    if is_hook(hook, m, n) and hook.isdisjoint(used):
+                        new_used = used.union(hook)
+                        new_remaining = remaining - hook
+                        if can_tile_with_hooks(m, n, new_used, new_remaining):
+                            return True
+    return False
+
+def main():
+    max_size = 6
+    print("Checking which m×n grids can be tiled with disjoint hooks:")
+    for m in range(1, max_size + 1):
+        for n in range(1, max_size + 1):
+            if can_tile_with_hooks(m, n):
+                print(f"({m}, {n}) can be tiled")
+            else:
+                print(f"({m}, {n}) cannot be tiled")
+
+if __name__ == "__main__":
+    main()
+```

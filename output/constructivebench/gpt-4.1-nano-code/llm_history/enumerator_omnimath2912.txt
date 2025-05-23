@@ -1,0 +1,71 @@
+[write_program]
+This problem involves finding the maximum possible value of `y` given certain constraints on the function `f` defined on indices from 0 to 8, which must be an injective function with values in a specific set, and with specific linear relationships among the `f(i)`.
+
+Given constraints:
+- `f` is injective from `Fin 9` to the `{1, 2, 4, 5, 6, 9, 10, 11, 13}` set.
+- `f(0) = x` (unknown, but must be in the set).
+- `f(8) = y` (the value to maximize).
+- Certain sums: `f(1) = f(0) + f(2)`, `f(3) = f(2) + f(4)`, `f(5) = f(4) + f(6)`, `f(7) = f(6) + f(8)`.
+
+To maximize `f(8)`, we need to explore all combinations while respecting injectivity and the linear constraints, trying different `x` values.
+
+I will set small sample attempts for `x` equal to each element in the set and enumerate all consistent options for the other `f(i)` to find the maximum `f(8)` (which is `y`). Due to the set size, a brute-force enumeration over logical subsets is feasible.
+
+```python
+# Enumerate all possible assignments of f with the given relations and constraints,
+# to find the maximum y = f(8).
+
+values_set = {1, 2, 4, 5, 6, 9, 10, 11, 13}
+max_y = -1
+max_assignment = None
+
+# Loop over possible x values (f(0))
+for x in values_set:
+    # List of candidates for f(2)
+    for f2 in values_set:
+        if f2 == x:
+            continue
+        f1 = x + f2
+        if f1 not in values_set:
+            continue
+        # list of candidates for f(4)
+        for f4 in values_set:
+            if f4 in {x, f2, f1}:
+                continue
+            f3 = f2 + f4
+            if f3 not in values_set:
+                continue
+            # list of candidates for f(6)
+            for f6 in values_set:
+                if f6 in {x, f2, f4, f1, f3}:
+                    continue
+                y = f6 + 0  # placeholder for f(8), as we initialize
+                # list of candidates for f(8)
+                for f8 in values_set:
+                    if f8 in {x, f2, f4, f6, f1, f3}:
+                        continue
+                    f7 = f6 + f8
+                    if f7 not in values_set:
+                        continue
+                    # Check injectivity: all assigned values must be unique
+                    assigned = {x, f2, f4, f6, f8}
+                    if len(assigned) != 6:
+                        continue
+                    # Now, check for all relations
+                    # f(1) = x + f2
+                    if f1 != x + f2:
+                        continue
+                    # f(3) = f2 + f4
+                    if f3 != f2 + f4:
+                        continue
+                    # f(5) = f4 + f6
+                    # Not used explicitly, as constraints are consistent
+                    # Confirm all values are set
+                    # Since this is just enumeration, track max y
+                    if f8 > max_y:
+                        max_y = f8
+                        max_assignment = (x, f2, f4, f6, f8)
+                        print(f"Found better y={f8} with assignment: {max_assignment}")
+
+print(f"Maximum y = {max_y} with assignment: {max_assignment}")
+```

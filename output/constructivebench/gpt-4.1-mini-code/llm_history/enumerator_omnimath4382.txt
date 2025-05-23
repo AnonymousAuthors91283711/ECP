@@ -1,0 +1,55 @@
+[write_program]
+The problem involves enumerating sets of positive integers (card counts) for small values of n to check a condition related to the equality of arithmetic and geometric means over subsets. We will try small n (e.g., 2 and 3), generate possible card assignments, and test if for every pair (i, j), there exists a nonempty subset S with the stated condition holding exactly.
+
+We will print such card assignments where the condition holds, assisting conjecturing that all cards must be equal.
+
+```python
+from itertools import product, combinations
+
+def arithmetic_mean(vals):
+    return sum(vals) / len(vals)
+
+def geometric_mean(vals):
+    prod = 1
+    for v in vals:
+        prod *= v
+    return prod ** (1 / len(vals))
+
+def check_condition(cards):
+    n = len(cards)
+    # For all pairs (i,j), check existence of nonempty subset S ⊆ [0,n), such that:
+    # (cards[i] + cards[j])/2 == geometric_mean(cards over S)
+    for i in range(n):
+        for j in range(n):
+            target = (cards[i] + cards[j]) / 2
+            found = False
+            # Enumerate all nonempty subsets of indices
+            for r in range(1, n+1):
+                for subset in combinations(range(n), r):
+                    vals = [cards[k] for k in subset]
+                    gm = geometric_mean(vals)
+                    # exact equality check for floats; use isclose with strict tolerance
+                    if abs(gm - target) < 1e-12:
+                        found = True
+                        break
+                if found:
+                    break
+            if not found:
+                return False
+    return True
+
+def enumerate_cards(n, max_card):
+    # Generate all n-length tuples of positive integers up to max_card
+    for cards in product(range(1, max_card+1), repeat=n):
+        if check_condition(cards):
+            print(f"n={n} cards={cards}")
+
+def main():
+    print("Checking n=2 with cards up to 5:")
+    enumerate_cards(2, 5)
+    print("Checking n=3 with cards up to 5:")
+    enumerate_cards(3, 5)
+
+if __name__ == "__main__":
+    main()
+```

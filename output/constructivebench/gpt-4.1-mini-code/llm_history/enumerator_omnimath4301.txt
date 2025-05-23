@@ -1,0 +1,50 @@
+[write_program]
+The problem appears to consider natural numbers \(n\) and the length \(N\) of their decimal digit list. For each such sequence of digits of length \(N\), every nonempty sublist \(s\) must have a digit \(d\) occurring exactly once in \(s\). The goal is to find the greatest such \(N\).
+
+This property means every sublist has at least one unique digit (a digit appearing exactly once in that sublist).
+
+We will enumerate lengths \(N\) and check if there's any number \(n\) with digits of length \(N\) satisfying the condition: every nonempty sublist has a unique digit. We try for small lengths and digits to conjecture the greatest possible \(N\).
+
+```python
+# Enumerate all digit sequences of length N and test the unique-digit-in-every-sublist condition.
+def has_unique_digit_in_every_sublist(digits):
+    length = len(digits)
+    # Check all nonempty sublists
+    for start in range(length):
+        for end in range(start+1, length+1):
+            sub = digits[start:end]
+            counts = {}
+            for d in sub:
+                counts[d] = counts.get(d, 0) + 1
+            # Check if some digit appears exactly once
+            if all(v != 1 for v in counts.values()):
+                # No digit with count exactly one found
+                return False
+    return True
+
+def enumerate_answers():
+    from itertools import product
+    max_found = 0
+    # Try lengths from 1 up to 7 (limited for performance)
+    for N in range(1, 8):
+        print(f"Testing length N={N}")
+        found_for_N = False
+        # Digits from 0 to 9, leading digit not zero except when N=1
+        # Generate all sequences of length N
+        start_digits = range(1, 10) if N > 1 else range(0, 10)
+        # For each leading digit
+        for first_digit in start_digits:
+            # All other digits can be 0-9
+            for digits_rest in product(range(10), repeat=N-1):
+                digits = [first_digit] + list(digits_rest)
+                if has_unique_digit_in_every_sublist(digits):
+                    number = int("".join(map(str, digits)))
+                    print(f"N={N} number={number} digits={digits}")
+                    found_for_N = True
+        if found_for_N:
+            max_found = N
+    print(f"Greatest N found: {max_found}")
+
+if __name__ == "__main__":
+    enumerate_answers()
+```

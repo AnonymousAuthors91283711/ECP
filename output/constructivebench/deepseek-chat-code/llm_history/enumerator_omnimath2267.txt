@@ -1,0 +1,56 @@
+[write_program]
+The problem asks for the remainder when (4^2013 - 1) is divided by 210. We need to compute this efficiently without calculating the enormous value of 4^2013 directly. 
+
+The solution involves using the Chinese Remainder Theorem (CRT) since 210 factors into 2×3×5×7. We'll compute 4^2013 mod each of these primes separately, then combine the results.
+
+Here's the Python program that calculates this:
+
+```python
+def crt(a, m):
+    # Chinese Remainder Theorem for pairwise coprime moduli m
+    from math import gcd
+    from functools import reduce
+    
+    def extended_gcd(a, b):
+        if a == 0:
+            return (b, 0, 1)
+        else:
+            g, y, x = extended_gcd(b % a, a)
+            return (g, x - (b // a) * y, y)
+    
+    def modinv(a, m):
+        g, x, y = extended_gcd(a, m)
+        if g != 1:
+            return None  # inverse doesn't exist
+        else:
+            return x % m
+    
+    M = reduce(lambda x, y: x*y, m)
+    total = 0
+    for ai, mi in zip(a, m):
+        Mi = M // mi
+        inv = modinv(Mi, mi)
+        if inv is None:
+            return None
+        total += ai * Mi * inv
+    return total % M
+
+def compute_remainder():
+    # Compute 4^2013 - 1 mod 210 using CRT
+    n = 2013
+    factors = [2, 3, 5, 7]
+    
+    # Compute 4^n mod each factor
+    mods = []
+    for p in factors:
+        # Compute 4^n mod p
+        pow_mod = pow(4, n, p)
+        # Subtract 1 mod p
+        mods.append((pow_mod - 1) % p)
+    
+    # Apply CRT
+    result = crt(mods, factors)
+    print(result)
+
+compute_remainder()
+```

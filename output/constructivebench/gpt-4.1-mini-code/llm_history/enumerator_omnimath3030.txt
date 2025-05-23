@@ -1,0 +1,64 @@
+[write_program]
+The problem involves 5×5 Boolean matrices M with exactly 15 True entries (3 per row and column), and we search for another matrix M' also with 3 True entries per row and column such that the symmetric difference between M and M' has size k. We want the least such k. To explore this, we enumerate matrices with row sums 3, column sums 3, and track symmetric differences for candidate pairs, printing all encountered k values.
+
+Since enumerating all such matrices is large, I will sample a single M with fixed pattern and try candidate M' matrices close to M, output symmetric difference sizes, and track minimal k found.
+
+```python
+from itertools import combinations, permutations
+
+n = 5
+row_sum = col_sum = 3
+
+# Generate one fixed matrix M with 3 ones per row and column
+# Use the permutation (0,1,2,3,4) rotated by i to set ones in each row
+def fixed_matrix():
+    M = [[False]*n for _ in range(n)]
+    base = [0,1,2]
+    for i in range(n):
+        for d in range(row_sum):
+            # For a circulant pattern, (i + d) mod n is chosen columns
+            M[i][(i + d) % n] = True
+    return M
+
+# Given a matrix, return sets of True positions
+def true_positions(M):
+    return {(i,j) for i in range(n) for j in range(n) if M[i][j]}
+
+M = fixed_matrix()
+S = true_positions(M)
+
+# Generate matrices M' with 3 ones per row and column using permutations of columns
+# We'll try permutations of [0,1,2,3,4] selecting first 3 columns per row as True (to approximate)
+# Only permutations of 5 columns with 3 ones row-wise and column-wise is complex, so test permutations of columns to generate M'
+# For each permutation p of columns, let M'[i][p[i]], p[(i+1)%n], p[(i+2)%n] = True (making row sums 3)
+from math import factorial
+
+found_ks = set()
+min_k = None
+
+# We'll try up to 20 permutations of columns as candidates for M'
+for p in permutations(range(n)):
+    # Build M' with rows having ones in p[i], p[(i+1)%n], p[(i+2)%n]
+    M2 = [[False]*n for _ in range(n)]
+    for i in range(n):
+        for d in range(row_sum):
+            j = p[(i+d)%n]
+            M2[i][j] = True
+
+    # Check column sums
+    col_counts = [sum(M2[i][j] for i in range(n)) for j in range(n)]
+    if any(c != col_sum for c in col_counts):
+        continue
+
+    S2 = {(i,j) for i in range(n) for j in range(n) if M2[i][j]}
+    diff = S.symmetric_difference(S2)
+    k = len(diff)
+    print(f"k = {k} for permutation {p}")
+    found_ks.add(k)
+    if min_k is None or k < min_k:
+        min_k = k
+    if len(found_ks) > 10:
+        break
+
+print(f"Minimum symmetric difference k found among tested: {min_k}")
+```

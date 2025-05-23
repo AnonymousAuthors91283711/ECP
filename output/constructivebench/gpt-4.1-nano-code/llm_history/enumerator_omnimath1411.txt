@@ -1,0 +1,58 @@
+[write_program]
+The problem asks for the greatest natural number \( n \) such that \( (2004)! \) divides \( ((n!)!)! \). To approach this, we'll approximate the divisibility condition and enumerate candidate \( n \) values starting from small, verifying divisibility conditions based on factorial prime exponents. We prioritize small samples, since large \( n \) rapidly lead beyond our computational capacity.
+
+We will:
+- Use prime factor exponents to verify divisibility.
+- Iterate \( n \) from a reasonable small point upwards.
+- Stop when divisibility fails, recording the maximum \( n \) that still satisfies the divisibility.
+
+Due to the constraints and the complexity, the code will use an approximation of prime exponent calculations, focusing on key primes dividing \( 2004! \).
+
+```python
+import math
+
+# Function to compute the exponent of prime p in x!
+def prime_factor_exponent(x, p):
+    count = 0
+    div = p
+    while div <= x:
+        count += x // div
+        div *= p
+    return count
+
+# Compute prime factors of 2004! for divisibility
+def factorial_prime_factors(n):
+    # Only consider primes up to n
+    primes = [p for p in range(2, n+1) if all(p % d != 0 for d in range(2, int(p**0.5)+1))]
+    factors = {}
+    for p in primes:
+        exp = prime_factor_exponent(n, p)
+        factors[p] = exp
+    return factors
+
+# Exponent of prime p in ((n!)!)!
+def exponent_in_facination(n, p):
+    # exponent of p in (factorial)! is sum_{k=1}^{floor((n)!/p^k)}
+    # for large factorials, approximate using Legendre's formula
+    return prime_factor_exponent(math.factorial(n), p)
+
+# Precompute prime exponents for 2004!
+target_factors = factorial_prime_factors(2004)
+
+max_n_found = 0
+# test n from some small range up to a threshold
+for n in range(1, 50):  # small sample due to computational complexity
+    n_fact = math.factorial(n)
+    # Now compute exponents in ((n!)!)!
+            # for each prime, check if (n!)! contains enough prime factors
+    satisfies = True
+    for p, required_exp in target_factors.items():
+        exp_in_n_fact_factorial = prime_factor_exponent(n_fact, p)
+        if exp_in_n_fact_factorial < required_exp:
+            satisfies = False
+            break
+    if satisfies:
+        print(n)  # streaming the results
+        max_n_found = n
+print("Maximum n satisfying the conditions:", max_n_found)
+```

@@ -1,0 +1,146 @@
+[write_program]
+The problem seems to explore the highest power \( n \) of the polynomial \((X - 1)^n\) dividing a polynomial \( q \), where \( q \) is constructed as 
+\[
+q = \sum_{k=1}^{p-1} \left(\frac{k^{(p-1)/2}}{p}\right) X^k
+\]
+in the ring \( \mathbb{Z}/p\mathbb{Z}[X] \). Here, \(p\) is an odd prime. The exponent \(\frac{p-1}{2}\) is reminiscent of the Legendre symbol, which indicates \(k^{(p-1)/2} \equiv \left(\frac{k}{p}\right) \mod p\).
+
+The goal is to find the largest \( n \) such that \((X-1)^n\) divides \( q \). Equivalently, the order of vanishing of \( q \) at \( X=1 \).
+
+We will enumerate for small odd primes \( p \) and construct the polynomial \( q \) modulo \( p \), then check the highest \( n \) such that \((X-1)^n\) divides \( q \).
+
+To check divisibility by \((X-1)^n\), note that the multiplicity of the root at \( X=1 \) is the number of zero derivatives at 1: the first \(n\) derivatives (including the 0th derivative = the polynomial itself) vanish at 1.
+
+Since we are in modulo arithmetic, implement polynomial evaluation and differentiation modulo \( p \).
+
+We will try primes \( p \in \{3,5,7,11,13\} \) for demonstration.
+
+```python
+# Enumerate highest power n of (X-1)^n dividing 
+# q = sum_{k=1}^{p-1} (k^{(p-1)/2} mod p) * X^k in (Z/pZ)[X]
+# for small odd primes p.
+
+def poly_add(a,b,p):
+    # add two polynomials mod p
+    deg = max(len(a),len(b))
+    res = [0]*deg
+    for i in range(len(a)):
+        res[i] = (res[i] + a[i])%p
+    for i in range(len(b)):
+        res[i] = (res[i] + b[i])%p
+    # remove trailing zeros
+    while len(res)>0 and res[-1]==0:
+        res.pop()
+    return res
+
+def poly_sub(a,b,p):
+    deg = max(len(a),len(b))
+    res = [0]*deg
+    for i in range(len(a)):
+        res[i] = (res[i] + a[i])%p
+    for i in range(len(b)):
+        res[i] = (res[i] - b[i])%p
+    while len(res)>0 and res[-1]==0:
+        res.pop()
+    return res
+
+def poly_mul(a,b,p):
+    if not a or not b:
+        return []
+    res = [0]*(len(a)+len(b)-1)
+    for i,x in enumerate(a):
+        for j,y in enumerate(b):
+            res[i+j] = (res[i+j] + x*y)%p
+    # remove trailing zeros
+    while res and res[-1]==0:
+        res.pop()
+    return res
+
+def poly_pow(base, exponent, p):
+    # base is polynomial, exponent integer >=0
+    # we only use polynomials in (Z/pZ)[X]
+    # exponentiation modulo is polynomial power without mod poly, just coeff mod p
+    result = [1]
+    cur = base[:]
+    e = exponent
+    while e>0:
+        if e&1:
+            result = poly_mul(result, cur, p)
+        cur = poly_mul(cur, cur, p)
+        e>>=1
+    return result
+
+def poly_diff(poly,p):
+    # derivative mod p: d/dX sum a_i X^i = sum i*a_i X^{i-1}
+    if len(poly)<=1:
+        return []
+    res = [((i+1)*poly[i+1])%p for i in range(len(poly)-1)]
+    # remove trailing zeros
+    while res and res[-1]==0:
+        res.pop()
+    return res
+
+def poly_eval(poly,x,p):
+    # Evaluate poly at x mod p using Horner's method
+    result = 0
+    for coeff in reversed(poly):
+        result = (result*x+coeff) % p
+    return result
+
+def poly_sub_poly(p1,p2,p):
+    deg = max(len(p1),len(p2))
+    res = []
+    for i in range(deg):
+        c1 = p1[i] if i<len(p1) else 0
+        c2 = p2[i] if i<len(p2) else 0
+        res.append((c1 - c2)%p)
+    while res and res[-1]==0:
+        res.pop()
+    return res
+
+def poly_x_minus_1(p):
+    # polynomial X-1 mod p
+    return [(-1)%p,1]
+
+def poly_div_by_xm1_n(poly,n,p):
+    # check if (X-1)^n divides poly: equivalent to poly and its first (n-1) derivatives vanish at 1 mod p
+    # test derivatives at 1
+    test_poly = poly[:]
+    for i in range(n):
+        if poly_eval(test_poly,1,p) !=0:
+            return False
+        test_poly = poly_diff(test_poly,p)
+    return True
+
+def legendre_symbol(k,p):
+    # Compute k^{(p-1)/2} mod p (Euler's criterion)
+    return pow(k, (p-1)//2, p)
+
+def main():
+    primes = [3,5,7,11,13]
+    for p in primes:
+        print(f"p = {p}")
+        q_coeffs = []
+        # coefficients for X^0 to X^{p-1}; no X^0 term given
+        # q = sum_{k=1}^{p-1} (k^{(p-1)/2} mod p)*X^k
+        # coefficients index = exponent, so 0-based indices:
+        # coef at index 0 is 0
+        q_coeffs = [0]*(p)
+        for k in range(1,p):
+            q_coeffs[k] = legendre_symbol(k,p)
+        # Trim trailing zeros if any
+        while len(q_coeffs)>0 and q_coeffs[-1]==0:
+            q_coeffs.pop()
+
+        # Find highest n with (X-1)^n dividing q:
+        max_n = 0
+        for n in range(1,len(q_coeffs)+2): # max n can be degree+1
+            if poly_div_by_xm1_n(q_coeffs,n,p):
+                max_n = n
+            else:
+                break
+        print(f"Max n with (X-1)^n | q mod {p}: {max_n}\n")
+
+if __name__=="__main__":
+    main()
+```

@@ -1,0 +1,133 @@
+[write_program]
+The problem is to count the number of functions \(a : \{0,1,2,3,4\} \to \mathbb{Z}\) satisfying two conditions:
+
+1. For each \(i\), \(a(i) \leq i\).
+2. The function \(a\) is nondecreasing (if \(i\le j\), then \(a(i) \le a(j)\)).
+
+We want the cardinality of the set of all such \(a\).
+
+Key observations:
+- Since \(a(i) \le i\), the possible values at \(i\) are integers \(\le i\).
+- The function is nondecreasing, so \(a(0) \le a(1) \le \dots \le a(4)\).
+- Also, for all \(i\), \(a(i) \le i\), so the values are restricted above by the index.
+- Values \(a(i)\) can be negative or zero or positive, but bounded by \(i\).
+
+This is equivalent to counting all monotone (nondecreasing) integer sequences \((a_0,a_1,a_2,a_3,a_4)\) with \(a_i \le i\).
+
+Since \(a_0 \le 0\), \(a_1 \le 1\), etc., but the monotonicity means \(a_0 \le a_1 \le a_2 \le a_3 \le a_4\).
+
+We have to count integer sequences with these constraints.
+
+Approach:
+Enumerate all sequences \(a\) where \(-M \le a_i \le i\), for some finite large enough \(M\). Since monotone nondecreasing and bounded above by \(i\), minimal value (lowest \(a_0\)) is \(-\infty\) theoretically, but since sequences have to be bounded by \(i\), and monotone, the minimal might be much lower.
+
+However, given \(a_4 \le 4\), and monotone increasing, the minimum \(a_0 \le a_1 \le \cdots \le a_4 \le 4\).
+
+Also, \(a_0 \le 0\), so the lower bound for \(a_0\) can be as low as needed, but with \(a_4 \le 4\), \(a_0 \le a_4\), so \(a_0\) can be as low as we want (unbounded below) unless we restrict somehow.
+
+But since \(a_i \in \mathbb{Z}\), and we want to count such sequences, is the set finite?
+
+If no restriction on lower bound of \(a_i\), the set is infinite because we could choose all \(a_i = -N \) for arbitrary large \(N\).
+
+But the problem's statement specifies that the function is from Fin 5 (finite set) into \(\mathbb{Z}\) with the conditions, so unless the problem context is within Lean's typeclass finiteness, the actual set is infinite.
+
+But the problem states `.ncard` meaning the finite cardinality of the set is equal to omnimath3311_answer.
+
+So clearly the problem is that the functions are from Fin 5 to \(\mathbb{Z}\) with conditions \(a_i \le i\) and \(a_i \le a_j\) for \(i \le j\).
+
+Hence \(a_i \le i\) means \(a_i\) is bounded above by \(i\), but not bounded below. If no lower bound then infinite.
+
+Maybe the problem context requires \(a_i\) also to be in \(\le i\) but monotone increasing, so the minimal allowed values must satisfy \(a_0 \le 0\), \(a_1 \le 1\), etc. But monotone increasing means \(a_0 \le a_1 \le a_2 \le a_3 \le a_4\).
+
+Combining, since \(a_4 \le 4\), all \(a_i \le 4\), and furthermore \(a_i \le i\), so actually \(a_i \le \min(4,i)\) which is just \(i\).
+
+Since the sequence is monotone increasing, then every \(a_i \ge a_0\).
+
+We can try an alternate reformulation:
+
+All sequences \(a_0 \le a_1 \le \cdots \le a_4\) of integers with \(a_i \le i\).
+
+Since monotone increasing, \(a_0 \le a_1 \le \cdots \le a_4 \le 4\). Also, for each \(i\), \(a_i \le i\). So \(a_i \le i\) is an upper bound putting a ceiling on \(a_i\).
+
+Hence \(a_0 \le 0\), \(a_1 \le 1\), ..., \(a_4 \le 4\).
+
+Since the sequence is monotone increasing, the lower value \(a_0\) is unbounded below, so infinite possible sequences unless we restrict to only integer values \(\ge -\infty\), but since no lower bound, it's infinite set.
+
+Hence the problem must have an implicit assumption that these functions have codomain within \(Z\) and also presumably bounded below by \(-\infty\).
+
+But the enumeration of the problem would be impossible without bounds.
+
+Therefore, likely the problem assumes \(a_i \ge 0\) or something else implicit.
+
+Given it is a Lean mathlib problem and the cardinality is finite, it is likely that \(a_i\) must be between \(-\infty\) and \(i\), but order monotone, so actually the only possible values for \(a_i\) are integers in \(\le i\), but since \(a_i\) can't decrease, minimal value of \(a_0\) bounded below by \(-\infty\), so infinite.
+
+Hence best to test with finite range from minimal value \(-5\) up to maximum \(4\) and count sequences satisfying the monotonicity and upper bounds.
+
+We expect sequences \(a = (a_0,\dots,a_4)\) where:
+
+- \(a_0 \in [-5,0]\), \(a_1 \in [-5,1]\), ..., \(a_4 \in [-5,4]\)
+- \(a_0 \le a_1 \le \cdots \le a_4\)
+- \(a_i \le i\)
+
+Enumerate all such sequences and count.
+
+Let's write code to do that.
+
+We pick minimal integer comparator = -5 for efficiency.
+
+The code will enumerate all increasing 5-tuples with \(a_i \le i\), \(a_i \ge -5\), and monotone nondecreasing.
+
+Print all such sequences as we find them, and then print the count.
+
+To reduce verbosity, only print the sequences, then final count.
+
+```python
+# Python program to enumerate all integer sequences a: {0..4} -> Z
+# such that a_i ≤ i and a_0 ≤ a_1 ≤ ... ≤ a_4
+# We'll consider a_i ∈ [-5..i] to have finite enumeration
+
+def main():
+    min_val = -5
+    count = 0
+    for a0 in range(min_val, 1):   # a0 ≤ 0
+        for a1 in range(max(a0, min_val), 2):  # a1 ≥ a0, a1 ≤ 1
+            for a2 in range(max(a1, min_val), 3):  # a2 ≤ 2
+                for a3 in range(max(a2, min_val), 4):  # a3 ≤ 3
+                    for a4 in range(max(a3, min_val), 5):  # a4 ≤4
+                        # Check a_i ≤ i is guaranteed by range caps
+                        seq = (a0,a1,a2,a3,a4)
+                        print(seq)
+                        count += 1
+    print("Total sequences counted:", count)
+
+if __name__ == "__main__":
+    main()
+```
+
+This prints sequences followed by total count so we can conjecture the formula for the number of such functions.
+
+We expect the count to match omnimath3311_answer.
+
+---
+
+Final code satisfies problem requirements: print partial results immediately, no hardcoded final answer, efficient enumeration with pruning.  
+The output is limited by the size of output tokens, so minimal printing per sequence and count only.
+
+```python
+# count nondecreasing integer sequences a0..a4 where a_i ≤ i, a_i ≥ -5 (to keep finite)
+def main():
+    min_val = -5
+    count = 0
+    for a0 in range(min_val, 1):   # a0 ≤ 0
+        for a1 in range(max(a0, min_val), 2):  # a1 ≤1
+            for a2 in range(max(a1, min_val), 3):  # a2 ≤2
+                for a3 in range(max(a2, min_val), 4):  # a3 ≤3
+                    for a4 in range(max(a3, min_val), 5):  # a4 ≤4
+                        seq = (a0, a1, a2, a3, a4)
+                        print(seq)
+                        count += 1
+    print("Total sequences counted:", count)
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,63 @@
+[write_program]
+The problem involves a function \( f:\mathbb{R} \to \mathbb{R} \) positive on positives and satisfying a complicated functional equation involving triple products and square roots, plus strict monotonicity. We want to explore candidates \( f \) possibly parameterized by some \( k > 0 \), so we try sample values of \( x,y,z \) and check which forms of \( f \) satisfy the identity. A natural approach is to test candidates of form \( f(x) = x^a \) or \( f(x) = k \cdot x^a \) for some \( a,k >0 \), and enumerate samples to see what fits best.
+
+We will:
+- Enumerate \( k \) and \( a \) over a small range (rational fractions for test)
+- Check if the functional equation holds approximately on chosen sample triples \((x,y,z)\)
+- Print exact formulas found that satisfy the equation up to small numerical deviations
+
+```python
+import math
+
+# Enumerate candidates f(x) = k * x^a with k,a in small ranges
+def f(x,k,a):
+    return k * (x**a)
+
+# Check the functional equation on given triples:
+# f(xyz) + f(x) + f(y) + f(z) ?= f(sqrt(xy)) * f(sqrt(yz)) * f(sqrt(zx))
+def check_eq(k,a, samples, tol=1e-9):
+    for x,y,z in samples:
+        lhs = f(x*y*z,k,a) + f(x,k,a) + f(y,k,a) + f(z,k,a)
+        rhs = (f(math.sqrt(x*y),k,a) * f(math.sqrt(y*z),k,a) * f(math.sqrt(z*x),k,a))
+        if abs(lhs - rhs) > tol:
+            return False
+    return True
+
+# Generate test triples with positive real numbers > 0,
+# simple integers and fractions for coverage
+samples = [
+    (1,1,1),
+    (1,2,3),
+    (2,2,2),
+    (1.5,2.5,3.5),
+    (0.5,1.5,2.5),
+]
+
+print("Enumerating candidates f(x) = k * x^a with k,a in {0.5,1,1.5,2}")
+
+for k_mul in [0.5,1,1.5,2]:
+    for a_pow in [0.5,1,1.5,2]:
+        if check_eq(k_mul,a_pow,samples):
+            # Print exact formula candidate if it fits all samples well
+            # Use rational fraction if a_pow matches common roots
+            print(f"Candidate found: f(x) = {k_mul} * x^{a_pow}")
+            # Since no approximations are output, this is the exact form
+
+# Trying k=1, since hpos and monotonicity suggests k>0 and positive exponent a works best
+# Test a=1 (identity), a=0.5 (sqrt), a=2 (square)
+print("Checking simple powers with k=1:")
+for a_pow in [0.5,1,2]:
+    if check_eq(1,a_pow,samples):
+        print(f"Candidate found: f(x) = x^{a_pow}")
+
+# Report extremal candidate (smallest positive a) found
+found_as = [0.5,1,1.5,2]
+valid_as = []
+for a_pow in found_as:
+    if check_eq(1,a_pow,samples):
+        valid_as.append(a_pow)
+if valid_as:
+    min_a = min(valid_as)
+    print(f"Minimal exponent a for valid f(x) = x^a with k=1: {min_a}")
+```
+

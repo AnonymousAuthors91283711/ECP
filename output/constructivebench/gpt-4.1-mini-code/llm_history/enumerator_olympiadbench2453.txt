@@ -1,0 +1,88 @@
+[write_program]
+The problem is about partitioning the set {1, ..., n} (with n even and less than 100) into three disjoint subsets A, B, C such that:
+- A contains only odd numbers,
+- B contains only even numbers,
+- C contains only multiples of 3,
+- the union of the three sets equals the full set {1,...,n},
+- the sums of elements in A, B, and C are all equal.
+
+We want to find for which n such a partition exists, i.e., enumerate all n < 100 even satisfying this property.
+
+The code will:
+- iterate over even n from 2 to 98,
+- list the odds, evens, and multiples of 3 up to n,
+- try to find partitions A in odds, B in evens, C in multiples of 3, disjoint and covering 1..n,
+- with equal sums.
+
+Due to complexity, we approximate by enumerating subsets of one category and deducing others by set differences.
+
+We will:
+- For each n even < 100:
+  - Compute total sum sum_total = n(n+1)/2.
+  - Each sum should be sum_total/3 (check divisibility).
+  - Extract digits sets.
+  - Enumerate subsets A from odds with sum target.
+  - For each such A, attempt to find B subset of evens with sum target and disjoint from A.
+  - Then check if C = full set minus A and B equals the multiples of 3 and sum to target.
+If any such triple partition is found, print n.
+
+Because full search is expensive, limit sizes or use pruning heuristics.
+
+```python
+# Enumerate even n<100 where {1..n} can be partitioned into sets A,B,C:
+# A odd numbers, B even numbers, C multiples of 3,
+# disjoint, covering whole set, sums equal.
+
+from itertools import combinations
+
+def subsets_with_sum(lst, target):
+    # Generate subsets of lst with sum exactly target
+    # To limit output, only search subsets up to half the length
+    for r in range(0, len(lst)+1):
+        for combo in combinations(lst, r):
+            if sum(combo) == target:
+                yield set(combo)
+
+def can_partition(n):
+    total = n*(n+1)//2
+    # sum must be divisible by 3 for equal sums
+    if total % 3 != 0:
+        return False
+    target = total // 3
+    full_set = set(range(1, n+1))
+    odds = [x for x in range(1, n+1) if x % 2 == 1]
+    evens = [x for x in range(1, n+1) if x % 2 == 0]
+    multiples3 = [x for x in range(1, n+1) if x % 3 == 0]
+
+    # For efficiency, build sets
+    odds_set = set(odds)
+    evens_set = set(evens)
+    mult3_set = set(multiples3)
+
+    # Enumerate A subsets of odds with sum=target
+    for A in subsets_with_sum(odds, target):
+        # B must be subset of evens disjoint from A
+        remain_for_B = evens_set - A
+        remain_for_C = full_set - A
+        # Enumerate B subsets from remain_for_B with sum=target
+        B_list = list(remain_for_B)
+        for B in subsets_with_sum(B_list, target):
+            C = full_set - A - B
+            if C == mult3_set and sum(C) == target:
+                print(f"n={n}, A={sorted(A)}, B={sorted(B)}, C={sorted(C)}")
+                return True
+    return False
+
+def main():
+    print("Testing n (even) from 2 to 98:")
+    found = []
+    for n in range(2, 100, 2):
+        if can_partition(n):
+            found.append(n)
+    print("Values of n with valid partition:", found)
+    if found:
+        print("Minimal n with such partition:", min(found))
+
+if __name__ == "__main__":
+    main()
+```

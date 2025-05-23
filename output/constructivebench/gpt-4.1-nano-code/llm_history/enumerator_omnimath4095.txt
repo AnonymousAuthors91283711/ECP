@@ -1,0 +1,88 @@
+[write_program]
+This problem appears to involve graphs, degrees, and triangles in a complete or extremal setting, likely related to combinatorics or graph theory. The theorem asserts that for a sufficiently large n (at least 3), a certain minimal k (the function `omnimath4095_answer n`) satisfies that *any* n-vertex graph with constant degree k must contain a triangle (i.e., a set of three mutually adjacent vertices).
+
+To explore the candidates for `omnimath4095_answer n`, I will:
+- Focus on small values of n, say n = 3, 4, 5, 6.
+- Generate all regular graphs with degrees from 0 up to n-1.
+- For each, check if the graph contains a triangle.
+- Find the minimal degree k where the condition holds.
+
+Given the constraints, I will:
+- Use small n for feasible enumeration.
+- Generate graphs via adjacency matrices or edge sets.
+- Confirm the existence of the triangle (complete subgraph of size 3).
+
+Here's the code implementing this:
+
+```python
+import itertools
+
+def generate_graphs(n, degree):
+    """
+    Generate all n-vertex regular simple graphs with degree 'degree'.
+    Return as adjacency lists.
+    """
+    vertices = range(n)
+    # Generate all possible edges
+    all_edges = list(itertools.combinations(vertices, 2))
+    # Generate all subsets of edges with total number equal to n*degree/2 (since sum of degrees = 2 * edges)
+    num_edges = n * degree // 2
+    for edges in itertools.combinations(all_edges, num_edges):
+        # Check if edges form a regular graph of degree 'degree'
+        degree_count = {v: 0 for v in vertices}
+        adj = {v: set() for v in vertices}
+        valid = True
+        for (u, v) in edges:
+            adj[u].add(v)
+            adj[v].add(u)
+            degree_count[u] += 1
+            degree_count[v] += 1
+        if all(c == degree for c in degree_count.values()):
+            yield adj
+
+def contains_triangle(adj):
+    """
+    Check if the graph represented by adjacency dict contains a triangle.
+    """
+    for v in adj:
+        neighbors = adj[v]
+        for u, w in itertools.combinations(neighbors, 2):
+            if u in adj[w]:
+                return True
+    return False
+
+def find_min_degree_with_triangle(n, max_degree):
+    """
+    For each degree from 0 to max_degree, generate all regular graphs and check for triangles.
+    Return the minimal degree k where all such graphs contain a triangle.
+    """
+    for k in range(max_degree + 1):
+        all_graphs = list(generate_graphs(n, k))
+        # If there are no graphs at this degree, skip
+        if not all_graphs:
+            continue
+        # Check if all graphs with degree k contain a triangle
+        if all(contains_triangle(adj) for adj in all_graphs):
+            print(f"For n={n}, degree={k}, all graphs contain a triangle.")
+            return k
+        else:
+            print(f"For n={n}, degree={k}, not all graphs contain a triangle.")
+    return None
+
+# Test small parameters
+n_values = [3, 4, 5]
+for n in n_values:
+    max_deg = n - 1
+    limit_deg = min(n - 1, 4)  # Limit to small degrees for efficiency
+    answer = find_min_degree_with_triangle(n, limit_deg)
+    print(f"Minimum degree for n={n} ensuring a triangle: {answer}")
+```
+
+This code:
+- Enumerates all regular graphs for small n and degrees.
+- Checks for the presence of a triangle.
+- Finds the minimal degree k such that all such graphs contain a triangle.
+
+Because enumeration grows rapidly, I limit degrees to a small value (up to 4) for feasibility. This can help conjecture the exact extremal degree for different n, which likely matches known extremal graph theory results for triangles in regular graphs.
+
+The approach streams results line-by-line during the checking process, supporting the intent to explore possible answers efficiently.

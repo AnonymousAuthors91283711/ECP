@@ -1,0 +1,52 @@
+[write_program]
+The problem involves characterizing primes \( p \) for which there exists a function \( f : \mathbb{Z} \to \mathbb{Z} \) with period \( p \) (i.e., \( f(x+p) = f(x) \)) such that for all integers \( x \), the value \( f(x + f(x)) - x \) is divisible by \( p \).
+
+To investigate this, we'll enumerate small primes \( p \) and try to find some function \( f \) with the given properties. Since \( f \) is periodic modulo \( p \), it suffices to consider the values of \( f \) on the set \( \{ 0, 1, ..., p-1 \} \).
+
+This is a complex combinatorial problem, so we'll simplify by:
+- Trying all functions \( f: \{0,...,p-1\} \to \{0,...,p-1\} \),
+- Checking periodicity is automatic by construction,
+- Checking the condition \( (f(x + f(x)) - x) \mod p = 0 \) for all \( x \in \{0,...,p-1\} \).
+
+We will consider small primes \( p \leq 7 \) for feasibility:
+- Primes to test: 2, 3, 5, 7
+- The domain and codomain for \( f \) are both \( \{0,...,p-1\} \).
+- For each function, check the condition and print \( p \) and one such function found.
+
+The output will print the prime and one \( f \) for which the condition holds, when found. This enumeration supports conjecturing the nature of the primes that satisfy the theorem.
+
+```python
+from itertools import product
+
+def check_condition(p, f):
+    # f is a list of length p with values in [0,p-1]
+    # Check for all x in [0,p-1]:
+    # f( (x + f(x)) mod p ) - x mod p == 0
+    for x in range(p):
+        y = (x + f[x]) % p
+        if (f[y] - x) % p != 0:
+            return False
+    return True
+
+def main():
+    primes = [2,3,5,7]
+    print("Enumerating primes and functions f: Z->Z mod p to find solutions.")
+    for p in primes:
+        print(f"Trying prime p={p}")
+        domain = range(p)
+        codomain = range(p)
+        found = False
+        # Enumerate all functions f: domain -> codomain
+        # Total functions = p^p (e.g. 7^7=823543, feasible)
+        for f_tuple in product(codomain, repeat=p):
+            if check_condition(p, f_tuple):
+                print(f"Prime {p} admits such a function f: {f_tuple}")
+                found = True
+                break  # Just print one example per prime for brevity
+        if not found:
+            print(f"No function f found for prime {p}")
+    print("Enumeration complete.")
+
+if __name__=="__main__":
+    main()
+```

@@ -1,0 +1,42 @@
+[write_program]
+The problem counts paths on a 6x6 grid (from (0,0) to (5,5)) taking steps right, up, or diagonally up-right, with no sequences of three points forming a right angle. To explore, the program enumerates such 11-step paths, printing each valid path it finds. The "no right angle" rule forbids consecutive moves that turn sharply at a grid point making a right angle.
+
+We enumerate all sequences of length 11 starting at (0,0) and ending at (5,5), where each move increments coordinates by (1,0), (0,1), or (1,1). We prune paths violating the no right angle condition early. Due to combinatorial explosion, we limit depth-first search with pruning to keep output manageable.
+
+```python
+# Enumerate 11-step paths from (0,0) to (5,5) using moves R=(1,0), U=(0,1), D=(1,1),
+# without forming any right angle in three consecutive points.
+# Print each valid full path found.
+
+moves = [(1,0),(0,1),(1,1)]
+target = (5,5)
+length = 11  # number of points = 11
+
+def is_right_angle(p1, p2, p3):
+    # Check if segments p1->p2 and p2->p3 form a right angle
+    # Vectors
+    v1 = (p2[0]-p1[0], p2[1]-p1[1])
+    v2 = (p3[0]-p2[0], p3[1]-p2[1])
+    # Dot product zero means right angle
+    return v1[0]*v2[0] + v1[1]*v2[1] == 0
+
+def search(path):
+    if len(path) == length:
+        if path[-1] == target:
+            print(path)
+        return
+    p = path[-1]
+    for dx,dy in moves:
+        np = (p[0]+dx, p[1]+dy)
+        if np[0] > target[0] or np[1] > target[1]:
+            continue
+        # Check no right angle for last three points if length >=3
+        if len(path) >= 2:
+            if is_right_angle(path[-2], path[-1], np):
+                continue
+        search(path + [np])
+
+print("Enumerating paths with no right angle, moves R,U,D:")
+search([(0,0)])
+```
+This code prints each full valid path immediately upon discovery, supporting conjectures or proofs about the count or structure of such paths.

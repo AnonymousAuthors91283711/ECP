@@ -1,0 +1,90 @@
+[write_program]
+The problem is to find the number of natural numbers \( n > 1 \) such that \( n \) divides \( x^{13} - x \) for all integers \( x > 0 \).
+
+This is a classic problem related to modular arithmetic and number theory, where we want to find all positive integers \( n > 1 \) dividing \( x^{13} - x \) for all \( x \in \mathbb{Z}^+ \).
+
+Given the difficulty, we can approach it by enumerating possible divisors \( n \), testing the divisibility condition for multiple values of \( x \), and using the fact that the divisibility must hold for all \( x \). 
+
+Since \( n \) divides \( x^{13} - x \) for all \( x \) implies \( n \) divides \( x^{13} - x \) in modular arithmetic, these \( n \) are divisors of the so-called universal exponent expression.
+
+One can use that \( x^{13} \equiv x \pmod n \) for all \( x \). Such \( n \) are divisors of the fixed polynomial that vanishes on all residues mod \( n \), often related to the fact that the polynomial \( x^{13} - x \) factorizes into linear factors over finite fields of characteristic \( p \).
+
+We'll enumerate possible \( n \) up to a certain bound, check the condition using small values of \( x \), and then attempt to find candidates.
+
+```python
+# Enumerate natural numbers n>1 such that n divides x^13 - x for all x>0.
+
+# Since checking for all x is impossible, test many x in a sample to conjecture.
+# Also, from number theory: such n must divide the product of primes p where p-1 divides 13, or p=13.
+
+# We'll test n up to 200 for efficiency.
+
+def divides_all_x(n, max_x=20):
+    # Check if n divides x^13 - x for all x in 1..max_x
+    for x in range(1, max_x+1):
+        val = pow(x, 13, n) - x
+        if val % n != 0:
+            return False
+    return True
+
+def prime_factors(n):
+    i = 2
+    factors = set()
+    while i*i <= n:
+        while n % i == 0:
+            factors.add(i)
+            n //= i
+        i += 1
+    if n > 1:
+        factors.add(n)
+    return factors
+
+def lcm(a, b):
+    from math import gcd
+    return a * b // gcd(a, b)
+
+# By Fermat's little theorem and properties of the polynomial,
+# all prime divisors p of such n must satisfy p | 13 or p-1 divides 13.
+
+# 13 is prime. Divisors of 13 are 1 and 13.
+
+# So p = 13 or p-1 divides 13 => p-1 in {1,13} => p in {2,14} (14 not prime)
+# So primes p are 2 or 13.
+
+# Since 2 and 13 are prime factors, candidates are products of powers of 2 and 13.
+
+# Let's test powers of 2 and 13 up to 200
+
+powers_2 = [2**i for i in range(1, 8) if 2**i <= 200]
+powers_13 = [13**i for i in range(1, 3) if 13**i <= 200]
+
+# Now combine powers of 2 and 13 within 200
+candidates = set()
+for p2 in powers_2:
+    candidates.add(p2)
+for p13 in powers_13:
+    candidates.add(p13)
+for p2 in powers_2:
+    for p13 in powers_13:
+        val = p2 * p13
+        if val <= 200:
+            candidates.add(val)
+
+candidates = sorted(candidates)
+
+print("Candidates n where n divides x^13 - x for many x:")
+for n in candidates:
+    if divides_all_x(n, max_x=20):
+        print(n)
+
+# Output the total count of such n up to 200
+valid = [n for n in candidates if divides_all_x(n, max_x=20)]
+print("Total valid n up to 200:", len(valid))
+
+# The minimal such n > 1 is likely 2 (since 2 divides x^13 - x for all x)
+# The maximal such n up to 200 (from candidates) will be the largest in valid list
+if valid:
+    print("Minimal valid n:", min(valid))
+    print("Maximal valid n:", max(valid))
+```
+

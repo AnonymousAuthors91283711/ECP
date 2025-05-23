@@ -1,0 +1,72 @@
+[write_program]
+The problem is about finding real values \( a,b,c \geq 1 \) and \( x,y,z > 0 \) satisfying the system:
+
+\[
+\begin{cases}
+a^x + b^y + c^z = 4 \\
+x a^x + y b^y + z c^z = 6 \\
+x^2 a^x + y^2 b^y + z^2 c^z = 9
+\end{cases}
+\]
+
+and among those solutions, we want to find the maximum possible \( c \).
+
+We will enumerate values of \( c \) starting from 1 to some upper bound, sample \( a, b \), and solve for \( x,y,z \) using numerical root-finding methods to check solutions. We print all candidates found with their parameters along with the corresponding \( c \). We prioritize exact values if we find exact matches, otherwise print approximations.
+
+```python
+# enumerator.py
+import math
+from itertools import product
+from scipy.optimize import root
+
+def f(vars, a, b, c):
+    x, y, z = vars
+    A = a**x
+    B = b**y
+    C = c**z
+    return [
+        A + B + C - 4,
+        x * A + y * B + z * C - 6,
+        x**2 * A + y**2 * B + z**2 * C - 9
+    ]
+
+def near(a, b, tol=1e-6):
+    return abs(a - b) < tol
+
+def try_solve(a, b, c):
+    # Initial guess (1,1,1)
+    sol = root(f, [1.0, 1.0, 1.0], args=(a,b,c))
+    if sol.success:
+        x,y,z = sol.x
+        # Check positivity
+        if x>0 and y>0 and z>0:
+            # Verify equations numerically
+            r = f((x,y,z),a,b,c)
+            if all(abs(v)<1e-6 for v in r):
+                return (a,b,c,x,y,z)
+    return None
+
+def main():
+    print("Enumerating candidates of (a,b,c,x,y,z) satisfying system:")
+    candidates = []
+    c_vals = [1.0 + i*0.25 for i in range(9)]  # c from 1 to 3 by 0.25
+    a_b_vals = [1.0, 1.5, 2.0]
+
+    for c in c_vals:
+        for a,b in product(a_b_vals, repeat=2):
+            res = try_solve(a,b,c)
+            if res:
+                a_,b_,c_,x_,y_,z_ = res
+                print(f"Found solution: a={a_:.4f}, b={b_:.4f}, c={c_:.4f}, x={x_:.4f}, y={y_:.4f}, z={z_:.4f}")
+                candidates.append((c_, a_, b_, x_, y_, z_))
+
+    # Find max c
+    if candidates:
+        c_max = max(c for c, *_ in candidates)
+        print(f"Maximum c found: {c_max:.4f}")
+    else:
+        print("No solutions found with tested parameters.")
+
+if __name__ == "__main__":
+    main()
+```

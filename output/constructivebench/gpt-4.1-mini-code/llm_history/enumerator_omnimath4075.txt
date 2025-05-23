@@ -1,0 +1,77 @@
+[write_program]
+The problem involves partitioning the set {0, 1, ..., n-1} into p disjoint subsets (where p is prime), each with equal sum. The goal is to explore when this is possible, likely characterizing the pairs (n, p) for which such a partition exists.
+
+We'll write a Python program to experiment with small n and prime p values, checking if the set {0, ..., n-1} can be partitioned into p subsets with equal sums. The program will print all such (n, p) pairs it finds where this is possible, for small ranges of n and p.
+
+```python
+from itertools import combinations
+from math import isqrt
+
+def is_prime(x):
+    if x < 2:
+        return False
+    for i in range(2, isqrt(x) + 1):
+        if x % i == 0:
+            return False
+    return True
+
+def partition_equal_sum(n, p):
+    # sum of 0..n-1
+    total = n*(n-1)//2
+    if total % p != 0:
+        return False  # sum must be divisible by p
+    target = total // p
+    elements = list(range(n))
+    
+    # Try to find p disjoint subsets each summing to target
+    # This is a complex problem; use backtracking with early pruning
+    
+    used = [False]*n
+    
+    def backtrack(k):
+        if k == p:
+            return all(used)
+        # find next unused element as start
+        start = 0
+        while start < n and used[start]:
+            start += 1
+        if start == n:
+            return False
+        
+        # try subsets containing elements starting at start that sum to target
+        # To reduce complexity, consider only subsets including 'start'
+        def find_subset(curr_sum, idx, subset):
+            if curr_sum == target:
+                # mark subset used and recurse:
+                for x in subset:
+                    used[x] = True
+                if backtrack(k+1):
+                    return True
+                for x in subset:
+                    used[x] = False
+                return False
+            if curr_sum > target or idx == n:
+                return False
+            # try including idx if unused
+            if not used[idx]:
+                if find_subset(curr_sum + elements[idx], idx+1, subset + [idx]):
+                    return True
+            # try excluding idx
+            return find_subset(curr_sum, idx+1, subset)
+        
+        return find_subset(0, start, [])
+    
+    return backtrack(0)
+
+# Enumerate small n and prime p, n up to 12, p primes up to 7 (small for speed)
+primes = [2,3,5,7]
+print("Checking partitions of {0..n-1} into p equal-sum subsets:")
+for p in primes:
+    print(f"Prime p={p}")
+    for n in range(p, 13):  # n≥p to partition into p subsets
+        if partition_equal_sum(n, p):
+            print(f"n={n}, p={p} => Possible equal-sum partition")
+
+# The program prints all discovered (n,p) where partition exists (likely equivalent to omnimath4075_answer n p)
+```
+

@@ -1,0 +1,62 @@
+[write_program]
+The problem involves enumerating the number of uphill paths in Nordic squares of size n×n. Nordic squares are bijections from a grid to {0,...,n²-1}. We want to find the minimal number \(k\) of uphill paths over all Nordic squares.  
+To assist, we'll generate all Nordic squares for small n (e.g., n=2), enumerate all uphill paths for each, and print counts. This helps conjecture the minimal number of uphill paths.
+
+```python
+from itertools import permutations
+
+# Small test size n=2
+n = 2
+N = n*n
+print(f"n={n}")
+
+# Positions in the grid
+positions = [(i,j) for i in range(n) for j in range(n)]
+
+def adj(c, d):
+    (x1,y1), (x2,y2) = c, d
+    return (x1 == x2 and abs(y1 - y2) == 1) or (y1 == y2 and abs(x1 - x2) == 1)
+
+def uphill_paths(f):
+    # Map from position to value 
+    val = {(i,j):f[i*n+j] for i in range(n) for j in range(n)}
+
+    paths = []
+
+    def is_valley(i,j):
+        # f(i,j) < f of all adjacent
+        for (x,y) in positions:
+            if adj((i,j),(x,y)) and val[(x,y)] <= val[(i,j)]:
+                return False
+        return True
+
+    def extend_path(path):
+        last = path[-1]
+        extended = False
+        for nbr in positions:
+            if adj(last,nbr) and val[nbr] > val[last] and nbr not in path:
+                extended = True
+                extend_path(path+[nbr])
+        if not extended:
+            paths.append(path)
+
+    # Start at valleys
+    for pos in positions:
+        if is_valley(*pos):
+            extend_path([pos])
+    return len(paths)
+
+count_paths = {}
+for perm in permutations(range(N)):
+    f = perm # f(i,j) = perm[i*n+j]
+    k = uphill_paths(f)
+    if k not in count_paths:
+        print(f"Uphill paths count: {k}")
+        count_paths[k] = 1
+    else:
+        count_paths[k] += 1
+
+min_k = min(count_paths)
+print(f"Minimal uphill paths: {min_k}")
+```
+

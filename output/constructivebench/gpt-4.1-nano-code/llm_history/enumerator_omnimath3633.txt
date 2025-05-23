@@ -1,0 +1,41 @@
+[write_program]
+Given the problem's formal logic, it appears to involve finding the maximum number of black squares in a (2n+1) x (2n+1) grid with certain adjacency constraints on 2x2 sub-blocks (each at most 2 black cells). To assist with conjecturing and proving, I will enumerate small cases for n=0, 1, 2, etc., and track the maximum possible count of black cells under the rules.
+
+Specifically, for small n, I'll generate all valid 0/1 matrices with the constraints that no 2x2 block has more than 2 black cells, and record the maximum black cell count. The code will print each feasible maximum as soon as found.
+
+```python
+import itertools
+
+def is_valid(matrix, size):
+    # Check that in every 2x2 sub-block, black cells ≤ 2
+    for i in range(size - 1):
+        for j in range(size - 1):
+            black_count = sum([
+                matrix[i][j], matrix[i][j+1],
+                matrix[i+1][j], matrix[i+1][j+1]
+            ])
+            if black_count > 2:
+                return False
+    return True
+
+def enumerate_matrices(n, max_black_found):
+    size = 2*n + 1
+    total_cells = size * size
+    max_m = 2**total_cells
+    for m in range(max_m):
+        # Generate binary matrix
+        bits = bin(m)[2:].zfill(total_cells)
+        matrix = [list(map(int, bits[i*size:(i+1)*size])) for i in range(size)]
+        if is_valid(matrix, size):
+            black_count = sum(sum(row) for row in matrix)
+            if black_count >= max_black_found[0]:
+                if black_count > max_black_found[0]:
+                    max_black_found[0] = black_count
+                print(f"n={n}, max black={black_count}")
+    return max_black_found[0]
+
+# Main enumeration for small n values to observe maximum black cell count
+max_black_global = [0]
+for n in range(0, 3):  # Adjust upper bound for more cases if needed
+    enumerate_matrices(n, max_black_global)
+```

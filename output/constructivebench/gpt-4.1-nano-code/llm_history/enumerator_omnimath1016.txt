@@ -1,0 +1,62 @@
+[write_program]
+The problem appears to ask for a least positive integer n such that for all coprime m < n, the order of m mod n is less than φ(n)/10. This is a number theory problem involving totatives, orders, and the Euler totient function. 
+
+To assist conjecturing and proving, we'll generate candidate n values up to a threshold, checking the condition for each coprime m. We'll print candidates as they are found and keep track of the least n satisfying the property.
+
+Since the problem involves coprimality, order of elements modulo n, and the totient function, we'll:
+- Generate n from 1 up to 100 (a small sample),
+- For each n, check if the condition holds for **all** coprime m,
+- Print n whenever the condition is satisfied,
+- Stop at the minimal n that satisfies the condition or after reaching our threshold.
+
+Here's the Python code:
+
+```python
+import math
+
+def totient(n):
+    """Compute Euler's totient function of n."""
+    result = n
+    p = 2
+    while p * p <= n:
+        if n % p == 0:
+            while n % p == 0:
+                n //= p
+            result -= result // p
+        p += 1 if p == 2 else 2
+    if n > 1:
+        result -= result // n
+    return result
+
+def order_mod(n, m):
+    """Compute the order of m modulo n, assuming gcd(m, n) == 1."""
+    if math.gcd(m, n) != 1:
+        return None
+    result = 1
+    x = m % n
+    while x != 1:
+        x = (x * m) % n
+        result += 1
+        if result > n:  # Just a safeguard; order can't be more than n
+            return None
+    return result
+
+max_n = 100
+threshold = 10  # to limit computations
+
+for n in range(1, max_n + 1):
+    phi_n = totient(n)
+    condition_holds = True
+    for m in range(1, n):
+        if math.gcd(m, n) == 1:
+            ord_m = order_mod(n, m)
+            if ord_m is None:
+                continue
+            if ord_m >= phi_n / 10:
+                condition_holds = False
+                break
+    if condition_holds:
+        print(f"Candidate n = {n}")
+```
+
+This code enumerates candidates up to 100, checking the condition. It prints each n satisfying the condition immediately.

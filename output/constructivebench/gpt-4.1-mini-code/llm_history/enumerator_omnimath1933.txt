@@ -1,0 +1,40 @@
+[write_program]
+The problem seems to relate to counting the number of ways to represent an integer n as sums of coins of denominations 1, 10, 25, and 100, with and without the constraint that at least one 100-coin is used. Functions P and B count these representations, and the limit of P(n)/B(n) as n→∞ is sought.
+
+We'll enumerate P(n) and B(n) for some values of n, then print P(n)/B(n) values to conjecture the limit. We'll:
+- enumerate all quadruples (p_0,p_1,p_2,p_3) with sum equal to n under the coin value constraint,
+- count how many such tuples exist for P(n) (all nonnegative),
+- count how many satisfy the same but with p_0≥1 for B(n),
+- print P(n), B(n), and their ratio for n from, say, 100 to 200 stepping by 10.
+
+Because combinations can be large, and we only have 400 tokens output max, limit output to these steps to see the trend.
+
+```python
+# Enumerate counts of ways to form n using coins 1,10,25,100 cents
+# P(n): number of ways with no constraint
+# B(n): number of ways with at least one 100 coin (p0>=1)
+# Print their ratio to conjecture limit
+
+def count_ways(n, require_100coin):
+    count = 0
+    max_100 = n // 100
+    for p0 in (range(1, max_100+1) if require_100coin else range(0, max_100+1)):
+        rem = n - 100*p0
+        max_25 = rem // 25
+        for p3 in range(max_25+1):
+            rem2 = rem - 25*p3
+            max_10 = rem2 // 10
+            for p2 in range(max_10+1):
+                rem3 = rem2 - 10*p2
+                p1 = rem3
+                if p1 >= 0:
+                    count += 1
+    return count
+
+print("n, P(n), B(n), P(n)/B(n)")
+for n in range(100, 201, 10):
+    Pn = count_ways(n, False)
+    Bn = count_ways(n, True)
+    ratio = Pn / Bn if Bn != 0 else float('inf')
+    print(f"{n}, {Pn}, {Bn}, {ratio:.6f}")
+```

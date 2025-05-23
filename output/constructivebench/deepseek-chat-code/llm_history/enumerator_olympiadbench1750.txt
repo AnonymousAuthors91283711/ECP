@@ -1,0 +1,67 @@
+[write_program]
+This problem involves finding the maximum number of triples (t) in a directed graph (d) with specific properties. To approach this, we'll:
+
+1. Model the problem with smaller parameters (n=6 instead of 2006)
+2. Enumerate possible directed graphs with n-3 edges (since d.card=2003 implies n-3 edges)
+3. Count valid triples that satisfy all conditions
+4. Track the maximum count found
+
+The key constraints are:
+- The graph is oriented (no mutual edges)
+- For every triple in t, at least one edge exists in the graph
+- The triple must satisfy either distance equality or odd distance conditions
+
+```python
+import itertools
+
+def main():
+    n = 6  # Smaller parameter for enumeration
+    max_edges = n - 3  # Corresponds to d.card=2003 in original problem
+    max_triples = 0
+    
+    # Generate all possible directed graphs with max_edges edges (no mutual edges)
+    vertices = range(n)
+    possible_edges = [(i,j) for i in vertices for j in vertices if i != j]
+    
+    for edges in itertools.combinations(possible_edges, max_edges):
+        # Check if graph is oriented (no mutual edges)
+        oriented = True
+        for (i,j) in edges:
+            if (j,i) in edges:
+                oriented = False
+                break
+        if not oriented:
+            continue
+        
+        # Count valid triples
+        triple_count = 0
+        for x, y, z in itertools.permutations(vertices, 3):
+            if x == y or y == z or z == x:
+                continue
+            
+            # Condition 1: at least one edge exists
+            edge_condition = ((x,y) in edges) or ((y,z) in edges) or ((z,x) in edges)
+            
+            # Condition 2: distance equality
+            d1 = min(abs(y-x), n-abs(y-x))
+            d2 = min(abs(z-y), n-abs(z-y))
+            d3 = min(abs(x-z), n-abs(x-z))
+            dist_condition = (d1 == d2) or (d2 == d3) or (d3 == d1)
+            
+            # Condition 3: odd distance pairs
+            odd_condition = ((d1%2==1 and d2%2==1) or 
+                           (d2%2==1 and d3%2==1) or 
+                           (d3%2==1 and d1%2==1))
+            
+            if edge_condition and (dist_condition or odd_condition):
+                triple_count += 1
+        
+        if triple_count > max_triples:
+            max_triples = triple_count
+            print(f"New max triples: {max_triples} with edges: {edges}")
+    
+    print(f"Final maximum triples for n={n}: {max_triples}")
+
+if __name__ == "__main__":
+    main()
+```

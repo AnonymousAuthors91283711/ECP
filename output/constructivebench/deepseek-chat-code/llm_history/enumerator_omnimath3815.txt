@@ -1,0 +1,53 @@
+[write_program]
+This problem involves finding all triples (p, x, y) where p is prime and x ≠ y such that x⁴ - y⁴ = p(x³ - y³). We'll write a Python program to enumerate small integer solutions to help conjecture the pattern.
+
+The approach:
+1. Factor the equation as (x-y)(x³ + x²y + xy² + y³) = p(x-y)(x² + xy + y²)
+2. Since x≠y, we can divide both sides by (x-y) to get x³ + x²y + xy² + y³ = p(x² + xy + y²)
+3. We'll search for small integer solutions with x > y (without loss of generality)
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+max_n = 50  # Search up to this value
+print(f"Searching for solutions with x,y ≤ {max_n}")
+
+for x in range(1, max_n + 1):
+    for y in range(1, x):
+        numerator = x**3 + x**2*y + x*y**2 + y**3
+        denominator = x**2 + x*y + y**2
+        if denominator == 0:
+            continue
+        p = numerator // denominator
+        if numerator % denominator == 0 and is_prime(p):
+            print(f"Found solution: p={p}, x={x}, y={y}")
+            # Verify the original equation
+            lhs = x**4 - y**4
+            rhs = p * (x**3 - y**3)
+            assert lhs == rhs, "Solution doesn't satisfy original equation"
+```

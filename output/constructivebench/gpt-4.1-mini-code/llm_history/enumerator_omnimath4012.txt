@@ -1,0 +1,54 @@
+[write_program]
+The problem is a functional equation involving real functions \( f: \mathbb{R} \to \mathbb{R} \):
+\[
+f(x) \cdot f(y) = x \cdot f(f(y - x)) + x \cdot f(2x) + f(x^2).
+\]
+
+To explore candidates, I will test functions of simple forms such as polynomials or constants for small values \( x, y \in \{-2, -1, 0, 1, 2\} \). This Python script enumerates and prints possible \( f \) values at these points, focusing on consistency of the functional equation. The enumeration will cover possible values of \( f(-2), f(-1), f(0), f(1), f(2) \) in a small integer range and verify if equation holds at the sampled points.
+
+```python
+from itertools import product
+
+# Points to test function values at x in {-2, -1, 0, 1, 2} and y in same range
+test_points = [-2, -1, 0, 1, 2]
+
+def check_eq(fvals):
+    # fvals is a dict: x -> f(x)
+    # Check equation for all pairs (x, y)
+    for x in test_points:
+        for y in test_points:
+            left = fvals[x] * fvals[y]
+            # f(f(y-x)) means fvals[fvals[y-x]] but fvals indexed by real replaced by sampled points
+            # f(y - x) might be outside domain keys, so skip or approximate by closest
+            arg1 = y - x
+            # For f(f(arg1)) approximate if arg1 not in fvals keys
+            # If arg1 in keys, f(arg1) approximated by nearest key
+            if arg1 in fvals:
+                inner = fvals[arg1]
+            else:
+                # approximate by closest key
+                inner = fvals[min(fvals.keys(), key=lambda k: abs(k - arg1))]
+            # Now f(f(y-x)) = f(inner)
+            if inner in fvals:
+                val_ff = fvals[inner]
+            else:
+                val_ff = fvals[min(fvals.keys(), key=lambda k: abs(k - inner))]
+            right = x * val_ff + x * fvals.get(2*x, fvals.get(min(fvals.keys(), key=lambda k: abs(k - 2*x)), 0)) + fvals.get(x*x, fvals.get(min(fvals.keys(), key=lambda k: abs(k - x*x)), 0))
+            if left != right:
+                return False
+    return True
+
+# We try values of f at sampled points in small range [-2, 2] integers
+domain_points = [-2, -1, 0, 1, 2]
+
+print("Enumerating candidate functions f: {-2,-1,0,1,2}→[-2..2]")
+
+for vals in product(range(-2, 3), repeat=len(domain_points)):
+    fvals = dict(zip(domain_points, vals))
+    if check_eq(fvals):
+        print("Possible f values:")
+        for x in domain_points:
+            print(f"f({x}) = {fvals[x]}")
+        print("---")
+```
+This script prints immediately every candidate function \( f \) on \(\{-2,-1,0,1,2\}\) consistent with the functional equation on these points, assisting in conjecturing \( f \) and formulating a proof.

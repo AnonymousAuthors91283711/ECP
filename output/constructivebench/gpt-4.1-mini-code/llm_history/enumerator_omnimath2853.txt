@@ -1,0 +1,81 @@
+[write_program]
+The problem is about counting the number of 8-tuples over ZMod 5 satisfying a set of linear equations (mod 5). Let's enumerate the possible values for each variable and check which tuples satisfy all 8 equations.
+
+All variables are elements of ZMod 5 = {0,1,2,3,4}. We have 8 variables (a,b,c,d,e,f,g,h). There are 5^8 = 390625 possible tuples, which is large but still feasible to brute force with early pruning and modular arithmetic.
+
+We will:
+- Loop over `a,b,c,d,e,f,g,h` in `0..4`
+- Check all constraints exactly mod 5
+- Print each valid tuple found
+- Print the total count modulo 100 after enumeration
+
+This is a direct approach that matches the problem statement.
+
+```python
+# Enumerate 8-tuples (a,b,c,d,e,f,g,h) in ZMod 5 satisfying given linear constraints mod 5.
+# Print each valid tuple as found, then print total count mod 100.
+
+def mod5(x):
+    return x % 5
+
+def valid_grid(a,b,c,d,e,f,g,h):
+    return (mod5(a+b+c) == 0 and
+            mod5(d+5+e) == 0 and
+            mod5(f+g+h) == 0 and
+            mod5(a+d+f) == 0 and
+            mod5(b+5+g) == 0 and
+            mod5(c+e+h) == 0 and
+            mod5(a+5+h) == 0 and
+            mod5(c+5+f) == 0)
+
+def main():
+    count = 0
+    mod = 100
+    # Since +5 ≡ 0 mod 5, we can omit explicit 5 additions to simplify:
+    # d + 5 + e ≡ d + e ≡ 0
+    # b + 5 + g ≡ b + g ≡0
+    # a + 5 + h ≡ a + h ≡0
+    # c + 5 + f ≡ c + f ≡0
+    # Rewrite conditions for efficiency:
+    # (1) a + b + c == 0
+    # (2) d + e == 0
+    # (3) f + g + h == 0
+    # (4) a + d + f == 0
+    # (5) b + g ==0
+    # (6) c + e + h ==0
+    # (7) a + h ==0
+    # (8) c + f ==0
+    # So we can solve some variables in terms of others to reduce search space:
+    # From (7): h = -a mod 5 = (5 - a)%5
+    # From (5): g = -b mod 5 = (5 - b)%5
+    # From (8): f = -c mod 5 = (5 - c)%5
+    # From (2): e = -d mod 5 = (5 - d)%5
+    # We only need to vary a,b,c,d and compute e,f,g,h accordingly.
+    for a in range(5):
+        h = (5 - a) % 5
+        for b in range(5):
+            g = (5 - b) % 5
+            for c in range(5):
+                f = (5 - c) % 5
+                # Check (1): a+b+c ==0
+                if (a + b + c) % 5 != 0:
+                    continue
+                for d in range(5):
+                    e = (5 - d) % 5
+                    # Check (4): a + d + f == 0
+                    if (a + d + f) %5 != 0:
+                        continue
+                    # Check (3): f + g + h == 0
+                    if (f + g + h) %5 !=0:
+                        continue
+                    # Check (6): c + e + h == 0
+                    if (c + e + h) %5 != 0:
+                        continue
+                    # All constraints satisfied
+                    count += 1
+                    print(f"Valid tuple found: (a,b,c,d,e,f,g,h) = ({a},{b},{c},{d},{e},{f},{g},{h})")
+    print(f"Total count mod 100: {count % mod}")
+
+if __name__ == "__main__":
+    main()
+```

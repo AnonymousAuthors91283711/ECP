@@ -1,0 +1,58 @@
+[write_program]
+This problem asks for the number of positive divisors of 12! that are congruent to 1 modulo 3. We'll write a Python program to enumerate all such divisors by:
+1. First computing the prime factorization of 12!
+2. Generating all possible divisors from the exponents
+3. Counting those ≡1 mod3
+
+The key insight is that for a divisor d ≡1 mod3, the sum of exponents of primes ≡2 mod3 must be even (by quadratic reciprocity).
+
+```python
+import math
+from collections import defaultdict
+from itertools import product
+
+def factorize(n):
+    factors = defaultdict(int)
+    while n % 2 == 0:
+        factors[2] += 1
+        n //= 2
+    i = 3
+    while i * i <= n:
+        while n % i == 0:
+            factors[i] += 1
+            n //= i
+        i += 2
+    if n > 1:
+        factors[n] += 1
+    return factors
+
+def count_divisors():
+    n = math.factorial(12)
+    factors = factorize(n)
+    
+    # Group primes by their residue mod 3
+    primes_mod3 = {1: [], 2: []}
+    for p in factors:
+        if p % 3 == 1:
+            primes_mod3[1].append(p)
+        elif p % 3 == 2:
+            primes_mod3[2].append(p)
+    
+    # For primes ≡1 mod3, exponents can be anything
+    # For primes ≡2 mod3, sum of exponents must be even
+    count = 0
+    
+    # Generate all possible exponent combinations for primes ≡2 mod3 with even sum
+    primes_2 = primes_mod3[2]
+    exponents_2 = [range(factors[p] + 1) for p in primes_2]
+    for exp_combo in product(*exponents_2):
+        if sum(exp_combo) % 2 == 0:
+            # For each valid combination, multiply by all possible combinations of primes ≡1 mod3
+            primes_1 = primes_mod3[1]
+            exponents_1 = [range(factors[p] + 1) for p in primes_1]
+            count += len(list(product(*exponents_1)))
+    
+    print(count)
+
+count_divisors()
+```

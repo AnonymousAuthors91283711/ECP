@@ -1,0 +1,87 @@
+[write_program]
+The problem counts functions \( f: \{0,\dots,6\} \to \{0,\dots,6\} \) such that there exists \( c \) with \( f(f(x)) = c \) for all \( x \). We want to enumerate all such functions and count them modulo 1000. The key observations:
+
+- \( f(f(x)) = c \) for all \( x \) means the image of \( f \circ f \) is a singleton \(\{c\}\).
+- So for every \(x\), \(f(f(x)) = c\).
+- This means \(f(y) = c\) for every \(y \in \text{Im}(f)\).
+- Therefore, \(f\) maps the image of \(f\) to the constant \(c\).
+- The image of \(f\) must be nonempty and all map to \(c\).
+- So, the image of \(f\) is a subset \(S\) with \(f(S) = \{c\}\).
+- Also \(c\) must be in \(S\), since \(f(c) = c\).
+- So the image \(S\) is any nonempty subset of \(\{0,\dots,6\}\) that contains \(c\).
+- Finally, the function \(f\) maps \(\{0,\dots,6\}\) onto \(S\), and \(f\) restricted to \(S\) is constant \(c\).
+
+We will enumerate candidate constants \( c \in [0,6] \), then for each nonempty subset \( S \) of \(\{0,\ldots,6\}\) containing \( c \), count all functions with image \(S\) and equal to \(c\) on \(S\). Outside of \(S\), \(f\) takes image in \(S\). The domain has 7 elements.
+
+The counting will proceed as:
+
+1. Fix \(c\).
+2. For each nonempty subset \(S\) containing \(c\).
+3. We fix \(f(x) = c\) for \(x \in S\).
+4. For \(x \notin S\), \(f(x)\) can be any element of \(S\).
+5. The image of \(f\) is \(S\), so the function \(f\) is onto \(S\).
+6. Since on \(S\), \(f = c\), only the outside part \(X = \{0,\dots,6\}\setminus S\) can vary.
+7. Define function \(g: X \to S\), with \(g(x) = f(x)\).
+8. Since the image of \(f\) = \(S\), the image of \(g\) together with \(c\) equals \(S\). Since on \(S\), \(f(x) = c\), the image of \(f\) equals \(S\), so the image of \(g\) union \(\{c\} = S\).
+9. So the image of \(g\) equals \(S \setminus \{c\}\).
+10. Thus, \(g\) must be surjective onto \(S \setminus \{c\}\) if \(c\) is in \(S\), or else \(S = \{c\}\) and \(g:\) empty domain.
+
+If \(S = \{c\}\), then \(X\) is the rest of the set (6 elements), \(g\) maps from 6 elements to the singleton \(\emptyset\) (since \(S \setminus \{c\} = \emptyset\)), so no surjectivity condition. So \(g\) constant \(c\).
+
+If \(S\) contains only \(c\), no additional constraint. \(f(x) = c\) for all \(x\).
+
+Otherwise, \(g\) is a surjection from a domain of size \(7 - |S|\) onto a codomain of size \(|S| - 1\).
+
+We enumerate all such surjections \(g\), count them, and sum over all \(c\) and \(S\).
+
+We will enumerate all such functions to verify by simulation for small domain and codomain.
+
+```python
+from itertools import product, combinations
+
+def surj_count(n, k):
+    # Count surjections from [n] onto [k] using inclusion-exclusion
+    # Number of functions: k^n
+    # Number of non-surjective functions: sum_{i=1}^k C(k,i)*(k - i)^n * (-1)^i
+    # Use memoization for efficiency
+    if k == 0:
+        return 1 if n == 0 else 0
+    res = 0
+    for i in range(k + 1):
+        sign = (-1) ** i
+        from math import comb
+        res += sign * comb(k, i) * (k - i) ** n
+    return res
+
+def main():
+    domain = range(7)
+    total = 0
+    # For each c in domain
+    for c in domain:
+        # For each subset S containing c
+        for size in range(1, 8):
+            # subsets of size 'size' containing c
+            for S in combinations(domain, size):
+                if c not in S:
+                    continue
+                S_set = set(S)
+                X_set = set(domain) - S_set
+                n = len(X_set)
+                k = size - 1  # surjection onto S\{c}
+                # count surjections from X to S\{c} if k>0
+                if k == 0:
+                    # no surjectivity condition, all functions from n elems to empty set?
+                    # If empty codomain and n>0, no maps
+                    # Actually, codomain is empty so no functions unless n=0
+                    # So if n==0, only one function
+                    cnt = 1 if n == 0 else 0
+                else:
+                    cnt = surj_count(n, k)
+                total += cnt
+                print(f"c={c}, S={sorted(S)}, count={cnt}")
+    print(f"Total functions count = {total}")
+    print(f"Count mod 1000 = {total % 1000}")
+
+if __name__ == "__main__":
+    main()
+```

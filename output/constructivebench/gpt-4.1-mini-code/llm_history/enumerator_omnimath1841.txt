@@ -1,0 +1,55 @@
+[write_program]
+The problem is to find natural numbers \( n \) such that there exist natural \( a,b,c \) with \(\frac{1}{a} + \frac{1}{b} + \frac{1}{c} = 1\) and \(a,b,c \mid n\). The theorem states the minimal such \(n\) is 6, no smaller except 6 itself, and the next such \(n\) after 6 but before 15 is a certain value (omnimath1841_answer.fst). Our program will:
+
+- Enumerate triples \(a,b,c\) with \(1/a + 1/b + 1/c =1\).
+- For each triple, compute lcm \(n\) of \(a,b,c\).
+- Enumerate such \(n\), print all found below 15.
+- This should help identify possible candidates like 6 and the next number.
+
+We will restrict \(a,b,c\) to at most 20 for efficiency.
+
+```python
+from math import gcd
+from fractions import Fraction
+
+def lcm(x,y):
+    return x*y//gcd(x,y)
+
+def triple_lcm(a,b,c):
+    return lcm(lcm(a,b), c)
+
+def check_sum(a,b,c):
+    return Fraction(1,a) + Fraction(1,b) + Fraction(1,c) == 1
+
+max_val = 20
+found_ns = set()
+
+print("Searching triples (a,b,c) with 1/a+1/b+1/c=1 and a,b,c dividing n=LCM(a,b,c)...")
+
+for a in range(1, max_val+1):
+    for b in range(a, max_val+1):
+        for c in range(b, max_val+1):
+            if check_sum(a,b,c):
+                n = triple_lcm(a,b,c)
+                if n < 15:
+                    # Print immediately
+                    print(f"Triple (a,b,c)=({a},{b},{c}), n=LCM={n}")
+                found_ns.add(n)
+
+candidates = sorted(x for x in found_ns if x < 15)
+print("Candidates n < 15 with 1/a+1/b+1/c=1 and a,b,c|n:")
+print(candidates)
+
+# Output minimal and next candidate after 6 if exist
+min_n = min(candidates) if candidates else None
+next_n = None
+for x in candidates:
+    if min_n is not None and x > min_n:
+        next_n = x
+        break
+if min_n is not None:
+    print(f"Minimum n found: {min_n}")
+if next_n is not None:
+    print(f"Next n after {min_n} before 15: {next_n}")
+```
+

@@ -1,0 +1,52 @@
+[write_program]
+The problem involves finding the number of natural numbers \( n \) between 1 and 1000 such that for a specific angle \( A \) where \( 0 < A < \frac{\pi}{2} \) and \( \tan A = 2 \cos A \), the expression \( (1/\cos A)^n + (\tan A)^n \) is an integer ending with the digit 9.
+
+To explore this, I will:
+- Compute \( A \) numerically from the equation \( \tan A = 2 \cos A \).
+- Check values for \( n \in [1,1000] \) where \( (1/\cos A)^n + (\tan A)^n \) is close to an integer.
+- For integers, check if the last digit is 9.
+- Print the \( n \) values meeting the criterion.
+
+```python
+import math
+
+# Find A such that tan(A) = 2 * cos(A), 0 < A < pi/2
+# We use a numerical solver (bisection)
+def f(A):
+    return math.tan(A) - 2 * math.cos(A)
+
+# Bisection method in (0, pi/2)
+lo, hi = 0.1, math.pi / 2 - 0.1
+for _ in range(50):
+    mid = (lo + hi) / 2
+    if f(mid) > 0:
+        hi = mid
+    else:
+        lo = mid
+A = (lo + hi) / 2
+
+cosA = math.cos(A)
+tanA = math.tan(A)
+c1 = 1 / cosA
+
+print(f"A ≈ {A:.8f}, cos A ≈ {cosA:.8f}, tan A ≈ {tanA:.8f}")
+
+# We'll check n from 1 to 1000
+# For each n, compute val = c1^n + tanA^n
+# Check if val is close to an integer k with k%10 = 9
+
+def is_integer_close(x, tol=1e-9):
+    k = round(x)
+    return abs(x - k) < tol, k
+
+count = 0
+for n in range(1, 1001):
+    val = c1**n + tanA**n
+    close, k = is_integer_close(val)
+    if close and k % 10 == 9:
+        print(f"n={n}, val={val:.12f}, int={k}")
+        count += 1
+
+print(f"Number of n with last digit 9 in expression: {count}")
+```
+

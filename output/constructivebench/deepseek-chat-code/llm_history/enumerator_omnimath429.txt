@@ -1,0 +1,86 @@
+[write_program]
+This problem involves finding the smallest clique size `k` (where `k ≥ 3`) in a graph satisfying certain conditions. We'll write a Python program to enumerate possible graphs and check the conditions to find the minimal `k`.
+
+The key conditions are:
+1. Every non-adjacent pair has a common neighbor
+2. Every vertex has at least one non-neighbor
+3. The sum of squared degrees equals n² - n
+
+We'll focus on small values of n (from 3 to 8) to find patterns.
+
+```python
+import itertools
+from collections import defaultdict
+
+def is_valid_graph(n, edges):
+    # Check condition h1: common neighbor for non-adjacent pairs
+    adj = defaultdict(set)
+    for u, v in edges:
+        adj[u].add(v)
+        adj[v].add(u)
+    
+    # Check h2: each vertex has at least one non-neighbor
+    for u in range(n):
+        if len(adj[u]) == n-1:
+            return False
+    
+    # Check h1
+    for u in range(n):
+        for v in range(u+1, n):
+            if v not in adj[u]:
+                # Need common neighbor
+                has_common = False
+                for w in range(n):
+                    if w in adj[u] and w in adj[v]:
+                        has_common = True
+                        break
+                if not has_common:
+                    return False
+    
+    # Check degree sum condition
+    degree_sq_sum = sum(len(adj[v])**2 for v in range(n))
+    if degree_sq_sum != n*n - n:
+        return False
+    
+    return True
+
+def max_clique_size(n, edges):
+    adj = defaultdict(set)
+    for u, v in edges:
+        adj[u].add(v)
+        adj[v].add(u)
+    
+    max_size = 0
+    # Check all possible subsets up to size n
+    for k in range(1, n+1):
+        for subset in itertools.combinations(range(n), k):
+            is_clique = True
+            for u, v in itertools.combinations(subset, 2):
+                if v not in adj[u]:
+                    is_clique = False
+                    break
+            if is_clique:
+                max_size = max(max_size, k)
+    return max_size
+
+def find_min_k(max_n=8):
+    for n in range(3, max_n+1):
+        print(f"\nChecking n = {n}")
+        min_k = float('inf')
+        # Generate all possible graphs with n vertices
+        possible_edges = list(itertools.combinations(range(n), 2))
+        # Try all possible edge subsets
+        for edge_mask in range(0, 1 << len(possible_edges)):
+            edges = [possible_edges[i] for i in range(len(possible_edges)) if (edge_mask >> i) & 1]
+            if is_valid_graph(n, edges):
+                k = max_clique_size(n, edges)
+                if k >= 3 and k < min_k:
+                    min_k = k
+                    print(f"Found graph with min k = {k} for n={n}")
+        if min_k != float('inf'):
+            print(f"Minimal k for n={n}: {min_k}")
+        else:
+            print(f"No valid graphs found for n={n}")
+
+find_min_k()
+```

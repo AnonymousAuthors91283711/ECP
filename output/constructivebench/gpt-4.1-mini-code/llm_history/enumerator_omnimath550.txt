@@ -1,0 +1,84 @@
+[write_program]
+The problem involves finding the least nonnegative integer \(c\) such that there exists a sequence of steps (booleans), where starting from (beans, cost) = (0, 0), each step either multiplies beans by 5 and adds 1 to the cost, or adds 1 to beans and adds 5 to the cost, so that after all steps, the number of beans is greater than 2008, beans modulo 100 is 42, and cost equals \(c\).
+
+We want to enumerate sequences efficiently and find the minimal cost \(c\).
+
+---
+
+Approach:
+- Each step is either:
+  - multiply beans by 5, cost += 1  (step=True)
+  - add 1 to beans, cost += 5       (step=False)
+- Start from (beans=0, cost=0)
+- We want beans > 2008 and beans % 100 == 42
+- Find minimal cost for which such a sequence exists.
+- We can do BFS or DP on (beans, cost), but beans can get large.
+- Since costs increase, we track minimal cost per beans mod 100 and beans value with pruning.
+- We'll use a dictionary with keys (beans_mod_100, beans div 100) or just keep track of beans modulo 100.
+- Because multiplication by 5 changes beans drastically, states grow quickly.
+- Let's consider that cost is low at the start, so BFS on states (beans, cost) but prune by only keeping states with minimal cost per beans mod 100 and beans in some range.
+- Limit beans to max 2500 (since we need > 2008) and generate states accordingly.
+
+---
+
+Print each found valid cost \(c\) immediately, keep track of minimal found.
+
+We'll stop once minimal cost is found.
+
+---
+
+```python
+from collections import deque
+
+def main():
+    target_mod = 42
+    target_min_beans = 2009  # strictly greater than 2008
+    max_beans = 3000  # prune states above this for efficiency
+    visited = dict()  # keys: (beans), values: minimal cost
+
+    # BFS queue elements: (beans, cost)
+    queue = deque()
+    queue.append((0,0))
+    visited[0] = 0
+
+    minimal_cost = None
+
+    while queue:
+        beans, cost = queue.popleft()
+
+        # Check goal condition
+        if beans > 2008 and beans % 100 == target_mod:
+            print(cost)  # print cost immediately when found
+            if minimal_cost is None or cost < minimal_cost:
+                minimal_cost = cost
+
+        # If minimal_cost found and current cost exceeds it, stop exploring further
+        if minimal_cost is not None and cost > minimal_cost:
+            continue
+
+        # Two possible steps:
+
+        # Step True: multiply beans by 5, cost +1
+        beans1 = beans * 5
+        cost1 = cost + 1
+        if beans1 <= max_beans:
+            prev_cost = visited.get(beans1, None)
+            if prev_cost is None or cost1 < prev_cost:
+                visited[beans1] = cost1
+                queue.append((beans1, cost1))
+
+        # Step False: add 1 to beans, cost +5
+        beans2 = beans + 1
+        cost2 = cost + 5
+        if beans2 <= max_beans:
+            prev_cost = visited.get(beans2, None)
+            if prev_cost is None or cost2 < prev_cost:
+                visited[beans2] = cost2
+                queue.append((beans2, cost2))
+
+    if minimal_cost is not None:
+        print('Minimal cost:', minimal_cost)
+
+if __name__ == '__main__':
+    main()
+```

@@ -1,0 +1,59 @@
+[write_program]
+This problem involves studying the unique solution x to a linear system \( A x = b \) where \( A \) is a 3x3 matrix depending on parameter \( m \), vector \( b \) is given by \((a,b,c)\), and \( m \neq 1, -2 \) so that \( A \) is invertible. The goal is to investigate the condition that the differences \( x_1 - x_0 = x_2 - x_1 \) hold (i.e., the solution vector's entries form an arithmetic progression). The theorem claims this is equivalent to the determinant of A being nonzero and the existence of a common difference \( d \) for the arithmetic progression.
+
+To experimentally investigate this, we can:
+
+- Enumerate over sample values of \( m, a, b, c \) with the exclusion of \( m = 1, -2 \).
+- Solve the system \( A x = b \) exactly or numerically.
+- Check the difference between consecutive solution entries.
+- Print the parameter values, solution vector \( x \), and differences.
+- Highlight cases where the differences are equal (up to numerical tolerance).
+- This would help conjecture under what parameter values the arithmetic progression condition holds.
+
+We'll use numpy for matrix computations, sympy for symbolic solves if needed but prefer exact values when possible, and enumerate a handful of sample parameters.
+
+```python
+import numpy as np
+
+def solve_system(m, a, b, c):
+    # Construct matrix A
+    A = np.array([[1,1,m],
+                  [1,m,1],
+                  [m,1,1]], dtype=float)
+    # Right-hand vector
+    b_vec = np.array([a,b,c], dtype=float)
+    det = np.linalg.det(A)
+    if abs(det) < 1e-12:
+        return None, det
+    x = np.linalg.solve(A, b_vec)
+    return x, det
+
+def nearly_equal(diffs, tol=1e-10):
+    return all(abs(diffs[i]-diffs[0])<tol for i in range(1,len(diffs)))
+
+def main():
+    ms = [-3, -1.5, 0, 0.5, 2, 3]  # exclude 1, -2
+    abc_samples = [
+        (1,2,3),
+        (0,0,0),
+        (1,1,1),
+        (2,-1,0),
+        (-1,2,-2),
+    ]
+    print("m,a,b,c | det | x | diffs x[i+1]-x[i] | equal diffs?")
+    for m in ms:
+        if m == 1 or m == -2:
+            continue
+        for a,b,c in abc_samples:
+            sol, det = solve_system(m,a,b,c)
+            if sol is None:
+                print(f"m={m}, a={a}, b={b}, c={c} singular matrix (det=0)")
+                continue
+            diffs = [sol[i+1]-sol[i] for i in range(2)]
+            eq = nearly_equal(diffs)
+            print(f"m={m}, a={a}, b={b}, c={c} | det={det:.3g} | x={sol} | diffs={diffs} | equal? {eq}")
+
+if __name__=="__main__":
+    main()
+```
+This will print each parameter combination and the solution vector with differences between entries, letting us observe when the arithmetic progression condition holds.

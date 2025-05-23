@@ -1,0 +1,55 @@
+[write_program]
+This problem is about finding the maximum number of disjoint pairs in a set of 17 elements where each pair has representatives whose values differ by at most 1 (mod 5). We'll write a Python program to enumerate possible configurations and find the maximum number of such pairs.
+
+The approach:
+1. Represent the 17 elements as indices 0-16
+2. Assign each element a value from 0-4 (Fin 5)
+3. Find all possible disjoint pairs where the absolute difference is ≤1
+4. Track the maximum number of such pairs across all possible assignments
+
+```python
+from itertools import combinations, product
+
+def main():
+    n = 17  # elements
+    k = 5   # possible values (0-4)
+    max_pairs = 0
+    
+    # We'll try all possible value assignments for small subsets first
+    # For full enumeration, we'd need 5^17 assignments which is impractical
+    # Instead we'll look for patterns and symmetric cases
+    
+    # Case 1: All elements have same value
+    reps = [0]*n
+    pairs = list(combinations(range(n), 2))
+    max_pairs = len(pairs)  # all pairs satisfy difference=0
+    print(f"All same: {max_pairs} pairs")
+    
+    # Case 2: Two values differing by 1 (e.g., 0 and 1)
+    # Split into groups of a and b
+    for split in range(1, n):
+        a, b = split, n-split
+        # Max pairs is min between complete graph on a and complete graph on b,
+        # plus all a-b pairs (since difference is exactly 1)
+        total = (a*(a-1))//2 + (b*(b-1))//2 + a*b
+        if total > max_pairs:
+            max_pairs = total
+            print(f"Two values split {a}-{b}: {max_pairs} pairs")
+    
+    # Case 3: Three consecutive values (0,1,2)
+    # Try balanced splits
+    for a in range(1, n-1):
+        for b in range(1, n-a):
+            c = n - a - b
+            # Pairs within each group plus adjacent groups
+            total = (a*(a-1))//2 + (b*(b-1))//2 + (c*(c-1))//2 + a*b + b*c
+            if total > max_pairs:
+                max_pairs = total
+                print(f"Three values split {a}-{b}-{c}: {max_pairs} pairs")
+    
+    # After testing cases, the maximum seems to be when all have same value
+    print(f"Maximum number of pairs found: {max_pairs}")
+
+if __name__ == "__main__":
+    main()
+```

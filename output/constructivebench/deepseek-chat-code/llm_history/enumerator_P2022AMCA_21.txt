@@ -1,0 +1,42 @@
+[write_program]
+This problem asks for a polynomial divisor of X^2022 + X^1011 + 1. We'll search for divisors by testing cyclotomic polynomials (which often divide polynomials of this form) and other simple patterns. The program will test small exponents first to find potential patterns.
+
+```python
+def poly_divisible(n, k, m):
+    """Check if X^n + X^k + 1 is divisible by X^m + X^l + 1 for some l < m"""
+    # We'll test m values that divide n or k patterns
+    max_m = min(100, n)  # reasonable upper bound
+    for m in range(1, max_m + 1):
+        if n % m != 0:
+            continue
+        for l in range(m):
+            # Check if the roots of X^m + X^l + 1 are also roots of X^n + X^k + 1
+            # A root w satisfies w^m + w^l + 1 = 0
+            # Then w^n = (w^m)^(n/m) = (-w^l - 1)^(n/m)
+            # We need w^n + w^k + 1 = 0
+            # This is complex to check symbolically, so we'll use numerical approximation
+            # with a small number of test points
+            for _ in range(5):  # test 5 random complex points
+                import cmath
+                theta = cmath.pi * (2 * _ + 1) / 10  # avoid simple angles
+                w = cmath.exp(1j * theta)
+                lhs = w**m + w**l + 1
+                if abs(lhs) > 1e-6:
+                    continue  # not a root
+                rhs = w**n + w**k + 1
+                if abs(rhs) < 1e-6:
+                    print(f"Potential divisor found: X^{m} + X^{l} + 1")
+                    return
+    print("No divisor found with m <=", max_m)
+
+# Test the specific problem case
+print("Testing X^2022 + X^1011 + 1:")
+poly_divisible(2022, 1011, 0)
+
+# Test smaller cases to identify patterns
+print("\nTesting smaller cases:")
+for n in [6, 9, 12, 18]:
+    k = n // 2
+    print(f"\nX^{n} + X^{k} + 1:")
+    poly_divisible(n, k, 0)
+```

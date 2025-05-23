@@ -1,0 +1,101 @@
+[write_program]
+The problem involves a Fibonacci-like sequence \(F\) defined by:
+- \(F(1) = 1\),
+- \(F(2) = 1\),
+- \(F(m) = F(m-1) + F(m-2)\) for \(m \geq 3\),
+
+and a polynomial \(p\) of degree 1008 that satisfies \(p(2n+1) = F(2n+1)\) for \(n=0, 1, \ldots, 1008\).
+
+We want to conjecture natural numbers \(a, b\) (likely relatively small) such that
+\[
+p(2019) = F(a) - F(b).
+\]
+
+Since \(p\) agrees with \(F\) at 1009 odd integers \(1, 3, 5, \ldots, 2017\), the polynomial \(p\) is the unique polynomial of degree 1008 interpolating these points. Because \(2019 = 2 \cdot 1009 + 1\) just beyond the highest interpolation point, evaluating \(p(2019)\) can be done by Lagrange interpolation on the points \(\{(2n+1, F(2n+1))\}_{n=0}^{1008}\).
+
+Our strategy:
+- Compute Fibonacci numbers \(F(k)\) up to needed indices.
+- Compute \(p(2019)\) by Lagrange interpolation on the 1009 points.
+- Since direct exact polynomial interpolation with 1009 points may be heavy, reduce computations by trying smaller degrees first (to check pattern).
+- For known Fibonacci identities, test values \(p(2019)\) and express as \(F(a)-F(b)\) for various \(a,b\).
+- Print pairs \((a,b)\) and \(F(a)-F(b)\) where \(F(a)-F(b) = p(2019)\) numerically.
+
+Because the problem is high complexity, we test small degree analogues to detect a pattern and conjecture the pair.
+
+```python
+# Enumerate Fibonacci values and test small-degree polynomial interpolation analogues 
+# to conjecture integers a,b such that p(2019) = F(a) - F(b).
+
+def fib(n, computed={0:0,1:1}):
+    # Memoized Fibonacci with F(0)=0, F(1)=1; problem uses F(1)=1,F(2)=1 shift
+    # so F(n) here corresponds to problem's F(n) with F(1)=1,F(2)=1
+    if n in computed:
+        return computed[n]
+    computed[n] = fib(n-1, computed) + fib(n-2, computed)
+    return computed[n]
+
+def fib_problem(n):
+    # Problem Fibonacci sequence: F(1)=1, F(2)=1
+    if n == 1 or n == 2:
+        return 1
+    return fib_problem(n-1) + fib_problem(n-2)
+
+# We use zero-based internal fib but shift indexes accordingly:
+# fib(1)=1, fib(2)=1 means fib(n) = fib_zero(n) with fib_zero(1)=fib(1)=1
+
+# We test smaller degrees for patterns.
+from math import comb
+
+def lagrange_eval(x_points, y_points, x):
+    total = 0
+    n = len(x_points)
+    for i in range(n):
+        xi, yi = x_points[i], y_points[i]
+        term = yi
+        for j in range(n):
+            if i != j:
+                term *= (x - x_points[j]) / (xi - x_points[j])
+        total += term
+    return total
+
+print("Testing smaller degrees interpolation and p(2019)...")
+
+# We'll try degrees 1 to 10 for pattern detection
+for deg in range(1, 11):
+    x_pts = [2*n+1 for n in range(deg+1)]
+    y_pts = [fib_problem(x) for x in x_pts]
+    val = lagrange_eval(x_pts, y_pts, 2019)
+    # val is float approximation; round for exactness
+    val_int = round(val)
+    # Try to write val_int as fib(a)-fib(b) for small a,b
+    found = False
+    max_a = 2*deg+30
+    for a in range(1, max_a):
+        Fa = fib_problem(a)
+        for b in range(0, a):
+            Fb = fib_problem(b)
+            if Fa - Fb == val_int:
+                print(f"Degree {deg}: p(2019) = F({a}) - F({b}) = {val_int}")
+                found = True
+                break
+        if found:
+            break
+    if not found:
+        print(f"Degree {deg}: p(2019) ≈ {val_int} no simple F(a)-F(b) found small a,b")
+
+# This should hint the pair (a,b) for the actual degree 1008 case.
+
+
+# For the problem (degree 1008), intractable exact lagrange.
+# Print likely candidates around 2019 and smaller from observed pattern:
+# This is a hinting enumeration approach.
+
+print("Enumerating candidate (a,b) with a,b near 2019...")
+for d in range(1,40):
+    a = 2019 + d
+    for b in range(max(0, a-50), a):
+        val = fib_problem(a) - fib_problem(b)
+        if val > 0 and val < 10**20:  # reasonably small
+            print(f"Candidate: F({a}) - F({b}) = {val}")
+
+```

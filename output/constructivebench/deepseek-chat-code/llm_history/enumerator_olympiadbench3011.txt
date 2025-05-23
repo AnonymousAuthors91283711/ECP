@@ -1,0 +1,54 @@
+[write_program]
+This problem asks for the smallest positive real number `t` such that there exists an injective function `f` from `Fin 3` (three points) to ℝ where:
+1. Each `f i` is one of `arcsin(sin t)`, `arccos(cos t)`, or `arctan(tan t)`
+2. The differences between consecutive points are equal (arithmetic progression) with non-zero common difference
+
+We'll write a program to search for the minimal `t` by:
+1. Considering the possible combinations of the three functions
+2. Checking for arithmetic progression conditions
+3. Finding the smallest positive `t` that satisfies the conditions
+
+```python
+import math
+from itertools import permutations
+
+def arcsin_sin(t):
+    # arcsin(sin t) has period 2π and range [-π/2, π/2]
+    k = (t + math.pi/2) // math.pi
+    return (-1)**k * (t - k*math.pi)
+
+def arccos_cos(t):
+    # arccos(cos t) has period 2π and range [0, π]
+    k = t // math.pi
+    if k % 2 == 0:
+        return t - k*math.pi
+    else:
+        return (k+1)*math.pi - t
+
+def arctan_tan(t):
+    # arctan(tan t) has period π and range (-π/2, π/2)
+    return math.atan(math.tan(t))
+
+functions = [arcsin_sin, arccos_cos, arctan_tan]
+
+def find_min_t():
+    min_t = float('inf')
+    # Check all permutations of the three functions
+    for f1, f2, f3 in permutations(functions, 3):
+        # We'll solve for t where f2(t) - f1(t) = f3(t) - f2(t) ≠ 0
+        # This is equivalent to 2*f2(t) = f1(t) + f3(t)
+        # We'll search for t in (0, π/2] first since functions have periodicity
+        step = 0.0001
+        t = step
+        while t <= math.pi/2 + 1e-8:
+            v1, v2, v3 = f1(t), f2(t), f3(t)
+            if abs(2*v2 - (v1 + v3)) < 1e-8 and abs(v2 - v1) > 1e-8:
+                if t < min_t:
+                    min_t = t
+                    print(f"Found candidate t: {t:.6f} with functions {f1.__name__}, {f2.__name__}, {f3.__name__}")
+            t += step
+    return min_t
+
+min_t = find_min_t()
+print(f"\nMinimal t found: {min_t:.6f}")
+```

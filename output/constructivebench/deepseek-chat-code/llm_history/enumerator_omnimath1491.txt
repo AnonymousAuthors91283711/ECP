@@ -1,0 +1,43 @@
+[write_program]
+The problem involves counting paths on a 2x2 grid where:
+1. The path starts at (0,0)
+2. Each step moves to an adjacent cell (up/down/left/right)
+3. The path has exactly 20 steps
+4. The sum of values at visited cells (excluding start) equals 20
+5. The grid values are: (0,0)=1, (0,1)=2, (1,0)=3, (1,1)=4
+
+We'll enumerate all possible paths of length 20 starting at (0,0) and count those with sum 20. Since 20 steps is too large for brute force, we'll use memoization and dynamic programming to track (position, steps remaining, current sum).
+
+```python
+from functools import lru_cache
+
+# Grid values
+grid = {
+    (0,0): 1,
+    (0,1): 2,
+    (1,0): 3,
+    (1,1): 4
+}
+
+# Directions: up, down, left, right
+directions = [(-1,0), (1,0), (0,-1), (0,1)]
+
+@lru_cache(maxsize=None)
+def count_paths(pos, steps_left, current_sum):
+    if steps_left == 0:
+        return 1 if current_sum == 20 else 0
+    if current_sum > 20:  # Early termination if sum exceeds target
+        return 0
+    
+    total = 0
+    for di, dj in directions:
+        ni, nj = pos[0] + di, pos[1] + dj
+        if 0 <= ni < 2 and 0 <= nj < 2:  # Check if new position is valid
+            new_pos = (ni, nj)
+            total += count_paths(new_pos, steps_left - 1, current_sum + grid[new_pos])
+    return total
+
+# Start at (0,0), 20 steps, initial sum 0 (since we don't count starting cell)
+result = count_paths((0,0), 20, 0)
+print(f"Number of valid paths: {result}")
+```

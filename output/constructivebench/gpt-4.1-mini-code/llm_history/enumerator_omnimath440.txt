@@ -1,0 +1,75 @@
+[write_program]
+The problem describes functions \( f : \mathbb{N} \to \mathbb{N} \) such that 
+1. \( f(n!) = (f(n))! \) for all \( n \), and 
+2. \( m \neq n \implies m-n \mid f(m) - f(n) \).
+
+We want to characterize such functions, presumably showing that they belong to some specific family (here called omnimath440_answer).
+
+To gain insight, let's enumerate some small functions \( f \) satisfying the divisibility condition and test the factorial equation on factorial inputs \( n! \) for small \( n \).
+
+We'll consider \( f \) defined on a small domain \(\{0,1,2,3,4,5\}\) with small values to start. The divisibility condition forces a sort of linear growth or modular behavior.
+
+We'll print each function that satisfies both properties for inputs up to 120 (5!) and see their values. This can help conjecture the exact characterization.
+
+```python
+# Enumerate small functions f: {0..5} -> {0..10} satisfying:
+# 1) For all m!=n in 0..5, (m-n) divides f(m)-f(n)
+# 2) For n in 0..5, f(n!) = (f(n))! with factorials computed accordingly
+from math import factorial as fact
+
+def divisible_condition(f):
+    domain = list(range(len(f)))
+    for m in domain:
+        for n in domain:
+            if m != n:
+                diff_idx = m - n
+                diff_val = f[m] - f[n]
+                if diff_val % diff_idx != 0:
+                    return False
+    return True
+
+def factorial_condition(f):
+    # Check n from 0 to 5 (5! = 120)
+    for n in range(6):
+        nf = fact(n)
+        if nf >= len(f):
+            # skip if n! out of domain bounds in f
+            continue
+        lhs = f[nf] if nf < len(f) else None
+        rhs = fact(f[n])
+        if lhs != rhs:
+            return False
+    return True
+
+def main():
+    # We test functions f : {0..120} → ℕ with small value bounds
+    # too large would be impossible, so restrict domain=6 and range=0..6 (small)
+    domain = 6
+    max_val = 6
+
+    from itertools import product
+    count = 0
+    for f in product(range(max_val+1), repeat=domain):
+        if divisible_condition(f):
+            # extend f to vals above domain if needed
+            # for factorial condition, need f(n!) for n=0..5:
+            # 0! =1, 1!=1, 2!=2,3!=6,4!=24,5!=120
+            # only 1,2,6 within domain=6, 24,120 not in domain, ignore those
+            # So restrict factorial_condition to n with n! < domain
+            factorial_ok = True
+            for n in range(6):
+                nf = fact(n)
+                if nf < domain:
+                    lhs = f[nf]
+                    rhs = fact(f[n])
+                    if lhs != rhs:
+                        factorial_ok = False
+                        break
+            if factorial_ok:
+                count += 1
+                print(f"Candidate f on {domain}: {f}")
+    print(f"Enumerated {count} candidates on domain of size {domain}")
+
+if __name__ == "__main__":
+    main()
+```

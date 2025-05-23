@@ -1,0 +1,55 @@
+[write_program]
+Let's analyze the problem:
+
+- We are asked to find the number of pairs `(p.1, p.2)` with:
+  - `p.1` in [1, 100]
+  - `p.2` in [101, 205]
+- such that `(3^{p.1} + 7^{p.2}) % 10 = 0`.
+- The goal is to enumerate all such pairs, stream results, and find the total count.
+
+Observations:
+- The last digit pattern (mod 10) of powers of 3 and 7 is periodic.
+- Period of 3^n mod 10 is 4:
+  - 3^1 ≡ 3
+  - 3^2 ≡ 9
+  - 3^3 ≡ 7
+  - 3^4 ≡ 1
+  - then repeats.
+- Period of 7^n mod 10 is 4:
+  - 7^1 ≡ 7
+  - 7^2 ≡ 9
+  - 7^3 ≡ 3
+  - 7^4 ≡ 1
+  - then repeats.
+
+We can precompute these cycles, then check all pairs `(p.1, p.2)` efficiently.
+
+Here's the Python code implementing this logic:
+
+```python
+# Enumerate last digits of powers based on repeating cycles
+def last_digit_power(base, exponent):
+    cycle = {
+        3: [3, 9, 7, 1],
+        7: [7, 9, 3, 1]
+    }
+    # Determine position in cycle
+    index = (exponent - 1) % 4
+    return cycle[base][index]
+
+count = 0
+# Precompute last digits for powers of 3 and 7
+# because cycles repeat every 4
+for p1 in range(1, 101):
+    last_3 = last_digit_power(3, p1)
+    for p2 in range(101, 206):
+        last_7 = last_digit_power(7, p2)
+        total_mod = (last_3 + last_7) % 10
+        if total_mod == 0:
+            print(f"Pair: ({p1}, {p2})")
+            count += 1
+
+print("Total pairs:", count)
+```
+
+This enumerates all pairs efficiently, streaming partial results immediately when a pair matches.

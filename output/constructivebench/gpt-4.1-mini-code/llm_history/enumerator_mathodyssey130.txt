@@ -1,0 +1,69 @@
+[write_program]
+# The problem involves finding the greatest natural number n for which there exists an injective function f from Fin n to 4-tuples of Fin 9, with an additional combinatorial condition involving injective mappings g from Fin 4 to Fin n.
+# We will enumerate values of n from 1 up to a certain threshold (say 20 for efficiency and token limit), and for each n, we attempt to find such an function f satisfying the conditions.
+# Since the problem is complex and relates to combinatorial configurations, this approach will print candidate n values along with a boolean "possible" flag (True if such f exists for that n).
+# We prioritize to print candidates as soon as found and then output the greatest n found.
+
+```python
+from itertools import product, combinations
+from collections import defaultdict
+
+# Fin9 = {0,...,8}
+Fin9 = list(range(9))
+
+# We want to find the largest n for which there exists an injective f: Fin n → (Fin9 x Fin9 x Fin9 x Fin9)
+# satisfying certain constraints related to the injectivity and a forbidden configuration.
+
+# Due to complexity, we enumerate possible tuples for small n and check the condition:
+# The condition roughly says: there is no injective g: Fin4 → Fin n such that
+# for some fixed a,b,c in Fin9, each f(g(i)) has first three coordinates (a,b,c), and
+# for distinct i,j in Fin4, the fourth coordinate of f(g(i)) are distinct.
+# In other words, no 4 distinct elements in domain mapped by f to tuples with same first 3 components but distinct 4th component.
+
+# So: For candidate f (injective), the image tuples in Fin9^4,
+# there must NOT exist any "fiber" over (a,b,c) with at least 4 distinct distinct last coords.
+
+# We will try to construct such an f for increasing n.
+# We'll try a simplification: pick f that covers tuples with unique first three coordinates combined with distinct enough last coords.
+
+MAX_N = 20
+
+def fibers_ok(tuples):
+    # tuples is list of unique 4-tuples in Fin9^4
+    # check no (a,b,c) has >=4 different d's
+    fiber_count = defaultdict(set)
+    for (a,b,c,d) in tuples:
+        fiber_count[(a,b,c)].add(d)
+    return all(len(ds) < 4 for ds in fiber_count.values())
+
+def can_construct_f(n):
+    # Can we find n distinct 4-tuples in Fin9^4, such that fibers_ok satisfied?
+    # We'll try a simple approach: generate tuples in lex order and pick first n respecting fibers_ok.
+    tuples = []
+    for t in product(Fin9, repeat=4):
+        # test if adding t breaks fiber condition
+        (a,b,c,d) = t
+        # count current d's for (a,b,c)
+        current_ds = [x[3] for x in tuples if x[:3] == (a,b,c)]
+        if len(set(current_ds)) == 3 and d not in current_ds:
+            # adding d would create fiber of size 4, forbidden
+            continue
+        tuples.append(t)
+        if len(tuples) == n:
+            break
+    if len(tuples) < n:
+        return False
+    return True
+
+found_candidates = []
+for n in range(1, MAX_N+1):
+    possible = can_construct_f(n)
+    print(f"n = {n}: possible = {possible}")
+    if possible:
+        found_candidates.append(n)
+if found_candidates:
+    max_n = max(found_candidates)
+    print(f"Maximum possible n up to {MAX_N}: {max_n}")
+else:
+    print("No candidates found up to MAX_N.")
+```

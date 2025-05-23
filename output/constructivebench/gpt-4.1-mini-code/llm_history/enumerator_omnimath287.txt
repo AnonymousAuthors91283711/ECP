@@ -1,0 +1,51 @@
+[write_program]
+The problem concerns counting certain coloring matrices with symmetry conditions related to row and column permutations. We want to enumerate small cases (say for n=3,4,5) of nxn boolean matrices and check which satisfy the "orderly" condition, then count those matrices.
+
+We represent matrices by nested lists, generate all boolean matrices for small n, check the condition, and print the count. We print all found orderly matrices and also the total count for each n.
+
+```python
+from itertools import product, permutations
+
+def is_orderly(c, n):
+    rows = list(range(n))
+    # For each row permutation sigma, we must find a column permutation tau making c(σ(i), τ(j))=c(i,j)
+    for sigma in permutations(rows):
+        found_tau = False
+        for tau in permutations(rows):
+            if all(c[sigma[i]][tau[j]] == c[i][j] for i in rows for j in rows):
+                found_tau = True
+                break
+        if not found_tau:
+            return False
+    # For each column permutation tau, we must find a row permutation sigma making c(σ(i), τ(j))=c(i,j)
+    for tau in permutations(rows):
+        found_sigma = False
+        for sigma in permutations(rows):
+            if all(c[sigma[i]][tau[j]] == c[i][j] for i in rows for j in rows):
+                found_sigma = True
+                break
+        if not found_sigma:
+            return False
+    return True
+
+def matrix_to_str(c):
+    return "\n".join("".join('1' if cell else '0' for cell in row) for row in c)
+
+def main():
+    for n in range(3, 6):
+        print(f"n={n} parameters")
+        count = 0
+        rows = range(n)
+        # Enumerate all 2^(n*n) boolean matrices
+        for bits in product([False, True], repeat=n*n):
+            c = [list(bits[i*n:(i+1)*n]) for i in range(n)]
+            if is_orderly(c, n):
+                count += 1
+                print("Orderly matrix found:")
+                print(matrix_to_str(c))
+                print()
+        print(f"Total orderly matrices for n={n}: {count}\n")
+
+if __name__=="__main__":
+    main()
+```

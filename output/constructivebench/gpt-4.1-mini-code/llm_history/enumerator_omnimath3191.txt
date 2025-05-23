@@ -1,0 +1,44 @@
+[write_program]
+The problem involves finding tuples \((n, k_s)\) with \(k_s\) a list of \(n\) positive integers satisfying:
+- \(\sum k_i = 5n - 4\),
+- \(\sum \frac{1}{k_i} = 1\).
+
+We want to enumerate small \(n\) and lists \(k_s\) that satisfy these conditions and print them immediately.
+
+```python
+from fractions import Fraction
+from itertools import combinations_with_replacement
+
+def enum_ks(n):
+    target_sum = 5*n - 4
+    # To speed up, generate combinations with k_i>=1, sum k_i=target_sum
+    # The minimum sum of n ones is n, max sum is target_sum
+    # Use combinations_with_replacement to generate sorted sequences (non-decreasing)
+    # but sum fixed makes it tricky; Instead generate integer partitions of target_sum into n parts.
+    # partitions with exactly n parts is slow, so use a partition generator
+
+    # We'll generate compositions/partitions by recursion:
+    def gen_partitions(total, length, start=1):
+        if length == 1:
+            if total >= start:
+                yield [total]
+            return
+        for first in range(start, total - length + 1 + 1):
+            for rest in gen_partitions(total - first, length - 1, first):
+                yield [first] + rest
+
+    for ks in gen_partitions(target_sum, n):
+        # compute sum of reciprocals exactly
+        rec_sum = sum(Fraction(1, k) for k in ks)
+        if rec_sum == 1:
+            print(f"n={n}, ks={ks}, sum={sum(ks)}, reciprocal_sum=1")
+            yield (n, ks)
+
+def main():
+    # Test small n because sum grows fast
+    for n in range(1, 9):
+        list(enum_ks(n))
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,53 @@
+[write_program]
+This problem asks for the number of integer pairs (x,y) where 0 < x ≤ 2020, 0 < y ≤ 2020, and 3x² + 10xy + 3y² is a prime power (p^k where p is prime and k ≥ 1). We'll write a Python program to enumerate such pairs efficiently.
+
+Key observations:
+1. The expression factors as (3x + y)(x + 3y)
+2. For this to be a prime power, both factors must be powers of the same prime (with one possibly being 1)
+3. We can iterate through possible x and y values while checking the condition
+
+```python
+import math
+from sympy import isprime
+
+def count_pairs(max_val=2020):
+    count = 0
+    for x in range(1, max_val + 1):
+        for y in range(1, max_val + 1):
+            a = 3*x + y
+            b = x + 3*y
+            if a == 1 or b == 1:
+                continue  # 1 is not a prime power
+            gcd_val = math.gcd(a, b)
+            if gcd_val == 0:
+                continue
+            # Check if a/gcd and b/gcd are both 1 or coprime
+            a_reduced = a // gcd_val
+            b_reduced = b // gcd_val
+            if (a_reduced == 1 or b_reduced == 1) or (a_reduced == b_reduced == 1):
+                # Now check if gcd_val is a prime power
+                if gcd_val == 1:
+                    # Need either a or b to be a prime power
+                    if (a == 1 and isprime(b)) or (b == 1 and isprime(a)) or (isprime(a) and b == 1) or (isprime(b) and a == 1):
+                        count += 1
+                else:
+                    # Check if gcd_val is a prime power
+                    if isprime(gcd_val):
+                        count += 1
+                    else:
+                        # Check higher powers
+                        temp = gcd_val
+                        p = None
+                        for p_candidate in range(2, int(math.sqrt(temp)) + 1):
+                            if temp % p_candidate == 0 and isprime(p_candidate):
+                                while temp % p_candidate == 0:
+                                    temp //= p_candidate
+                                if temp == 1:
+                                    count += 1
+                                break
+    return count
+
+# For demonstration with smaller value (actual problem uses 2020)
+print("Counting pairs with max_val=20 (for demonstration):")
+print("Number of valid pairs:", count_pairs(20))
+```

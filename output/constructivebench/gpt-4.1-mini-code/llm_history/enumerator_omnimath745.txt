@@ -1,0 +1,64 @@
+[write_program]
+This problem involves summing binomial coefficients modulo 3 and averaging them over \(a, b \in \{0, \dots, 80\}\) with \(b \leq a\). I will write a Python program to:
+
+- Enumerate \(a, b\) in \([0,80]\),
+- Compute \(\binom{a}{b} \bmod 3\) efficiently via Lucas' theorem,
+- Sum the values where \(b \leq a\),
+- Calculate and print the running cumulative sums and averages.
+
+This can help spot patterns and conjecture \(\text{omnimath745_answer}\).
+
+Since the sum is large, the program prints intermediate sums at key steps and the final average.
+
+```python
+# Enumerate sums of C(a,b) mod 3 for 0 <= b <= a < 81 and compute average.
+
+def nCr_mod3(n, r):
+    # Compute nCr mod 3 using Lucas theorem
+    # Convert n,r in base 3
+    if r > n:
+        return 0
+    res = 1
+    while n > 0 or r > 0:
+        n_i = n % 3
+        r_i = r % 3
+        if r_i > n_i:
+            return 0
+        # C(n_i, r_i) mod 3: combin. for small n_i,r_i
+        # possible values:
+        # C(0,0)=1; C(1,0)=1; C(1,1)=1; C(2,0)=1; C(2,1)=2; C(2,2)=1
+        if r_i == 0 or r_i == n_i:
+            c = 1
+        elif n_i == 2 and r_i == 1:
+            c = 2
+        else:
+            c = 0  # others are zero mod 3
+            # Specifically handle C(1,1), C(1,0)
+            if n_i == 1 and r_i == 1:
+                c = 1
+            elif n_i == 1 and r_i == 0:
+                c = 1
+        if c == 0:
+            return 0
+        res = (res * c) % 3
+        n //= 3
+        r //= 3
+    return res
+
+def main():
+    total = 0
+    count = 0
+    for a in range(81):
+        for b in range(a+1):
+            val = nCr_mod3(a,b)
+            total += val
+            count += 1
+            # Print progress every 500 elements
+            if count % 500 == 0:
+                print(f"Sum after {count} pairs: {total}")
+    average = total / count
+    print(f"Total sum: {total}, Count: {count}, Average: {average}")
+
+if __name__ == "__main__":
+    main()
+```

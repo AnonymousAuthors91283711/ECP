@@ -1,0 +1,55 @@
+[write_program]
+This problem involves finding all 2x3 grid configurations (with non-negative integers) satisfying three equations. The variables are `grid 0 0`, `grid 0 1`, `grid 0 2`, `grid 1 0`, `grid 1 1`, and `grid 1 2`. The equations translate to:
+
+1. `grid 0 0 + 10 * grid 0 1 + 100 * grid 0 2 = 999`
+2. `grid 1 0 + 10 * grid 1 1 + 100 * grid 1 2 = 999`
+3. `grid 0 0 + grid 1 0 + 10 * (grid 0 1 + grid 1 1) + 100 * (grid 0 2 + grid 1 2) = 99`
+
+Given the constraints, the plan is:
+
+- Loop over possible values of `grid 0 2` and `grid 1 2`, since they appear multiplied by 100 and sum up close to 999.
+- For each, find `grid 0 1` and `grid 1 1` by solving the first two equations.
+- Then compute the sums for the third equation to verify consistency.
+- Count solutions and output each set as discovered.
+
+```python
+# Enumerate possible values for the hundreds place (since 100 * value <= 999)
+solutions = []
+
+# Loop over possible hundreds digits (0-9 because 100*9=900 <= 999)
+for g02 in range(10):
+    for g12 in range(10):
+        sum_row0 = 999
+        sum_row1 = 999
+
+        # For each row, find possibilities for g0_0, g0_1:
+        # equation: g0_0 + 10 * g0_1 + 100 * g0_2 = 999
+        # g0_0 = 999 - 10 * g0_1 - 100 * g0_2
+        # g0_0 >= 0 => 999 - 10 * g0_1 - 100 * g0_2 >= 0
+        # g0_1 >= 0, g0_1 <= (999 - 100 * g0_2)/10
+        max_g0_1 = (999 - 100 * g02) // 10
+        for g0_1 in range(max_g0_1 + 1):
+            g0_0 = 999 - 10 * g0_1 - 100 * g02
+            if g0_0 < 0:
+                continue
+
+            # Similarly for row 1
+            max_g1_1 = (999 - 100 * g12) // 10
+            for g1_1 in range(max_g1_1 + 1):
+                g1_0 = 999 - 10 * g1_1 - 100 * g12
+                if g1_0 < 0:
+                    continue
+
+                # Verify the third equation:
+                # g0_0 + g1_0 + 10*(g0_1 + g1_1) + 100*(g0_2 + g1_2) = 99
+                total = g0_0 + g1_0 + 10*(g0_1 + g1_1) + 100*(g02 + g12)
+                if total == 99:
+                    solutions.append({
+                        'grid0': (g0_0, g0_1, g02),
+                        'grid1': (g1_0, g1_1, g12)
+                    })
+                    print(f"Solution: {solutions[-1]}")
+
+# Output total count of solutions
+print(f"Total solutions: {len(solutions)}")
+```

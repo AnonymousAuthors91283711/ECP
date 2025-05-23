@@ -1,0 +1,65 @@
+[write_program]
+The problem involves finding integer-coefficient polynomials \(P\) where \(P(0) \neq 0\) and for all natural numbers \(n\) and \(m\), the product \(P(n)^m \cdot P(m)^n\) is a perfect square. To explore candidates, I will iterate over polynomials with small integer coefficients and check the given condition for small \(n,m\). Since the condition must hold for all \(n,m\), checking many pairs for each polynomial may indicate patterns or counterexamples.
+
+```python
+from sympy import symbols, Poly, factorint
+
+x = symbols('x')
+
+def is_perfect_square(n):
+    if n < 0:
+        return False
+    # Check if all prime exponents are even for n's prime factorization
+    f = factorint(n)
+    return all(e % 2 == 0 for e in f.values())
+
+def check_poly(P, test_range=5):
+    # Check P(0) != 0
+    if P.eval(0) == 0:
+        return False
+    # Check condition for all 1 <= n,m <= test_range
+    for n in range(1, test_range+1):
+        val_n = P.eval(n)
+        if val_n == 0:
+            return False  # If any value is zero, product may fail square
+        for m in range(1, test_range+1):
+            val_m = P.eval(m)
+            prod = val_n**m * val_m**n
+            if not is_perfect_square(prod):
+                return False
+    return True
+
+print("Enumerating polynomials of degree up to 2 with coefficients in -3..3")
+from sympy import ZZ
+
+coeff_range = range(-3,4)
+
+# Degree 0 polynomial (constant)
+for c0 in coeff_range:
+    P = Poly(c0, x, domain=ZZ)
+    res = check_poly(P)
+    if res:
+        print(f"Candidate polynomial: P(x) = {P}")
+
+# Degree 1 polynomial
+for c1 in coeff_range:
+    if c1 == 0:
+        continue
+    for c0 in coeff_range:
+        P = Poly(c1*x + c0, x, domain=ZZ)
+        res = check_poly(P)
+        if res:
+            print(f"Candidate polynomial: P(x) = {P}")
+
+# Degree 2 polynomial
+for c2 in coeff_range:
+    if c2 == 0:
+        continue
+    for c1 in coeff_range:
+        for c0 in coeff_range:
+            P = Poly(c2*x**2 + c1*x + c0, x, domain=ZZ)
+            res = check_poly(P)
+            if res:
+                print(f"Candidate polynomial: P(x) = {P}")
+```
+

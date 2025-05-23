@@ -1,0 +1,50 @@
+[write_program]
+This problem involves finding two two-digit integers \( a \) and \( b \) (from 10 to 99) such that the following hold:
+
+\[
+\begin{cases}
+100a + b = m^2 \\
+201a + b = n^2
+\end{cases}
+\]
+for some integers \( m, n \).
+
+Subtracting the two equations:
+\[
+(201a + b) - (100a + b) = n^2 - m^2 \implies 101a = (n - m)(n + m).
+\]
+
+We want to find all possible \( a, b \) with the given constraints.
+
+Given \( 10 \le a, b \le 99 \),
+we can iterate over small \( a \), compute candidate \( n, m \), then verify if \( b \) is a two-digit integer.
+
+Here's the code:
+
+```python
+# Enumerate all possible a in the range 10..99
+for a in range(10, 100):
+    # For each a, compute 101 * a, which factors into (n - m)*(n + m)
+    target = 101 * a
+    # n - m and n + m must be divisor pairs of target with same parity
+    for d in range(1, int(target**0.5) + 1):
+        if target % d == 0:
+            d1 = d
+            d2 = target // d
+            # (n - m) = d1, (n + m) = d2 or vice versa
+            for (delta, sum_) in [(d1, d2), (d2, d1)]:
+                # Check for same parity to get integer m, n
+                if (delta + sum_) % 2 == 0 and (sum_ - delta) % 2 == 0:
+                    n_plus_m = sum_
+                    n_minus_m = delta
+                    n = (n_plus_m + n_minus_m) // 2
+                    m = (n_plus_m - n_minus_m) // 2
+                    # Compute b = 100a + m^2 - 100a
+                    # Actually, from earlier: 100a + b = m^2 => b = m^2 - 100a
+                    # Also, from first eq: b = m^2 - 100a
+                    b = m**2 - 100 * a
+                    if 10 <= b <= 99:
+                        print(f"a={a}, b={b}, m={m}, n={n}")
+```
+
+This code systematically searches for all \( a, b \) pairs that satisfy the equations, printing solutions immediately when found.

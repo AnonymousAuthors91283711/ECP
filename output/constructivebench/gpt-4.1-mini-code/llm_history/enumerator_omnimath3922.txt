@@ -1,0 +1,47 @@
+[write_program]
+The problem asks whether there exists an integer-valued function \(m\) on the finite set \(\{0, \ldots, 14\}\) such that the sum over \(k\) of \(m_k \cdot \arctan(k+1)\) equals \(\arctan(16)\).  
+I'll write a program to enumerate integer coefficient vectors \(m\) with small entries to find such relations. The program prints any found exact integer combinations giving \(\arctan(16)\) up to a small numerical tolerance.
+
+```python
+import math
+
+# We try integer vectors m = (m0,...,m14) with each m_i in [-limit, limit]
+# and sum m_i * arctan(i+1) approx arctan(16).
+# Small limits for efficiency.
+limit = 3
+arctans = [math.atan(i+1) for i in range(15)]
+target = math.atan(16)
+eps = 1e-9
+
+def approx_equal(a,b,eps=1e-9):
+    return abs(a-b) < eps
+
+print(f"Trying integer vectors m_i in [-{limit},{limit}] for i=0..14")
+print(f"Target = arctan(16) ≈ {target:.12f}")
+
+# To speed up: only enumerate vectors with most coefficients zero or small sum abs.
+# We limit the number of nonzero coefficients to 3 for tractability.
+
+from itertools import combinations, product
+
+max_nonzero = 3
+
+for nz in range(1, max_nonzero+1):
+    print(f"Trying vectors with {nz} nonzero coefficients...")
+    for indices in combinations(range(15), nz):
+        # enumerate all integer assignments for chosen indices
+        for values in product(range(-limit,limit+1), repeat=nz):
+            if all(v == 0 for v in values):
+                continue
+            val = 0.0
+            for idx,v in zip(indices, values):
+                val += v * arctans[idx]
+            if approx_equal(val, target, eps):
+                # Print exact vector found:
+                m = [0]*15
+                for idx,v in zip(indices, values):
+                    m[idx] = v
+                print("Found approximation with m =", m)
+```
+This program tries integer combinations with up to 3 nonzero coefficients in [-3,3] and prints approximations of \(\arctan(16)\).  
+Running this may indicate whether such integer linear combinations exist. Increasing limit or number of nonzeros is possible but costly.

@@ -1,0 +1,48 @@
+[write_program]
+This problem involves enumerating numbers with exactly two 1's in their binary representation within a certain range, then checking divisibility by 9 and calculating the probability that a randomly chosen such number is divisible by 9. The goal is to confirm the fraction p/q = 83/830 and p+q = 913.
+
+We can:
+- Enumerate all 40-bit numbers with exactly two 1's.
+- Check divisibility by 9.
+- Output counts for total and divisible numbers.
+- Print the fraction in lowest terms for evidence.
+
+We'll print intermediate results streaming as found, but since total is large, we'll directly count efficiently using combinatorics and modular arithmetic instead of explicitly iterating all 2^40 numbers.
+
+```python
+# Enumerate numbers with exactly two 1's among 40 positions
+# Count how many are divisible by 9 to confirm probability = 83/830.
+
+from math import gcd
+
+def mod9_of_num(bits):
+    # number = 2^i + 2^j, mod 9 = (2^i mod 9 + 2^j mod 9) mod 9
+    # precompute 2^k mod 9 for k in [0..39]
+    pow2_mod9 = [1]
+    for _ in range(39):
+        pow2_mod9.append((pow2_mod9[-1]*2) % 9)
+    return bits, pow2_mod9
+
+def main():
+    pow2_mod9 = [1]
+    for _ in range(39):
+        pow2_mod9.append((pow2_mod9[-1]*2) % 9)
+    total = 0
+    divisible = 0
+    # i < j, positions of 1-bits in 40-bit number
+    for i in range(40):
+        for j in range(i+1,40):
+            rem = (pow2_mod9[i] + pow2_mod9[j]) % 9
+            total += 1
+            if rem == 0:
+                divisible += 1
+                print(f"Divisible: bits at positions {i}, {j}; number mod 9=0")
+    print(f"Total numbers with exactly two 1's in 40 bits: {total}")
+    print(f"Count divisible by 9: {divisible}")
+    g = gcd(divisible, total)
+    p, q = divisible // g, total // g
+    print(f"Probability = {p}/{q} with sum p+q={p+q}")
+
+if __name__ == "__main__":
+    main()
+```

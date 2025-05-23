@@ -1,0 +1,84 @@
+[write_program]
+This problem describes a population of students, each with a pair of eye colors (each color indexed 0,1,2), with given proportions of students having at least one eye of a certain color. We want to find the proportion of students having both eyes the same color.
+
+We'll enumerate small populations (small `n`) and assign pairs `(a,b)` where `a,b` in {0,1,2}, ensuring the marginal conditions on counts of students having eye 0, 1 or 2 on at least one side hold approximately. We then count how many have `a = b`. We print such candidate proportions for small `n` and display the observed proportion.
+
+Because the problem is combinatorial, enumerating all assignments for even small `n` is huge. So instead, we iterate over all possible distributions of counts of pairs `(a,b)` summing to `n` with increments of `n` up to some small integer `n` (like 10), consistent with the marginal constraints.
+
+We'll print approximate fractions and whenever fraction numerator/denominator matches closely the marginals (3/10,4/10,5/10), we'll print the proportion of "same eye" pairs.
+
+```python
+from fractions import Fraction
+from itertools import product
+
+# We want to find a set of nonnegative integers n_ab for a,b in {0,1,2}:
+# sum n_ab = N (small)
+# The marginal constraints:
+# count of students with eye color 0 on at least one eye = 3/10 * N
+# count of students with eye color 1 on at least one eye = 4/10 * N
+# count of students with eye color 2 on at least one eye = 5/10 * N
+# Note that these sets overlap; so:
+# For color c, count is sum_{(a,b): a=c or b=c} n_ab
+
+# Then compute proportion of n_aa / N and print candidates
+
+def almost_equal_frac(f1, f2, tol=1e-2):
+    return abs(float(f1 - f2)) < tol
+
+def check_constraints(n_ab, N):
+    # compute counts:
+    count0 = sum(n_ab[a][b] for a in range(3) for b in range(3) if a == 0 or b == 0)
+    count1 = sum(n_ab[a][b] for a in range(3) for b in range(3) if a == 1 or b == 1)
+    count2 = sum(n_ab[a][b] for a in range(3) for b in range(3) if a == 2 or b == 2)
+    # compare to fractions:
+    return (almost_equal_frac(Fraction(count0, N), Fraction(3,10)) and
+            almost_equal_frac(Fraction(count1, N), Fraction(4,10)) and
+            almost_equal_frac(Fraction(count2, N), Fraction(5,10)))
+
+def print_result(n_ab, N):
+    num_same = sum(n_ab[i][i] for i in range(3))
+    frac_same = Fraction(num_same, N)
+    print(f"N={N}, same eye fraction = {num_same}/{N} = {float(frac_same):.3f}")
+
+# N max small because 9 variables sum to N, complexity O(N^8)
+# We'll try N=10 for demonstration
+N = 10
+
+# Function to generate all integer partitions of N into 9 parts (for n_ab)
+# but this is large; we do a smarter approach:
+# Generate tuples (n_00,...,n_22), sum to N
+# We'll do constrained enumeration - only try sums to N
+
+def enumerate_n_ab(N):
+    # We'll enumerate n_ab[a][b] as flat list
+    # 9 variables: from 0 to N, sum N
+    # Using integer compositions with 9 parts summing to N
+
+    def compositions(n, k):
+        # Generate compositions of n into k parts
+        if k == 1:
+            yield (n,)
+            return
+        for i in range(n+1):
+            for tail in compositions(n-i, k-1):
+                yield (i,) + tail
+
+    for comp in compositions(N,9):
+        n_ab = [[0]*3 for _ in range(3)]
+        idx = 0
+        for a in range(3):
+            for b in range(3):
+                n_ab[a][b] = comp[idx]
+                idx += 1
+        yield n_ab
+
+print("Enumerating candidates for N=10 with constraints 3/10,4/10,5/10 on color presence.")
+
+count_found = 0
+for n_ab in enumerate_n_ab(N):
+    if check_constraints(n_ab,N):
+        print_result(n_ab,N)
+        count_found += 1
+        if count_found >= 15:
+            break
+```

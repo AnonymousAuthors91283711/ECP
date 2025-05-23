@@ -1,0 +1,44 @@
+[write_program]
+This problem involves a recursive sequence where each term depends on the previous term and constants a0 and c. We need to find conditions on a0 and c such that the first 1990 terms are positive but the 1991st term is negative.
+
+The recursive relation resembles the addition formula for tangent function. Let's explore this connection by testing small values of n and different (a0,c) pairs to find patterns.
+
+```python
+import math
+
+def check_sequence(a0, c, max_n=1990):
+    """Check if sequence stays positive for n < max_n and negative at n=max_n"""
+    f = a0
+    for n in range(1, max_n + 1):
+        if f <= 0 and n < max_n:
+            return False
+        f = (f + c) / (1 - c * f)
+        if math.isinf(f) or math.isnan(f):
+            return False
+    return f < 0
+
+def find_conditions():
+    """Find (a0,c) pairs satisfying the condition"""
+    # Test small rational values for c
+    for c_num in range(1, 5):
+        for c_den in range(1, 5):
+            c = c_num / c_den
+            if c >= 1:  # Avoid division by zero in recursion
+                continue
+                
+            # Find critical a0 values
+            tan_c = math.tan(c * math.pi / 2)
+            for k in range(1, 1990):
+                a0_lower = math.tan((k - 0.5) * math.pi - c * 1990 * math.pi / 2)
+                a0_upper = math.tan(k * math.pi - c * 1990 * math.pi / 2)
+                
+                # Test values around critical points
+                for delta in [0.01, -0.01]:
+                    a0_test = (a0_lower + a0_upper)/2 + delta
+                    if a0_test > 0 and check_sequence(a0_test, c):
+                        print(f"Found valid pair: a0={a0_test:.4f}, c={c:.4f}")
+
+if __name__ == "__main__":
+    find_conditions()
+    print("Enumerated possible (a0,c) pairs")
+```

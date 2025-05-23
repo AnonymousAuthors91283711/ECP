@@ -1,0 +1,37 @@
+[write_program]
+The problem involves counting permutations \( f \) of the set \(\{0, \ldots, 6\}\) with the property that for each \( i \) in \( \{0, \ldots, 5\} \), \((f(i) + 1)(f(i+1) + 1) \leq 20\), and also \((f(6) + 1)(f(0) + 1) \leq 20\). We work with values from 1 to 7 (due to +1 offset).
+
+To enumerate, generate all permutations of \(\{0, \ldots, 6\}\), then check these inequalities around the cycle. We print each permutation that fits, showing the product pairs, and at end summarize the count.
+
+Small search space (7! = 5040 permutations) allows full enumeration. This satisfies requirement 3 by fixing \(n=7\).
+
+```python
+from itertools import permutations
+
+n = 7
+count = 0
+
+# Precompute the allowed pairs (a,b) with (a+1)*(b+1) <= 20 for digits 0..6
+allowed_pairs = set()
+for a in range(n):
+    for b in range(n):
+        if (a+1)*(b+1) <= 20:
+            allowed_pairs.add((a, b))
+
+print("Enumerating permutations f of {0,..,6} where for all i, (f(i)+1)*(f(i+1)+1)<=20 mod 7")
+
+for p in permutations(range(n)):
+    # Check the cyclic condition on consecutive indices
+    valid = True
+    for i in range(n):
+        if (p[i], p[(i+1)%n]) not in allowed_pairs:
+            valid = False
+            break
+    if valid:
+        count += 1
+        # Print permutation and product pairs (f(i)+1)*(f(i+1)+1)
+        products = [(p[i]+1)*(p[(i+1)%n]+1) for i in range(n)]
+        print(f"Perm: {p} Products: {products}")
+
+print(f"Total count of such permutations: {count}")
+```

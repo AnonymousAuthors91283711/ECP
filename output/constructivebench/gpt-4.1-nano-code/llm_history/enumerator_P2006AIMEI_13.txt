@@ -1,0 +1,44 @@
+[write_program]
+This problem involves finding the greatest n less than 1000 such that the sum of 2-adic valuations (exponent of 2) over numbers in the range [0, 2^{n-1}) is a perfect square. Our task is to generate candidate values and verify which correspond to perfect squares. Since the sum involves 2-adic valuations of 2*k for all k, note that v_2(2*k) = 1 + v_2(k). 
+
+To efficiently compute the sum, for each n, count how many k in [0, 2^{n-1}) have a particular v_2(k). The sum is then:
+\[ \sum_{k=0}^{2^{n-1}-1} (1 + v_2(k)) \]
+which simplifies to:
+\[ 2^{n-1} + \sum_{k=0}^{2^{n-1}-1} v_2(k) \]
+
+The sum of v_2(k) for k in [0, 2^{n-1}) can be computed by counting the number of k with a certain valuation. The key is that v_2(k) counts how many trailing zeros k has in binary.
+
+We will generate n from small values up to 999, compute the sum, check if it's a perfect square, and track the maximum n where this holds. 
+
+```python
+import math
+
+def v2(k):
+    """Compute 2-adic valuation of k."""
+    count = 0
+    while k > 0 and k % 2 == 0:
+        k //= 2
+        count += 1
+    return count
+
+# Precompute counts of v_2 for k in [0, 2^{n-1})
+# Instead of enumerating all, use recursive pattern recognition
+max_n = 0
+max_n_value = 0
+
+for n in range(1, 1000):
+    limit = 2 ** (n - 1)
+    total_v2_sum = 0
+    for k in range(limit):
+        total_v2_sum += v2(k)
+    total_sum = limit + total_v2_sum
+    sqrt_candidate = int(math.isqrt(total_sum))
+    if sqrt_candidate * sqrt_candidate == total_sum:
+        # We found a sum that is a perfect square
+        print(f"n={n}, sum={total_sum}={sqrt_candidate}^2")
+        if n > max_n:
+            max_n = n
+            max_n_value = total_sum
+
+print(f"Maximum n less than 1000 with sum perfect square: {max_n}")
+```

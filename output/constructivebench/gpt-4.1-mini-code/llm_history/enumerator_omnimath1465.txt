@@ -1,0 +1,150 @@
+[write_program]
+The problem asks to find tuples (a,b,c) for which a given quartic polynomial with coefficients involving a,b,c has exactly three distinct roots that are the tangent values of y, 2y, and 3y for some real y. The polynomial is degree 4 but with degree exactly 3 (so the leading coefficient annihilates?), and these three roots are distinct and exhaust the roots except for one (since degree is 3). 
+
+We want to enumerate candidate triples (a,b,c). Since y is a parameter here, we will test some rational multiples of π (avoiding poles of tan) to compute r1, r2, r3. For each triple, check if there is a quartic polynomial of the shape given (X^4 + a X^3 + b X^2 + a X + c) that has those as roots, with degree exactly 3 (which probably means the polynomial is divisible by X - some root). We'll try to find a,b,c satisfying the conditions, then print them.
+
+Below is a Python program that enumerates y values and tries algebraically to find (a,b,c) matching the polynomial conditions, printing the results immediately.
+
+```python
+import math
+
+def isclose(a, b, eps=1e-9):
+    return abs(a - b) < eps
+
+def polynomial_eval(a, b, c, x):
+    # Evaluate p(x) = x^4 + a x^3 + b x^2 + a x + c
+    return x**4 + a*x**3 + b*x**2 + a*x + c
+
+def find_abc_from_roots(r1, r2, r3):
+    # Given roots r1, r2, r3, we want polynomial:
+    # p(x) = x^4 + a x^3 + b x^2 + a x + c
+    # with degree exactly 3 => leading coeff is zero? Or polynomial has a factor (x - root) dividing out the x^4 term?
+    # The problem says p.natDegree = 3 (so the coefficient of x^4 is zero in evaluation).
+    # Since Polynomial.X^4 is the highest term and leading coefficient is 1 in the problem, this means the polynomial is not monic degree 4.
+    # The problem is ambiguous, but as the polynomial starts with X^4 term, with coefficient 1, then degree is 4,
+    # so to have natDegree 3, the leading coefficient must be zero, so polynomial is effectively degree 3.
+    # So the quartic polynomial equals zero, but leading coefficient 1 means impossible, so maybe the polynomial is zero mod polynomial factor that kills degree 4.
+    #
+    # Alternative: Consider p(x) factors as (x - r1)(x - r2)(x - r3)(x - r), but degree 3 means leading coeff zero, so leading term cancels.
+    #
+    # We try to find a relation for unknown a,b,c in terms of roots.
+    # Since:
+    # p(x) = x^4 + a x^3 + b x^2 + a x + c
+    # = (x - r1)(x - r2)(x - r3)(x - r4)
+    # Coefficients of quartic:
+    # sum roots = -a
+    # sum product pairs = b
+    # sum product triples = -a
+    # product roots = c
+    #
+    # From conditions:
+    #   a = - (r1 + r2 + r3 + r4)
+    #   b = (sum of roots two at a time)
+    #   a = - (sum of roots three at a time)
+    #   c = product of roots
+    #
+    # Equate the two expressions for 'a' to find r4.
+    #
+    r_sum_3 = r1 + r2 + r3
+    r_sum_2_3 = r1*r2 + r2*r3 + r1*r3
+    r_prod_3 = r1*r2*r3
+
+    # a = - (r1 + r2 + r3 + r4)
+    # and a = - (r1 r2 r3 + r2 r3 r4 + r1 r3 r4 + r1 r2 r4) but problem gives a same as negative sum of triple products of roots
+    # But from coefficients:
+    # Coef x^3 = a = -sum roots
+    # Coef x^2 = b = sum product pairs
+    # Coef x^1 = a = - sum triple products
+    # Coef x^0 = c = product roots
+
+    # So from that:
+    # - (r1 + r2 + r3 + r4) = a
+    # and
+    # - (r1 r2 r3 + r2 r3 r4 + r1 r3 r4 + r1 r2 r4) = a
+    # Left sides must be equal, so:
+    # -(r1 + r2 + r3 + r4) = -(r1 r2 r3 + r2 r3 r4 + r1 r3 r4 + r1 r2 r4)
+    #
+    # Multiply both sides by -1:
+    # r1 + r2 + r3 + r4 = r1 r2 r3 + r2 r3 r4 + r1 r3 r4 + r1 r2 r4
+    #
+    # Rearrange terms by treating r4 as variable:
+    # r4 + r1 + r2 + r3 = r1 r2 r3 + r4 (r1 r2 + r2 r3 + r1 r3)
+    # r4 - r4 (r1 r2 + r2 r3 + r1 r3) = r1 r2 r3 - (r1 + r2 + r3)
+    # r4 (1 - (r1 r2 + r2 r3 + r1 r3)) = r1 r2 r3 - (r1 + r2 + r3)
+    #
+    # If denominator zero, no solution.
+    denom = 1 - r_sum_2_3
+    if abs(denom) < 1e-12:
+        return None
+    r4 = (r_prod_3 - r_sum_3) / denom
+
+    # Now calculate a,b,c from roots:
+    a = - (r1 + r2 + r3 + r4)
+    b = r1*r2 + r2*r3 + r1*r3 + r1*r4 + r2*r4 + r3*r4
+    a_check = - (r1*r2*r3 + r2*r3*r4 + r1*r3*r4 + r1*r2*r4)
+    # Check consistency of a:
+    if not isclose(a, a_check):
+        return None
+    c = r1*r2*r3*r4
+
+    # Verify polynomial degree is 3: leading coefficient is 1, so degree is 4.
+    # But problem states degree is 3 exactly, so leading coeff must vanish,
+    # But our poly has leading coeff 1, so actually the polynomial string given is degree 4,
+    # So to have degree 3, coefficient for x^4 must be zero, contradicting.
+    #
+    # So the only way is polynomial is divisible by x - r0 and leading term cancels out,
+    # but from problem it is given polynomial qed x^4 + a x^3 + b x^2 + a x + c
+    #
+    # Alternatively, problem suggests that the polynomial's degree is 3, so the polynomial is divisible by (x - root)
+    # which zeroes the coefficient of x^4. So the polynomial is not really monic degree 4,
+    # but degree 3 polynomial; polynomial is monic degree 4 but equal to zero polynomial after subtracting (x - root)s?
+    #
+    # We will accept these values for a,b,c if degree < 4 is observed. Otherwise skip.
+    #
+    # Since polynomial has leading term 1*x^4, degree 4, degree condition fails if leading coeff nonzero.
+    # So check if the polynomial coefficients simplify to degree 3 polynomial:
+    # For degree 3:
+    # Coeff of x^4 = 0
+    # But coefficient is 1, so not zero.
+    # So the problem wants that the polynomial has natural degree 3,
+    # that means the quartic polynomial equals zero polynomial only if leading coefficient gone.
+    # So skip if degree 4.
+    #
+    # So only accept if something else holds. The problem is that leading coeff is fixed.
+    #
+    # We just output (a,b,c).
+
+    # Now check roots:
+    roots = [r1, r2, r3, r4]
+    if len(set(roots)) != 4:
+        # Roots not distinct
+        return None
+
+    return (a,b,c,r4)
+
+def tan_check_angle(y):
+    # Check no tan poles near y, 2y, 3y by verifying cos(y), cos(2y), cos(3y) not zero
+    return (abs(math.cos(y)) > 1e-7 and abs(math.cos(2*y)) > 1e-7 and abs(math.cos(3*y)) > 1e-7)
+
+def main():
+    print("Enumerating possible (a,b,c) for y in samples:")
+    step = 0.1
+    # try y from 0.1 to 1.5 in steps
+    for i in range(1, 16):
+        y = i * step
+        if not tan_check_angle(y):
+            continue
+        r1 = math.tan(y)
+        r2 = math.tan(2*y)
+        r3 = math.tan(3*y)
+        if abs(r1 - r2) < 1e-9 or abs(r2 - r3) < 1e-9 or abs(r1 - r3) < 1e-9:
+            continue
+        abc = find_abc_from_roots(r1,r2,r3)
+        if abc is not None:
+            a,b,c,r4 = abc
+            print(f"y={y:.2f} -> a={a:.6f} b={b:.6f} c={c:.6f} r4={r4:.6f}")
+
+if __name__ == "__main__":
+    main()
+```
+This program samples y values in [0.1,1.5] and tries to find quadruple roots matching polynomial coefficients. It prints all (a,b,c) found with their corresponding y and computed root r4. This can assist in conjecturing the pattern of all such (a,b,c).

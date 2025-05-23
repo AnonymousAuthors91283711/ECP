@@ -1,0 +1,81 @@
+[write_program]
+This problem involves a strictly increasing sequence \( a : \mathbb{N} \to \mathbb{N} \) such that every natural number \( n \) can be uniquely written in the form
+
+\[
+n = a_i + 2 a_j + 4 a_k,
+\]
+
+with \( i,j,k \in \mathbb{N} \). The question is to find \( a_{1998} \) under these conditions.
+
+To assist in conjecturing the true answer, the Python program below attempts to enumerate possible sequences \( a \) with small values for initial terms and checks the uniqueness and coverage properties for numbers up to a certain threshold. It prints candidate sequences that satisfy these properties, aiming to identify patterns and potentially the exact \( a_{1998} \).
+
+```python
+# Enumerate candidate strictly increasing sequences a, satisfying
+# uniqueness and coverage of n by n = a_i + 2 a_j + 4 a_k.
+# We consider small initial sequences and verify conditions for n <= 100.
+# Print partial results to guide conjecture on a.
+
+def check_uniqueness_and_coverage(a, max_n):
+    # Check if every n in 0..max_n can be uniquely represented as a_i + 2 a_j + 4 a_k
+    represent = {}
+    length = len(a)
+    for n in range(max_n + 1):
+        reps = []
+        for i in range(length):
+            ai = a[i]
+            if ai > n:
+                break
+            for j in range(length):
+                val_j = 2 * a[j]
+                if ai + val_j > n:
+                    break
+                for k in range(length):
+                    val_k = 4 * a[k]
+                    s = ai + val_j + val_k
+                    if s == n:
+                        reps.append((i,j,k))
+                    if s > n:
+                        break
+        if len(reps) == 0 or len(reps) > 1:
+            return False
+        represent[n] = reps[0]
+    return True
+
+def strictly_increasing(seq):
+    return all(x < y for x, y in zip(seq, seq[1:]))
+
+def main():
+    max_n = 100
+    # We try candidate sequences a up to length 10 starting at 0
+    # We fix a_0 = 0 for convenience (since 0 is natural number)
+    # Then generate candidate sequences increasing by at least 1
+    
+    from itertools import combinations
+    from math import inf
+    
+    # We'll try sequences starting with 0
+    # We'll generate next terms up to max_term to keep enumeration feasible
+    max_term = 50
+    
+    # To keep output small, just scan sequences of length 7 with strictly increasing values
+    # and print the ones passing checks
+    
+    # We fix a_0 = 0
+    first_term = 0
+    length = 7
+    # For candidate sequences, select (length -1) increasing numbers from 1..max_term
+    candidates = combinations(range(1, max_term+1), length-1)
+    count = 0
+    for c in candidates:
+        a = (first_term,) + c
+        if not strictly_increasing(a):
+            continue
+        if check_uniqueness_and_coverage(a, max_n):
+            print(f"Candidate a: {a}")
+            count += 1
+            if count >= 5:
+                break
+
+if __name__ == "__main__":
+    main()
+```

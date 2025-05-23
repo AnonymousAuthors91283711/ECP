@@ -1,0 +1,98 @@
+[write_program]
+Problem analysis:
+We have two strictly increasing integer sequences \(a_n\), \(b_n\) with \(a_1 = b_1 = 1\), \(a_2 \leq b_2\), and some \(n\) with \(a_n b_n = 2010\). The problem asks for the greatest such \(n\).
+
+We want to enumerate pairs \((a_n, b_n)\) with \(a_n < a_{n+1}\), \(b_n < b_{n+1}\), \(a_1 = b_1 = 1\), \(a_2 \leq b_2\) and find \(n\) with \(a_n b_n = 2010\).
+
+We seek greatest such \(n\), so let's enumerate:
+
+- Divisors of 2010 = \(1, 2, 3, 5, 6, 10, 15, 30, 67, 134, 201, 335, 402, 670, 1005, 2010\).
+- For fixed \(n\), \(a_n b_n = 2010\) means \(a_n\) and \(b_n\) is a divisor pair.
+- Sequences are strictly increasing with first term = 1.
+- \(a_2 \leq b_2\).
+- We'll try to find the largest \(n\) where \(a_n b_n = 2010\) for some increasing sequences.
+
+To simplify enumeration, let's fix \(a_n\), \(b_n = 2010 / a_n\) both integers.
+
+Enumerate candidate \(n\) from 1 up to some max (say 20), and possible \(a_n\), \(b_n\) pairs.
+
+We try to construct sequences starting with 1, then stepping up to \(a_n, b_n\) at position \(n\) for each divisor pair and check all monotone constraints and \(a_2 \le b_2\).
+
+We'll print all usable \(n\) and at the end print max.
+
+```python
+# Enumerate possible n with a_n * b_n = 2010 and sequences a, b strictly increasing,
+# starting with a_1 = b_1 = 1, a_2 <= b_2. Print all found solutions and max n.
+
+def divisors(n):
+    divs = []
+    for i in range(1, int(n**0.5)+1):
+        if n % i == 0:
+            divs.append(i)
+            if i*i != n:
+                divs.append(n//i)
+    return sorted(divs)
+
+def check_seq(a2, b2, n, an, bn):
+    # sequences a, b must be strictly increasing integers starting at 1
+    # a_1=1, b_1=1, a_2 = a2, b_2 = b2 with a2 <= b2
+    if not (1 < a2 <= b2):  
+        return False
+    # For n=1, a_1*b_1=1*1=1 !=2010 no
+    # For n=2 check if a2 * b2 == 2010 (or later n)
+    # We'll assume monotone increments from 1 to a2 and 1 to b2 then to an and bn at n:
+    # We can have strictly increasing sequences like:
+    # a:1 < a2 < ... < an
+    # b:1 < b2 < ... < bn
+    # with a_n * b_n = 2010
+
+    # To ensure a, b strictly increasing integer sequences between indices,
+    # minimal increments are steps of 1.
+
+    # minimal length for strictly increasing from 1 to an is (an - 1 + 1) (value steps)
+    # similarly for b.
+
+    # Number of steps needed to reach an from a2 is an - a2 (if n>2)
+    # Similarly for b.
+
+    # To reach position n from 2, need enough steps for increments:
+    # n-2 steps to increase from a2 to an >= n -2
+    if an <= a2 or bn <= b2:
+        return False
+    # We can always define monotone sequences if differences are large enough
+    # So final check for sequence plausibility:
+    # length n >= max(an -1, bn -1)+1 to ensure possible increments
+    # Since we only enumerate small n, check n >= max(an, bn)
+    # Let's relax and accept if an and bn >= n (since sequences are increasing from 1)
+    if an < n or bn < n:
+        return False
+    return True
+
+def main():
+    N_MAX = 20
+    target = 2010
+    divs = divisors(target)
+    max_n = 0
+    print("Enumerate sequences with a1=b1=1, a2<=b2, strictly increasing, and a_n*b_n=2010")
+    for n in range(1, N_MAX+1):
+        for an in divs:
+            bn = target // an
+            if an * bn == target:
+                # Try possible a2, b2 with 1 < a2 <= b2 < an,bn for n>1 else skip
+                # For n=1 only a1=1,b1=1 sets 2010? No since 1*1=1
+                if n == 1:
+                    continue
+                for a2 in range(2, an+1):
+                    for b2 in range(a2, bn+1):
+                        if check_seq(a2, b2, n, an, bn):
+                            print(f"Found n={n}, a_n={an}, b_n={bn}, a_2={a2}, b_2={b2}")
+                            max_n = max(max_n, n)
+                            break  # break b2 loop
+                    else:
+                        continue
+                    break  # break a2 loop
+    print(f"Maximum n with a_n * b_n = 2010 under constraints: {max_n}")
+
+if __name__ == "__main__":
+    main()
+```

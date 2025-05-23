@@ -1,0 +1,76 @@
+[write_program]
+The problem involves finding integer coefficients \(a\) such that the polynomial 
+\[ X^n + a X^{n-1} + p q \]
+factors nontrivially over \(\mathbb{Z}[X]\), with \(p\) prime, \(q\) squarefree, and not divisible by \(p\), for \(n \geq 3\).
+
+Since the original theorem is abstract, we'll experiment with small primes \(p\), small squarefree integers \(q\) (coprime to \(p\)), and values \(n=3,4,5\). For each triple, we try to factor the polynomial \(X^n + a X^{n-1} + p q\) and collect all integer \(a\) making it reducible. This enumerates possible answers; from this data, conjectures about the form of \(\text{omnimath134_answer}(p,q,n)\) can emerge.
+
+We use sympy's polynomial factorization over integers. To keep output short and informative:
+- Print parameters used.
+- Print every \(a\) found with a factorization.
+- Stop after collecting answers up to abs(a) ≤ 10 (arbitrarily small bound for feasibility).
+- For larger \(n\) values the search is heavier, so we limit \(a\)'s range and sample \(n=3,4\).
+
+```python
+# enumerator.py
+from sympy import symbols, Poly, factor
+from sympy.ntheory import isprime
+from math import gcd
+
+X = symbols('X')
+
+def is_squarefree(m):
+    if m == 0:
+        return False
+    # Check if m is squarefree: no prime divides m more than once
+    m = abs(m)
+    for p in range(2, int(m**0.5)+1):
+        if m % (p*p) == 0:
+            return False
+    return True
+
+def polynomial_reducible(n, a, pq):
+    # Poly: X^n + a X^{n-1} + pq
+    f = Poly(X**n + a*X**(n-1) + pq, X)
+    fac = factor(f)
+    # factor returns either the polynomial itself if irreducible or product of factors
+    # If fac != f => reducible
+    return fac != f
+
+def test_p_q_n(p, q, n, a_range=range(-10,11)):
+    print(f"\nTesting p={p} (prime), q={q} (squarefree, gcd(p,q)=1), n={n}")
+    pq = p*q
+    answers = []
+    for a in a_range:
+        if polynomial_reducible(n, a, pq):
+            print(f" Reducible for a={a}")
+            answers.append(a)
+    if answers:
+        print(f" => All a with reducible polynomial: {sorted(set(answers))}")
+    else:
+        print(" => No reducible polynomial found in this a-range.")
+
+def main():
+    # Sample primes p
+    primes = [2, 3, 5]
+    # sample few squarefree q coprime with p
+    candidates_q = [1, 3, 5, 6, 7, 10]  # many are squarefree; filter below
+    # select n values 3 and 4
+    ns = [3,4]
+
+    for p in primes:
+        for q in candidates_q:
+            if not isprime(p):
+                continue
+            if not is_squarefree(q):
+                continue
+            if gcd(p,q) != 1:
+                continue
+            for n in ns:
+                if n < 3:
+                    continue
+                test_p_q_n(p, q, n)
+
+if __name__ == "__main__":
+    main()
+```

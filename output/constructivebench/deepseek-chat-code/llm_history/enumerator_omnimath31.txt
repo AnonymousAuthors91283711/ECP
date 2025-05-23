@@ -1,0 +1,41 @@
+[write_program]
+This problem involves finding natural numbers n for which there exists a bijective function g: ZMod n → ZMod n such that for all k in 0..100, the function x ↦ g(x) + k*x is also bijective. We'll write a Python program to enumerate possible n values that satisfy this condition for small ranges.
+
+The key observation is that this condition is related to complete mappings in finite fields, where a polynomial is a permutation polynomial for multiple coefficients. We'll test small n values and verify the condition for k=0 and k=1 (simpler cases) before checking more k values.
+
+```python
+def is_bijective_for_ks(n, max_k):
+    """Check if there exists g making x ↦ g(x) + k*x bijective for all k ≤ max_k"""
+    from itertools import permutations
+    
+    # For small n, brute-force check all possible g permutations
+    for g in permutations(range(n)):
+        # Check bijectivity for each k
+        all_bijective = True
+        for k in range(max_k + 1):
+            seen = set()
+            bijective = True
+            for x in range(n):
+                y = (g[x] + k * x) % n
+                if y in seen:
+                    bijective = False
+                    break
+                seen.add(y)
+            if not bijective:
+                all_bijective = False
+                break
+        if all_bijective:
+            return True
+    return False
+
+def find_valid_n(max_n=20, max_k=5):
+    """Find n ≤ max_n satisfying the condition for k ≤ max_k"""
+    for n in range(1, max_n + 1):
+        if is_bijective_for_ks(n, min(max_k, 100)):  # Don't exceed problem's k=100
+            print(f"Found candidate n = {n}")
+
+if __name__ == "__main__":
+    print("Testing small n values with k up to 5:")
+    find_valid_n(20, 5)
+    print("\nNote: For full verification up to k=100, increase max_k parameter")
+```

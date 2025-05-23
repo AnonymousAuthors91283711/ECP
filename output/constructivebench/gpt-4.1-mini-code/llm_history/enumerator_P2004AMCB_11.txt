@@ -1,0 +1,69 @@
+[write_program]
+The problem involves finding the smallest positive integer \( n \) such that there exists a score distribution of \( n \) students meeting the conditions:
+
+1. Each score is at least 60.
+2. There are 5 distinct students scoring 100.
+3. The average score is 76, i.e., sum of scores is \( 76n \).
+
+We want to enumerate \( n \) starting from 5 (since at least 5 students needed to have 100), and check if scores meeting these criteria exist. Scores are integers \(\geq 60\).
+
+For each \(n\), the sum is \(76n\), and 5 scores are fixed at 100 each, summing to 500. The remaining \(n-5\) scores are at least 60 and sum to \(76n - 500\). We try to find a set of \(n-5\) integers \(\geq 60\) summing exactly to that number.
+
+We know minimal sum for remaining scores is \(60\cdot (n-5)\). So we need:
+
+\[
+76n - 500 \geq 60(n-5) \implies 76n - 500 \geq 60n - 300 \implies 16n \geq 200 \implies n \geq 13
+\]
+
+So minimal \( n \) might be near 13. We'll check \( n \) starting 5 to ~20 and attempt to partition the remainder sum among \(n-5\) numbers each ≥60.
+
+To reduce complexity, the residual sum minus \(60 (n-5)\) is the "excess" amount to be distributed among the \(n-5\) remaining scores, all increments above 60.
+
+We need to check if the excess can be distributed as nonnegative integers over \(n-5\) entries.
+
+Since increments are unrestricted above zero integers, the problem reduces to checking if:
+
+\[
+\text{excess} = (76n - 500) - 60(n - 5) = 16n - 200
+\]
+
+is ≥ 0 (already ensured for \(n \geq 13\)).
+
+Because these increments can be arbitrary integers ≥ 0, sum of increments is \(\text{excess}\), so the distribution always exists. Hence, minimal \(n\) is 13.
+
+Let's write a Python program to confirm this enumeration and print valid \(n\) candidates and demonstrate solutions found.
+
+```python
+# Enumerate n and check for existence of scores meeting problem conditions.
+
+def find_scores(n):
+    # We have 5 scores at 100 each → sum = 500
+    # Sum of all = 76*n
+    total_sum = 76 * n
+    remainder_sum = total_sum - 500
+    num_remaining = n - 5
+    if num_remaining < 0:
+        return None
+    min_possible = 60 * num_remaining
+    if remainder_sum < min_possible:
+        return None
+    # excess above minimum 60 per score
+    excess = remainder_sum - min_possible
+    # can distribute excess arbitrarily among num_remaining scores
+    # so solution exists
+    # construct an example solution:
+    scores = [100]*5 + [60]*num_remaining
+    # add excess to the first score among remaining
+    if num_remaining > 0:
+        scores[5] += excess
+    return scores
+
+print("Checking n from 5 to 20:")
+for n in range(5, 21):
+    scores = find_scores(n)
+    if scores is not None:
+        print(f"n={n} valid example scores: {scores}")
+        break
+print(f"Minimal n with solution is possibly {n}")
+```
+

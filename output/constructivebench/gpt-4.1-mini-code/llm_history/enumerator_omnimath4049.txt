@@ -1,0 +1,64 @@
+[write_program]
+The given theorem describes a function \( F: \mathbb{N} \to \mathbb{N} \) satisfying:  
+1. \(F\) is surjective (hits every natural number).  
+2. For every positive \(k\), the set \(\{ n \mid F(n)=k \}\) is infinite.  
+3. For all \(n \ge 2\), \( F(F(n^{163})) = F(F(n)) + F(F(361)) \).
+
+This is a highly nontrivial structure! To explore candidates, we can try enumerating functions \(F\) over a small domain in Python. Since the functional equation involves iterated \(F\) and huge exponents, direct full search is impossible.
+
+We try:  
+- Define candidate functions \(F:\{0,...,N\}\to \mathbb{N}\) for small \(N\).  
+- Check if condition 3 approximately holds over that domain for chosen functions like linear, constant, identity, or simple periodic.  
+- Surjectivity and infinite preimages are uncheckable on finite domain, but printing the function can give intuition.  
+- Print all functions found satisfying the relation approximately for small \(n\).
+
+We will try:  
+- Candidate functions of the form \(F(n) = an + b\) modulo some range, checking conditions for \(n=2..N\).  
+- Print functions that satisfy the functional equation exactly on this small domain.
+
+Below is the program enumerating linear functions modulo \(M=10\), with varying \(a,b\) in \([0,9]\), checking the given relation on \(n=2..5\).
+
+```python
+# Enumerate candidate linear functions F(n) = (a*n + b) % M over [0,...,N]
+# Check if F(F(n^163)) == F(F(n)) + F(F(361)) for n=2..5
+
+def modular_pow(base, exponent, mod):
+    result = 1
+    base %= mod
+    e = exponent
+    while e > 0:
+        if e & 1:
+            result = (result * base) % mod
+        base = (base * base) % mod
+        e >>= 1
+    return result
+
+M = 10  # modulus for codomain
+N = 10  # domain size: n in [0..9]
+
+# Precompute n^163 mod M for n=0..N
+pow_cache = [modular_pow(n, 163, M) for n in range(N+1)]
+pow_361 = modular_pow(361, 1, M)  # Since 361 mod M
+# Actually 361 mod 10 = 1, so F(F(361)) = F(F(1)) here.
+
+for a in range(M):
+    for b in range(M):
+        # define F(n) = (a*n + b) mod M
+        def F(x): return (a*x + b) % M
+
+        # check condition for all n in [2..5]
+        valid = True
+        for n in range(2,6):
+            left = F(F(pow_cache[n]))
+            right = F(F(n)) + F(F(pow_361))
+            right %= M
+            if left != right:
+                valid = False
+                break
+        if valid:
+            print(f"Found function: F(n) = ({a}*n + {b}) mod {M}")
+            for x in range(N+1):
+                print(f"F({x})={F(x)}")
+            print()
+```
+This will print candidate linear functions mod 10 that satisfy the functional equation for small \(n\) and may give insight.

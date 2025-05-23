@@ -1,0 +1,49 @@
+[write_program]
+This problem involves finding all pairs of real-valued functions (f, g) that satisfy the given functional equation. We'll approach it by testing polynomial functions of low degrees, as these are often solutions to such equations.
+
+The strategy is:
+1. Assume f and g are polynomial functions
+2. Try linear and quadratic forms first
+3. Substitute into the equation and solve for coefficients
+4. Enumerate possible solutions
+
+```python
+import sympy as sp
+
+def find_functional_solutions():
+    x, y, a, b, c, d, e, f_coeff = sp.symbols('x y a b c d e f_coeff')
+    
+    # Try linear forms first: f(x) = a*x + b, g(x) = c*x + d
+    print("Testing linear forms:")
+    f_linear = a*x + b
+    g_linear = c*x + d
+    
+    lhs = g_linear.subs(x, f_linear.subs(x, x + y))
+    rhs = f_linear.subs(x, x) + (2*x + y) * g_linear.subs(x, y)
+    
+    eq = sp.simplify(lhs - rhs)
+    coeffs = sp.Poly(eq, x, y).coeffs()
+    sol_linear = sp.solve(coeffs, (a, b, c, d))
+    
+    for sol in sol_linear:
+        print(f"Solution found: f(x) = {sol[a]}*x + {sol[b]}, g(x) = {sol[c]}*x + {sol[d]}")
+    
+    # Try quadratic forms if linear doesn't capture all solutions
+    print("\nTesting quadratic forms:")
+    f_quad = a*x**2 + b*x + c
+    g_quad = d*x**2 + e*x + f_coeff
+    
+    lhs = g_quad.subs(x, f_quad.subs(x, x + y))
+    rhs = f_quad.subs(x, x) + (2*x + y) * g_quad.subs(x, y)
+    
+    eq = sp.simplify(lhs - rhs)
+    coeffs = sp.Poly(eq, x, y).coeffs()
+    sol_quad = sp.solve(coeffs, (a, b, c, d, e, f_coeff))
+    
+    for sol in sol_quad:
+        if all(v != 0 for v in sol.values()):  # Filter trivial solutions
+            print(f"Solution found: f(x) = {sol[a]}*x^2 + {sol[b]}*x + {sol[c]}, g(x) = {sol[d]}*x^2 + {sol[e]}*x + {sol[f_coeff]}")
+
+if __name__ == "__main__":
+    find_functional_solutions()
+```

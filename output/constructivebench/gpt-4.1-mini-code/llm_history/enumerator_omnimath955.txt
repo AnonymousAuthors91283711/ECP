@@ -1,0 +1,74 @@
+[write_program]
+The problem asks for the number of bijections \( f: \{0,1,\ldots,9\} \to \{0,1,\ldots,9\} \) such that for every \( i \), the difference \( |f(i) - i| \leq 1 \). In other words, \( f(i) \) can be \( i-1 \), \( i \), or \( i+1 \) whenever those values are in \(\{0,\ldots,9\}\), and \( f \) is a bijection.
+
+This can be interpreted as counting permutations of \(\{0,\ldots,9\}\) restricted such that each element moves by at most one position.
+
+We will enumerate all such permutations with these constraints efficiently.
+
+Because only adjacent or the same positions can be swapped, these bijections correspond precisely to permutations made up of fixed points and adjacent transpositions that do not overlap.
+
+This type of permutation is known as a "partial involution" composed of disjoint transpositions on adjacent elements and fixed points.
+
+We can count such permutations by a dynamic programming approach, enumerating sequences of blocks of length 1 or 2:
+
+- For position i, either:
+  - \( f(i) = i \) (fixed point),
+  - or \( f(i) = i+1 \) and \( f(i+1) = i \) (adjacent transposition),
+  
+and ensure bijectivity.
+
+The number of such permutations on size n is known to be the \( (n+1) \)-th Fibonacci number.
+
+We will implement a program that enumerates explicitly for \( n=10 \), print all such permutations (only as lists of their values), and print the count, confirming the Fibonacci relation.
+
+```python
+from itertools import permutations
+
+n = 10
+
+# Instead of full permutations (too large), we generate all permutations built from fixed points and adjacent transpositions.
+# To do so, we use DFS enumerating the positions from 0 to n-1:
+# At each step, decide:
+# - fixed point i -> f(i) = i
+# - if i+1 < n and both unused, also try transposition of i and i+1 (f(i)=i+1, f(i+1)=i)
+
+def dfs(i, used, f):
+    if i == n:
+        # Completed permutation
+        print(f)  # print permutation as tuple/list
+        yield 1
+        return
+    if used[i]:
+        # Already assigned (in a transposition)
+        yield from dfs(i+1, used, f)
+        return
+    # fixed point
+    used[i] = True
+    f[i] = i
+    yield from dfs(i+1, used, f)
+    # backtrack
+    used[i] = False
+
+    # try transposition with next if possible
+    if i+1 < n and not used[i+1]:
+        used[i] = True
+        used[i+1] = True
+        f[i] = i+1
+        f[i+1] = i
+        yield from dfs(i+2, used, f)
+        used[i] = False
+        used[i+1] = False
+
+print(f"Enumerating all bijections f: {{0..{n-1}}} → {{0..{n-1}}} with |f(i)-i| ≤ 1:")
+
+count = 0
+used = [False]*n
+f = [None]*n
+
+for c in dfs(0, used, f):
+    count += c
+
+print("Total count:", count)
+# For n=10, count should equal Fib(11) = 89.
+```
+

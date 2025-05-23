@@ -1,0 +1,70 @@
+[write_program]
+The problem involves complex numbers \( z \) whose \( k \)-th powers have real values (imaginary part zero) but are not equal to 1, and polynomial approximations of their real parts at \( n=0,1,2,3 \). We want to explore such \( z \) and \( k \), find the minimal such \( k \), and then determine the maximum leading coefficient \( a \) for quadratic polynomials fitting the first four values of the real part sequence \( f(n) = \mathrm{Re}(z^n) \).
+
+Let's enumerate candidate \( z = e^{i\theta} \) where \(\theta = 2\pi m / k\) for small \( k \), check that \( (z^k).im=0 \) but \( z^k \neq 1 \) is false, so actually \( z^k = 1 \) won't hold if we pick other angles. We can explore \( k \) from 1 to some small upper limit. For each \( k \), enumerate \( m \) and form the sequence \( f \), then find the quadratic polynomial \( p(n) = a n^2 + b n + c \) through \( f(0..3) \), and report the leading coefficient \( a \) along with \( k \).
+
+We will print out all \( (k, a) \) pairs found, and then the maximum \( a \) for the minimal \( k \).
+
+```python
+import math
+
+def quadratic_fit_4pts(y0, y1, y2, y3):
+    # Solve for a,b,c in p(n)=a n^2 + b n + c
+    # Using points n=0..3:
+    # c = y0
+    # b + c + a = y1 -> b + a = y1 - c
+    # 4a + 2b + c = y2
+    # 9a + 3b + c = y3
+    # We'll solve the linear system for a,b:
+    c = y0
+    # From second eq: b = y1 - c - a
+    # Substitute into third and fourth:
+    # 4a + 2(y1 - c - a) + c = y2  -> 4a + 2y1 - 2c - 2a + c = y2 -> (4a - 2a) + 2y1 - c = y2
+    # 2a + 2 y1 - c = y2 -> 2a = y2 - 2y1 + c
+    # a = (y2 - 2 y1 + c)/2
+    a = (y2 - 2*y1 + c)/2
+    b = y1 - c - a
+    # Check last eq for consistency:
+    check = 9*a + 3*b + c
+    if abs(check - y3) > 1e-10:
+        # Numerical inconsistency; ignore this fit
+        return None
+    return a, b, c
+
+# Enumerate k from 1 to 10 (small sample)
+results = []
+min_k_candidates = []
+print("Enumerating (k, a) for z=e^{2pi i m/k} with gcd(m,k)=1:")
+for k in range(1, 11):
+    found_valid = False
+    # Enumerate m coprime to k, 1 <= m < k
+    for m in range(1, k):
+        if math.gcd(m, k) != 1:
+            continue
+        theta = 2 * math.pi * m / k
+        z = complex(math.cos(theta), math.sin(theta))
+        z_k = z**k
+        # Check imaginary part close to zero and z^k != 1
+        if abs(z_k.imag) < 1e-14 and abs(z_k.real - 1) > 1e-14:
+            # sequence f(n) = Re(z^n)
+            f = [ (z**n).real for n in range(4)]
+            coeffs = quadratic_fit_4pts(*f)
+            if coeffs is None:
+                continue
+            a, b, c = coeffs
+            print(f"k={k}, m={m}, a={a:.6f}")
+            results.append((k,a))
+            found_valid = True
+    if found_valid:
+        min_k_candidates.append(k)
+
+if not min_k_candidates:
+    print("No valid k found with the given constraints.")
+else:
+    min_k = min(min_k_candidates)
+    a_candidates = [a for (k,a) in results if k == min_k]
+    print(f"Minimal k: {min_k}")
+    print(f"Maximum leading coefficient a for minimal k: {max(a_candidates):.6f}")
+```
+
+This code prints each viable leading coefficient and the minimal \( k \) found, then outputs the maximum \( a \) for that \( k \). It helps conjecture the true answer.

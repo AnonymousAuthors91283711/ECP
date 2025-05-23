@@ -1,0 +1,60 @@
+[write_program]
+The problem involves complex polynomials and roots, asking for the ratio \( \frac{P(1)}{P(-1)} \) under given conditions. We cannot solve it directly but can enumerate over small-degree analogues to conjecture the value of this ratio. We'll try smaller degree versions of the polynomial \( f = X^n + 17 X^{n-1} + 1 \) with \( n = 2,3,4,5 \), find roots numerically, form the transformed roots \( r + \frac{1}{r} \), construct polynomial \( P \) with these roots, and compute \( P(1)/P(-1) \). This should reveal a pattern.
+
+We will:
+- Use sympy for polynomial and roots.
+- For \( n = 2,3,4,5 \), build \( f = X^n + 17 X^{n-1} + 1 \).
+- Find roots numerically.
+- Form roots \( s_i = r_i + 1/r_i \).
+- Build monic polynomial \( P \) with roots \( s_i \).
+- Compute \( P(1)/P(-1) \), print it as exact or approximate value.
+
+Limit enumerations to minimize output length.
+
+```python
+# Enumerate small degree analogues to conjecture ratio P(1)/P(-1)
+import sympy as sp
+
+X = sp.Symbol('X')
+
+def poly_roots_coeff(n, c=17):
+    # f = X^n + c*X^{n-1} + 1
+    f = X**n + c*X**(n-1) + 1
+    # find roots numerically
+    roots = sp.nroots(f, n=15)
+    return roots
+
+def p_from_roots(roots):
+    # Given roots, construct minimal polynomial with those roots
+    # roots here are s = r + 1/r
+    # We use sp.poly with roots
+    return sp.poly(sp.prod(X - r for r in roots), X, domain='QQ')
+
+def main():
+    # Try degrees 2 to 5 to enumerate possible P(1)/P(-1)
+    print("# Using f = X^n + 17 X^{n-1} + 1; computing P(1)/P(-1)")
+    for n in range(2,6):
+        f = X**n + 17*X**(n-1) + 1
+        roots = poly_roots_coeff(n)
+        # Compute s = r + 1/r for each root r not zero (should not be zero root)
+        s_vals = []
+        for r in roots:
+            if abs(r) > 1e-15:
+                s = r + 1/r
+                # simplify fraction if possible
+                s_vals.append(s)
+        # Create polynomial P with roots s_vals
+        P = sp.poly(sp.prod(X - sp.nsimplify(s) for s in s_vals), X)
+        # Evaluate P(1)/P(-1)
+        val1 = P.eval(1)
+        val_1 = P.eval(-1)
+        # Try exact if rational, else float
+        try:
+            ratio = sp.nsimplify(val1/val_1)
+        except:
+            ratio = val1/val_1
+        print(f"n={n}, P(1)/P(-1) ~ {ratio}")
+
+if __name__ == "__main__":
+    main()
+```

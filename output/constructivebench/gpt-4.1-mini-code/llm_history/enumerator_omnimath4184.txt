@@ -1,0 +1,83 @@
+[write_program]
+The problem describes a function \( f:\mathbb{N}^3 \to \mathbb{R} \) defined recursively. When any coordinate is zero, \(f=0\), otherwise \(f\) equals \(1 + \frac{1}{6}\) times the sum of values at 6 neighbors with coordinate increases/decreases of 1 that keep the sum \(p+q+r\) constant. We want to explore possible values of \(f\) for small integers \(p,q,r\).
+
+I will enumerate \(f(p,q,r)\) for small triples with \(p,q,r \leq 3\), starting from boundary cases where \(f=0\) (any coordinate zero), and iteratively apply the recursion to compute values inside the cube. Values will be printed in lexicographic order with exact rational output using Python's fractions module.
+
+```python
+from fractions import Fraction
+from collections import deque
+
+# f(p,q,r) stored in a dictionary with keys tuples (p,q,r)
+f = {}
+
+# Initialize boundary cases: if any coordinate zero => f=0
+max_n = 3
+for p in range(max_n+1):
+    for q in range(max_n+1):
+        for r in range(max_n+1):
+            if p==0 or q==0 or r==0:
+                f[(p,q,r)] = Fraction(0)
+
+# BFS queue for states with at least one neighbor known, start with boundaries known
+q = deque()
+for key in f.keys():
+    q.append(key)
+
+# neighbors in the recursion (deltas)
+deltas = [
+    (1, -1, 0),
+    (-1, 1, 0),
+    (-1, 0, 1),
+    (1, 0, -1),
+    (0, 1, -1),
+    (0, -1, 1)
+]
+
+# We'll iterate several times to propagate values until stable or max_iters
+max_iters = 20
+
+# Initialize f for interior points as None to distinguish unknown
+for p in range(1,max_n+1):
+    for q1 in range(1,max_n+1):
+        for r1 in range(1,max_n+1):
+            if (p,q1,r1) not in f:
+                f[(p,q1,r1)] = None
+
+# Iterate updates on f:
+for it in range(max_iters):
+    updated = False
+    for p in range(1,max_n+1):
+        for q1 in range(1,max_n+1):
+            for r1 in range(1,max_n+1):
+                if f[(p,q1,r1)] is None or it>0:  # if unknown or on iteration >0, try updating
+                    # compute sum of neighbors if all defined else skip
+                    neighbors = []
+                    for dp,dq,dr in deltas:
+                        np, nq, nr = p+dp, q1+dq, r1+dr
+                        if np>=0 and nq>=0 and nr>=0 and np<=max_n and nq<=max_n and nr<=max_n:
+                            val = f.get((np,nq,nr))
+                            if val is None:
+                                break
+                            neighbors.append(val)
+                        else:
+                            break
+                    else:  # if break not triggered
+                        # if any coord zero neighbors not possible by boundary, but we allow zero coords neighbors
+                        new_val = Fraction(1) + sum(neighbors)/6
+                        if f[(p,q1,r1)] != new_val:
+                            f[(p,q1,r1)] = new_val
+                            updated = True
+    if not updated:
+        break
+
+# Print results for interior points sorted by lex order, exact fractions
+for p in range(max_n+1):
+    for q1 in range(max_n+1):
+        for r1 in range(max_n+1):
+            if p==0 or q1==0 or r1==0:
+                continue
+            val = f[(p,q1,r1)]
+            if val is not None:
+                print(f"f({p},{q1},{r1}) = {val}")
+```
+This enumerates exact values for \(f(p,q,r)\) for small triples, aiding conjecture and understanding of the recursive formula.

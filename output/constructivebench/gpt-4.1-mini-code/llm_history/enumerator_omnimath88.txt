@@ -1,0 +1,69 @@
+[write_program]
+The problem involves finding the maximum size \(m\) of a family of 2-subsets of \(2n\) elements with the property that any \((k+1)\)-subset of indices contains two whose 2-subsets intersect. This is a combinatorial extremal problem. We'll enumerate candidates for small values \(k,n\) and increasing \(m\), test the condition, and print verified values of \(m\).
+
+```python
+import itertools
+
+# Check if family f of subsets of [2n], each size 2, satisfies:
+# For every (k+1)-subset of indices from [m], there exist i,j distinct with f[i], f[j] intersecting.
+def check_family(m, k, n, family):
+    # family: list of sets of size 2
+    # indices: 0..m-1
+    for subset in itertools.combinations(range(m), k+1):
+        # Check if all pairs disjoint in this subset?
+        # We want to find i,j with intersecting f[i], f[j], so disjointness fails
+        # If no such pair found, condition fails
+        found = False
+        for i, j in itertools.combinations(subset, 2):
+            if family[i].intersection(family[j]):
+                found = True
+                break
+        if not found:
+            return False # condition fails
+    return True
+
+def enumerate_families(m, k, n):
+    # universe: [0..2n-1]
+    universe = range(2*n)
+    # All 2-subsets of universe
+    two_subsets = list(itertools.combinations(universe, 2))
+    # Enumerate families of size m - large so limit enumeration by heuristic
+    # To limit computations, enumerate over combinations of two_subsets of size m (indices of f)
+    for family_indices in itertools.combinations(range(len(two_subsets)), m):
+        family = [set(two_subsets[i]) for i in family_indices]
+        if check_family(m, k, n, family):
+            yield family
+
+def main():
+    # Small samples
+    samples = [(1,1),(1,2),(2,2)]
+    for k,n in samples:
+        print(f"Parameters k={k}, n={n}")
+        max_m_found = 0
+        for m in range(1, 2*n+1): # m cannot exceed total 2-subsets count = C(2n,2)
+            # For speed, break if no example found for previous m-1
+            # To avoid huge computations, only try a few families, not all
+            found_any = False
+            # Limit families tried per m to 1000 (random? deterministic first ones)
+            # But itertools.combinations gives lex order - so try first 1000 only
+            count = 0
+            for family in enumerate_families(m, k, n):
+                print(f"Found m={m} family: {family}")
+                found_any = True
+                max_m_found = m
+                break  # print one example per m
+                count += 1
+                if count >= 1000:
+                    break
+            if not found_any and m > max_m_found:
+                # No families found for this m while found for m-1
+                # So maximal m is max_m_found
+                print(f"Maximum m for k={k}, n={n} is {max_m_found}")
+                break
+        else:
+            # Tried all m up to 2*n, print max found
+            print(f"Maximum m for k={k}, n={n} at least {max_m_found}")
+
+if __name__ == "__main__":
+    main()
+```

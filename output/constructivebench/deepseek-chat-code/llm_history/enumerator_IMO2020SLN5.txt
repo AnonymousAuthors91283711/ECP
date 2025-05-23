@@ -1,0 +1,105 @@
+[write_program]
+This problem is from the IMO 2020 Shortlist (Problem N5) and involves finding all multiplicative functions f: ℕ → ℕ with certain properties. The key is to enumerate possible multiplicative functions and check the conditions.
+
+We'll:
+1. Generate small prime powers as candidates for f(p^k)
+2. Construct multiplicative functions from these values
+3. Check the infinite fixed-point condition
+4. Output valid functions in a streaming fashion
+
+```python
+import math
+from itertools import count
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def multiplicative_function(p, c):
+    def f(n):
+        if n == 1:
+            return 0
+        res = 0
+        for prime, exp in factorize(n):
+            if prime == p:
+                res += c * exp
+        return res
+    return f
+
+def factorize(n):
+    factors = []
+    if n == 1:
+        return factors
+    # Check for 2 separately
+    exp = 0
+    while n % 2 == 0:
+        exp += 1
+        n //= 2
+    if exp > 0:
+        factors.append((2, exp))
+    # Check odd divisors up to sqrt(n)
+    i = 3
+    max_factor = math.isqrt(n) + 1
+    while i <= max_factor:
+        exp = 0
+        while n % i == 0:
+            exp += 1
+            n //= i
+            max_factor = math.isqrt(n) + 1
+        if exp > 0:
+            factors.append((i, exp))
+        i += 2
+    if n > 1:
+        factors.append((n, 1))
+    return factors
+
+def check_condition(f):
+    fixed_points = 0
+    for n in count(1):
+        valid = True
+        for k in range(1, n):
+            if f(k) != f(n - k):
+                valid = False
+                break
+        if valid:
+            fixed_points += 1
+            if fixed_points >= 10:  # Arbitrary threshold for "infinite"
+                return True
+    return False
+
+def main():
+    max_prime = 20
+    max_c = 5
+    print("Searching for solutions...")
+    for p in range(2, max_prime + 1):
+        if not is_prime(p):
+            continue
+        for c in range(1, max_c + 1):
+            f = multiplicative_function(p, c)
+            if check_condition(f):
+                print(f"Found solution: f(n) = {c} * exponent of {p} in n")
+
+if __name__ == "__main__":
+    main()
+```

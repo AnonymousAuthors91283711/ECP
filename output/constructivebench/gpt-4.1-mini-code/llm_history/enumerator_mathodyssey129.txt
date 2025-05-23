@@ -1,0 +1,89 @@
+[write_program]
+The problem is about finding the smallest number \( k \) of distinct "heard" values for a friendship graph with certain conditions on the graph and numbers assigned to vertices. Let's explore small values of \( n \), enumerate possible friendship graphs and assignments, and print the distinct counts of heard values found.
+
+We will:
+- Use small \( n \in \{3,4\} \) as \( n>2 \).
+- Enumerate possible simple undirected graphs without self-loops, where each vertex has at least one friend.
+- For each graph, assign distinct positive numbers to vertices from a small range.
+- Compute "heard" values and count distinct values.
+- Print these counts to observe minimal possible values.
+
+```python
+from itertools import combinations, product
+from math import gcd
+
+def distinct_fractions(fracs):
+    # reduce fractions to simplest form to detect equality
+    def reduce_fraction(num, den):
+        g = gcd(num, den)
+        return (num // g, den // g)
+    reduced = set(reduce_fraction(n, d) for n, d in fracs)
+    return len(reduced)
+
+def fraction_sum(friends, numbers):
+    # sum numbers[j]/degree[j]
+    result = []
+    degrees = [sum(friendship[i][j] for j in range(n)) for i in range(n)]
+    for i in range(n):
+        total_num = 0
+        total_den = 1
+        # sum of fractions numbers[j]/degree[j]
+        # We keep numerator and denominator separately and sum fractions carefully
+        # sum a/b + c/d = (a*d + b*c)/(b*d)
+        for j in range(n):
+            if friendship[i][j]:
+                # add numbers[j]/degrees[j]
+                a, b = numbers[j], degrees[j]
+                # sum fractions: total_num/total_den + a/b = (total_num*b + a*total_den)/(total_den*b)
+                total_num = total_num * b + a * total_den
+                total_den *= b
+                # reduce fraction after each addition to keep numbers small
+                g = gcd(total_num, total_den)
+                total_num //= g
+                total_den //= g
+        result.append((total_num, total_den))
+    return result
+
+def all_graphs(n):
+    # undirected graphs with no self loops,
+    # vertex i adjacent to j <=> adjacency[i][j] == adjacency[j][i]
+    # each vertex has at least one friend
+    vertices = range(n)
+    # possible edges: i<j
+    edges = list(combinations(vertices, 2))
+    for edgenum in range(1, len(edges)+1):
+        for chosen in combinations(edges, edgenum):
+            adjacency = [[False]*n for _ in range(n)]
+            for (x,y) in chosen:
+                adjacency[x][y] = True
+                adjacency[y][x] = True
+            # check all vertices have degree >=1
+            if all(any(adjacency[v]) for v in vertices):
+                yield adjacency
+
+def distinct_heard_counts(n):
+    print(f"n = {n}")
+    # Use small positive integers as numbers: 1..n+1 to ensure distinct positive assignments
+    number_values = list(range(1, n+2))
+    minimal_k = None
+    found_ks = set()
+    for friendship in all_graphs(n):
+        # assign numbers injectively from number_values to vertices, all permutations of length n
+        from itertools import permutations
+        for numbers_perm in permutations(number_values, n):
+            # compute heard fractions
+            heard = fraction_sum(friendship, numbers_perm)
+            k = distinct_fractions(heard)
+            if k not in found_ks:
+                found_ks.add(k)
+                print("k =", k)
+                if minimal_k is None or k < minimal_k:
+                    minimal_k = k
+    print("Minimal k for n =", n, "is", minimal_k)
+    print()
+
+if __name__ == "__main__":
+    for n in [3,4]:
+        distinct_heard_counts(n)
+```
+

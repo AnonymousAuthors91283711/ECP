@@ -1,0 +1,59 @@
+[write_program]
+The problem appears to be related to the Fibonacci sequence, with a focus on the minimal size of sets that contain differences equal to Fibonacci numbers. The sequence defined by F satisfies the recurrence of Fibonacci, with initial conditions F(0)=0, F(1)=1.
+
+The core question: For each n ≥ 2, determine the minimal size of a set S of integers such that, for every k in [2, n], there exist two elements in S differing by F(k).
+
+Approach:
+- For small n, explicitly construct candidate sets S.
+- For each n, enumerate sets up to a certain size, check the difference conditions.
+- Use the minimal size found and print it.
+- Justify through enumeration, not relying on known closed-forms.
+
+The code will:
+- For given n, attempt to find the smallest set S satisfying the difference property by trying set sizes from 2 upwards.
+- For computational efficiency, generate candidate sets with small sizes first.
+- For each candidate, verify all Fibonacci differences up to n.
+
+```python
+import itertools
+
+def fibonacci(k):
+    # Generate Fibonacci number recursively or iteratively
+    a, b = 0, 1
+    for _ in range(k):
+        a, b = b, a + b
+    return a
+
+def can_represent_all_fib_differences(S, n):
+    # Check if for all k in [2, n], exists x,y in S with x - y = F(k) or y - x = F(k)
+    for k in range(2, n + 1):
+        target = fibonacci(k)
+        found = False
+        for x in S:
+            if x + target in S or x - target in S:
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+def find_min_set(n, max_size=10):
+    # For sizes from 2 to max_size, generate subsets and check
+    # Use small candidate sets to limit runtime
+    for size in range(2, max_size + 1):
+        for S in itertools.combinations(range(-100, 101), size):
+            S_set = set(S)
+            if can_represent_all_fib_differences(S_set, n):
+                print(f"n={n}, minimal size={size}, set={S_set}")
+                return size
+    print(f"n={n}, no set found up to size {max_size}")
+    return None
+
+def main():
+    # Test for n from 2 to 5 (small values)
+    for n in range(2, 6):
+        find_min_set(n, max_size=8)
+
+if __name__ == "__main__":
+    main()
+```

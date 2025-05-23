@@ -1,0 +1,66 @@
+[write_program]
+The problem is to find three distinct primes p, q, r such that p < q < r and p * q * r = 989 * 1001 * 1007 + 320. It also states that these are the unique such primes, and asks us to enumerate all possible answers to assist in conjecturing and proving the true answer.
+
+First, observe:
+- Calculate the target product: `989 * 1001 * 1007 + 320`.
+- Factor the product 989 * 1001 * 1007 into primes or parts, then find triples of primes with the specified multiplication.
+- Since the numbers are large, we attempt to factor them quickly.
+
+Given the constraints, the approach:
+- Compute the target product.
+- Let's find factors of the target, especially focusing on primes.
+- For computational efficiency, only enumerate candidate triples of primes where p, q, r are small or within a manageable range, because we don't want excess computation.
+
+Note: Since the problem is structured around small sample computation and enumeration, the code will:
+- Compute the product.
+- Generate candidate primes up to a certain limit.
+- Check combinations that multiply to the target.
+- Immediately print each valid (p, q, r).
+
+Below is the code to perform this enumeration:
+
+```python
+import math
+
+# Compute the target product
+target = 989 * 1001 * 1007 + 320
+
+# Generate a list of prime numbers up to a certain limit for candidate factors
+# For efficiency, limit the search to primes up to, say, 2000
+LIMIT = 2000
+
+# Simple sieve to generate primes up to LIMIT
+def sieve(n):
+    sieve = [True]*(n+1)
+    sieve[0] = sieve[1] = False
+    for i in range(2, int(math.sqrt(n))+1):
+        if sieve[i]:
+            for j in range(i*i, n+1, i):
+                sieve[j] = False
+    return [i for i in range(2, n+1) if sieve[i]]
+
+primes = sieve(LIMIT)
+
+# Store found solutions, avoid duplicates
+found = set()
+
+# Enumerate all triplets (p, q, r) with p < q < r
+for i in range(len(primes)):
+    p = primes[i]
+    # If p^3 > target, no need to continue
+    if p**3 > target:
+        break
+    for j in range(i+1, len(primes)):
+        q = primes[j]
+        if p * q * q > target:
+            break
+        for k in range(j+1, len(primes)):
+            r = primes[k]
+            prod = p * q * r
+            if prod == target:
+                # Found a valid triplet
+                print(f"Found primes: p={p}, q={q}, r={r}")
+                found.add((p, q, r))
+            elif prod > target:
+                break
+```

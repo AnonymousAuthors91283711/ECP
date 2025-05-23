@@ -1,0 +1,59 @@
+[write_program]
+The problem deals with a finite set \( s \) of positive integers where for each \( n \in s \), the 2022nd iterate of the map \( m \mapsto m - \minFac(m) \) is prime, but the 2021st is not prime. The sum of all such \( n \) equals a certain answer.
+
+To explore, we:
+- Define \(\minFac(m)\) as the smallest prime factor of \( m \) (or \( m \) itself if \( m \) is prime),
+- Starting from \( n \), iterate the mapping 2022 times,
+- Check if the 2022nd image is prime,
+- Check if the 2021st is *not* prime,
+- If so, record \( n \).
+
+The problem is difficult and computationally intensive, so we limit the search to some manageable range, e.g., \( n \leq 2000 \). We print each candidate \( n \) as we find it and their sum at the end.
+
+```python
+import math
+
+def is_prime(x: int) -> bool:
+    if x < 2:
+        return False
+    if x % 2 == 0:
+        return x == 2
+    r = int(math.isqrt(x))
+    for i in range(3, r+1, 2):
+        if x % i == 0:
+            return False
+    return True
+
+def min_fac(x: int) -> int:
+    if x % 2 == 0:
+        return 2
+    r = int(math.isqrt(x))
+    for i in range(3, r+1, 2):
+        if x % i == 0:
+            return i
+    return x
+
+def iterate_map(n: int, times: int) -> int:
+    m = n
+    for _ in range(times):
+        m -= min_fac(m)
+        if m <= 0:  # If we go to <= 0, stop early
+            return 0
+    return m
+
+def main():
+    limit = 2000
+    candidates = []
+    print(f"Checking n in [1..{limit}]")
+    for n in range(1, limit+1):
+        before = iterate_map(n, 2021)
+        after = iterate_map(n, 2022)
+        if after > 1 and is_prime(after) and not is_prime(before):
+            candidates.append(n)
+            print(n)
+    total = sum(candidates)
+    print(f"Sum of candidates: {total}")
+
+if __name__ == "__main__":
+    main()
+```

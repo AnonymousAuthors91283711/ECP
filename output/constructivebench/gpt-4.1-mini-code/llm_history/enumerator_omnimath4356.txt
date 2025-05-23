@@ -1,0 +1,107 @@
+[write_program]
+The problem describes a transformation on four integers (a,b,c,d) applied 1996 times, then checks primality conditions on three expressions involving the resulting quadruple. The theorem conjectures that it's impossible for all three of those expressions to be prime simultaneously after 1996 steps.
+
+To explore possible counterexamples or verify this conjecture, I will:
+
+- Enumerate small integer quadruples (a,b,c,d) with values in a small range, e.g. -5 to 5.
+- Compute the quadruple after 1996 iterations of the given step operation.
+- Compute three values: b'c'-a'd', a'c'-b'd', a'b'-c'd'.
+- Check primality of the absolute value of these three values.
+- Print cases where all three are prime.
+
+Due to the large number of iterations (1996), I will optimize by noting the step operation patterns and summarize the result to a closed form before iterating.
+
+This will aid conjecturing the true result.
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    if n in (2,3):
+        return True
+    if n%2 == 0 or n%3 == 0:
+        return False
+    i = 5
+    while i*i <= n:
+        if n%i == 0 or n%(i+2) == 0:
+            return False
+        i += 6
+    return True
+
+def step(w,x,y,z):
+    return (w - x, x - y, y - z, z - w)
+
+def iterate_step_1996(a,b,c,d):
+    # Let's find closed form of iteration:
+    # step(w,x,y,z) = (w - x, x - y, y - z, z - w)
+    # This is a linear operation on vector v = [w,x,y,z].
+    # Matrix M =
+    # [ 1 -1  0  0]
+    # [ 0  1 -1  0]
+    # [ 0  0  1 -1]
+    # [-1  0  0  1]
+    # Iterating M 1996 times: v' = M^1996 v
+    # Compute M^1996 v without full exponentiation by observing pattern.
+
+    # Eigen decomposition is complicated; instead notice sum(w+x+y+z)= constant:
+    # sum step(w,x,y,z) = (w-x)+(x-y)+(y-z)+(z-w) = 0
+    # sum invariant = w+x+y+z = S
+
+    # Let's find pattern on difference vector:
+    # Let S = a+b+c+d
+    S = a + b + c + d
+
+    # Let's try to express M^k v in terms of a,b,c,d and k.
+    # Let's calculate M once:
+    M = [
+        [1,-1,0,0],
+        [0,1,-1,0],
+        [0,0,1,-1],
+        [-1,0,0,1]
+    ]
+
+    # Use repeated squaring to get M^1996:
+    def matmul(A,B):
+        return [[sum(A[i][k]*B[k][j] for k in range(4)) for j in range(4)] for i in range(4)]
+    def matvecmul(M,v):
+        return [sum(M[i][j]*v[j] for j in range(4)) for i in range(4)]
+    def matpow(M,p):
+        R = [[1 if i==j else 0 for j in range(4)] for i in range(4)]
+        base = M
+        while p > 0:
+            if p & 1:
+                R = matmul(R,base)
+            base = matmul(base,base)
+            p >>= 1
+        return R
+
+    M1996 = matpow(M, 1996)
+    v = [a,b,c,d]
+    a_,b_,c_,d_ = matvecmul(M1996,v)
+    return a_,b_,c_,d_
+
+# Small range enumeration to find counterexamples if any:
+range_limit = 5
+count_checked = 0
+count_found = 0
+
+print("Enumerating quadruples a,b,c,d in range [-5..5]")
+
+for a in range(-range_limit, range_limit+1):
+    for b in range(-range_limit, range_limit+1):
+        for c in range(-range_limit, range_limit+1):
+            for d in range(-range_limit, range_limit+1):
+                count_checked += 1
+                a_,b_,c_,d_ = iterate_step_1996(a,b,c,d)
+                vals = [b_*c_ - a_*d_, a_*c_ - b_*d_, a_*b_ - c_*d_]
+                abs_vals = [abs(x) for x in vals]
+                if all(is_prime(x) for x in abs_vals):
+                    count_found += 1
+                    print(f"Found all-prime triple after 1996 steps for (a,b,c,d)=({a},{b},{c},{d}) =>")
+                    print(f"  (b'*c' - a'*d', a'*c' - b'*d', a'*b' - c'*d') = {vals}")
+
+print(f"Checked {count_checked} quadruples, found {count_found} with all three primes.")
+```
+

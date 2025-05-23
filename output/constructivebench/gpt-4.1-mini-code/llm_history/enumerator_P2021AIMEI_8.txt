@@ -1,0 +1,94 @@
+[write_program]
+The problem concerns counting integers \( c \) such that the quartic equation 
+\[ x^4 - 2 c x^2 + (c + 1) = 0 \]
+has exactly 12 real roots total, when considering all solutions \( x \) for that \( c \).
+
+Since the polynomial is quartic in \( x \), the maximum number of real roots per equation is 4. The form suggests symmetry and varying the integer \( c \) may yield different numbers of real roots. The problem likely wants the count of such integers \( c \) where the equation has exactly 12 real roots counted over some range or parameter.
+
+However, the original problem is from a formal proof assistant script and uses advanced mathlib constructs. For enumeration and conjecture, let's:
+
+- Interpret: For each integer \( c \), solve the quartic and count real roots,
+- Then find \( c \) where the total number of **distinct solutions over some domain** is 12.
+
+Since a quartic polynomial has only 4 roots, 12 roots would imply something different (perhaps summing roots over multiple intervals or multiple values of \( c \)). Without domain context, normally a quartic cannot have 12 roots.
+
+An alternative view: maybe the problem is about the total number of roots of a system or consideration over multiple equations or parameters. The use of `Nat.card` (set cardinality) suggests counting the number of distinct roots collectively over some set parameterized by \( c \).
+
+To assist, let's write code to:
+
+- For integers \( c \) in a small range (e.g. -10 to 10),
+- Solve \( x^4 - 2 c x^2 + (c + 1) = 0 \),
+- Count the number of distinct real roots,
+- Collect for which \( c \) the number of real roots is 4, 2, 0, etc.
+- Print \( c \) and its count of real roots,
+- Then print all \( c \) where the number of real roots is exactly 4 (max).
+
+The polynomial can be rewritten as:
+\[ x^4 - 2 c x^2 + (c + 1) = 0 \]
+or equivalently:
+\[ (x^2)^2 - 2 c x^2 + (c + 1) = 0 \]
+Make substitution:
+\[ y = x^2 \geq 0 \]
+and solve:
+\[ y^2 - 2 c y + (c + 1) = 0 \]
+
+Then roots \( y_1, y_2 \) are found from this quadratic in \( y \). For each positive root \( y_i \), we get two real roots \( x = \pm \sqrt{y_i} \). For zero roots \( y_i = 0 \), one root \( x=0 \).
+
+Hence the number of real roots for the quartic is \( 2k \) where \( k \) is the number of positive roots \( y_i \), plus possibly one if zero is a root, up to max 4 roots.
+
+Thus the total number of real roots per \( c \) can be 0, 2 or 4.
+
+For \textbf{12 real roots} for a single quartic is impossible; so the problem likely concerns the cardinality of the set:
+\[
+\{ c \in \mathbb{Z} : \text{number of real roots of } x^4 - 2cx^2 + c + 1=0 \text{ is } 12 \}
+\]
+where the "{x: ...}=0" is the set of solutions \( x \) for fixed \( c \). The problem statement is a bit ambiguous. Since there cannot be 12 roots from a quartic, likely the problem comes from the original AIME solution referring to a different scenario.
+
+Given this uncertainty, I will write code to:
+
+- Enumerate \( c \in [-10,10] \),
+- Solve for \( y \) the quadratic \( y^2 - 2 c y + c + 1=0 \),
+- For each root \( y \geq 0 \), count roots \( x = \pm \sqrt{y} \),
+- Sum number of real roots for each \( c \),
+- Print \( c \) and the number of roots,
+- Finally print all \( c \) where the number of real roots is e.g. 4 (the maximum),
+- Possibly conjecture from this data.
+
+This will generate immediate output for conjecture.
+
+```python
+import math
+
+def real_roots_count(c):
+    # Solve y^2 - 2 c y + c + 1 = 0
+    # y = x^2, so y >= 0 for real x
+    a, b, d = 1, -2*c, c+1
+    discriminant = b*b - 4*a*d
+    if discriminant < 0:
+        return 0
+    sqrt_d = math.sqrt(discriminant)
+    y1 = (2*c + sqrt_d)/2
+    y2 = (2*c - sqrt_d)/2
+    count = 0
+    for y in [y1, y2]:
+        if y > 0:
+            count += 2  # x = ± sqrt(y)
+        elif abs(y) < 1e-14:
+            count += 1  # x=0 root
+    return count
+
+def main():
+    print("c  real_roots_count")
+    for c in range(-10, 11):
+        roots = real_roots_count(c)
+        print(f"{c:2d} {roots}")
+    print("c values with 4 real roots:")
+    max_roots = 4
+    for c in range(-10, 11):
+        if real_roots_count(c) == max_roots:
+            print(c)
+
+if __name__ == "__main__":
+    main()
+```
+This output may help conjecture the set of integers \( c \) that yield a certain number of real roots. Adjust the range or thresholds as needed.

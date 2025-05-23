@@ -1,0 +1,59 @@
+[write_program]
+The problem involves finding the number of values \( x \in [0, \pi] \) satisfying \(\arcsin(\sin(6x)) = \arccos(\cos x)\). To enumerate solutions, I'll sample \(x\) in \([0,\pi]\), compute both sides, and check equality with a tolerance. Since both sides are principal values of inverse trig functions, their ranges differ: \(\arcsin\) in \([- \pi/2, \pi/2]\) and \(\arccos\) in \([0, \pi]\). Equality implies \(\arcsin(\sin(6x)) = \arccos(\cos x) \in [0, \pi/2]\) because arcsin output is limited, so values must be consistent.
+
+To find exact values, I consider the known identities:
+- \(\arcsin(\sin \theta) = \theta\) if \(\theta \in [-\pi/2, \pi/2]\).
+- \(\arccos(\cos \phi) = \phi\) if \(\phi \in [0, \pi]\).
+
+Thus, for each \(x\), we can compute principal values and check equality, considering that \(\arcsin(\sin(6x))\) "folds" \(6x\) into \([- \pi/2, \pi/2]\) via periodicity.
+
+I'll discretize \([0, \pi]\) finely and print solutions immediately when found.
+
+```python
+import math
+
+# Numerically find x in [0, pi] where arcsin(sin(6x)) = arccos(cos x).
+# Both functions return principal values:
+# arcsin(sin θ) ∈ [-pi/2, pi/2]; arccos(cos φ) ∈ [0, pi].
+# We'll sample 0 <= x <= pi with a fine step and check near equality.
+
+def arcsin_sin(theta):
+    # Reduce theta mod 2pi and apply arcsin(sin(theta)) formula
+    # arcsin(sin(theta)) = theta - 2*pi*k if in [-pi/2, pi/2], else adjusted.
+    # Equivalently: 
+    # arcsin(sin theta) = residual in [-pi/2, pi/2]:
+    # Calculate theta mod 2pi in [0, 2pi)
+    t = theta % (2 * math.pi)
+    if t <= math.pi/2:
+        return t
+    elif t <= 3*math.pi/2:
+        return math.pi - t
+    else:
+        return t - 2*math.pi
+
+def arccos_cos(phi):
+    # arccos(cos phi) = phi if phi in [0, pi], else folds accordingly
+    # Since domain is [0, pi], no folds needed
+    return phi
+
+n_solutions = 0
+delta = 1e-5
+step = 1e-4
+x = 0.0
+solutions = []
+while x <= math.pi + 1e-8:
+    val1 = arcsin_sin(6*x)
+    val2 = arccos_cos(x)
+    # Since arcsin_sin in [-pi/2, pi/2], arccos_cos in [0, pi], equality only possible if val1 >= 0
+    if val1 >= 0 and abs(val1 - val2) < delta:
+        # Print solution rounded nicely
+        sol = round(x, 6)
+        # Avoid duplicates by checking proximity to last found
+        if not solutions or abs(sol - solutions[-1]) > 1e-4:
+            print(f"x = {sol}, arcsin(sin(6x)) = {val1:.6f}, arccos(cos x) = {val2:.6f}")
+            solutions.append(sol)
+            n_solutions += 1
+    x += step
+
+print(f"Number of solutions in [0, pi]: {n_solutions}")
+```

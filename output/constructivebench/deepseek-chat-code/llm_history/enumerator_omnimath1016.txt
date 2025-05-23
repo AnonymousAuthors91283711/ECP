@@ -1,0 +1,70 @@
+[write_program]
+This problem asks for the smallest positive integer `n` such that for all `m` coprime with `n`, the order of `m` modulo `n` is less than φ(n)/10. We'll write a Python program to search for this minimal `n` by checking each candidate in order.
+
+The approach:
+1. Compute φ(n) (Euler's totient function) for each n
+2. For each n, check all m coprime with n to see if their order is < φ(n)/10
+3. The first n satisfying this condition for all coprime m is our answer
+
+```python
+import math
+from math import gcd
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def phi(n):
+    result = n
+    p = 2
+    while p * p <= n:
+        if n % p == 0:
+            while n % p == 0:
+                n = n // p
+            result -= result // p
+        p += 1
+    if n > 1:
+        result -= result // n
+    return result
+
+def multiplicative_order(a, n):
+    if gcd(a, n) != 1:
+        return 0
+    order = phi(n)
+    factors = set()
+    temp = order
+    p = 2
+    while p * p <= temp:
+        if temp % p == 0:
+            factors.add(p)
+            while temp % p == 0:
+                temp //= p
+        p += 1
+    if temp > 1:
+        factors.add(temp)
+    for p in factors:
+        while order % p == 0 and pow(a, order // p, n) == 1:
+            order //= p
+    return order
+
+def check_condition(n):
+    if n <= 1:
+        return False
+    totient = phi(n)
+    threshold = totient / 10
+    for m in range(1, n):
+        if gcd(m, n) == 1:
+            ord_m = multiplicative_order(m, n)
+            if ord_m >= threshold:
+                return False
+    return True
+
+def find_min_n():
+    n = 1
+    while True:
+        n += 1
+        if check_condition(n):
+            print(f"Found candidate: {n}")
+            return n
+
+if __name__ == "__main__":
+    find_min_n()
+```

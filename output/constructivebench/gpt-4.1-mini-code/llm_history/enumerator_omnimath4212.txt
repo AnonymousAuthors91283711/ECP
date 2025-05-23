@@ -1,0 +1,81 @@
+[write_program]
+The problem involves finding all complex roots \( x \) on the unit circle (i.e., \( |x| = 1 \)) satisfying the polynomial equation 
+\[ x^n - x^{n-2} - x + 2 = 0, \]
+for integers \( n \geq 2 \).
+
+A computational approach is to:
+- For small \( n \) (e.g., from 2 up to 6),
+- Compute all roots of the polynomial,
+- Filter those roots with modulus very close to 1,
+- Print these roots exactly if possible or as decimals with reasonable precision,
+- Specifically highlight the roots found for each \( n \).
+
+This should help conjecture the structure of the set \( \texttt{omnimath4212\_answer(n)} \).
+
+```python
+import numpy as np
+
+def roots_on_unit_circle(n, tol=1e-10):
+    # Polynomial coefficients for x^n - x^{n-2} - x + 2 = 0
+    # Coefficients are in descending powers of x:
+    # Degree n, coefficients are:
+    # x^n: 1
+    # x^{n-1}: 0
+    # x^{n-2}: -1
+    # powers down to x^1: -1 at x^1
+    # x^0: 2
+    # Others zero
+    coeffs = [0]*(n+1)
+    coeffs[0] = 1          # x^n
+    coeffs[n-2] = -1       # x^{n-2}
+    coeffs[n-1] = 0        # x^{n-1} coefficient zero
+    coeffs[n-1] = 0        # redundant, just highlight indices below
+    coeffs[n-1-1] = 0      # n-1-1 = n-2 position, already set -1 above
+    # Index for x^1 is n-1
+    coeffs[-2] = -1        # x^1 position coefficient -1
+    coeffs[-1] = 2         # constant term
+    # To ensure correctness: The list coeffs has length n+1,
+    # coeffs[0] is for x^n, coeffs[-1] is constant.
+
+    # Fix editing above for indexing:
+    # The coefficients list should be setup as follows:
+    # coeffs[0] = 1 (x^n)
+    # coeffs[n-2] = -1 (x^{n-2})
+    # coeffs[-2] = -1 (x^1)
+    # coeffs[-1] = 2 (constant)
+    # Other coefficients = 0
+
+    # Let's clear and build explicitly:
+    coeffs = [0]*(n+1)
+    coeffs[0] = 1          # x^n
+    if n-2 >= 0:
+        coeffs[n-2] = -1   # x^{n-2}
+    coeffs[-2] = -1         # x^1
+    coeffs[-1] = 2          # x^0
+
+    roots = np.roots(coeffs)
+    # Filter roots with abs close to 1
+    unit_roots = []
+    for r in roots:
+        if abs(abs(r)-1) < tol:
+            unit_roots.append(r)
+    return unit_roots
+
+def format_root(r, tol=1e-12):
+    # Format root: if imaginary part very small, print real only
+    if abs(r.imag) < tol:
+        return f"{r.real:.12g}"
+    else:
+        return f"({r.real:.12g} {'+' if r.imag >= 0 else '-'} {abs(r.imag):.12g}j)"
+
+def main():
+    print("Enumerate complex roots on unit circle for x^n - x^{n-2} - x + 2 = 0")
+    for n in range(2, 7):
+        print(f"\nn = {n}")
+        roots = roots_on_unit_circle(n)
+        for r in roots:
+            print(format_root(r))
+
+if __name__ == "__main__":
+    main()
+```

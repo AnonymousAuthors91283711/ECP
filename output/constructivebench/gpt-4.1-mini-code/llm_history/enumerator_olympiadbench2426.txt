@@ -1,0 +1,55 @@
+[write_program]
+The problem is to find the unique train speed \( v > 0 \) such that the time between trains passing Linh equals 10 minutes, given trains depart every 3 minutes and Linh's speed is 60 km/h. Specifically:
+
+\[
+\text{passing_interval} = \frac{\text{train_distance}}{\text{relative_speed}} \implies \frac{10}{60} = \frac{v \times \frac{3}{60}}{v - 60}.
+\]
+
+We can enumerate reasonable values for \(v\) above 60 (since for \(v \leq 60\), relative speed is zero or negative invalidating the model), and print when equality (within floating precision or exact rational) holds for the relation. We prioritize exact rational arithmetic using `fractions.Fraction`.
+
+```python
+from fractions import Fraction
+
+def main():
+    train_interval = Fraction(3, 60)  # 3 minutes in hours
+    passing_interval = Fraction(10, 60)  # 10 minutes in hours
+    linh_speed = Fraction(60, 1)  # 60 km/h
+
+    print(f"Parameters:")
+    print(f"  train_interval = {train_interval} hours")
+    print(f"  passing_interval = {passing_interval} hours")
+    print(f"  linh_speed = {linh_speed} km/h")
+    print("Enumerating candidate train speeds v > linh_speed:")
+
+    # We test speed v from 61 to 80 km/h for potential candidates
+    # Equation: passing_interval = (v * train_interval) / (v - linh_speed)
+    # => passing_interval * (v - linh_speed) = v * train_interval
+    # => passing_interval*v - passing_interval*linh_speed = v*train_interval
+    # => passing_interval*v - v*train_interval = passing_interval*linh_speed
+    # => v*(passing_interval - train_interval) = passing_interval*linh_speed
+    # => v = (passing_interval*linh_speed) / (passing_interval - train_interval)
+
+    denom = passing_interval - train_interval
+    if denom == 0:
+        print("Denominator zero, no solution.")
+        return
+
+    v_exact = (passing_interval * linh_speed) / denom
+    print(f"Exact solution for v (km/h): {v_exact} (~{float(v_exact):.6f})")
+
+    # Check integer values around exact v
+    low = int(v_exact)
+    high = low + 2
+    for v_int in range(low, high):
+        if v_int <= linh_speed:
+            continue  # relative speed <=0 no good
+        lhs = passing_interval
+        rhs = Fraction(v_int) * train_interval / (Fraction(v_int) - linh_speed)
+        if lhs == rhs:
+            print(f"v = {v_int} satisfies equation exactly.")
+        else:
+            print(f"v = {v_int}: lhs={float(lhs):.6f}, rhs={float(rhs):.6f}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,35 @@
+[write_program]
+The problem involves finding a polynomial with integer coefficients that divides \(X^{2022} + X^{1011} + 1\). To help conjecture such divisors, we can enumerate possible divisors of degrees dividing 2022 or 1011, checking divisibility exactly using polynomial arithmetic over integers. We print any nontrivial divisor found.
+
+We'll try small-degree polynomials with coefficients in {-1,0,1} to keep the search feasible and check divisibility by polynomial remainder.
+
+```python
+from sympy import Poly, symbols, div, ZZ
+
+X = symbols('x')
+target = Poly(X**2022 + X**1011 + 1, X, domain=ZZ)
+
+def small_polys(deg_max, coeffs):
+    # Generate monic polynomials with degree up to deg_max and coefficients in coeffs including ±1,0
+    # To keep output short we only generate degree dividing 2022 or 1011 or small degrees
+    # and limit search to polynomials with terms at degrees 0 and deg only to keep feasible
+    for d in range(1, deg_max+1):
+        # Try polynomials X^d + a*X + b with a,b in coeffs to catch possible divisors
+        for a in coeffs:
+            for b in coeffs:
+                # monic polynomial: X^d + aX + b
+                poly = Poly(X**d + a*X + b, X, domain=ZZ)
+                yield poly
+
+print("Target polynomial: x^2022 + x^1011 + 1")
+print("Enumerating candidate divisors with degrees up to 5 and coefficients in {-1,0,1}:")
+
+coeffs = [-1,0,1]
+
+for candidate in small_polys(5, coeffs):
+    q, r = div(target, candidate, domain=ZZ)
+    if r.is_zero:
+        print(f"Divides: {candidate.as_expr()}")
+
+print("Enumeration complete.")
+```

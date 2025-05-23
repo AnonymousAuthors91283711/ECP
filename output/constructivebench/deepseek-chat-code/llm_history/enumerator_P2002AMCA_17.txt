@@ -1,0 +1,71 @@
+[write_program]
+This problem asks for the minimal sum of a set of distinct primes where:
+1. Each prime's digits are pairwise disjoint (no shared digits between any two primes)
+2. Together, their digits cover all digits 1-9 exactly once
+
+We'll write a Python program to find such prime sets and compute their sums, tracking the minimal sum found.
+
+```python
+import itertools
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def get_digits(n):
+    return set(str(n))
+
+max_prime = 10000  # Reasonable upper bound for this problem
+primes = [p for p in range(2, max_prime) if is_prime(p)]
+
+min_sum = float('inf')
+best_combo = None
+
+# Try combinations of increasing size
+for k in range(1, 10):
+    for combo in itertools.combinations(primes, k):
+        digits_used = set()
+        valid = True
+        for p in combo:
+            p_digits = get_digits(p)
+            if '0' in p_digits:
+                valid = False
+                break
+            if digits_used & p_digits:
+                valid = False
+                break
+            digits_used.update(p_digits)
+        if valid and digits_used == {'1','2','3','4','5','6','7','8','9'}:
+            current_sum = sum(combo)
+            print(f"Found valid set: {combo} with sum {current_sum}")
+            if current_sum < min_sum:
+                min_sum = current_sum
+                best_combo = combo
+
+if best_combo:
+    print(f"\nMinimal sum found: {min_sum} from primes {best_combo}")
+else:
+    print("No valid combination found within the prime limit")
+```

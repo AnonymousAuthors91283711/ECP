@@ -1,0 +1,132 @@
+[write_program]
+This problem involves finding integers \( m, n, r, s \) with certain modular congruences and inequalities, then summing them up. The key points:
+
+- \( r > 0 \), and \( r \) satisfies: \( 702 \equiv r \pmod{m} \), \( 787 \equiv r \pmod{m} \), \( 855 \equiv r \pmod{m} \).
+- \( s > 0 \), and \( s \) satisfies: \( 412 \equiv s \pmod{n} \), \( 722 \equiv s \pmod{n} \), \( 815 \equiv s \pmod{n} \).
+- \( r \neq s \).
+
+We want to find possible values of \( m, n, r, s \). To do so programmatically, we'll analyze the differences to understand the constraints.
+
+- For \( r \):
+  
+  The three congruences imply:
+  
+  \[
+  702 \equiv r \pmod{m},
+  \]
+  \[
+  787 \equiv r \pmod{m},
+  \]
+  \[
+  855 \equiv r \pmod{m}.
+  \]
+  
+  Which means:
+  
+  \[
+  702 - r \equiv 0 \pmod{m},
+  \]
+  \[
+  787 - r \equiv 0 \pmod{m},
+  \]
+  \[
+  855 - r \equiv 0 \pmod{m}.
+  \]
+  
+  Therefore, \( m \) divides all three differences: \( (702 - r), (787 - r), (855 - r) \).
+
+- The pairwise differences must be divisible by \( m \):
+
+  \[
+  (787 - r) - (702 - r) = 85,
+  \]
+  \[
+  (855 - r) - (787 - r) = 68,
+  \]
+  \[
+  (855 - r) - (702 - r) = 153.
+  \]
+  
+  So \( m \) divides 85, 68, and 153.
+
+- For \( s \):
+
+  Similar logic:
+
+  \[
+  412 \equiv s \pmod{n},
+  \]
+  \[
+  722 \equiv s \pmod{n},
+  \]
+  \[
+  815 \equiv s \pmod{n}.
+  \]
+  
+  Differences:
+
+  \[
+  722 - 412 = 310,
+  \]
+  \[
+  815 - 722 = 93,
+  \]
+  \[
+  815 - 412 = 403.
+  \]
+  
+  So \( n \) divides 310, 93, and 403.
+
+---
+
+Based on this, the possible \( m \) are divisors of 85, 68, 153; and possible \( n \) are divisors of 310, 93, 403.
+
+Let's enumerate these divisors, pick small divisors to find candidates for \( r \) and \( s \) with \( r \neq s \), and compute the sum.
+
+```python
+# List divisors of numbers
+def divisors(x):
+    return [d for d in range(1, x+1) if x % d == 0]
+
+# Divisors for m based on differences
+divs_85 = divisors(85)   # factors of 85
+divs_68 = divisors(68)   # factors of 68
+divs_153 = divisors(153) # factors of 153
+
+# Divisors for n based on differences
+divs_310 = divisors(310) # factors of 310
+divs_93 = divisors(93)   # factors of 93
+divs_403 = divisors(403) # factors of 403
+
+# Generate candidate m values (common divisors of all three)
+candidate_m = [d for d in set(divs_85).intersection(divs_68).intersection(divs_153)]
+# Generate candidate n values
+candidate_n = [d for d in set(divs_310).intersection(divs_93).intersection(divs_403)]
+
+import itertools
+
+# For each m, r can be any number with 1 <= r < m
+# For r, pick small values for demonstration. Similarly for s.
+
+results = []
+
+for m in candidate_m:
+    # r must satisfy: 702 ≡ r mod m, likewise for the others
+    # since m divides the differences, all these congruences satisfy:
+    # r ≡ 702 mod m
+    r_candidate = 702 % m
+    if r_candidate == 0:
+        r_candidate = m  # r > 0
+    for n in candidate_n:
+        s_candidate = None
+        for s in range(1, n):  # pick s from 1 to n-1
+            # s must satisfy 412 ≡ s mod n
+            if 412 % n == s and 722 % n == s and 815 % n == s:
+                # check s > 0 and s ≠ r
+                if s > 0 and s != r_candidate:
+                    total = m + n + r_candidate + s
+                    print(f"m={m}, n={n}, r={r_candidate}, s={s} => sum={total}")
+                    results.append(total)
+
+# The code will output candidate sums; from this, one can conjecture the answer.
+```

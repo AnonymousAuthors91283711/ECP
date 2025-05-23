@@ -1,0 +1,196 @@
+[write_program]
+The problem involves counting triplets \((a, b, c)\) with \(a, b, c \in \{1, 2, \dots, 2010\}\) satisfying the divisibility condition:
+
+\[
+3 \mid a b c + a b + a.
+\]
+
+Let's analyze the divisibility condition:
+
+\[
+a b c + a b + a \equiv 0 \pmod{3}.
+\]
+
+Factor out \(a\):
+
+\[
+a (b c + b + 1) \equiv 0 \pmod{3}.
+\]
+
+Therefore, for each triplet:
+
+\[
+a \equiv 0 \pmod{3} \quad \text{or} \quad (b c + b + 1) \equiv 0 \pmod{3}.
+\]
+
+This splits the counting into two cases:
+
+**Case 1:** \(a \equiv 0 \pmod{3}\).  
+Number of such \(a\):
+
+\[
+N_a = \lfloor \frac{2010}{3} \rfloor = 670.
+\]
+
+For each such \(a\), \(b\) and \(c\) can be any in \(\{1, \dots, 2010\}\):
+
+\[
+N_b = N_c = 2010.
+\]
+
+Total for case 1:
+
+\[
+N_a \times N_b \times N_c = 670 \times 2010^2.
+\]
+
+**Case 2:** \(a \not\equiv 0 \pmod{3}\), meaning \(a \equiv 1\) or \(2 \pmod{3}\).
+
+Since \(\gcd(a, 3)=1\), \(a\) is invertible modulo 3. The divisibility depends solely on:
+
+\[
+b c + b + 1 \equiv 0 \pmod{3}.
+\]
+
+Rewrite:
+
+\[
+b c + b + 1 \equiv 0 \pmod{3} \Rightarrow b(c + 1) \equiv -1 \pmod{3}.
+\]
+
+Because \(-1 \equiv 2 \pmod{3}\), the condition becomes:
+
+\[
+b(c + 1) \equiv 2 \pmod{3}.
+\]
+
+Let's analyze values modulo 3:
+
+- For \(b \equiv 0 \pmod{3}\): \(b \equiv 0 \Rightarrow b(c+1) \equiv 0\). Never equals 2.
+
+- For \(b \equiv 1 \pmod{3}\):
+
+\[
+1 \times (c+1) \equiv c+1 \equiv 2 \pmod{3} \Rightarrow c+1 \equiv 2 \Rightarrow c \equiv 1 \pmod{3}.
+\]
+
+- For \(b \equiv 2 \pmod{3}\):
+
+\[
+2 \times (c+1) \equiv 2(c+1) \equiv 2 c + 2 \pmod{3}.
+\]
+
+We want:
+
+\[
+2 c + 2 \equiv 2 \pmod{3} \Rightarrow 2 c \equiv 0 \pmod{3} \Rightarrow c \equiv 0 \pmod{3}.
+\]
+
+**Summary:**
+
+| \(b \pmod{3}\) | \(c \pmod{3}\) | Condition for \(b(c+1)\) to be 2 mod 3 |
+|----------------|----------------|-----------------------------------------|
+| 0              | any            | no (since product is 0)                |
+| 1              | \(c \equiv 1\) | yes                                    |
+| 2              | \(c \equiv 0\) | yes                                    |
+
+Now, for \(a\) with \(a \equiv 1 \text{ or } 2 \pmod{3}\), i.e., 2/3 of \(a\):
+
+- Number of such \(a\):
+
+\[
+\frac{2}{3} \times 2010 = 1340.
+\]
+
+For these \(a\), the counts for \(b\) and \(c\):
+
+- \(b \equiv 1 \pmod{3}\): count \(\lfloor 2010/3 \rfloor=670\).
+
+- \(c \equiv 1 \pmod{3}\): same, 670.
+
+- \(b \equiv 2 \pmod{3}\): 670.
+
+- \(c \equiv 0 \pmod{3}\): 670.
+
+Number of \((b,c)\) pairs satisfying the condition:
+
+- For \(b \equiv 1 \pmod{3}\), \(c \equiv 1 \pmod{3}\):
+
+\[
+670 \times 670.
+\]
+
+- For \(b \equiv 2 \pmod{3}\), \(c \equiv 0 \pmod{3}\):
+
+\[
+670 \times 670.
+\]
+
+Total:
+
+\[
+2 \times (670 \times 670) = 2 \times 449,290 = 898,580.
+\]
+
+Finally, total triplets for case 2:
+
+\[
+(2010 - 670) \times (898,580) = 1340 \times 898,580.
+\]
+
+The total number of such triplets:
+
+\[
+\boxed{
+\text{Total} = 670 \times 2010^2 + 1340 \times 898,580.
+}
+\]
+
+The probability:
+
+\[
+\frac{\text{Total}}{2010^3}.
+\]
+
+Here's the Python code to compute this probability precisely:
+
+```python
+# Counting triplets satisfying the divisibility condition
+def count_triplets():
+    N = 2010
+    count_a_zero = N // 3  # a ≡ 0 mod 3
+    count_b = N
+    count_c = N
+    
+    # Case 1: a ≡ 0 mod 3
+    total_case1 = count_a_zero * count_b * count_c
+    
+    # Case 2: a ≠ 0 mod 3 (a ≡ 1 or 2 mod 3), total count
+    total_a_nonzero = 2 * count_a_zero  # 2/3 of N
+    # For b and c:
+    count_b_mod1 = count_b // 3
+    count_b_mod2 = count_b // 3
+    count_c_mod0 = count_c // 3
+    count_c_mod1 = count_b // 3
+    
+    # Pairs for condition b(c+1) ≡ 2 mod 3:
+    # (b ≡ 1, c ≡ 1): number of pairs
+    pairs_b1_c1 = count_b_mod1 * count_c_mod1
+    # (b ≡ 2, c ≡ 0)
+    pairs_b2_c0 = count_b_mod2 * count_c_mod0
+    
+    total_pairs = pairs_b1_c1 + pairs_b2_c0
+    total_case2 = total_a_nonzero * total_pairs
+    
+    total_triplets = total_case1 + total_case2
+    probability = total_triplets / (N ** 3)
+    
+    # Print partial results
+    print("Case 1 triplets:", total_case1)
+    print("Case 2 triplets:", total_case2)
+    print("Total triplets:", total_triplets)
+    print("Probability:", probability)
+
+# Run the counting
+count_triplets()
+```

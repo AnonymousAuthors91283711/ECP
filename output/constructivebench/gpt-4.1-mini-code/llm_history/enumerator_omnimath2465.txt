@@ -1,0 +1,71 @@
+[write_program]
+The problem looks for the count (cardinality) of natural numbers \( n \) such that:
+- \( n \geq 10^9 \),
+- \( n \equiv 0 \pmod{11} \),
+- and the digits of \( n \) from the 1st to the 9th digit (from right, zero-based) are non-increasing moving left (i.e., digits form a non-increasing sequence).
+
+Since \( n \geq 10^9 \), the number has at least 10 digits.
+
+We want to enumerate such 10-digit numbers \( n \) divisible by 11 and whose digits satisfy the non-increasing condition on the leftmost 9 digits.
+
+Strategy:
+- Generate all 10-digit numbers with digits non-increasing from left to right.
+- Check divisibility by 11.
+- Count those with \( n \geq 10^9 \) (all 10-digit numbers satisfy this).
+- Print each qualifying number immediately.
+
+We will generate in decreasing order from the most significant digit to the least, ensuring \( d_i \geq d_{i+1} \) for \( i=0..8 \).
+
+To keep computations feasible, we generate digit sequences rather than numbers, then construct \( n \) from digits.
+
+We check divisibility by 11 using the alternating sum of digits rule:
+\[
+(n_0 - n_1 + n_2 - n_3 + \cdots) \equiv 0 \pmod{11}
+\]
+where \( n_0 \) is the most significant digit.
+
+We print each number as soon as found.
+
+```python
+# Enumerate 10-digit numbers n with digits non-increasing left to right,
+# n divisible by 11, and n >= 10^9. Print each such n.
+
+def digits_to_num(digs):
+    return sum(d * 10**(9 - i) for i, d in enumerate(digs))
+
+def divisible_by_11(digs):
+    # alternating sum from leftmost digit
+    total = 0
+    for i, d in enumerate(digs):
+        if i % 2 == 0:
+            total += d
+        else:
+            total -= d
+    return total % 11 == 0
+
+def search(pos, prefix, last_digit):
+    if pos == 10:
+        # finished digits
+        n = digits_to_num(prefix)
+        print(n)
+        return
+    # digits must be non-increasing: d[pos] <= d[pos-1]
+    for d in range(last_digit, -1, -1):
+        prefix.append(d)
+        if pos == 9:
+            # check divisibility by 11 and n>=10^9
+            if prefix[0] != 0 and divisible_by_11(prefix):
+                n = digits_to_num(prefix)
+                print(n)
+        else:
+            search(pos+1, prefix, d)
+        prefix.pop()
+
+def main():
+    # The most significant digit can't be 0 for a 10-digit number
+    for first_digit in range(9, 0, -1):
+        search(1, [first_digit], first_digit)
+
+if __name__ == "__main__":
+    main()
+```

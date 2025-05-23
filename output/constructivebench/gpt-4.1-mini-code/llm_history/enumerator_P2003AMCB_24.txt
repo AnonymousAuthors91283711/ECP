@@ -1,0 +1,91 @@
+[write_program]
+The problem looks for the smallest positive integer \( c \) such that there exist two integers \( a < b < c \) and a unique real number \( x \) satisfying:
+\[
+x^2 + a^2 = 2^x + 2^a, \quad
+x^2 + b^2 = 2^x + 2^b, \quad
+x^2 + c^2 = 2^x + 2^c.
+\]
+
+We want to find triples \( (a,b,c) \) where a unique \( x \) solves all three equations simultaneously. Since \( x \) appears identically in each equation, rearranging gives:
+\[
+x^2 - 2^x = 2^a - a^2 = 2^b - b^2 = 2^c - c^2.
+\]
+
+So for some value \( k \), we have \( k = 2^a - a^2 = 2^b - b^2 = 2^c - c^2 \) with \( a < b < c \). The uniqueness of \( x \) means the equation \( x^2 - 2^x = k \) has a unique solution, which guides us.
+
+This is an enumeration problem:
+- Compute \( y_n = 2^n - n^2 \) for \( n \) in a useful range.
+- Find triples \( (a,b,c) \) with equal \( y_a = y_b = y_c \).
+- Check the uniqueness of \( x \) for that \( k \).
+
+We will try \( n = 1 \) to 20. For each value of \( k \), if it repeats at 3 or more indices, print the triple and check uniqueness by sampling \( x \) values numerically.
+
+```python
+# Enumerate triples (a,b,c) of positive integers with a<b<c<=20,
+# where 2^a - a^2 = 2^b - b^2 = 2^c - c^2 = k,
+# and for this k, the equation x^2 - 2^x = k has a unique real root.
+
+import math
+
+def f(x): return x*x - 2**x
+
+def num_roots(k):
+    # Count real roots of f(x)=k approximately.
+    # f(x) continuous, goes +∞ as x→±∞. Has a unique local max and min.
+    # Count sign changes around critical points to find roots.
+    # Derivative f'(x) = 2x - 2^x * ln2.
+    # Find critical points numerically.
+    def df(x): return 2*x - (2**x)*math.log(2)
+    # Use binary search to find critical points where df=0
+    def find_root(a,b):
+        # find root of df=0 on [a,b]
+        for _ in range(50):
+            m=(a+b)/2
+            if df(m)*df(a)<=0: b=m
+            else: a=m
+        return (a+b)/2
+
+    # Rough bounds for critical points
+    c1 = find_root(-1.5,0)  # first critical point (max)
+    c2 = find_root(0,2.0)   # second (min)
+
+    fv = lambda x: f(x)-k
+    # Check signs around critical points to count roots
+    points = [-1000, c1, c2, 1000]
+    signs = [fv(p)>0 for p in points]
+    count=0
+    for i in range(len(points)-1):
+        if signs[i]!=signs[i+1]:
+            count+=1
+    return count
+
+max_n=20
+vals = {}
+for n in range(1,max_n+1):
+    val = 2**n - n**2
+    if val not in vals:
+        vals[val] = []
+    vals[val].append(n)
+
+answers = []
+for k, lst in vals.items():
+    if len(lst)>=3:
+        # Enumerate all increasing triples
+        lst.sort()
+        for i in range(len(lst)):
+            for j in range(i+1,len(lst)):
+                for m in range(j+1,len(lst)):
+                    a,b,c = lst[i], lst[j], lst[m]
+                    # Check uniqueness of root for this k
+                    r = num_roots(k)
+                    if r==1:
+                        print(f"Triple (a,b,c)=({a},{b},{c}) with k={k} has unique root count={r}")
+                        answers.append((c,a,b))  # store c for min checking
+
+if answers:
+    answers.sort()
+    print("Minimal c with such triple is", answers[0][0])
+else:
+    print("No triples found for n ≤ 20")
+```
+The program prints found triples with the uniqueness property and finally the minimal \( c \) found. This facilitates conjecture and proof.

@@ -1,0 +1,57 @@
+[write_program]
+The problem involves enumerating all possible states reachable from a starting sequence of characters `['H', 'H', 'M', 'M', 'M', 'M', 'T', 'T']` by applying swaps of adjacent pairs ('H', 'M'), ('M', 'H'), ('T', 'M'), and ('H', 'T') in either order. Our goal is to count the total number of distinct sequences reachable, which corresponds to the size of the set `S`.
+
+Since the moves are swaps of specific pairs, the problem reduces to understanding the permutations of the multiset with counts of each character, but with restrictions imposed by only being able to swap particular pairs. To enumerate potential reachable states, we will generate all permutations of the multiset and test whether each can be reached from the start by a sequence of valid moves.
+
+Given the constraints, the key complexities:
+- The initial multiset is fixed.
+- Moves involve swapping positions of certain pairs.
+- We want to count all states reachable from the initial sequence, not just permutations.
+
+However, in this simplified context (assuming moves can reach all permutations consistent with the swap rules), the problem reduces to counting the distinct arrangements and verifying reachability via swap sequences.
+
+The approach:
+- Generate all permutations of the multiset `['H', 'H', 'M', 'M', 'M', 'M', 'T', 'T']`.
+- For each permutation, check if it can be reached from the start using sequences of `valid_move`. Given the rules, we will heuristically assume that all permutations maintaining the overall multiset and respecting the swap rules are reachable for this problem's scope.
+- Count and output each reachable permutation.
+
+Here's the code that performs this enumeration efficiently:
+
+```python
+from itertools import permutations
+from math import factorial
+# Define the initial multiset
+start = ['H', 'H', 'M', 'M', 'M', 'M', 'T', 'T']
+
+# Generate all unique permutations of the multiset
+perm_set = set(permutations(start))
+reachable_states = []
+
+# Function to check if two states differ by a valid move
+def valid_transition(s, t):
+    for i in range(len(s) - 1):
+        if s[i] != t[i]:
+            if (s[i], s[i+1]) in [('H', 'M'), ('M', 'H'), ('T', 'M'), ('H', 'T')]:
+                if s[:i] + [s[i+1], s[i]] + s[i+2:] == t:
+                    return True
+    return False
+
+# Breadth-first search to find all reachable states
+from collections import deque
+queue = deque([tuple(start)])
+visited = set([tuple(start)])
+while queue:
+    current = queue.popleft()
+    # Check all permutations to see if reachable via valid_move
+    for p in perm_set:
+        if p not in visited:
+            # Check if p can be reached from current by a valid move
+            if valid_transition(list(current), list(p)):
+                visited.add(p)
+                queue.append(p)
+
+# Output all reachable states immediately
+for state in visited:
+    print(''.join(state))
+print(f"Total reachable states: {len(visited)}")
+```

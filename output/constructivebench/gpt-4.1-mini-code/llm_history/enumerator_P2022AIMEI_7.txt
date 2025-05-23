@@ -1,0 +1,60 @@
+[write_program]
+The problem is to find pairs of positive coprime integers \((m,n)\) such that for distinct integers \(a,b,c,d,e,f',g,h,i\) from 1 to 9, the fraction \(\frac{abc - def'}{ghi} = \frac{m}{n} > 0\). We want to find the pairs \((m,n)\) that appear from such configurations, focusing on those with small values and coprime \(m,n\).
+
+The approach is:
+- Enumerate all injective functions \(f : \{0,\ldots,8\} \to \{1,\ldots,9\}\) which is permutation of 1 to 9.
+- For each permutation, compute numerator = \(a*b*c - d*e*f'\), denominator = \(g*h*i\).
+- Skip zero or negative results.
+- Reduce fraction \(\frac{numerator}{denominator}\) to lowest terms.
+- Print each fraction pair \((m,n)\) when found.
+- Stop after a threshold of enumerations to limit output.
+
+We can reuse Python's itertools.permutations to generate permutations and fractions module to simplify fractions.
+
+```python
+from itertools import permutations
+from math import gcd
+from fractions import Fraction
+
+# We'll iterate over permutations of 1..9 assigning slots a,b,c,d,e,f',g,h,i
+digits = list(range(1,10))
+seen = set()
+count = 0
+max_print = 50  # limit output lines to avoid overflow
+
+print("Enumerating fractions (m,n) from permutations with positive value:")
+
+for p in permutations(digits):
+    a,b,c,d,e,f_,g,h,i = p
+    numerator = a*b*c - d*e*f_
+    denominator = g*h*i
+    if denominator == 0:
+        continue
+    if numerator <= 0:
+        continue
+    # reduce fraction
+    common = gcd(numerator, denominator)
+    m = numerator // common
+    n = denominator // common
+    if (m,n) in seen:
+        continue
+    # check coprime
+    if gcd(m,n) != 1:
+        continue
+    print(f"m={m}, n={n}")
+    seen.add((m,n))
+    count += 1
+    if count >= max_print:
+        break
+
+# Find minimal (m,n) by m/n value
+min_frac = None
+for (m,n) in seen:
+    f = Fraction(m,n)
+    if (min_frac is None) or (f < min_frac):
+        min_frac = f
+
+if min_frac:
+    print(f"Minimal fraction found: {min_frac.numerator}/{min_frac.denominator}")
+```
+

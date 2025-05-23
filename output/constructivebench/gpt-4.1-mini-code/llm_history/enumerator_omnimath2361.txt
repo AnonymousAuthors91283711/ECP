@@ -1,0 +1,59 @@
+[write_program]
+This problem asks to find the count of positive divisors \( d \) of \( 12! \) such that \( d \equiv 1 \pmod{3} \).
+
+To explore this, the program will:
+- Compute \( 12! \) and its divisors (by prime factorization and enumeration).
+- For each divisor \( d \), check if \( d \equiv 1 \pmod{3} \).
+- Print each divisor that satisfies the condition.
+- Finally, print the count.
+
+We limit ourselves to enumerating the divisors by prime factorization rather than naive iteration for efficiency.
+
+```python
+from math import factorial
+from functools import reduce
+
+# Compute prime factors of 12! with their exponents
+# 12! prime factorization:
+# 12! = 2^10 * 3^5 * 5^2 * 7^1 * 11^1
+prime_factors = {2:10, 3:5, 5:2, 7:1, 11:1}
+
+# Generate all divisors from prime factors
+def generate_divisors(primes_exp):
+    primes = list(primes_exp.keys())
+    exps = [list(range(e+1)) for e in primes_exp.values()]
+    # iterate all combinations of exponents to generate divisors
+    def backtrack(idx, current):
+        if idx == len(primes):
+            print(current)  # print divisor immediately
+            return 1
+        count = 0
+        p = primes[idx]
+        for e in exps[idx]:
+            count += backtrack(idx+1, current*(p**e))
+        return count
+    return backtrack(0,1)
+
+print("Divisors d of 12! with d % 3 = 1:")
+count = 0
+# We use a modified function to print only those divisors d where d % 3 == 1
+def generate_divisors_mod3_1(primes_exp):
+    primes = list(primes_exp.keys())
+    exps = [list(range(e+1)) for e in primes_exp.values()]
+    count = 0
+    def backtrack(idx, current):
+        nonlocal count
+        if idx == len(primes):
+            if current % 3 == 1:
+                print(current)
+                count +=1
+            return
+        p = primes[idx]
+        for e in exps[idx]:
+            backtrack(idx+1, current*(p**e))
+    backtrack(0,1)
+    return count
+
+count = generate_divisors_mod3_1(prime_factors)
+print("Count =", count)
+```

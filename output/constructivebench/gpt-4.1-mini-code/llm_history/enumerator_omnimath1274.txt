@@ -1,0 +1,57 @@
+[write_program]
+The problem is to find the number of real solutions \(x\) to the equation
+\[
+2003^x + 2004^x = 2005^x.
+\]
+
+By considering sample values of \(x\), we can try to identify the number of solutions. Let's enumerate values of \(x\) (possibly integers and simple rationals) and check when the equality holds or is nearly true.
+
+```python
+# Enumerate solutions x to 2003^x + 2004^x = 2005^x for x in a reasonable range,
+# print all approximate solutions found and conjecture the number of real solutions.
+
+def f(x):
+    from math import pow
+    return pow(2003, x) + pow(2004, x) - pow(2005, x)
+
+def sign_change_points():
+    # We scan integer x from -10 to 10 to look for sign changes in f(x).
+    # We'll do a finer search near sign changes to estimate roots.
+    xs = []
+    prev_x = -10
+    prev_val = f(prev_x)
+    for i in range(-9, 11):
+        val = f(i)
+        if prev_val == 0:
+            print(f"Exact solution found at x = {prev_x}")
+            xs.append(prev_x)
+        if val == 0:
+            print(f"Exact solution found at x = {i}")
+            xs.append(i)
+        if prev_val * val < 0:
+            # sign changed, root in (prev_x, i)
+            # binary search for root approximately
+            low, high = prev_x, i
+            for _ in range(30):
+                mid = (low + high)/2
+                mid_val = f(mid)
+                if abs(mid_val) < 1e-14:
+                    break
+                if prev_val * mid_val < 0:
+                    high = mid
+                    val = mid_val
+                else:
+                    low = mid
+                    prev_val = mid_val
+            root = (low + high)/2
+            print(f"Approximate solution near x = {root:.14f}")
+            xs.append(root)
+        prev_x = i
+        prev_val = val
+    return xs
+
+print("Checking for real solutions of 2003^x + 2004^x = 2005^x")
+solutions = sign_change_points()
+print(f"Total approximate number of solutions found: {len(solutions)}")
+```
+This enumerator scans integer \(x\) from -10 to 10, looks for sign changes in the function \(f(x)=2003^x + 2004^x - 2005^x\), then uses binary search to find approximate real roots, printing each root found immediately. This helps enumerate all real solutions in the range, which likely include all solutions given the shape of the function.

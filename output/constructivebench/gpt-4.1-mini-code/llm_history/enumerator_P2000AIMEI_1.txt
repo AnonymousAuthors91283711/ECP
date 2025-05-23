@@ -1,0 +1,48 @@
+[write_program]
+The problem asks for the smallest positive integer \(n\) such that for every factorization \(a \times b = 10^n\), at least one of \(a\) or \(b\) contains the digit 0 in its decimal representation.
+
+We want to enumerate \(n\) from 1 upwards, and for each \(n\), check all factorizations of \(10^n\). For each factorization \(a \times b = 10^n\), check if both \(a\) and \(b\) contain no zero digits. If any such factorization is found, \(n\) is not large enough.
+
+To keep the checking efficient:
+- \(10^n\) has the prime factorization \(2^n \times 5^n\).
+- Every factorization corresponds to dividing the exponents of 2 and 5 between \(a\) and \(b\).
+- Enumerate \(i\) from 0 to \(n\), let \(a = 2^i \times 5^j\), \(b = 2^{n - i} \times 5^{n - j}\) for \(j = 0 \dots n\).
+- This covers all divisors \(a\) of \(10^n\) because \(a\) must be of the form \(2^i 5^j\) with \(0 \leq i,j \leq n\).
+- Check decimal digits of \(a\) and \(b\) for zero.
+
+Print each \(n\) as a candidate, and also print factorizations without zero digits to find counterexamples quickly until the minimal \(n\) is found.
+
+```python
+def has_zero_digit(x):
+    return '0' in str(x)
+
+def check_n(n):
+    # For each division of prime exponents i,j from 0..n
+    # a = 2^i * 5^j, b = 2^{n-i} * 5^{n-j}
+    from math import pow
+    two_pows = [2**i for i in range(n+1)]
+    five_pows = [5**j for j in range(n+1)]
+    pow_10_n = 10**n
+    for i in range(n+1):
+        for j in range(n+1):
+            a = two_pows[i]*five_pows[j]
+            b = (two_pows[n - i])*(five_pows[n - j])
+            if a * b != pow_10_n:
+                # Should not happen but safeguard
+                continue
+            if not has_zero_digit(a) and not has_zero_digit(b):
+                print(f"n={n}, counterexample: a={a}, b={b} (both no zero digits)")
+                return False
+    print(f"n={n} works: Every factorization has zero digit in a or b")
+    return True
+
+def main():
+    print("Enumerating for n=1 to 14 (AIME scale):")
+    for n in range(1, 15):
+        if check_n(n):
+            print(f"Minimal n with the property is {n}")
+            break
+
+if __name__ == '__main__':
+    main()
+```

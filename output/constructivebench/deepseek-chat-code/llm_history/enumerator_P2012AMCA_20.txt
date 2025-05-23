@@ -1,0 +1,61 @@
+[write_program]
+This problem asks for the exponent k such that the coefficient of X^2012 in (1+X+X^2+...+X^7)^8 equals 2^k. We'll write a Python program to enumerate possible k values by computing the polynomial expansion and checking coefficients.
+
+The approach:
+1. Represent the polynomial as (1-X^8)/(1-X) raised to the 8th power
+2. Compute the coefficient using the multinomial theorem
+3. Check which coefficients are powers of 2
+4. For the specific X^2012 term, find the exponent k
+
+```python
+from math import comb
+from itertools import product
+
+def coefficient(n, k):
+    """Compute coefficient of x^k in (1+x+...+x^7)^n using inclusion-exclusion"""
+    total = 0
+    for t in range(0, (k // 8) + 1):
+        sign = (-1)**t
+        remaining = k - 8*t
+        if remaining < 0:
+            continue
+        # Multinomial coefficient for sum a_i = n where sum i*a_i = remaining
+        # This is equivalent to compositions of remaining into n parts <=7
+        # We use dynamic programming for this part
+        dp = [0]*(remaining+1)
+        dp[0] = 1
+        for _ in range(n):
+            new_dp = [0]*(remaining+1)
+            for i in range(remaining+1):
+                if dp[i] == 0:
+                    continue
+                for j in range(0, min(8, remaining-i+1)):
+                    new_dp[i+j] += dp[i]
+            dp = new_dp
+        total += sign * comb(n, t) * dp[remaining]
+    return total
+
+def is_power_of_two(n):
+    return (n & (n-1)) == 0 and n != 0
+
+def find_exponent(n):
+    k = 0
+    while n % 2 == 0:
+        n = n // 2
+        k += 1
+    return k if n == 1 else None
+
+def main():
+    n = 8
+    target = 2012
+    c = coefficient(n, target)
+    print(f"Coefficient of x^{target}: {c}")
+    k = find_exponent(c)
+    if k is not None:
+        print(f"Exponent k where coefficient equals 2^k: {k}")
+    else:
+        print("Coefficient is not a power of 2")
+
+if __name__ == "__main__":
+    main()
+```

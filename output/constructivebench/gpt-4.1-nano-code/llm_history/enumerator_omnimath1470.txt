@@ -1,0 +1,79 @@
+[write_program]
+This problem involves number theory concepts: divisors, the totient function (φ), and summations over divisors. The key steps are:
+
+- Compute \( n \) as the product of the first 10 primes.
+- For each divisor \( x \) of \( n \), sum over divisors \( y \) of \( n/x \), multiplying \( \phi(x) \) and \( y \).
+- Sum all these contributions, then divide by \( n \).
+
+Given the structure, an efficient approach is:
+
+1. Generate all divisors of \( n \).
+2. For each divisor \( x \), find divisors of \( n/x \).
+3. Sum \( \phi(x) \times y \) over these.
+4. Sum across all \( x \), then divide by \( n \).
+
+We avoid computing directly all divisor pairs naively by recognizing that the divisors of \( n \), with \( n \) as the product of the first 10 primes, can be systematically generated. Since the primes are small, enumerating all divisor combinations is feasible.
+
+We implement this with minimal tokens, stream results when available, and keep calculations exact.
+
+```python
+from math import gcd
+from itertools import product
+
+# List of first 10 primes
+primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+# Compute n as product of these primes
+n = 1
+exps = []
+for p in primes:
+    n *= p
+
+# Generate all divisors of n
+# Since n is square-free with prime exponents 1, divisors correspond to subsets of prime factors
+divisors = [1]
+prime_factors = [(p, 1) for p in primes]
+# For each divisor, generate divisors by subset multiplication
+def generate_divisors(primes):
+    divisors = [1]
+    for p in primes:
+        temp = []
+        for d in divisors:
+            temp.append(d)
+            temp.append(d * p)
+        divisors = temp
+    return list(set(divisors))
+div_list = generate_divisors(primes)
+
+# Precompute phi for all divisors
+phi_cache = {}
+def phi(x):
+    if x in phi_cache:
+        return phi_cache[x]
+    result = x
+    for p in primes:
+        if p * p > x:
+            break
+        if x % p == 0:
+            while x % p == 0:
+                x //= p
+            result -= result // p
+    if x > 1:
+        result -= result // x
+    phi_cache[x] = result
+    return result
+
+total_sum = 0
+for x in div_list:
+    phi_x = phi(x)
+    n_over_x = n // x
+    # Generate divisors of n/x
+    y_divs = [d for d in div_list if n_over_x % d == 0]
+    for y in y_divs:
+        total_sum += phi_x * y
+        print(f"Divisor x: {x}, y: {y}, phi(x): {phi_x}, product: {phi_x * y}")
+result = total_sum // n
+print(f"Total sum divided by n: {result}")
+```
+
+This code efficiently enumerates all divisor pairs, computes \(\phi(x)\), sums the products, and divides by \( n \). It prints intermediate divisor pairs for transparency. This approach is suitable for a high-school difficulty problem reduced to divisor enumeration and totient calculations.

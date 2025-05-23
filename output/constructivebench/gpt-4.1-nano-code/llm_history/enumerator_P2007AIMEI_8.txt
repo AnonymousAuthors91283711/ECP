@@ -1,0 +1,81 @@
+[write_program]
+This problem involves finding the greatest \(k \in \mathbb{N}\) such that there exists a cubic polynomial \(P \in \mathbb{Q}[X]\) satisfying certain divisibility conditions involving quadratic polynomials. To approach this:
+
+- Let's choose small candidate values of \(k\) (probably around 0 to 50) to check for the divisibility conditions.
+- We generate polynomials \(P\) of degree 3 that are divisible by the two quadratics for each candidate \(k\).
+- Verify if such \(P\) exists, and track the greatest \(k\).
+
+Since the problem is abstract and algebraic, we'll implement a numerical search, focusing on small \(k\), and print the candidates when the divisibility conditions are met.
+
+```python
+from sympy import symbols, Poly, Rational, div, gcd
+from itertools import product
+
+X = symbols('X')
+
+def quadratic(k):
+    # quadratic for divisibility: X^2 + (k - 29)X - k
+    return Poly(X**2 + (k - 29)*X - k, X)
+
+def quadratic2(k):
+    # second quadratic for divisibility: 2X^2 + (2k - 43)X + k
+    return Poly(2*X**2 + (2*k - 43)*X + k, X)
+
+# Generate all monic cubic polynomials P with rational coefficients
+# For efficiency, we can parametrize P by three rational numbers a, b, c
+# with leading coefficient 1 for simplicity
+answers = []
+
+for k in range(0, 50):  # small sample range for k
+    q1 = quadratic(k)
+    q2 = quadratic2(k)
+    
+    # Compute GCDs to check divisibility
+    # Since the problem states divisibility, check if q1 and q2 divide P
+    
+    # Let's construct a sample P divisible by q1 and q2
+    # For that, P must be divisible by their least common multiple
+    # If q1 and q2 are coprime, LCM is their product
+    
+    g1 = gcd(q1, q2)
+    # For simplicity, assume q1 and q2 are coprime or work with their product
+    lcm_poly = q1 * q2 // g1
+    
+    # Since q1 and q2 are quadratics, their product is degree 4
+    # But P is degree 3, so P can be a polynomial dividing both, 
+    # which can only happen if q1 and q2 share a factor, i.e., gcd not 1
+    # If gcd is 1, no degree 3 P divides both quadratics
+    if g1.as_expr() != 1:
+        # P divides both q1 and q2 if q1 and q2 share a factor,
+        # so P could be q1 or q2 (if degree 3)
+        # For degree 3, P could be q1 (degree 2) or q2 (degree 2), but not degree 3
+        # So no candidate in this case
+        continue
+    
+    # Otherwise, q1 and q2 are coprime; check their gcd
+    # For explicit divisibility, try to find if either quadratic divides some degree 3 polynomial
+    # For simplicity, check whether q1 divides some polynomial of degree 3
+    # But degree 3 cannot be divisible by quadratic unless it's reducible
+    # Let's generate candidate P as q1 times a linear polynomial:
+    
+    for a in Rational(-3,1), Rational(-2,1), Rational(-1,1), Rational(0,1), Rational(1,1), Rational(2,1), Rational(3,1):
+        for b in Rational(-3,1), Rational(-2,1), Rational(-1,1), Rational(0,1), Rational(1,1), Rational(2,1), Rational(3,1):
+            P = q1 * (X + a) + b
+            P_poly = Poly(P, X)
+            deg_P = P_poly.degree()
+            if deg_P != 3:
+                continue
+            # Check if q2 divides P
+            rem = div(P, q2)[1]
+            if rem.is_zero:
+                print(f"Found candidate for k={k}: P divisible by both quadratics.")
+                answers.append(k)
+                print(f"k={k}, polynomial P: {P_expr}")
+                break
+
+# Output the maximum k found
+if answers:
+    print("Maximum k:", max(answers))
+else:
+    print("No candidates found in sample range.")
+```

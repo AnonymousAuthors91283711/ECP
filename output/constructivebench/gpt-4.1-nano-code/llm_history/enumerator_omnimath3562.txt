@@ -1,0 +1,58 @@
+[write_program]
+The problem investigates solutions to a system of three equations involving positive real variables \(x, y, z\):
+\[
+\begin{cases}
+x + \frac{y}{z} = 2 \\
+y + \frac{z}{x} = 2 \\
+z + \frac{x}{y} = 2
+\end{cases}
+\]
+with all variables \(x, y, z > 0\). We need to find all possible sums \(s = x + y + z\) of solutions, and then identify the set of possible sums.
+
+To approach this, I will examine solutions with small positive numbers, seeking patterns or bounds for \(x + y + z\). Since we're to enumerate solutions, I'll try small rational values and see if they satisfy the system, then derive the sum.
+
+I'll write a Python program that:
+
+- Enumerates small positive rational values of \(x, y, z\) within a custom small set.
+- Checks whether these solutions satisfy the equations within a small tolerance.
+- Records and prints the sums \(x + y + z\).
+- Looks for extremal values (minimum and maximum sums) within the search range.
+
+This brute-force method provides insight; for a more precise answer, symbolic algebra or algebraic manipulation would be best, but here, enumeration gives a constructive fallback.
+
+```python
+# Enumerate small positive rational values for x, y, z
+import math
+
+solutions = set()
+limit = 5  # upper bound for enumerations
+step = 0.1  # step size for enumerations
+
+for ix in range(1, int(limit / step)):
+    x = ix * step
+    for iy in range(1, int(limit / step)):
+        y = iy * step
+        # derive z from the first equation: x + y/z = 2 => y/z = 2 - x
+        rhs_z = 2 - x
+        if abs(rhs_z) < 1e-8:
+            continue  # avoid division by zero
+        z = y / rhs_z
+        if z <= 0 or z > limit:
+            continue
+        # check second equation: y + z/x ≈ 2
+        lhs2 = y + z / x
+        if abs(lhs2 - 2) > 1e-2:
+            continue
+        # check third equation: z + x/y ≈ 2
+        lhs3 = z + x / y
+        if abs(lhs3 - 2) > 1e-2:
+            continue
+        s = x + y + z
+        solutions.add(round(s, 2))
+        print(f"Found solution: x={x:.2f}, y={y:.2f}, z={z:.2f}, sum={s:.2f}")
+
+if not solutions:
+    print("No solutions found in enumeration.")
+else:
+    print("Possible sums (approximate):", sorted(solutions))
+```

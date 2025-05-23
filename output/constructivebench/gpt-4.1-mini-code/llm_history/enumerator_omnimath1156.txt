@@ -1,0 +1,64 @@
+[write_program]
+The problem describes a recurrence for a sequence \(E\) with initial conditions \(E(k) = 0\) for \(k \leq 0\) and for \(k > 0\):
+\[
+E(k) = 1 + \frac{E(k-1) + E(k-2)}{2}.
+\]
+We want to analyze the asymptotic behavior of \(E(n)\), specifically expressing it as
+\[
+E(n) \approx a n + b,
+\]
+and to find the constants \(a\) and \(b\).
+
+We'll write a Python program to:
+- Compute \(E(k)\) for \(k\) up to some \(N\),
+- Use linear regression or finite differences to guess \(a\) and \(b\),
+- Print the computed values and approximations to observe the convergence.
+
+```python
+# Program to analyze the sequence defined by
+# E(k) = 0 for k <= 0
+# E(k) = 1 + (E(k-1) + E(k-2)) / 2 for k > 0
+# Goal: find (a,b) with E(n) ~ a*n + b
+
+def compute_sequence(N):
+    E = [0]*(N+1)
+    for k in range(1, N+1):
+        if k == 1:
+            E[k] = 1 + (E[k-1] + E[k-2]) / 2  # E[0] and E[-1] treated as 0
+        else:
+            E[k] = 1 + (E[k-1] + E[k-2]) / 2
+    return E
+
+def estimate_linear_params(E):
+    # Use last few points to estimate slope a and intercept b via differences
+    n = len(E)-1
+    # Use points n-4, n-3, n-2, n-1, n
+    points = [(i, E[i]) for i in range(n-4, n+1)]
+    # Compute slope estimates by finite differences:
+    slopes = [(points[i+1][1] - points[i][1]) for i in range(4)]
+    avg_slope = sum(slopes)/4
+    # Estimate intercept by least squares
+    # b ~ E(n) - a*n
+    last_intercepts = [E[i] - avg_slope*i for i in range(n-4, n+1)]
+    avg_intercept = sum(last_intercepts)/5
+    return avg_slope, avg_intercept
+
+def main():
+    N = 30
+    E = compute_sequence(N)
+    print("k\tE(k)")
+    for k in range(N+1):
+        print(f"{k}\t{E[k]:.8f}")
+    a, b = estimate_linear_params(E)
+    print(f"\nEstimated asymptotic parameters:")
+    print(f"a (slope) = {a:.8f}")
+    print(f"b (intercept) = {b:.8f}")
+    # Also print E(k) - (a*k + b) to see closeness
+    print("\nk\tE(k) - (a*k + b)")
+    for k in range(N-5, N+1):
+        diff = E[k] - (a*k + b)
+        print(f"{k}\t{diff:.8e}")
+
+if __name__ == "__main__":
+    main()
+```

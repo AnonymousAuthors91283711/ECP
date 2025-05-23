@@ -1,0 +1,88 @@
+[write_program]
+The given equation is \(3^{x - 1} \cdot 9^{\frac{3}{2x^2}} = 27\).
+
+Rewrite terms with base 3:
+- \(9 = 3^2\)
+- \(27 = 3^3\).
+
+So,
+\[
+3^{x - 1} \cdot (3^2)^{\frac{3}{2x^2}} = 3^{x - 1} \cdot 3^{\frac{3}{x^2}} = 3^3.
+\]
+
+Thus,
+\[
+3^{x - 1 + \frac{3}{x^2}} = 3^3 \implies x - 1 + \frac{3}{x^2} = 3.
+\]
+
+Rewrite as:
+\[
+x - 1 + \frac{3}{x^2} = 3 \implies x + \frac{3}{x^2} = 4.
+\]
+
+Multiply both sides by \(x^2\):
+\[
+x^3 + 3 = 4x^2 \implies x^3 - 4x^2 + 3 = 0.
+\]
+
+We want to find all real solutions \(x\) of this cubic.
+
+I will enumerate small integer and rational roots by rational root theorem candidates, then use iteration to approximate other roots if needed.
+
+```python
+# Enumerate possible rational roots of cubic x^3 - 4x^2 + 3 = 0 and approximate others
+from math import isclose
+
+def cubic(x):
+    return x**3 - 4*x**2 + 3
+
+def check_root(x):
+    return isclose(cubic(x), 0, abs_tol=1e-12)
+
+# Candidates for rational roots: divisors of constant term ±1, ±3
+candidates = [1, -1, 3, -3]
+
+found_roots = set()
+
+print("Checking rational candidates:")
+for c in candidates:
+    val = cubic(c)
+    if abs(val) < 1e-12:
+        print(f"Root found: x = {c}")
+        found_roots.add(c)
+
+# Use bisection method to find other roots in intervals where sign changes
+def bisect(f, a, b, tol=1e-12, max_iter=100):
+    fa, fb = f(a), f(b)
+    if fa*fb > 0:
+        return None
+    for _ in range(max_iter):
+        mid = (a+b)/2
+        fmid = f(mid)
+        if abs(fmid) < tol:
+            return mid
+        if fa*fmid < 0:
+            b = mid
+            fb = fmid
+        else:
+            a = mid
+            fa = fmid
+    return (a+b)/2
+
+# Check intervals for roots by evaluating f at points
+points = [-2,0,1,2,3,4,5]
+for i in range(len(points)-1):
+    a, b = points[i], points[i+1]
+    if cubic(a)*cubic(b) < 0:
+        root = bisect(cubic, a, b)
+        if root is not None:
+            # Round root to 12 decimals and avoid duplicates
+            r_rounded = round(root, 12)
+            if all(abs(r_rounded - fr) > 1e-10 for fr in found_roots):
+                print(f"Root found (approx): x ≈ {r_rounded}")
+                found_roots.add(r_rounded)
+
+print("All roots found (exact or approximate):")
+for r in sorted(found_roots):
+    print(f"x = {r}")
+```

@@ -1,0 +1,61 @@
+[write_program]
+The problem considers sequences \(a: \mathbb{N} \to \mathbb{Z}\) with constraints at squares and near squares, a Lipschitz-type condition involving square roots, and injectivity. We want to explore examples or refute existence for small indices, checking the sign pattern and the differences constrained by \(2023 \sqrt{n}\). We enumerate \(a\) values for \(n \leq 10\) iteratively, enforcing sign constraints on \(a(k^2)\) and \(a(k^2+k)\), difference bounds, and injectivity.
+
+```python
+import math
+
+# Enumerate candidate integer sequences a: N->Z for n=0..10 
+# satisfying:
+# - a(k^2) > 0 for k>0
+# - a(k^2 + k) < 0 for k>0
+# - |a(n+1)-a(n)| ≤ 2023*sqrt(n)
+# - a injective
+
+LIMIT=10
+MAX_DIFF = 2023
+
+# We store partial sequences as dict: index->value
+# Backtracking with pruning
+
+def valid_sign(n, val):
+    # sign constraints for k>0:
+    # a(k^2) > 0
+    # a(k^2 + k) < 0
+    for k in range(1, int(math.sqrt(LIMIT))+2):
+        if k*k == n:
+            return val > 0
+        if k*k + k == n:
+            return val < 0
+    return True
+
+def search(seq, used):
+    n = len(seq)
+    if n > LIMIT:
+        # full valid sequence found
+        print("Sequence a up to n=10:", seq)
+        return
+    prev = seq[-1] if n>0 else None
+    # range for next value: try around prev ± max diff
+    # but if prev=None (n=0), try small range
+    min_val = -10000 if prev is None else prev - int(MAX_DIFF*math.sqrt(max(1,n-1))) - 10
+    max_val = 10000 if prev is None else prev + int(MAX_DIFF*math.sqrt(max(1,n-1))) + 10
+    for v in range(min_val, max_val+1):
+        if v in used:
+            continue
+        if prev is not None:
+            diff_bound = MAX_DIFF*math.sqrt(max(1,n-1))
+            if abs(v - prev) > diff_bound:
+                continue
+        if not valid_sign(n, v):
+            continue
+        # valid to extend
+        seq.append(v)
+        used.add(v)
+        search(seq, used)
+        seq.pop()
+        used.remove(v)
+
+if __name__ == "__main__":
+    print("Enumerating integer sequences a(n) for n=0..10 under constraints")
+    search([], set())
+```

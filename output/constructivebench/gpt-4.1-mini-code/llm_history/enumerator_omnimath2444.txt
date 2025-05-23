@@ -1,0 +1,53 @@
+[write_program]
+This problem investigates the smallest integer n ≥ 2 such that we cannot split the integers from 2 to n into two disjoint sets S and T covering all these numbers, neither containing a triple (a,b,c) with a^b = c entirely inside one set.
+
+To assist, the program enumerates n from 2 up to some threshold and attempts to find such partitions. Since full search is very expensive, we try small n and attempt heuristic checks of the existence of such partitions.
+
+We print n and a note whether it is possible to find such a partition, which helps conjecturing the least n where no partition exists.
+
+```python
+from itertools import product
+
+# Check if a^b = c with a,b,c in set s
+def has_exp_triple(s):
+    s = set(s)
+    for a in s:
+        for b in s:
+            if b == 0:
+                continue  # ignore exponent 0, as a^0=1 < 2
+            c = a**b
+            if c in s:
+                return True
+    return False
+
+def can_partition(n):
+    arr = list(range(2, n+1))
+    # Try all ways to 2-color arr into sets S and T
+    # Because of size we limit n ≤ 10 for full search
+    # For larger n, heuristic or skip
+    if n > 10:
+        return None
+    for assign in product([0,1], repeat=len(arr)):
+        S = [x for x,a in zip(arr, assign) if a==0]
+        T = [x for x,a in zip(arr, assign) if a==1]
+        # Check unions and disjoint true by construction
+        if not has_exp_triple(S) and not has_exp_triple(T):
+            return True
+    return False
+
+max_n = 12
+print("n    PartitionPossible")
+for n in range(2, max_n+1):
+    res = can_partition(n)
+    if res is None:
+        print(f"{n}: Skipped (too large)")
+    else:
+        print(f"{n}: {'Yes' if res else 'No'}")
+        
+# Print minimal n where partition impossible if exists
+for n in range(2, max_n+1):
+    res = can_partition(n)
+    if res == False:
+        print(f"Minimal n with no partition: {n}")
+        break
+```

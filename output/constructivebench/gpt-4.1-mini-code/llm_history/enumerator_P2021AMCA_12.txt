@@ -1,0 +1,76 @@
+[write_program]
+The problem involves a sixth-degree polynomial with integer coefficients and roots that are positive integers. The polynomial is:
+
+p(X) = X^6 - 10 X^5 + A X^4 + B X^3 + C X^2 + D X + 16.
+
+It's given that all roots are positive integers. Since the leading term is X^6 and the constant term is 16, whose positive divisors are limited, the roots must be positive integers whose product is 16.
+
+We want to find possible values of A, B, C, D under the conditions, in particular B, and we want to enumerate possible tuples of six positive integer roots that multiply to 16 and sum to 10 (since coefficient of X^5 is -10, sum of roots is 10).
+
+We can enumerate all tuples of 6 positive integers whose product is 16 and sum is 10. For each such tuple, we can compute the symmetric sums to find coefficients A, B, C, D.
+
+Since the polynomial is monic with integer coefficients, the Viète formulas hold:
+- Sum of roots = 10 (coefficient of X^5 = -sum of roots)
+- sum of products of roots taken 2 at a time = A
+- sum of products taken 3 at a time = -B
+- sum of products taken 4 at a time = C
+- sum of products taken 5 at a time = -D
+- product of roots = 16
+
+We enumerate all 6-tuples of positive integers with product=16 and sum=10, then compute coefficients and print B each time.
+
+Since 16 has few divisors, the number of tuples to check is small.
+
+Below is the program that does this enumeration:
+
+```python
+from itertools import combinations
+from math import prod
+
+# Generate all 6-tuples of positive integers >0 with product 16 and sum 10
+# Since 16 = 2^4, possible divisors are 1,2,4,8,16
+
+def gen_mult_product(target_product, length, start=1):
+    # recursively generate tuples of given length with product=target_product
+    if length == 1:
+        if target_product >= start:
+            yield (target_product,)
+        return
+    for i in range(start, target_product + 1):
+        if target_product % i == 0:
+            # Fix i as first root
+            for tail in gen_mult_product(target_product // i, length - 1, i):
+                yield (i,) + tail
+
+# Compute symmetric sums needed for coefficients
+def sum_k_products(roots, k):
+    return sum(prod(comb) for comb in combinations(roots, k))
+
+def main():
+    target_product = 16
+    length = 6
+    
+    print("Enumerating 6 positive integer roots with product=16 and sum=10:")
+    found = []
+    for roots in gen_mult_product(target_product, length):
+        if sum(roots) == 10:
+            # root tuple found
+            r = roots
+            # compute Viète sums
+            # p = X^6 -10 X^5 + A X^4 + B X^3 + C X^2 + D X +16
+            # sum roots = 10 (confirmed)
+            A = sum_k_products(r, 2)
+            B = -sum_k_products(r, 3)
+            C = sum_k_products(r, 4)
+            D = -sum_k_products(r, 5)
+            print(f"Roots: {r}, B = {B}")
+            found.append(B)
+    if found:
+        min_B = min(found)
+        max_B = max(found)
+        print(f"Minimum B found: {min_B}")
+        print(f"Maximum B found: {max_B}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,114 @@
+[write_program]
+The problem involves two polynomials \( A, B \) meeting a rational function identity for all real \( x \neq -10, 0 \) under some non-vanishing conditions. We want to find all such monic polynomials \( A \) for which there exists a \( B \) satisfying this identity, then sum their evaluations at 10.
+
+To explore this problem computationally, we start by guessing small-degree monic polynomials \( A(x) = x^n + a_{n-1}x^{n-1} + ... + a_0 \) with small integer coefficients. For each \( A \), we'll attempt to find a polynomial \( B \) such that the main functional equation holds for multiple sample values of \( x \), then check consistency.
+
+We rewrite the condition: 
+
+\[
+\frac{1}{A(x)} + \frac{1}{B(x)} + \frac{1}{x+10} = \frac{1}{x} \quad \Rightarrow \quad \frac{1}{B(x)} = \frac{1}{x} - \frac{1}{x+10} - \frac{1}{A(x)}.
+\]
+
+We define \( M(x) := \frac{1}{x} - \frac{1}{x+10} - \frac{1}{A(x)} \). Then \( B(x) = \frac{1}{M(x)} \).
+
+To ensure \( B \) is a polynomial, \( M(x) \) must be a rational function that is the reciprocal of a polynomial. Hence \( M(x) \) must be of form \( 1/B(x) \).
+
+We will try small degrees \( n = 1, 2 \) and coefficients from a small range (e.g. \(-2..2\)) to find candidate \( A \) polynomials. For each candidate, we numerically check \( M(x) \) on multiple sample points. Then reconstruct \( B \) by interpolating \( 1 / M(x) \). If \( B \) is a polynomial and the identity holds at these points, we output \( A \) and \( B \).
+
+Finally, we print the sum of \( A(10) \) over all found \( A \).
+
+This enumerator prints all found \( A \) and \( B \) in increasing degree and coefficient order, along with their evaluations at 10, to aid in conjecture.
+
+```python
+# Enumerator for candidate monic polynomials A and corresponding B satisfying
+# 1/A(x) + 1/B(x) + 1/(x+10) = 1/x for x ≠ -10,0, with A monic polynomial, B polynomial.
+
+from sympy import symbols, Poly, simplify, cancel
+from sympy.abc import x
+from sympy import Rational
+import numpy as np
+
+def is_poly(expr):
+    # Check if expr is a polynomial in x
+    return expr.is_polynomial(x)
+
+def eval_poly_at(p, val):
+    return p.eval(val)
+
+def candidates_for_A(max_deg=2, coef_range=2):
+    # Generate monic polynomials up to degree max_deg with integer coefficients in [-coef_range, coef_range]
+    # Leading coeff = 1
+    for deg in range(1, max_deg+1):
+        # Coef list length = deg, leading coeff = 1 fixed
+        # Coefs for x^{deg-1}, ..., x^0 from -coef_range to coef_range
+        coefs_list = []
+        def gen_coefs(pos, acc):
+            if pos == deg:
+                coefs_list.append(acc)
+                return
+            for c in range(-coef_range, coef_range+1):
+                gen_coefs(pos+1, acc+[c])
+        gen_coefs(0, [])
+        for coefs in coefs_list:
+            # construct polynomial: leading 1 * x^deg + sum c_i x^i
+            poly = Poly(x**deg + sum(c*x**i for i,c in enumerate(reversed(coefs))), x)
+            yield poly
+
+def valid_B_for_A(A):
+    # For the candidate A, try to find B polynomial satisfying condition:
+    # 1/A(x) + 1/B(x) + 1/(x+10) = 1/x  => 1/B(x) = 1/x - 1/(x+10) - 1/A(x)
+    # Try to approximate B by interpolation from samples 
+    samples = [-9, -1, 1, 2, 3, 4]
+    # Check denominators nonzero to avoid invalid points
+    vals = []
+    for val in samples:
+        if val ==0 or val == -10:
+            return None
+        A_val = A.eval(val)
+        if A_val == 0:
+            return None
+        rhs = Rational(1,val) - Rational(1,val+10) - Rational(1,A_val)
+        if rhs == 0:
+            # 1/B=0 implies B infinite, discard
+            return None
+        vals.append( (val, 1/rhs) )
+    # Interpolate B from points (x_i, y_i)
+    from sympy import interpolate
+    try:
+        B_poly = interpolate(vals, x)
+    except Exception:
+        return None
+    # Check degree of B <= degree of A or reasonable:
+    if B_poly.is_polynomial():
+        # Confirm identity at a few extra points
+        test_pts = [5, 6, 7]
+        for pt in test_pts:
+            if pt == 0 or pt == -10:
+                continue
+            A_val = A.eval(pt)
+            B_val = B_poly.eval(pt)
+            if A_val == 0 or B_val == 0:
+                return None
+            lhs = Rational(1,A_val) + Rational(1,B_val) + Rational(1, pt + 10)
+            rhs = Rational(1, pt)
+            if lhs != rhs:
+                return None
+        return Poly(B_poly, x)
+    return None
+
+def main():
+    total = Rational(0)
+    found = []
+    print("Enumerating candidate monic polynomials A (deg ≤ 2, coefficients in [-2,2]):")
+    for A in candidates_for_A(2,2):
+        B = valid_B_for_A(A)
+        if B is not None:
+            val10 = A.eval(10)
+            print(f"A = {A.as_expr()}, B = {B.as_expr()}, A(10) = {val10}")
+            found.append( (A, B, val10) )
+            total += val10
+    print("Sum of A(10) over found polynomials:", total)
+
+if __name__ == "__main__":
+    main()
+```

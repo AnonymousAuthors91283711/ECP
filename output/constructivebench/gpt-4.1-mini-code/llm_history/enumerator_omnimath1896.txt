@@ -1,0 +1,66 @@
+[write_program]
+The problem counts the number of functions \( f: \{0,1,2\} \times \{0,1,2,3\} \to \{0,1,2\} \) satisfying a certain condition forbidding a "rectangle" of equal values as specified.
+
+To assist in conjecturing this count, we enumerate all such functions and print those that satisfy the condition.
+
+We'll represent \( f \) by a list of length 12 (3*4), each element in \{0, 1, 2\}. The condition says: for all \( x_1 < x_2 \in \{0,1,2\} \) and \( y_1 < y_2 \in \{0,1,2,3\} \), it is NOT the case that all three of
+
+\[
+f(x_1,y_1) = f(x_1,y_2), \quad f(x_2,y_1) = f(x_2,y_2), \quad f(x_1,y_1) = f(x_2,y_1)
+\]
+
+hold.
+
+In other words, no "rectangle" of points \((x_1,y_1), (x_1,y_2), (x_2,y_1), (x_2,y_2)\) where the four function values form a rectangle with \(f(x_1,y_1)\) repeated 3 times as above.
+
+We'll enumerate all functions (3^12 = 531441) and check the condition for each, count and print the valid ones. To keep output short, we'll only print a sample of valid functions and count them.
+
+To meet the output limit and efficiency, we sample parameters (like \( |X|=3, |Y|=4, |Z|=3 \)) as given, print partial results, and at the end print the count.
+
+```python
+# Enumerate functions f: (3x4) -> 3 avoiding forbidden rectangles
+# f indexed as f[x*4 + y], values in {0,1,2}
+
+def check_condition(f):
+    # f: list of length 12, values in {0,1,2}
+    for x1 in range(3):
+        for x2 in range(x1+1,3):
+            for y1 in range(4):
+                for y2 in range(y1+1,4):
+                    v11 = f[x1*4 + y1]
+                    v12 = f[x1*4 + y2]
+                    v21 = f[x2*4 + y1]
+                    v22 = f[x2*4 + y2]
+                    # Check if forbidden rectangle appears:
+                    # f(x1,y1) = f(x1,y2) and f(x2,y1) = f(x2,y2) and f(x1,y1) = f(x2,y1)
+                    if v11 == v12 and v21 == v22 and v11 == v21:
+                        return False
+    return True
+
+def main():
+    from itertools import product
+    count = 0
+    # Enumerate all functions
+    # There are 3^12 = 531441 functions
+    # To avoid slow full enumeration, enumerate with pruning or sample partial
+    # But problem asks all to conjecture the answer, limit output per requirement
+    
+    # We'll count valid functions and print each immediately
+    # To limit output, print at most first 10 valid functions
+    max_print = 10
+    printed = 0
+    domain_size = 3*4
+    codomain = [0,1,2]
+    
+    print("Enumerating functions f:(3x4)->3 satisfying condition...")
+    for f in product(codomain, repeat=domain_size):
+        if check_condition(f):
+            count += 1
+            if printed < max_print:
+                print(f"Valid function #{count}: {f}")
+                printed += 1
+    print(f"Total valid functions: {count}")
+
+if __name__ == "__main__":
+    main()
+```

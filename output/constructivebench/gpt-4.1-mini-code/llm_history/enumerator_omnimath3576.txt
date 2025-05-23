@@ -1,0 +1,78 @@
+[write_program]
+The problem involves maximizing a parameter \( c \) related to families of subsets of an \( n \)-element set with each subset having size at least \( \ell \), and a double sum expression involving intersection sizes and subset sizes weighted by nonnegative rationals.
+
+We will try small values for \( n \) and \( \ell \), generate all collections \( A = (A_i) \) of subsets with at least size \( \ell \), then for a choice of weights \( x_i \geq 0 \), compute the value inside the supremum expression. We will search for the largest \( c \) such that the inequality always holds. Since the problem is complicated and symbolic, we will enumerate subsets and simple weights (such as indicator vectors or uniform weights) for small \(k\), and print candidate values for \(c\).
+
+We will:
+- Fix small \( n, \ell \) values.
+- Consider various families \((A_i)\) with small \(k\).
+- Try simple weight vectors \(x_i\) such as unit vectors and uniform vector.
+- Compute the quantity \[
+Q = \frac{\sum_{i,j} x_i x_j \frac{|A_i \cap A_j|^2}{|A_i||A_j|}}{\left(\sum_i x_i\right)^2}
+\]
+- For given \( (A_i, x_i) \), print the attained \(Q\) as candidates for \(c\).
+
+This enumeration helps guess upper bounds on \(c\).
+
+```python
+from itertools import combinations, product
+from fractions import Fraction
+
+def subsets_of_size_at_least(n, ell):
+    # Generate all subsets of {0,...,n-1} of size at least ell
+    base = list(range(n))
+    for size in range(ell, n+1):
+        for s in combinations(base, size):
+            yield frozenset(s)
+
+def intersection_term(Ai, Aj):
+    inter = len(Ai & Aj)
+    if len(Ai)*len(Aj)==0:
+        return Fraction(0)
+    return Fraction(inter*inter, len(Ai)*len(Aj))
+
+def test_n_ell(n, ell):
+    print(f"Testing n={n}, ell={ell}")
+    subs = list(subsets_of_size_at_least(n, ell))
+    max_k = min(3, len(subs))  # limit family size to 3 for performance
+    printed = set()
+    for k in range(1, max_k+1):
+        # iterate over all k-tuples of subsets (with repetition)
+        # to keep manageable, use combinations with replacement
+        for A_tuple in combinations(subs, k):
+            # possible nonnegative rational weights: try uniform and unit vectors
+            # uniform weights x_i=1
+            x = [Fraction(1)]*k
+            numerator = sum(x[i]*x[j]*intersection_term(A_tuple[i], A_tuple[j]) for i in range(k) for j in range(k))
+            denominator = sum(x)**2
+            val = numerator/denominator if denominator!=0 else Fraction(0)
+            if val not in printed:
+                printed.add(val)
+                print(f"c candidate = {val} for family sizes {[len(A) for A in A_tuple]} weights uniform")
+            # try unit weight vectors to explore corners
+            for idx in range(k):
+                x = [Fraction(0)]*k
+                x[idx] = Fraction(1)
+                numerator = sum(x[i]*x[j]*intersection_term(A_tuple[i], A_tuple[j]) for i in range(k) for j in range(k))
+                denominator = sum(x)**2
+                val = numerator/denominator if denominator!=0 else Fraction(0)
+                if val not in printed:
+                    printed.add(val)
+                    print(f"c candidate = {val} for family sizes {[len(A) for A in A_tuple]} weights unit vector at {idx}")
+            # try weights x_i = i+1 for variation
+            x = [Fraction(i+1) for i in range(k)]
+            numerator = sum(x[i]*x[j]*intersection_term(A_tuple[i], A_tuple[j]) for i in range(k) for j in range(k))
+            denominator = sum(x)**2
+            val = numerator/denominator if denominator!=0 else Fraction(0)
+            if val not in printed:
+                printed.add(val)
+                print(f"c candidate = {val} for family sizes {[len(A) for A in A_tuple]} weights linear")
+
+def main():
+    # Test small parameters
+    for (n, ell) in [(3,1), (4,2), (5,2)]:
+        test_n_ell(n, ell)
+
+if __name__ == "__main__":
+    main()
+```

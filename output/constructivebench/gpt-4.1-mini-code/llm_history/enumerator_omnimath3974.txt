@@ -1,0 +1,67 @@
+[write_program]
+This problem asks to characterize all real functions \( f:\mathbb{R} \to \mathbb{R} \) satisfying
+\[ f(x^2 - y^2) = x f(x) - y f(y) \quad \forall x,y \in \mathbb{R}. \]
+
+I will write a Python program to enumerate possible functions with simple forms (such as polynomials of degree ≤ 2) and check the given equation on a few values. This may help conjecture the form of \( f \).
+
+```python
+# Enumerate candidate functions f of the form f(x) = a*x^2 + b*x + c
+# Check the functional equation on some sample points
+
+def check_eq(a, b, c):
+    # Check the equation for several (x, y)
+    # f(x^2 - y^2) ?= x * f(x) - y * f(y)
+    # with f(x) = a*x^2 + b*x + c
+    
+    points = [
+        (0,0), (1,0), (0,1), (1,1), (-1,1), (2,1), (1,-1), (2,-2)
+    ]
+    for x, y in points:
+        lhs = a*(x**2 - y**2)**2 + b*(x**2 - y**2) + c
+        rhs = x*(a*x**2 + b*x + c) - y*(a*y**2 + b*y + c)
+        if abs(lhs - rhs) > 1e-9:
+            return False
+    return True
+
+print("Testing functions f(x)=a*x^2 + b*x + c that satisfy the equation:")
+for a in [-2,-1,0,1,2]:
+    for b in [-2,-1,0,1,2]:
+        for c in [-2,-1,0,1,2]:
+            if check_eq(a,b,c):
+                print(f"f(x) = {a}*x^2 + {b}*x + {c}")
+
+print("\nTrying some simple non-polynomial guesses:")
+
+# Try f(x) = k*x linear (c=0, a=0)
+for k in [-2,-1,0,1,2]:
+    def f(x): return k*x
+    fails = False
+    for x,y in [(1,2),(3,-1),(-2,-2)]:
+        lhs = f(x**2 - y**2)
+        rhs = x*f(x) - y*f(y)
+        if abs(lhs - rhs) > 1e-9:
+            fails = True
+            break
+    if not fails:
+        print(f"f(x) = {k}*x (linear)")
+
+# Try f(x) = k*x^3
+for k in [-1,0,1]:
+    def f(x): return k*x**3
+    fails = False
+    for x,y in [(1,2),(3,-1),(-2,-2)]:
+        lhs = f(x**2 - y**2)
+        rhs = x*f(x) - y*f(y)
+        if abs(lhs - rhs) > 1e-6:
+            fails = True
+            break
+    if not fails:
+        print(f"f(x) = {k}*x^3")
+
+# Try zero function
+def f(x): return 0
+print("f(x) = 0 (zero function) trivially satisfies")
+
+# Final note: linear forms survive; output encourages conjecture f(x)=c*x.
+```
+This program tries polynomials of degree up to 2 and some other forms. It prints all functions passing the test on a few sample points immediately, helping to conjecture the real characterization.

@@ -1,0 +1,53 @@
+[write_program]
+Given the problem involves finding the maximum and minimum values of the ratio \( r = y/x \) over the positive solutions to the quadratic form \( 2x^2 + xy + 3y^2 - 11x - 20y + 40 = 0 \), we interpret it as an optimization problem with constraints.
+
+The plan:
+- Choose small positive sample values for \( x \) and solve for corresponding \( y \) satisfying the quadratic.
+- Compute the ratio \( y/x \).
+- Track maximum and minimum ratios found.
+- Output these answers immediately when new bounds are identified.
+
+This approach approximates the extremal ratios without exhaustive search, focusing only on promising candidates, efficiently streaming answers.
+
+```python
+import numpy as np
+
+# Coefficients for the quadratic form: 2x^2 + xy + 3y^2 - 11x - 20y + 40 = 0
+# We solve for y given x
+
+ratios = []
+x_values = np.linspace(0.1, 5, 100)  # small positive x to avoid division by zero
+
+max_ratio = -np.inf
+min_ratio = np.inf
+
+for x in x_values:
+    # Quadratic in y: 3 y^2 + x y - 20 y + 2 x^2 - 11 x + 40 = 0
+    # Rewrite as: 3 y^2 + (x - 20) y + (2 x^2 - 11 x + 40) = 0
+    A = 3
+    B = x - 20
+    C = 2 * x**2 - 11 * x + 40
+
+    discriminant = B**2 - 4 * A * C
+    if discriminant < 0:
+        continue  # no real y
+
+    sqrt_disc = np.sqrt(discriminant)
+    for sign in [1, -1]:
+        y = (-B + sign * sqrt_disc) / (2 * A)
+        if y > 0:
+            ratio = y / x
+            ratios.append(ratio)
+            # Update maximum
+            if ratio > max_ratio:
+                max_ratio = ratio
+                print(f"New maximum ratio: {ratio:.4f} at x={x:.2f}, y={y:.2f}")
+            # Update minimum
+            if ratio < min_ratio:
+                min_ratio = ratio
+                print(f"New minimum ratio: {ratio:.4f} at x={x:.2f}, y={y:.2f}")
+
+# Final extremal ratios
+print(f"Approximate maximum ratio: {max_ratio}")
+print(f"Approximate minimum ratio: {min_ratio}")
+```

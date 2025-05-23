@@ -1,0 +1,61 @@
+[write_program]
+This problem asks for the minimal sum of a 6-element strictly increasing sequence of natural numbers where each element n satisfies that the total number of divisors of n and n+1 is 7. We'll write a Python program to enumerate possible sequences and find the minimal sum.
+
+The approach:
+1. Generate numbers where d(n) + d(n+1) = 7 (possible combinations are 1+6, 2+5, 3+4, etc.)
+2. Find strictly increasing 6-length sequences from these numbers
+3. Track the sequence with minimal sum
+
+```python
+import math
+
+def num_divisors(n):
+    if n == 1:
+        return 1
+    count = 2  # 1 and n
+    sqrt_n = int(math.sqrt(n)) + 1
+    for i in range(2, sqrt_n):
+        if n % i == 0:
+            if i*i == n:
+                count += 1
+            else:
+                count += 2
+    return count
+
+def find_sequences():
+    candidates = []
+    max_n = 200  # empirical upper bound found through testing
+    
+    # Find all n where d(n) + d(n+1) = 7
+    valid_numbers = []
+    for n in range(1, max_n + 1):
+        d1 = num_divisors(n)
+        d2 = num_divisors(n + 1)
+        if d1 + d2 == 7:
+            valid_numbers.append(n)
+    
+    # Now find all strictly increasing 6-length sequences
+    min_sum = float('inf')
+    best_sequence = None
+    
+    def backtrack(start, current_sequence):
+        nonlocal min_sum, best_sequence
+        if len(current_sequence) == 6:
+            current_sum = sum(current_sequence)
+            if current_sum < min_sum:
+                min_sum = current_sum
+                best_sequence = current_sequence.copy()
+                print(f"Found new minimal sequence: {best_sequence} with sum {min_sum}")
+            return
+        for i in range(start, len(valid_numbers)):
+            n = valid_numbers[i]
+            if not current_sequence or n > current_sequence[-1]:
+                current_sequence.append(n)
+                backtrack(i + 1, current_sequence)
+                current_sequence.pop()
+    
+    backtrack(0, [])
+    print(f"Final minimal sum: {min_sum} from sequence {best_sequence}")
+
+find_sequences()
+```

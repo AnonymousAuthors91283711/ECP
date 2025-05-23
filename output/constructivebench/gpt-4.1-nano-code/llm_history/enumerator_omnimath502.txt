@@ -1,0 +1,53 @@
+[write_program]
+The problem involves a function θ(n) defined as the number of integers x less than 2010 such that 2010 divides x^2 - n. We want to evaluate the sum of n * θ(n) for n from 0 to 2009, modulo 2010. 
+
+Given that 2010 factors as 2 * 3 * 5 * 67, we should analyze the problem modulo each prime factor and leverage properties of quadratic residues. To manage the task efficiently and systematically, the program will:
+
+- Set specific sample values for n.
+- For each n, find the number of solutions x modulo 2010 such that x^2 ≡ n mod 2010.
+- Sum n * θ(n) over all n.
+- Use properties of quadratic residues and the Chinese Remainder Theorem to handle factors efficiently.
+
+Below is a Python program that enumerates all n from 0 to 2009, computes θ(n) by solving quadratic congruences modulo prime factors, and accumulates n * θ(n). It then outputs the running total modulo 2010.
+
+```python
+# Enumerate all n from 0 to 2009
+# For each n, compute θ(n): number of solutions x < 2010 with 2010 | x^2 - n
+# Using Chinese Remainder Theorem and quadratic residue counts modulo prime factors
+
+import math
+
+def quadratic_residues(p):
+    residues = set()
+    for x in range(p):
+        residues.add((x * x) % p)
+    return residues
+
+# Prime factors of 2010
+primes = [2, 3, 5, 67]
+
+# Precompute quadratic residues for each prime
+residues_map = {}
+for p in primes:
+    residues_map[p] = quadratic_residues(p)
+
+total_sum = 0
+
+for n in range(2010):
+    # For each prime factor, find solutions to x^2 ≡ n mod p
+    solutions_counts = []
+    for p in primes:
+        n_mod_p = n % p
+        count = 0
+        # Count solutions to x^2 ≡ n_mod_p mod p
+        for x in range(p):
+            if (x * x) % p == n_mod_p:
+                count += 1
+        solutions_counts.append(count)
+    # Total solutions modulo 2010 are product of counts over prime factors
+    theta_n = math.prod(solutions_counts)
+    # Add to sum the product n * θ(n)
+    total_sum += n * theta_n
+
+print("Sum of n * θ(n) from 0 to 2009 modulo 2010:", total_sum % 2010)
+```

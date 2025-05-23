@@ -1,0 +1,93 @@
+[write_program]
+The problem involves real numbers \(a, r\) with \(|r| < 1\), and infinite sums of geometric series:
+
+\[
+\sum_{n=0}^{\infty} a r^{n} = 7
+\quad \text{and} \quad
+\sum_{k=0}^{\infty} a r^{2k+1} = 3.
+\]
+
+We want to explore possible \((a, r)\) pairs satisfying these constraints and examine the value of the expression noted as \(P2007AMCB\_15\_answer(a, r) = \frac{5}{2}\).
+
+From the sums:
+
+1. \(\sum_{n=0}^\infty a r^{n} = a \cdot \frac{1}{1-r} = 7\)
+2. \(\sum_{k=0}^\infty a r^{2k+1} = a r \cdot \frac{1}{1-r^2} = 3\)
+
+This yields relations:
+
+\[
+a = 7(1 - r),
+\]
+\[
+7(1 - r) \cdot \frac{r}{1 - r^2} = 3.
+\]
+
+Let's solve for \(r\), then \(a\), and compute the requested value. We'll enumerate possible \(r\) values near the solution (from -1 to 1 skipping problematic points), print \(a\), and verify sums, printing relevant values.
+
+```python
+# enumerator.py
+# Enumerate values (a, r) satisfying the infinite sum constraints:
+# sum_{n} a r^n = 7, sum_{k} a r^{2k+1} = 3 with |r|<1.
+
+# The sum formulas:
+# sum_n a r^n = a/(1-r) = 7 => a = 7(1 - r)
+# sum_k a r^{2k+1} = a r/(1-r^2) = 3
+
+# Substitute a in the second:
+# 7(1-r)*r/(1 - r^2) = 3
+
+# Let's solve for r numerically and enumerate around the roots.
+
+from math import isclose
+
+print("Enumerate candidate (r,a) pairs where |r|<1 satisfying the sums and computed value.")
+
+def check(r):
+    if abs(r) >= 1:
+        return
+    a = 7*(1 - r)
+    lhs2 = a * r / (1 - r**2)
+    if not isclose(lhs2, 3, abs_tol=1e-12):
+        return
+    # Compute the value a/(1-r) and a*r/(1-r^2) again to confirm:
+    sum1 = a/(1-r)
+    sum2 = a*r/(1 - r**2)
+    # Confirm sums
+    if not (isclose(sum1, 7, abs_tol=1e-12) and isclose(sum2,3,abs_tol=1e-12)):
+        return
+    # Now compute the value in problem (which should equal 5/2)
+    # The problem does not explicitly state what P2007AMCB_15_answer is,
+    # but presumably it's the value a/(1-r^2) or similar.
+    # Let's check a/(1 - r^2):
+    val = a / (1 - r**2)
+    print(f"r = {r:.14f}, a = {a:.14f}, val = {val:.14f}") 
+
+def solve():
+    # The equation is:
+    # 7 r (1 - r) / (1 - r^2) = 3
+    # Rewrite as:
+    # 7 r (1 - r) = 3 (1 - r^2)
+    # 7 r - 7 r^2 = 3 - 3 r^2
+    # 0 = 3 - 3 r^2 - 7 r + 7 r^2 = 3 + 4 r^2 -7 r
+    # 4 r^2 - 7 r + 3 = 0
+    # Solve quadratic:
+    # r = [7 ± sqrt(49 - 48)]/8 = (7 ± 1)/8
+    # r = 1 or r = 3/4
+    # But r=1 not allowed (radius of convergence <1)
+    # So r=0.75 is a valid root
+    # Check |r|<1, yes.
+
+    for r in [0.75]:
+        check(r)
+
+    # Let's try near r=0.75 by tiny increments print a few for sanity
+    for dr in [-0.01, 0, 0.01]:
+        rr = 0.75 + dr
+        check(rr)
+
+if __name__ == "__main__":
+    solve()
+    print("The candidate value for P2007AMCB_15_answer (a,r) appears to be val above.")
+```
+

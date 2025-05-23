@@ -1,0 +1,67 @@
+[write_program]
+The problem appears to involve number theory, specifically the structure of divisors of a natural number N, the existence of prime powers in N, and the construction of a function from divisors to a finite set such that certain distinctness conditions are satisfied. The goal seems to identify the largest number of divisors of N with a function from them to a 4-element set, respecting certain distinctness properties, especially when N is not a prime power.
+
+Since the code uses a condition that N should not be a prime power, we want to examine such N, especially composite numbers with multiple divisors. We want to find the greatest possible number of divisors for such N, and construct functions accordingly.
+
+To keep the computation simple and effective, I'll test small composite numbers with multiple divisors, especially products of distinct small primes. The maximum number of pairwise distinct images for divisors can be up to 4, given the codomain size, but the constraints reduce this.
+
+The approach:
+- Generate N as a product of two distinct primes (since N is not a prime power, this is a simple case).
+- Count divisors; for two primes p and q, divisors are {1, p, q, pq}.
+- For each such N, enumerate all possible functions f: divisors → {0,1,2,3} with the constraints:
+  - For each pair of divisors, if they are not gcd-related, images must be distinct.
+  - For the greatest number, try to assign images to as many divisors as possible without violating constraints.
+  
+Since the divisors of pq are {1, p, q, pq}, the gcds are predictable, and the problem simplifies.
+
+Let's implement this reasoning.
+
+```python
+# Enumerate composite N as product of two distinct small primes
+# and tests the maximum size of such a function
+from itertools import product, permutations
+
+# Small primes
+primes = [2, 3, 5, 7]
+max_divisors = 0
+best_N = None
+best_mapping = None
+
+for i in range(len(primes)):
+    for j in range(i+1, len(primes)):
+        p, q = primes[i], primes[j]
+        N = p * q
+        divisors = [1, p, q, p*q]
+
+        # Generate all functions from divisors to {0,1,2,3}
+        for images in product(range(4), repeat=len(divisors)):
+            mapping = dict(zip(divisors, images))
+            # Check the constraints:
+            # For each pair of divisors (a, b),
+            # if gcd(a, b) != 1, then images must be distinct
+            valid = True
+            for a_idx, a in enumerate(divisors):
+                for b_idx, b in enumerate(divisors):
+                    if a_idx >= b_idx:
+                        continue
+                    from math import gcd
+                    g = gcd(a, b)
+                    if g != 1:
+                        # images must be distinct
+                        if mapping[a] == mapping[b]:
+                            valid = False
+                            break
+            if valid:
+                size = len(divisors)
+                if size > max_divisors:
+                    max_divisors = size
+                    best_N = N
+                    best_mapping = mapping
+        # Only need candidates with maximum divisors, so break early for largest
+        # but since the number is small, continue to find potentially larger ones
+
+print(f"Prime factors: {primes}")
+print(f"Selected N: {best_N} with divisors {divisors}")
+print(f"Mapping: {best_mapping}")
+print(f"Number of divisors: {max_divisors}")
+```

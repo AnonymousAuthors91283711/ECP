@@ -1,0 +1,54 @@
+[write_program]
+The problem involves studying the set of natural numbers \( n \) such that the quadratic polynomial 
+\[ f(n) = 2n^2 - k n + 77 \]
+(where \( k = 21 + 2T \) for some natural number parameter \( T \)) is positive and prime. We want to find the greatest \( n \) with positive prime \( f(n) \).
+
+I will write a Python program to enumerate possible \( n \) for various small \( T \), compute \( f(n) \), check primality, ensuring \( f(n) > 0 \), and print all such \( n \). This can help conjecture the maximum \( n \) and how it depends on \( T \).
+
+Since values can grow quickly, we'll limit \( n \) for each \( T \) to a reasonable interval around \( k/(4) \) where the parabola achieves its minimum or zero crossing, as beyond that \( f(n) \) grows large but it's less likely to be prime.
+
+```python
+import math
+
+def is_prime(m):
+    if m < 2: return False
+    if m in (2,3): return True
+    if m % 2 == 0: return False
+    r = int(math.isqrt(m))
+    for d in range(3, r+1, 2):
+        if m % d == 0:
+            return False
+    return True
+
+def f(n, k):
+    return 2 * n * n - k * n + 77
+
+def enumerate_primes_for_T(T):
+    k = 21 + 2*T
+    results = []
+    # f grows like 2n^2, but for primality often small values are more interesting.
+    # The quadratic is positive for large n, its minimum at n = k/(4)
+    approx_min = k / 4
+    # We'll check n from max(0, int(approx_min)-10) to int(approx_min)+30 to find primes,
+    # this range is heuristic.
+    start = max(0, int(approx_min) - 10)
+    end = int(approx_min) + 30
+    for n in range(start, end + 1):
+        val = f(n, k)
+        if val > 0 and is_prime(val):
+            print(f"T={T}, n={n}, f(n)={val} prime")
+            results.append(n)
+    if results:
+        max_n = max(results)
+        print(f"Maximum n for T={T} is {max_n}")
+    else:
+        print(f"No n with prime f(n)>0 found for T={T}")
+
+def main():
+    # Test for small sample values of T
+    for T in range(5):  # small values 0..4 to keep output small
+        enumerate_primes_for_T(T)
+
+if __name__ == "__main__":
+    main()
+```

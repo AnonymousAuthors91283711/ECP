@@ -1,0 +1,67 @@
+[write_program]
+The problem relates two expressions involving powers of x and y. For real numbers \(x,y\), and a parameter \(k\), with
+\[
+\frac{x^2 + y^2}{x^2 - y^2} + \frac{x^2 - y^2}{x^2 + y^2} = k,
+\]
+we want to express
+\[
+\frac{x^8 + y^8}{x^8 - y^8} - \frac{x^8 - y^8}{x^8 + y^8}
+\]
+in terms of \(k\).
+
+The python code will enumerate values for \(x, y\) (avoiding zeros and denominators equal to zero), compute \(k\) and the target expression, then print pairs \((k, \text{value})\) to find a pattern.
+
+```python
+# Enumerate pairs (x,y) with small integer values, avoiding zero denominators
+# Compute k = (x^2+y^2)/(x^2 - y^2) + (x^2 - y^2)/(x^2 + y^2)
+# Compute val = (x^8 + y^8)/(x^8 - y^8) - (x^8 - y^8)/(x^8 + y^8)
+# Print (k, val) to conjecture a formula val = f(k)
+
+def safe_div(a, b):
+    return None if b == 0 else a / b
+
+def compute_k_val(x, y):
+    x2, y2 = x*x, y*y
+    denom1 = x2 - y2
+    denom2 = x2 + y2
+    if denom1 == 0 or denom2 == 0:
+        return None
+    k = safe_div(x2 + y2, denom1)
+    if k is None:
+        return None
+    k += safe_div(denom1, denom2)
+    if k is None:
+        return None
+
+    x8 = x2*x2*x2*x2
+    y8 = y2*y2*y2*y2
+    denom3 = x8 - y8
+    denom4 = x8 + y8
+    if denom3 == 0 or denom4 == 0:
+        return None
+    val = safe_div(x8 + y8, denom3)
+    if val is None:
+        return None
+    val -= safe_div(denom3, denom4)
+    if val is None:
+        return None
+    return (k, val)
+
+def main():
+    seen = set()
+    for x in range(1, 11):
+        for y in range(1, x):  # y < x to avoid zero denominators
+            res = compute_k_val(x, y)
+            if res is None:
+                continue
+            k, val = res
+            # Round results to detect distinct values
+            k_r = round(k, 6)
+            val_r = round(val, 6)
+            if (k_r, val_r) not in seen:
+                seen.add((k_r, val_r))
+                print(f"k = {k_r}, val = {val_r}")
+
+if __name__ == "__main__":
+    main()
+```

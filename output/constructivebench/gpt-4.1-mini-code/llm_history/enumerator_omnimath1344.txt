@@ -1,0 +1,54 @@
+[write_program]
+The problem involves real variables \(x, y, \theta\) with positive \(x,y\) and \(\theta\) not a multiple of \(\pi/2\). There are two equations involving trigonometric expressions and powers of \(x,y\). We want to find the value of \(x/y + y/x\).
+
+To investigate, I will write a Python program that:
+
+- Selects sample values of \(\theta\) avoiding multiples of \(\pi/2\).
+- For some small integer values of \(x,y>0\), checks if the first equation approximately holds (since it's an equality with transcendental functions).
+- If it does, checks the second equation.
+- If both hold approximately, print the value \(x/y + y/x\).
+
+This enumeration might discover some candidate values or patterns to conjecture the closed form value.
+
+We will try \(x,y\) in a small integer range (e.g. 1 to 10) and \(\theta\) a few angles (e.g. \(\pi/6, \pi/4, \pi/3, \pi/5\)) ensuring no division by zero or invalid values.
+
+```python
+# Enumerate candidate values for x/y + y/x satisfying given equations approximately
+import math
+
+def approx_eq(a, b, tol=1e-7):
+    return abs(a - b) < tol
+
+def main():
+    # Sample theta values avoiding multiples of pi/2
+    thetas = [math.pi/6, math.pi/4, math.pi/3, math.pi/5]
+    print("theta values used (radians):", thetas)
+    found = set()
+    for theta in thetas:
+        sin_theta = math.sin(theta)
+        cos_theta = math.cos(theta)
+        sin_2theta = math.sin(2*theta)
+        for x in range(1, 11):
+            for y in range(1, 11):
+                # Check x,y > 0
+                # Check first equation: sin(theta)/x ≈ cos(theta)/y
+                lhs1 = sin_theta / x
+                rhs1 = cos_theta / y
+                if approx_eq(lhs1, rhs1):
+                    # Check second equation:
+                    lhs2 = (cos_theta **4) / (x **4) + (sin_theta **4) / (y **4)
+                    denom = (x**3)*y + (y**3)*x
+                    if denom == 0:
+                        continue
+                    rhs2 = 97 * sin_2theta / denom
+                    if approx_eq(lhs2, rhs2):
+                        val = x / y + y / x
+                        # To avoid printing duplicates due to approximate equality
+                        val_rnd = round(val, 7)
+                        if val_rnd not in found:
+                            found.add(val_rnd)
+                            print(f"x={x}, y={y}, theta={theta:.6f} => x/y + y/x = {val_rnd}")
+
+if __name__ == "__main__":
+    main()
+```

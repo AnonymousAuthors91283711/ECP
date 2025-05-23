@@ -1,0 +1,66 @@
+[write_program]
+This problem involves finding the value of k that satisfies a system of trigonometric equations with constraints. We'll approach it by:
+
+1. Using small angle approximations to find candidate values
+2. Implementing a numerical search to find k values that approximately satisfy the equations
+3. Checking the sum constraint 2π = w+x+y+z
+
+The program will:
+- Iterate over possible k values
+- For each k, solve for w,x,y,z using the given equations
+- Check if the sum condition is approximately satisfied
+- Print promising candidates
+
+```python
+import math
+
+def solve_for_theta(n, k):
+    """Solve n*tanθ = k*(1 + 1/cosθ) for θ using Newton's method"""
+    if k == 0:
+        return 0.0
+    theta = math.pi/4  # Initial guess
+    for _ in range(100):
+        tan_t = math.tan(theta)
+        cos_t = math.cos(theta)
+        f = n * tan_t - k * (1 + 1/cos_t)
+        df = n/(cos_t**2) - k*math.sin(theta)/(cos_t**2)
+        new_theta = theta - f/df
+        if abs(new_theta - theta) < 1e-10:
+            break
+        theta = new_theta
+    return theta
+
+def check_sum(k):
+    """Check if the sum of angles equals 2π for given k"""
+    w = solve_for_theta(3, k)
+    x = solve_for_theta(4, k)
+    y = solve_for_theta(5, k)
+    z = solve_for_theta(6, k)
+    total = w + x + y + z
+    return abs(total - 2*math.pi) < 1e-4, total
+
+def main():
+    # Search around expected value based on harmonic mean
+    start_k = 2.0
+    end_k = 3.0
+    step = 0.0001
+    best_k = None
+    min_diff = float('inf')
+    
+    k = start_k
+    while k <= end_k:
+        valid, total = check_sum(k)
+        if valid:
+            print(f"Found candidate k={k:.6f}, sum={total:.6f}")
+            diff = abs(total - 2*math.pi)
+            if diff < min_diff:
+                min_diff = diff
+                best_k = k
+        k += step
+    
+    if best_k is not None:
+        print(f"\nBest candidate: k={best_k:.6f}")
+
+if __name__ == "__main__":
+    main()
+```

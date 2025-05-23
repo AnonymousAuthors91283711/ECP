@@ -1,0 +1,59 @@
+[write_program]
+The problem involves a fixed \(T = 55\) and an integer \(K\) satisfying a set of inequalities and existential quantifiers involving rational \(r > 1\) and positive integer \(d\). From the statements:
+
+1. \(20 < T - 5 < K\), so \(20 < 50 < K\) (since \(T=55\))
+2. There exists \(r > 1\) rational such that \(20 \cdot r = T-5 = 50\) and \((T-5) \cdot r = K\).
+   From \(20 r = 50\), \(r = \frac{50}{20} = \frac{5}{2} = 2.5\).
+   Then \(K = (T-5) \cdot r = 50 \times 2.5 = 125.\)
+3. \(19 < K < 4 T + 11 = 4 \times 55 + 11 = 231\), so \(19 < K < 231\) is satisfied.
+4. There exists \(d > 0\) integer such that \(19 + d = K\) and \(K + d = 4T + 11 = 231\).
+   So \(K = 19 + d\) and \(K + d = 231 \iff 19 + d + d = 231 \implies 2d = 212 \implies d=106\).
+   Then \(K = 19 + 106 = 125.\)
+
+Thus the only \(K\) with these properties is apparently 125.
+
+The challenge is to programmatically verify this by enumerating candidates \(K\) near the feasible range and checking the conditions.
+
+```python
+# Enumerate possible K values around the range given T=55, check conditions
+def approx_eq(a, b, tol=1e-10):
+    return abs(a - b) < tol
+
+def is_rational_eq(a_num, a_den, b):
+    # Check if fraction a_num/a_den equals float b exactly
+    return a_den != 0 and a_num == b * a_den
+
+def main():
+    T = 55
+    T_minus_5 = T - 5  # 50
+    lower_K = T_minus_5 + 1  # K > 50
+    upper_K = 4 * T + 11  # 231
+
+    # For integer K in (50,231), check if exists rational r > 1 with 20*r=50 and 50*r=K.
+    # Since 20*r=50 => r=2.5 fixed, so check K == 50 * r = 50*2.5=125.
+    # Also, check if exists integer d >0 s.t 19 + d = K and K + d = 231.
+
+    print(f"Parameters: T={T}")
+    candidates = []
+    for K in range(lower_K, upper_K):
+        r = 50 / 20  # fixed r=2.5 from first relation
+        cond1 = approx_eq(20 * r, T_minus_5)
+        cond2 = approx_eq(T_minus_5 * r, K)
+        cond3 = 19 < K < upper_K
+        # Check if d := K - 19 >0 and K + d == 231
+        d = K - 19
+        cond4 = d > 0 and (K + d == upper_K)
+        if cond1 and cond2 and cond3 and cond4:
+            print(f"Found K={K} with r={r}, d={d}")
+            candidates.append(K)
+    if candidates:
+        min_candidate = min(candidates)
+        max_candidate = max(candidates)
+        print(f"Minimum candidate K = {min_candidate}")
+        print(f"Maximum candidate K = {max_candidate}")
+    else:
+        print("No candidate found.")
+
+if __name__ == "__main__":
+    main()
+```

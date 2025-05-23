@@ -1,0 +1,47 @@
+[write_program]
+This problem asks for the count of numbers n between 1 and 2017 inclusive where (n-2)(n-0)(n-1)(n-7) is divisible by 1001. Since 1001 factors into 7×11×13, we can find numbers where the product is divisible by all three primes.
+
+The approach is to find numbers n where:
+1. n ≡ 0,1,2, or 7 mod 7 (makes one factor divisible by 7)
+2. n ≡ 0,1,2, or 7 mod 11
+3. n ≡ 0,1,2, or 7 mod 13
+
+We'll use the Chinese Remainder Theorem to count valid residues modulo 1001, then scale to the range 1-2017.
+
+```python
+def count_valid_numbers():
+    # Precompute all valid residues mod 1001 (7*11*13)
+    valid_residues = set()
+    # Possible residues for each prime factor
+    residues_7 = {0, 1, 2, 7}
+    residues_11 = {0, 1, 2, 7}
+    residues_13 = {0, 1, 2, 7}
+    
+    # Generate all combinations using CRT
+    for r7 in residues_7:
+        for r11 in residues_11:
+            # Find x ≡ r7 mod7 and x ≡ r11 mod11
+            # Using CRT for 7 and 11 (since gcd(7,11)=1)
+            x = r7
+            while x % 11 != r11:
+                x += 7
+            # Now find all solutions mod 7*11=77
+            for r13 in residues_13:
+                # Find y ≡ x mod77 and y ≡ r13 mod13
+                y = x
+                while y % 13 != r13:
+                    y += 77
+                valid_residues.add(y % 1001)
+    
+    # Now count numbers 1-2017 that are ≡ any valid residue mod1001
+    count = 0
+    full_cycles = 2017 // 1001
+    remainder = 2017 % 1001
+    
+    count += full_cycles * len(valid_residues)
+    count += sum(1 for r in valid_residues if 1 <= r <= remainder)
+    
+    print(count)
+
+count_valid_numbers()
+```

@@ -1,0 +1,49 @@
+[write_program]
+This problem involves counting Hamiltonian cycles in a 5-dimensional hypercube where each step changes exactly 2 bits. We'll write a Python program to enumerate such paths for smaller dimensions first to identify a pattern.
+
+The program will:
+1. Represent hypercube vertices as binary strings
+2. Count paths that start and end at all zeros
+3. Ensure each step changes exactly 2 bits
+4. Print counts for dimensions 1-4 to help conjecture the answer for dimension 5
+
+```python
+from itertools import product, combinations
+
+def count_hypercube_paths(dim):
+    vertices = list(product([0,1], repeat=dim))
+    zero = tuple([0]*dim)
+    
+    # Build adjacency list (edges with exactly 2 bit changes)
+    adj = {v: [] for v in vertices}
+    for v in vertices:
+        for indices in combinations(range(dim), 2):
+            w = list(v)
+            w[indices[0]] ^= 1
+            w[indices[1]] ^= 1
+            adj[v].append(tuple(w))
+    
+    # DFS to count Hamiltonian paths from zero back to zero
+    count = 0
+    visited = set()
+    
+    def dfs(current, steps):
+        nonlocal count
+        if steps == 2**dim:
+            if current == zero:
+                count += 1
+            return
+        for neighbor in adj[current]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                dfs(neighbor, steps+1)
+                visited.remove(neighbor)
+    
+    visited.add(zero)
+    dfs(zero, 1)
+    return count
+
+# Enumerate for dimensions 1-4 (5 would be too slow with this approach)
+for dim in range(1, 5):
+    print(f"Dimension {dim}: {count_hypercube_paths(dim)} paths")
+```

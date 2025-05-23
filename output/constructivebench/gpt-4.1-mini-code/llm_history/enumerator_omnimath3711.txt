@@ -1,0 +1,51 @@
+[write_program]
+The problem is asking for the least positive integer \( k \) such that there exists a function \( f : \mathbb{Z} \to \{1, \dots, k\} \) assigning sets (intervals) of integers from 1 to \( k \) to each integer \( x \), with the property that for all integers \( x, y \), if \( |x - y| \in \{5, 7, 12\} \), then \( f(x) \neq f(y) \).
+
+This is a coloring problem on the integers with forbidden distances 5, 7, and 12. The smallest number of colors \( k \) for which such a coloring exists is required.
+
+The program below enumerates \( k \) from 1 to a small threshold (e.g., 10), and for each \( k \), tries to color a finite segment of integers (e.g., 0 to 20) with \( k \) colors so that no two points at distance 5, 7, or 12 share the same color. It prints all \( k \) for which such a coloring is found, then outputs the minimal such \( k \).
+
+```python
+# Enumerate minimal k for coloring integers with forbidden distances 5,7,12
+
+def is_valid_coloring(colors, dists):
+    n = len(colors)
+    for i in range(n):
+        for dist in dists:
+            j = i + dist
+            if j < n and colors[i] == colors[j]:
+                return False
+    return True
+
+def backtrack(colors, pos, k, n, dists):
+    if pos == n:
+        return True
+    for color in range(1, k+1):
+        colors[pos] = color
+        # check only distances back (pos - dist)
+        valid = True
+        for dist in dists:
+            prev = pos - dist
+            if prev >= 0 and colors[prev] == color:
+                valid = False
+                break
+        if valid and backtrack(colors, pos+1, k, n, dists):
+            return True
+    return False
+
+def find_min_k(max_k=10, segment_length=20):
+    dists = [5,7,12]
+    valid_ks = []
+    for k in range(1, max_k+1):
+        colors = [0]*segment_length
+        if backtrack(colors, 0, k, segment_length, dists):
+            print(f"Possible k: {k}")
+            valid_ks.append(k)
+    if valid_ks:
+        print(f"Minimum k found: {min(valid_ks)}")
+    else:
+        print("No valid k found up to", max_k)
+
+if __name__ == "__main__":
+    find_min_k()
+```

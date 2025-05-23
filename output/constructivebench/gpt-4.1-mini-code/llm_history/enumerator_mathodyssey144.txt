@@ -1,0 +1,73 @@
+[write_program]
+The problem is asking for the largest size of a subset \( s \subseteq \{1, \ldots, 100\} \) such that for any distinct \(a, b \in s\), the number \(\frac{\mathrm{lcm}(a,b)}{\gcd(a,b)}\) is NOT a perfect square.
+
+Note \(\frac{\mathrm{lcm}(a,b)}{\gcd(a,b)} = \frac{a b}{(\gcd(a,b))^2}\).
+
+We want to search subsets of \(\{1, \ldots, 100\}\) with this property and find the maximum cardinality. Complete brute force enumeration of all subsets is impossible, but we can try enumerating subsets greedily with a backtracking or checking approach to guess possible max sizes.
+
+The program below:
+- Checks this property for pairs
+- Builds subsets incrementally
+- Prints sizes and subsets found
+- Enumerates subsets up to some threshold size and prints the max found
+
+This might help conjecture the maximum size and the subsets achieving it.
+
+```python
+from math import gcd, isqrt
+from itertools import combinations
+
+def is_square(x):
+    r = isqrt(x)
+    return r*r == x
+
+def lcm(a,b):
+    return a*b//gcd(a,b)
+
+# Check condition for all pairs in s:
+def condition(s):
+    lst = sorted(s)
+    for i in range(len(lst)):
+        for j in range(i+1,len(lst)):
+            a,b = lst[i], lst[j]
+            val = lcm(a,b)//gcd(a,b)
+            if is_square(val):
+                return False
+    return True
+
+N = 100
+nums = list(range(1,N+1))
+
+max_size_found = 0
+max_subsets = []
+
+# We try to build subsets incrementally, ensuring the condition holds
+# Because full search is impossible, let's try a greedy approach adding numbers in ascending order
+
+def backtrack(start, curr_subset):
+    global max_size_found, max_subsets
+    if len(curr_subset) > max_size_found:
+        print(f"Found subset size {len(curr_subset)}: {sorted(curr_subset)}")
+        max_size_found = len(curr_subset)
+        max_subsets = [set(curr_subset)]
+    elif len(curr_subset) == max_size_found:
+        max_subsets.append(set(curr_subset))
+
+    for nxt in range(start, N+1):
+        new_subset = curr_subset + [nxt]
+        if condition(new_subset):
+            backtrack(nxt+1, new_subset)
+        # else skip nxt
+
+# To reduce runtime, let's skip some numbers that are perfect squares themselves
+# Usually including 1 causes val=1 which is a perfect square
+# Let's try starting from 2 upwards
+
+print("Starting backtracking to find large subsets satisfying condition (up to time limit)...")
+backtrack(2, [])
+
+print(f"Maximum subset size found: {max_size_found}")
+print("Some subsets of that size (up to 5 shown):")
+for s in max_subsets[:5]:
+    print(sorted(s))
+```

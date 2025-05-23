@@ -1,0 +1,77 @@
+[write_program]
+This problem involves analyzing a finite set S of natural numbers with known maximum and minimum, along with conditions on averages of various subsets. To assist in conjecturing the answer, the approach is to:
+
+- Fix small sample parameters for the set size and the min/max.
+- Generate possible sets S satisfying the constraints.
+- Compute the sum and average to find the answer.
+- Stream answers as they are found, prioritizing exact rational results.
+- For efficiency, only generate candidate sets once parameters are fixed.
+
+Note: The problem is theoretical, and a brute-force enumeration of all possible sets can be inefficient. Limiting to small ranges based on the constraints makes the enumeration manageable.
+
+```python
+from itertools import combinations
+
+# Parameters: small range around expected min/max values
+# To find candidate sets S, with size between 3 to 10 (small for enumeration)
+# The constraints:
+# maxS - minS = 72
+# minS, maxS in S
+# The averages of various subsets are fixed
+
+minS_candidate = 0
+maxS_candidate = 72  # Since maxS - minS = 72, and both are in S
+set_size_range = range(3, 10)  # small sizes for enumeration
+answer_found = False
+
+for size in set_size_range:
+    # Generate candidate sets with min and max fixed:
+    for minS in range(minS_candidate, maxS_candidate - 71):
+        maxS = minS + 72
+        if maxS > 100:  # limit upper bound to keep search finite
+            continue
+        inside_range = range(minS, maxS + 1)
+        # Ensure set size matches
+        for subset in combinations(inside_range, size):
+            S = set(subset)
+            # Check if minS and maxS in S
+            if minS not in S or maxS not in S:
+                continue
+            # Check averages constraints systematically
+            size_S = len(S)
+            sum_S = sum(S)
+            if size_S < 2:
+                continue
+            # h_avg1: (sum of S \ {maxS})/(size_S - 1) = 32
+            sum_without_max = sum_S - maxS
+            if size_S -1 != 0 and sum_without_max % (size_S -1) == 0:
+                avg1 = sum_without_max // (size_S -1)
+                if avg1 != 32:
+                    continue
+            else:
+                continue
+            # h_avg2: (sum of S \ {maxS, minS}) / (size_S -2) =35
+            sum_without_max_min = sum_S - maxS - minS
+            if size_S -2 != 0 and sum_without_max_min % (size_S - 2) == 0:
+                avg2 = sum_without_max_min // (size_S -2)
+                if avg2 != 35:
+                    continue
+            else:
+                continue
+            # h_avg3: (sum of S \ {minS}) / (size_S - 1) = 40
+            sum_without_min = sum_S - minS
+            if size_S -1 != 0 and sum_without_min % (size_S -1) == 0:
+                avg3 = sum_without_min // (size_S -1)
+                if avg3 != 40:
+                    continue
+            else:
+                continue
+            # If all constraints pass, compute overall average
+            total_avg = sum_S / size_S
+            print(f"Candidate set S: {sorted(S)}")
+            print(f"Sum: {sum_S}, Size: {size_S}, Average: {total_avg}")
+            answer_found = True
+
+# Note: The code only prints candidates when constraints are met.
+# The solving process helps in conjecturing the exact value for the overall average.
+```

@@ -1,0 +1,56 @@
+[write_program]
+This problem involves finding the ratio g(2)/g(1) given a recursive sequence g and a polynomial f. We'll enumerate possible values for g(1) and g(2) that satisfy the given conditions for a(1) through a(5).
+
+The approach is:
+1. Express g(n) in terms of g(1) and g(2) using the recurrence relation
+2. Use the given values of a(n) to set up equations
+3. Solve for the ratio g(2)/g(1)
+
+```python
+def main():
+    # We'll try small integer values for f(1), f(2), f(3), f(4), f(5)
+    # Since f is a polynomial, we can assume degree <=4 (5 points determine degree 4 poly)
+    from itertools import product
+    
+    # Try possible ratios r = g2/g1
+    for numerator in range(-10, 11):
+        for denominator in range(1, 11):
+            if numerator == 0:
+                continue
+            r = numerator / denominator
+            
+            # Calculate g values using recurrence: g(n+1) = g1 * r^n
+            g1 = 1  # We can assume g1=1 since we're looking for ratio r
+            g2 = g1 * r
+            g3 = g1 * r**2
+            g4 = g1 * r**3
+            g5 = g1 * r**4
+            
+            # Calculate f(n) = a(n) - g(n+1)
+            f1 = 1 - g2
+            f2 = 2 - g3
+            f3 = 3 - g4
+            f4 = 14 - g5
+            f5 = 16 - (g1 * r**5)
+            
+            # Check if these points fit a polynomial of degree <=4
+            # We'll check if the 4th finite difference is constant
+            points = [f1, f2, f3, f4, f5]
+            diffs = [points]
+            for _ in range(4):
+                new_diff = []
+                for i in range(1, len(diffs[-1])):
+                    new_diff.append(diffs[-1][i] - diffs[-1][i-1])
+                diffs.append(new_diff)
+                if len(new_diff) < 2:
+                    break
+            
+            if len(diffs[-1]) >= 1 and all(abs(d - diffs[-1][0]) < 1e-6 for d in diffs[-1]):
+                print(f"Found valid ratio: {numerator}/{denominator} = {r}")
+                return
+    
+    print("No valid ratio found in search space")
+
+if __name__ == "__main__":
+    main()
+```

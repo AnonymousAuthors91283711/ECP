@@ -1,0 +1,64 @@
+[write_program]
+This problem appears to be a formalized mathematical statement about set properties and logical implications. While we can't directly translate the Lean proof into Python, we can create a program to enumerate small cases that might help understand the underlying combinatorial structure.
+
+The problem involves:
+1. A set of 6 candidates
+2. Properties "appropriate", "perspective", and "universal" defined on subsets
+3. Several logical conditions connecting these properties
+
+We'll create a program to:
+1. Enumerate all subsets of a smaller set (size 4 for efficiency)
+2. Check properties that satisfy similar conditions
+3. Output cases where the conditions hold
+
+```python
+from itertools import combinations
+
+def main():
+    # Using smaller universe size (4) for demonstration
+    universe_size = 4
+    candidates = set(range(universe_size))
+    
+    # Enumerate all possible subsets (powerset)
+    all_subsets = []
+    for k in range(universe_size + 1):
+        all_subsets.extend(combinations(candidates, k))
+    
+    # Try to find properties that satisfy similar conditions
+    for appropriate in all_subsets:
+        appropriate_set = set(appropriate)
+        # Check condition h3: perspective is subsets where adding one element makes appropriate
+        perspective_subsets = []
+        for subset in all_subsets:
+            subset_set = set(subset)
+            # Check if exists candidate not in subset where adding makes appropriate
+            for candidate in candidates - subset_set:
+                if subset_set | {candidate} in map(set, appropriate):
+                    perspective_subsets.append(subset)
+                    break
+        
+        # Check condition h4: universal candidates
+        universal_candidates = []
+        for candidate in candidates:
+            universal = True
+            for lineup in perspective_subsets:
+                lineup_set = set(lineup)
+                if candidate not in lineup_set and lineup_set <= (candidates - {candidate}):
+                    if (lineup_set | {candidate}) not in map(set, appropriate):
+                        universal = False
+                        break
+            if universal:
+                universal_candidates.append(candidate)
+        
+        # Check condition h5: all candidates are universal
+        if set(universal_candidates) == candidates:
+            print(f"Found case where all candidates are universal")
+            print(f"Appropriate subsets: {appropriate}")
+            print(f"Perspective subsets: {perspective_subsets}")
+            print("---")
+
+if __name__ == "__main__":
+    main()
+```
+
+Note: This program explores small cases to help understand the problem structure. The actual problem involves 6 candidates, but enumerating all subsets for size 6 would be computationally expensive (2^64 subsets). The program demonstrates the approach with a smaller size (4) to maintain reasonable runtime while showing the pattern.

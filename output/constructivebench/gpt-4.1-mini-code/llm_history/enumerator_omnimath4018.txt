@@ -1,0 +1,80 @@
+[write_program]
+The problem defines a sequence where \( x_0 =1 \), and 
+\[
+x_{k+1} = \frac{x_k \cdot p(x_k)}{q(x_k)}
+\]
+Here,
+- \( p(x) \) is the least prime NOT dividing \( x \),
+- \( q(x) \) is the product of all primes less than \( p(x) \).
+
+We want to find the smallest \( n \) such that \( x_n = 1995 \).
+
+To explore, we will:
+- Implement routines to get primes, check divisibility,
+- Compute \( p(x) \) and \( q(x) \),
+- Generate the sequence,
+- Print each \( (n,x_n) \),
+- Stop if \( x_n=1995 \) or after a reasonable bound.
+
+We will pick limit 50 for safe exploration.
+
+```python
+# Enumerate x_sequence and print steps to find when x_n = 1995
+
+def primes_up_to(n):
+    # Sieve of Eratosthenes to get primes up to n
+    sieve = [True]*(n+1)
+    sieve[0]=sieve[1]=False
+    for i in range(2,int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i,n+1,i):
+                sieve[j]=False
+    return [p for p in range(2,n+1) if sieve[p]]
+
+def prime_list():
+    # Generates primes on demand using small list
+    # We'll generate on the fly to check divisors.
+    # We'll cache first 100 primes for convenience.
+    # Since p(x) is least prime not dividing x, primes needed are small.
+    ps = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47]
+    return ps
+
+def p(x):
+    # least prime not dividing x
+    for prime in prime_list():
+        if x%prime != 0:
+            return prime
+    # If none found (unlikely for x small), extend primes:
+    # but given problem constraints, won't happen for x < large.
+    # So raise error if not found.
+    raise ValueError("No prime found that does not divide x")
+
+def q(x):
+    # product of all primes less than p(x)
+    px = p(x)
+    prod = 1
+    for prime in prime_list():
+        if prime < px:
+            prod *= prime
+    return prod
+
+def main():
+    x = 1
+    print(f"n=0, x_0={x}")
+    for n in range(1, 51):
+        px = p(x)
+        qx = q(x)
+        numerator = x*px
+        # qx divides x*px exactly by construction, but check:
+        if numerator%qx != 0:
+            print(f"At n={n}, division not exact: {numerator}/{qx}")
+            break
+        x = numerator//qx
+        print(f"n={n}, p(x)={px}, q(x)={qx}, x_{n}={x}")
+        if x == 1995:
+            print(f"Found x_{n}=1995")
+            break
+
+if __name__ == "__main__":
+    main()
+```

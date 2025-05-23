@@ -1,0 +1,61 @@
+[write_program]
+This problem asks for all positive integers n where there exists a sequence of positive integers x₁, x₂, ..., xₙ such that the sum of 2^(i-1)/(x_i)² for i from 1 to n equals 1. We'll write a Python program to search for such n values by enumerating possible sequences.
+
+The approach:
+1. For small n values (1-10), try to find sequences x_i that satisfy the equation
+2. For each n, generate possible x_i values in a reasonable range (1-100)
+3. Use memoization and early termination to optimize the search
+4. Output n values where solutions exist
+
+```python
+import itertools
+
+def find_valid_n(max_n=10, max_x=100):
+    valid_ns = []
+    for n in range(1, max_n + 1):
+        # Generate all possible x_i sequences where x_i are positive integers ≤ max_x
+        # We'll use a recursive approach with memoization
+        found = False
+        
+        # The exponents part is fixed for each i: 2^(i-1)
+        exponents = [2**(i) for i in range(n)]  # i is 0-based in code
+        
+        # We'll try all possible x_i in increasing order
+        # The equation is sum (exponents[i] / x_i^2) = 1
+        # We can compute partial sums and check
+        
+        # Using a generator to avoid memory issues
+        def generate_sequences(remaining_depth, current_xs, remaining_sum):
+            if remaining_depth == 0:
+                if abs(remaining_sum) < 1e-10:  # floating point tolerance
+                    yield current_xs
+                return
+            
+            i = n - remaining_depth
+            max_possible_x = int((exponents[i] / remaining_sum)**0.5) + 2
+            max_possible_x = min(max_possible_x, max_x)
+            
+            for x in range(1, max_possible_x + 1):
+                term = exponents[i] / (x * x)
+                if term > remaining_sum + 1e-10:
+                    continue
+                yield from generate_sequences(
+                    remaining_depth - 1,
+                    current_xs + [x],
+                    remaining_sum - term
+                )
+        
+        # Try to find at least one solution
+        for solution in generate_sequences(n, [], 1.0):
+            print(f"n = {n}, solution found: {solution}")
+            valid_ns.append(n)
+            found = True
+            break
+        
+        if not found:
+            print(f"n = {n}, no solution found with x_i ≤ {max_x}")
+    
+    print("\nValid n values found:", valid_ns)
+
+find_valid_n()
+```

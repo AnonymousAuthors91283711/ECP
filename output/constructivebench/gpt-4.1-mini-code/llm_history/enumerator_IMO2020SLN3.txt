@@ -1,0 +1,50 @@
+[write_program]
+The problem is about finite sequences of length \( n \) with certain properties connecting averages and squares. To explore it computationally, I'll write a Python program that, for small \( n \), enumerates sequences \( a \) of length \( n \) with distinct elements, then checks whether for every pair \( (i,j) \) the average \(\frac{a_i + a_j}{2}\) equals some \( a_k \) which is also a perfect square of some \( a_l \). This will help conjecture for which \( n \) such sequences exist.
+
+Given exponential growth, I'll limit elements to small integers and small \( n \) like 2,3,4 for exploration.
+
+```python
+from itertools import product, combinations
+
+def is_perfect_square(x):
+    if x < 0:
+        return False
+    r = int(x**0.5)
+    return r*r == x
+
+def check_sequence(a):
+    n = len(a)
+    # Condition: sequence not all equal
+    if all(x == a[0] for x in a):
+        return False
+    # For all i,j there exists k,l with a_k = (a_i+a_j)/2 and a_k = a_l^2
+    for i, j in combinations(range(n), 2):
+        s = a[i] + a[j]
+        if s % 2 != 0:
+            return False
+        mid = s // 2 # integer division
+        if mid not in a:
+            return False
+        # Check if mid is a perfect square of some a_l in sequence
+        if all(mid != x*x for x in a):
+            return False
+    return True
+
+max_elem = 10  # limit element size to keep enumeration feasible
+
+for n in range(2,5):
+    print(f"n={n}")
+    found = False
+    # Generate all sequences of length n with elements in [0..max_elem] and not all equal
+    # To reduce search, enforce strictly increasing sequences (since order indexed by Fin n)
+    for a in product(range(max_elem+1), repeat=n):
+        if len(set(a)) == 1:
+            continue
+        # Check condition
+        if check_sequence(a):
+            found = True
+            print(f"Found sequence: {a}")
+    if not found:
+        print("No sequence found satisfying conditions")
+```
+This will enumerate candidate sequences for small \( n \) to assist conjecture about the problem.

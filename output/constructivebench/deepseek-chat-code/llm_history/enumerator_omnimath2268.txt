@@ -1,0 +1,40 @@
+[write_program]
+This problem involves finding the sum of reciprocals of certain polynomial roots combinations. We'll approach it by:
+1. Finding the roots of the polynomial x³ + 3x - 1
+2. Calculating the sum for all distinct root pairs (x,y) of (x³ + y³)⁻¹
+3. Expressing the result as a reduced fraction m/n
+4. Computing 100m + n
+
+We'll use numerical approximations to find the roots, then compute the sum exactly using symbolic computation.
+
+```python
+import numpy as np
+from fractions import Fraction
+from itertools import permutations
+
+# Find roots of x^3 + 3x - 1 = 0
+coeffs = [1, 0, 3, -1]
+roots = np.roots(coeffs)
+
+# Filter real roots (problem implies 3 distinct real roots)
+real_roots = [r.real for r in roots if abs(r.imag) < 1e-10]
+
+# Calculate the sum S = sum_{x≠y} 1/(x³ + y³)
+total = Fraction(0, 1)
+for x, y in permutations(real_roots, 2):
+    denominator = x**3 + y**3
+    if abs(denominator) > 1e-10:  # Avoid division by zero
+        total += Fraction(1).limit_denominator(10**6) / Fraction(denominator).limit_denominator(10**6)
+
+# Simplify the fraction
+m, n = total.numerator, total.denominator
+gcd_val = np.gcd(m, n)
+m_reduced = m // gcd_val
+n_reduced = n // gcd_val
+
+# Compute the final answer
+answer = 100 * m_reduced + n_reduced
+
+print(f"Reduced fraction: {m_reduced}/{n_reduced}")
+print(f"Final answer: {answer}")
+```

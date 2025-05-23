@@ -1,0 +1,65 @@
+[write_program]
+Let's analyze the problem: 
+
+- We are considering injective functions `f` from a grid (2 rows × 6 columns = 12 points) to `Fin 12` (numbers 0 to 11). 
+- The functions prevent adjacent points (in a grid sense) from mapping to numbers differing by a multiple of 3.
+- We want to count how many such functions exist (`|S|`).
+- The ultimate goal: compute `P2023AIMEII_10_answer` as the number of such functions.
+
+Key observations:
+- The grid has adjacency edges (vertical and horizontal).
+- The `Adjacent` relation makes a grid graph.
+- The functions assign numbers to points with the constraints: distinct, injective, and non-divisible differences of 3 for adjacent points.
+
+Approach:
+- Since the grid is small, enumerate all possible labelings considering the constraints.
+- Use parameters: e.g., assign labels row-wise and check constraints.
+- To avoid an explosion, consider fixed assignments for small parts (like fixing one point's label) and propagate constraints.
+
+Due to complexity, we implement a backtracking enumeration:
+- Fix a starting point's label.
+- For each remaining point, choose labels consistent with the previous choices (injective and respecting adjacency constraints).
+- Print each valid assignment immediately as being found.
+
+Here's the code:
+
+```python
+# Enumerate all valid functions f: grid points -> {0,...,11}
+# with injectivity and adjacency constraint: differences not divisible by 3.
+
+from itertools import permutations
+
+def main():
+    points = [(0,i) for i in range(6)] + [(1,i) for i in range(6)]
+    total_points = len(points)
+    labels = range(12)
+    adjacency = {}
+    for i, p1 in enumerate(points):
+        adjacency[p1] = []
+        for j, p2 in enumerate(points):
+            if p1 != p2 and (
+                (p1[0] == p2[0] and abs(p1[1]-p2[1]) == 1) or
+                (p1[1] == p2[1] and abs(p1[0]-p2[0]) == 1)
+            ):
+                adjacency[p1].append(p2)
+    count = 0  # to track total count
+    for perm in permutations(labels, total_points):
+        f = {p: lbl for p, lbl in zip(points, perm)}
+        # Check injectivity (permutations guarantee)
+        # Check adjacency difference mod 3 ≠ 0
+        valid = True
+        for p in points:
+            for nb in adjacency[p]:
+                if (abs(f[p] - f[nb]) % 3) == 0:
+                    valid = False
+                    break
+            if not valid:
+                break
+        if valid:
+            count += 1
+            print(f"Valid assignment: {f}")
+    print(f"Total valid functions: {count}")
+
+if __name__ == "__main__":
+    main()
+```

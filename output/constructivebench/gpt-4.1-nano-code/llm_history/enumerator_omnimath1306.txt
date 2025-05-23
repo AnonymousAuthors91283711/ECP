@@ -1,0 +1,49 @@
+[write_program]
+The problem involves finding integers a, b, c and a polynomial f(x) = x^4 + a x^2 + b x + c such that 2, -3, and 5 are roots of f, and the sum a + b + c is an integer answer we want to determine through enumeration.
+
+Given the roots, we can form the polynomial as:  
+f(x) = (x - 2)(x + 3)(x - 5) * (x + d), for some integer d, or more simply, since these roots are fixed, express f(x) as:  
+f(x) = (x - 2)(x + 3)(x - 5)(x + e) for some integer e, but since it's degree 4 with specific roots, we can express f as  
+f(x) = (x - 2)(x + 3)(x - 5)(x + d) or use the known roots approach directly.
+
+The roots are 2, -3, 5, and since the polynomial is degree 4, the roots are these three plus a fourth root r that is unknown:
+
+f(x) = (x - 2)(x + 3)(x - 5)(x - r)
+
+Expanding this polynomial will give us coefficients in terms of r. We can then match it to the form:  
+f(x) = x^4 + a x^2 + b x + c
+
+by comparing coefficients, so the task reduces to iterating over small integer candidates for r and computing the sum a + b + c for each, and printing each possible solution.
+
+```python
+# Enumerate possible fourth roots r in a small range
+# For each r, expand the polynomial with known roots, then match coefficients
+# and compute a + b + c.
+
+from sympy import symbols, expand, Poly
+
+x = symbols('x')
+
+for r in range(-10, 11):
+    # Construct the polynomial with roots 2, -3, 5, r
+    f = (x - 2)*(x + 3)*(x - 5)*(x - r)
+    # Expand to get coefficients
+    poly_expanded = expand(f)
+    coeffs = Poly(poly_expanded, x).all_coeffs()
+    # The polynomial is x^4 + a x^2 + b x + c
+    # Coeffs order: [1, a3, a2, a1, c], but since degree 4, coeffs list: [a0, a1, a2, a3, a4]
+    # sympy's all_coeffs() returns highest degree first: [a4, a3, a2, a1, a0]
+    # So:
+    a4, a3, a2, a1, a0 = coeffs
+    # The polynomial form:
+    # f(x) = x^4 + a3 x^3 + a2 x^2 + a1 x + a0
+    # need to match to form: x^4 + a x^2 + b x + c
+    # Note that here a3 is the x^3 coefficient, which should be zero in the form. So, check if a3 == 0
+    
+    if a3 == 0:
+        a = a2
+        b = a1
+        c = a0
+        result = a + b + c
+        print(f"Root r = {r}, a = {a}, b = {b}, c = {c}, sum a+b+c = {result}")
+```

@@ -1,0 +1,108 @@
+[write_program]
+The problem defines a minimal value \(M\) related to sums of functions and conditions involving parameters \(a,b,c,p,q,r\), with constraints \(p,q,r \geq 2\). 
+
+To support conjecturing, I will enumerate values of \(M\) for small parameters \(a,b,c,p,q,r\) (e.g. from 1 to 2 or 3), and for each tuple try all functions \(f\) from the finite domain \((x,y,z) \in [0,a] \times [0,b] \times [0,c]\) with values summing to \(M\). For each \(f\), I will check if the given property holds for some \(g\). Since \(g\) is also unknown, I will enumerate candidate \(g\), and check the inequality.
+
+Due to computational complexity, I will limit \(a,b,c\) to 1 or 2, \(p,q,r\) to 2, and limit to small values of sums \(M\) up to a threshold. The program will print candidates \(M\) as they are found, for each parameter set.
+
+Because directly checking all functions \(f\) and \(g\) is too large, I will only look at some simple functions \(f\), e.g. \(f\) identically zero except at one point, or uniform, to get some candidate values to conjecture about.
+
+---
+
+```python
+# Enumerate minimal M for small parameters (a,b,c,p,q,r)
+# according to conditions given in the math problem.
+# We test small parameter values and functions f,g.
+# Due to complexity, f and g are restricted to a few samples.
+
+def sums_iter(a,b,c,limit):
+    # Generate tuples of values on grid (a+1)*(b+1)*(c+1) with sum limit
+    # Yields list of lists of values, sum == limit, values ≥0
+    from itertools import product
+
+    size = (a+1)*(b+1)*(c+1)
+    # For efficiency, only try values 0 or limit in one place
+    # yields only few candidates
+    # All zeros except one position equal to limit
+    for pos in range(size):
+        vals = [0]*size
+        vals[pos] = limit
+        yield vals
+
+def indices(a,b,c):
+    for x in range(a+1):
+        for y in range(b+1):
+            for z in range(c+1):
+                yield x,y,z
+
+def check_conditions(a,b,c,p,q,r,M,f):
+    # Try to find g: [0..a]×[0..b]×[0..c]→N satisfying conditions
+    # Use simple candidate g: zero except g(0,0,0)=1
+    # Check the inequality at all points:
+    # f(x,y,z) + g(x-1,y,z) + g(x,y-1,z) + g(x,y,z-1) >= (p+q+r)*g(x,y,z)
+    # where g(-1,*,*)=0 etc.
+    # For this candidate, since g zero except at (0,0,0)=1,
+    # quickly check if inequalities hold.
+
+    # Build g dictionary
+    g = {}
+    for x in range(a+1):
+        for y in range(b+1):
+            for z in range(c+1):
+                g[(x,y,z)] = 0
+    g[(0,0,0)] = 1
+
+    # Check inequalities
+    for x in range(a+1):
+        for y in range(b+1):
+            for z in range(c+1):
+                lhs = f[(x,y,z)]
+                if x > 0:
+                    lhs += g[(x-1,y,z)]
+                if y > 0:
+                    lhs += g[(x,y-1,z)]
+                if z > 0:
+                    lhs += g[(x,y,z-1)]
+                rhs = (p+q+r)*g[(x,y,z)]
+                if lhs < rhs:
+                    return False
+    return True
+
+def f_list_to_dict(a,b,c,vals):
+    d = {}
+    i = 0
+    for x in range(a+1):
+        for y in range(b+1):
+            for z in range(c+1):
+                d[(x,y,z)] = vals[i]
+                i += 1
+    return d
+
+def enumerate_M_candidates():
+    # Test small parameters
+    for a in [1,2]:
+        for b in [1,2]:
+            for c in [1,2]:
+                for p in [2]:
+                    for q in [2]:
+                        for r in [2]:
+                            print(f"Parameters a={a} b={b} c={c} p={p} q={q} r={r}")
+                            THRESHOLD = 6  # max M to try
+                            for M in range(1,THRESHOLD+1):
+                                # Enumerate f candidates with sum == M:
+                                satisfied = False
+                                for vals in sums_iter(a,b,c,M):
+                                    f = f_list_to_dict(a,b,c,vals)
+                                    # Check if there exists g with the property:
+                                    # We try the simple candidate g as in check_conditions
+                                    if check_conditions(a,b,c,p,q,r,M,f):
+                                        print(f"Found M={M} for f={vals}")
+                                        satisfied = True
+                                        break
+                                if satisfied:
+                                    print(f"Candidate minimal M={M}")
+                                    break
+
+if __name__ == "__main__":
+    enumerate_M_candidates()
+```

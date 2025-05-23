@@ -1,0 +1,60 @@
+[write_program]
+This problem involves finding the minimal positive integer n such that there exists a sequence a: ℕ → ℝ satisfying certain recursive conditions and reaching the value 2014 at position n. The sequence can either double and add 1 or take a fractional step at each position.
+
+We'll approach this by:
+1. Modeling the sequence generation with both possible operations
+2. Tracking when we reach 2014
+3. Finding the minimal n where this occurs
+
+The program will explore all possible paths up to a reasonable depth, tracking the minimal n where 2014 is reached.
+
+```python
+def find_min_n(target=2014, max_depth=20):
+    from fractions import Fraction
+
+    min_n = None
+    # We use Fraction for exact arithmetic to avoid floating point errors
+    # The initial value must be a positive integer (a0 > 0)
+    initial_values = [Fraction(1,1)]  # Start with a0=1, can be extended if needed
+
+    for a0 in initial_values:
+        # We'll use BFS to explore all possible paths
+        from collections import deque
+        queue = deque()
+        queue.append((0, a0))  # (current position n, current value a_n)
+
+        visited = {}  # To store minimal steps to reach each value
+
+        while queue:
+            n, current = queue.popleft()
+
+            if current == target:
+                if min_n is None or n < min_n:
+                    min_n = n
+                    print(f"Found solution with n={n}")
+                continue
+
+            if n >= max_depth:
+                continue
+
+            if current in visited and visited[current] <= n:
+                continue
+            visited[current] = n
+
+            # Option 1: a_{n+1} = 2*a_n + 1
+            next1 = 2 * current + 1
+            queue.append((n+1, next1))
+
+            # Option 2: a_{n+1} = a_n / (a_n + 2)
+            if current != 0:  # Avoid division by zero
+                denominator = current + 2
+                next2 = current / denominator
+                queue.append((n+1, next2))
+
+    if min_n is not None:
+        print(f"Minimal n found: {min_n}")
+    else:
+        print(f"No solution found up to depth {max_depth}")
+
+find_min_n()
+```

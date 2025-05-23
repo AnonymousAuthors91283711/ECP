@@ -1,0 +1,86 @@
+[write_program]
+The functional equation is:
+f(1 + xy) - f(x + y) = f(x) f(y),
+with the condition f(-1) ≠ 0.
+
+Let's attempt to find functions f: ℝ → ℝ that satisfy the equation and the condition, by enumerating some candidate functions (e.g., constants, linear, quadratic, exponential) and testing them numerically. We'll print any candidate that appears to satisfy the equation exactly or approximately for some sample points, and verify the condition f(-1) ≠ 0.
+
+```python
+import math
+from fractions import Fraction
+
+# Helper: check if floats are close
+def approx_eq(a, b, tol=1e-9):
+    return abs(a - b) < tol
+
+# Try candidate functions:
+# 1. Constant: f(x) = c
+# 2. Linear: f(x) = a*x + b
+# 3. Quadratic: f(x) = a*x**2 + b*x + c
+# 4. Exponential: f(x) = A * r**x
+# 5. Rational: try rational multiples of x
+
+# Evaluate the functional equation for some sample (x,y):
+samples = [
+    (0, 0), (1, 1), (-1, -1), (2, 3), (0.5, -0.5)
+]
+
+def check_func(f):
+    # Check the equation for all sample pairs
+    for x, y in samples:
+        left = f(1 + x * y) - f(x + y)
+        right = f(x) * f(y)
+        if not approx_eq(left, right):
+            return False
+    # Check f(-1) != 0
+    if approx_eq(f(-1), 0):
+        return False
+    return True
+
+# Enumerate some parameters with small integers/fractions
+print("# Constant candidates")
+for c in [1, -1, 2, -2, 0.5, -0.5]:
+    f = lambda x, c=c: c
+    # Equation: c - c ?= c*c -> 0 = c^2? No unless c=0, fails f(-1)!=0
+    # So constant functions are unlikely except maybe c=0
+    if check_func(f):
+        print(f"Constant f(x)={c} passes.")
+
+print("# Linear candidates")
+# f(x) = a*x + b
+for a in [-2, -1, 0, 1, 2]:
+    for b in [-2, -1, 0, 1, 2]:
+        def f(x, a=a, b=b): return a*x + b
+        if check_func(f):
+            print(f"Linear f(x)={a}*x + {b} passes.")
+
+print("# Quadratic candidates")
+for a in [-1, 0, 1]:
+    for b in [-1, 0, 1]:
+        for c in [-1, 0, 1]:
+            def f(x, a=a, b=b, c=c): return a*x*x + b*x + c
+            if check_func(f):
+                print(f"Quadratic f(x)={a}*x^2 + {b}*x + {c} passes.")
+
+print("# Exponential candidates")
+# f(x) = A * r^x try r, A in small rationals
+for A in [1, -1, 2, -2]:
+    for r in [0.5, 1, 2]:
+        if r == 0:
+            continue
+        def f(x, A=A, r=r): return A * (r ** x)
+        if check_func(f):
+            print(f"Exponential f(x)={A}*{r}^x passes.")
+
+print("# Rational linear candidates with fractions")
+for na in [-2, -1, 0, 1, 2]:
+    for da in [1, 2]:
+        a = Fraction(na, da)
+        for nb in [-2, -1, 0, 1, 2]:
+            for db in [1, 2]:
+                b = Fraction(nb, db)
+                def f(x, a=a, b=b):
+                    return float(a*x + b)
+                if check_func(f):
+                    print(f"Fractional linear f(x)={a}*x + {b} passes.")
+```

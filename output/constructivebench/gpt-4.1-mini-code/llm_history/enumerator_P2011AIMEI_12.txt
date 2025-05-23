@@ -1,0 +1,122 @@
+[write_program]
+We want to analyze permutations of \( n = 6 + w \) individuals (with some number of men among them) so that every man is next to at least one other man, and among those permutations count how many have a block of at least 4 men together. The goal is to find the smallest \( w \) making the ratio \(\frac{\text{success}}{\text{valid}} \leq \frac{1}{100}\).
+
+To assist, we'll assume the problem involves 6 men and \( w \) women, total \( n=6+w \), and enumerate permutations of men and women:
+- Valid permutations: every man adjacent to at least one other man.
+- Success permutations: valid permutations with at least 4 men together.
+
+We will:
+- Generate permutations of men and women abstractly (by blocks).
+- Enumerate all partitions of men where each man blocks represents grouped men.
+- Enumerate ways to interleave men (in groups) and women.
+- Count valid permutations and those with a block of length ≥4.
+
+We iterate small \( w \) values (0 to 6), print counts and ratio, to observe the behavior and guess the minimal \( w \).
+
+```python
+from math import factorial as f
+from fractions import Fraction
+
+# Number of men fixed to 6
+men = 6
+
+def partitions(n):
+    # Generate all partitions of n into positive integers (descending)
+    # To split men into adjacent blocks 
+    def helper(n, max_val, prefix):
+        if n == 0:
+            yield prefix
+        else:
+            for i in range(min(max_val, n), 0, -1):
+                yield from helper(n - i, i, prefix + [i])
+    return list(helper(n, n, []))
+
+def count_ways(partition, w):
+    """
+    Count permutations counted by:
+    - partition: list of block sizes of men (each block is adjacent men)
+    - w = number of women
+    Conditions:
+    - Every man touches at least one other man implies no singleton men blocks
+      So all block sizes >=2.
+    - Total men = 6 must be partitioned into blocks all >=2.
+    Returns count of permutations for given partition and w.
+    """
+    # Number of blocks: b
+    b = len(partition)
+    if any(x < 2 for x in partition):
+        return 0  # singleton men not allowed
+    total_people = men + w
+
+    # The men blocks can be permuted among themselves (b! ways)
+    men_blocks_perm = f(b)
+
+    # Each block internal permutations: product of factorial of block sizes
+    men_internal = 1
+    for sz in partition:
+        men_internal *= f(sz)
+
+    # To ensure each man has neighbor man, men blocks are separate blocks.
+    # We interleave blocks (b men-blocks + w women blocks).
+    # Women are individuals, can be permuted in w! ways
+
+    women_perm = f(w)
+
+    # Total blocks to arrange: b men-blocks + w women (individual units)
+    total_blocks = b + w
+
+    # Number of ways to arrange these distinct blocks: total_blocks!
+    # But men blocks and women are distinct entities. So just total_blocks!
+    blocks_perm = f(total_blocks)
+
+    # But women are individual, no blocking.
+    # The total permutations count for a given partition:
+    # ways = men_blocks_perm * men_internal * women_perm * blocks_perm
+
+    return men_blocks_perm * men_internal * women_perm * blocks_perm
+
+def count_valid(w):
+    # valid permutations = sum over partitions of men into blocks sizes >=2
+    # counting permutations where every man adjacent to at least one other man
+
+    # Generate partitions of 6 men into blocks sizes >= 2
+    all_parts = partitions(men)
+    valid_parts = [p for p in all_parts if all(x >= 2 for x in p)]
+
+    total = 0
+    for p in valid_parts:
+        ways = count_ways(p, w)
+        total += ways
+    return total, valid_parts
+
+def count_success(w):
+    # success = valid permutations having at least one block of size >=4 men-block
+    all_parts = partitions(men)
+    valid_parts = [p for p in all_parts if all(x >= 2 for x in p) and any(x >=4 for x in p)]
+
+    total = 0
+    for p in valid_parts:
+        ways = count_ways(p, w)
+        total += ways
+    return total
+
+print("w | valid        | success      | success/valid")
+for w in range(7):
+    valid, valid_parts = count_valid(w)
+    if valid == 0:
+        continue
+    success = count_success(w)
+    ratio = Fraction(success, valid)
+    print(f"{w:1d} | {valid:12d} | {success:12d} | {float(ratio):.6f} ({ratio})")
+
+# Output minimal w with ratio <= 1/100
+for w in range(7):
+    valid, _ = count_valid(w)
+    if valid == 0:
+        continue
+    success = count_success(w)
+    ratio = Fraction(success, valid)
+    if ratio <= Fraction(1, 100):
+        print(f"\nMinimal w with ratio <= 1/100: {w}")
+        break
+```

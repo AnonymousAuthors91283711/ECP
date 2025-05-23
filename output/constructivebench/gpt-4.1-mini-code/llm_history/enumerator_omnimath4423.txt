@@ -1,0 +1,108 @@
+[write_program]
+The problem relates to decomposing a bijection f on integers with displacement bounded by k into a composition of bijections each moving points by at most 1. We want to verify the conjecture for small values of k.
+
+We will:
+- Check small k values (1 to 4).
+- Enumerate all bijections f: ℤ → ℤ with |f(z)-z| ≤ k over a small integer range centered at 0.
+- Attempt to write f as composition of bijections each with displacement ≤ 1.
+- Print the results as they come to conjecture omnimath4423_answer(k).
+
+Since ℤ is infinite, for practical enumeration, we restrict domain to integers in [-m, m] for small m depending on k, and treat bijections on finite sets Z = {−m,..,m}.
+
+```python
+# enumerator.py
+from itertools import permutations
+
+def is_bounded_displacement(perm, domain, k):
+    return all(abs(perm[i] - domain[i]) <= k for i in range(len(domain)))
+
+def can_decompose_to_1_shift(permutation, domain):
+    # Heuristic:
+    # Decompose permutation as product of permutations each moving elements by at most 1
+    # We try compositions of simple shifts (±1 transpositions or identity)
+    n = len(domain)
+    # Because domain is small, try a BFS of applying all ±1 bounded bijections
+    from collections import deque
+
+    id_perm = tuple(domain)
+    target = tuple(permutation)
+    # Generate all ±1-bounded bijections on domain (like permutations where 
+    # each element moves at most one index in domain)
+    moves = []
+    for i in range(n):
+        # identity (no move)
+        pass
+    # Generate transpositions of neighbors where displacement ≤1 at integers
+    one_shift_perms = []
+    # identity:
+    one_shift_perms.append(id_perm)
+    # try swapping neighbors differing by 1 in their integer values
+    for i in range(n-1):
+        # swap domain[i], domain[i+1]
+        arr = list(id_perm)
+        arr[i], arr[i+1] = arr[i+1], arr[i]
+        # Check if displacement ≤1
+        if all(abs(arr[j] - domain[j]) <= 1 for j in range(n)):
+            one_shift_perms.append(tuple(arr))
+
+    visited = set([id_perm])
+    queue = deque([(id_perm, 0)])
+
+    while queue:
+        current, depth = queue.popleft()
+        if current == target:
+            return True, depth
+        if depth > 10:
+            # limit depth to avoid explosion
+            continue
+        for p in one_shift_perms:
+            # compose p ∘ current
+            composed = tuple(p[current.index(x)] for x in domain)  # careful: indexes are domain indexes
+            # Actually, indexes in domain are 0..n-1, current is permutation of domain
+            # We want composition p(current(x)) for each x in domain.
+            # Thus for element domain[i], we get current[i], find its index j in domain,
+            # then output p[j].
+            # Let's build a dict for domain values to index:
+        # Redo composition:
+        domain_to_i = {v:i for i,v in enumerate(domain)}
+        composed = []
+        for x in domain:
+            cur_img = current[domain_to_i[x]]
+            p_index = domain_to_i[cur_img]
+            composed.append(p[p_index])
+        composed = tuple(composed)
+        if composed not in visited:
+            visited.add(composed)
+            queue.append((composed, depth+1))
+    return False, None
+
+def main():
+    # Small test values for k
+    for k in range(1,5):
+        print(f"Testing k={k}")
+        # domain size roughly 2k+1 to include displacements
+        m = 2 * k
+        domain = list(range(-m, m+1))
+        n = len(domain)
+
+        # Enumerate bijections f with displacement ≤ k on domain
+        count_checked = 0
+        count_decomposable = 0
+        for perm in permutations(domain):
+            if is_bounded_displacement(perm, domain, k):
+                count_checked += 1
+                decomposable, depth = can_decompose_to_1_shift(perm, domain)
+                if decomposable:
+                    print(f"Found decomposable bijection at k={k}; domain={domain}")
+                    print(f"Permutation: {perm}")
+                    print(f"Minimal composition depth: {depth}")
+                    count_decomposable += 1
+                    if count_decomposable >= 5:
+                        # Limit output
+                        break
+        print(f"For k={k}: checked {count_checked} bijections, decomposable count (up to 5 shown): {count_decomposable}")
+        print()
+
+if __name__ == "__main__":
+    main()
+```

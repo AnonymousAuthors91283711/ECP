@@ -1,0 +1,49 @@
+[write_program]
+This problem asks to find all positive integer quadruples (x,y,z,t) satisfying the equation 12^x + 13^y - 14^z = 2013^t. We'll write a Python program to search for solutions by bounding the exponents and checking possible combinations.
+
+The approach:
+1. Since 2013^t grows rapidly, we'll limit t to small values (t ≤ 3)
+2. For each t, compute the right-hand side (2013^t)
+3. For each possible y, compute 13^y and see if 12^x - 14^z = RHS - 13^y has solutions
+4. Use modular arithmetic checks to prune impossible cases early
+
+```python
+def solve():
+    max_t = 3
+    max_exp = 20  # reasonable upper bound for exponents
+    
+    for t in range(1, max_t + 1):
+        rhs = 2013 ** t
+        print(f"\nChecking t = {t}, RHS = {rhs}")
+        
+        for y in range(1, max_exp + 1):
+            term_y = 13 ** y
+            if term_y > rhs + (14 ** max_exp):  # 13^y too large
+                continue
+                
+            remaining = rhs - term_y
+            if remaining <= 0:
+                continue
+                
+            # Check if remaining can be expressed as 12^x - 14^z
+            for x in range(1, max_exp + 1):
+                term_x = 12 ** x
+                if term_x <= remaining:
+                    z_candidate = term_x - remaining
+                    if z_candidate <= 0:
+                        continue
+                    # Check if z_candidate is a power of 14
+                    z = 1
+                    while 14 ** z <= z_candidate:
+                        if 14 ** z == z_candidate:
+                            print(f"Found solution: (x={x}, y={y}, z={z}, t={t})")
+                        z += 1
+                else:
+                    # Now check if remaining = 12^x - 14^z (negative case)
+                    for z in range(1, max_exp + 1):
+                        if term_x - (14 ** z) == remaining:
+                            print(f"Found solution: (x={x}, y={y}, z={z}, t={t})")
+
+if __name__ == "__main__":
+    solve()
+```

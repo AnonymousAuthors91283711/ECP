@@ -1,0 +1,44 @@
+[write_program]
+The problem is about summing the probabilities \( P(a,b,c) = 2^{-a} \cdot 2^{-b} \cdot 2^{-c} = 2^{-(a+b+c)} \) over strictly increasing triplets \( (a,b,c) \) forming an arithmetic progression with common difference \( d = b-a = c-b > 0 \). We want to enumerate triplets \((a,b,c)\) and sum the corresponding probabilities where \(a < b < c\), \(b - a = c - b = d > 0\).
+
+Rewrite sum over \(a,d\) with \(b = a + d\), \(c = a + 2d\).
+
+We consider small values for \(a,d \geq 0\). The sum of probabilities where event holds equals \(\sum_{d=1}^\infty \sum_{a=0}^\infty 2^{-(a + (a+d) + (a+2d))} = \sum_{d=1}^\infty \sum_{a=0}^\infty 2^{-3a - 3d} = \sum_{d=1}^\infty 2^{-3d} \sum_{a=0}^\infty 2^{-3a} = \left(\sum_{d=1}^\infty 2^{-3d}\right) \left(\sum_{a=0}^\infty 2^{-3a}\right)\).
+
+The sums are geometric series, so the answer should be a rational fraction.
+
+Let's write a program to enumerate and sum probabilities up to some cutoffs, print partial sums and conjecture the exact fraction.
+
+```python
+# Enumerate triplets (a,b,c) with a < b < c, b - a = c - b = d > 0
+# Compute sum of 2^{-(a+b+c)} over these and print partial sums for ranges of a,d
+from fractions import Fraction
+
+def prob(a, b, c):
+    return Fraction(1, 2 ** (a + b + c))
+
+max_d = 10
+max_a = 10
+
+total = Fraction(0,1)
+print("Enumerating probabilities for a <= {} and d <= {}".format(max_a, max_d))
+for d in range(1, max_d+1):
+    sum_d = Fraction(0,1)
+    for a in range(max_a+1):
+        b = a + d
+        c = a + 2*d
+        p = prob(a,b,c)
+        sum_d += p
+        print(f"a={a}, d={d}, triplet=({a},{b},{c}), prob={p}")
+    print(f"Sum over a=0..{max_a} for d={d}: {sum_d}")
+    total += sum_d
+
+print(f"Partial total sum (a<= {max_a}, d<= {max_d}): {total}")
+
+# Now conjecture infinite sums for a and d.
+# sum_{a=0}^\infty 2^{-3a} = 1/(1 - 2^{-3}) = 1/(1 - 1/8) = 8/7
+# sum_{d=1}^\infty 2^{-3d} = 2^{-3} / (1 - 2^{-3}) = (1/8)/(7/8) = 1/7
+# total sum = (8/7)*(1/7) = 8/49
+print(f"Conjectured exact sum: 8/49")
+```
+

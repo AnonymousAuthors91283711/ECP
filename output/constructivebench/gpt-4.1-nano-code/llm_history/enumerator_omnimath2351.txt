@@ -1,0 +1,59 @@
+[write_program]
+The problem involves a sequence of polynomials {a_n} satisfying a recurrence relation, with initial conditions a_1 and a_2, and examining the behavior of the sum of their roots as n approaches infinity. 
+
+Since the sequence is defined with a linear recurrence, the roots' sums are related to the coefficients and the roots of the characteristic equation. For a second-order linear recurrence, the sum of roots (roots of a polynomial) often stabilizes or follows a predictable pattern.
+
+Let's enumerate polynomial roots for small n to observe potential patterns. Here, the initial polynomials are provided, and the recurrence relation can be used to generate subsequent polynomials.
+
+**Step-by-step plan:**
+- Implement the initial polynomials a_1 and a_2.
+- Use the recurrence to generate subsequent polynomials.
+- For each polynomial, compute the roots and sum them.
+- Since the roots are in ℝ, and polynomials are quadratic, roots can be computed explicitly.
+- Print each sum as it is calculated.
+
+This allows us to observe the behavior and guess the limit of the sum of roots.
+
+```python
+import numpy as np
+
+# Initial polynomials coefficients
+# a_1 = 3*X^2 - X
+# a_2 = 3*X^2 - 7*X + 3
+
+# Recurrence: a_{n+2} = (5/2) * a_{n+1} - a_n
+# Implemented via coefficient vectors, starting from degree 2 polynomials
+
+def generate_polynomial_coeffs(a1_coeffs, a2_coeffs, n):
+    # Generate sequence of coefficients up to index n
+    polys = [a1_coeffs, a2_coeffs]
+    for _ in range(2, n):
+        # Polynomial coefficients for next term
+        # Need to perform: a_{n+2} = (5/2)*a_{n+1} - a_n
+        # We use convolution coefficients if needed
+        a_next = np.polynomial.polynomial.Polynomial(
+            (5/2) * np.array(polys[-1]) - np.array(polys[-2])
+        ).coef
+        # Ensure coefficients are stored up to degree 2 for quadratic
+        # Pad with zeros if necessary
+        a_next = np.pad(a_next, (0, max(0, 2 - len(a_next)+1)), 'constant')
+        polys.append(a_next)
+    return polys
+
+# Initial polynomials coefficients (constant term first)
+a1_coeffs = np.array([-1, -1, 3])  # 3X^2 - X
+a2_coeffs = np.array([3, -7, 3])   # 3X^2 - 7X + 3
+
+# Generate up to, say, n=10
+polynomials = generate_polynomial_coeffs(a1_coeffs, a2_coeffs, 10)
+
+# For each polynomial, compute roots and their sum
+for idx, coeffs in enumerate(polynomials[1:], start=1):
+    # Polynomial coefficients in ascending order
+    p = np.polynomial.Polynomial(coeffs)
+    roots = p.roots()
+    # Filter roots in ℝ
+    real_roots = roots[np.isreal(roots)].real
+    sum_roots = sum(real_roots)
+    print(f"n={idx+1}, roots={list(real_roots)}, sum={sum_roots}")
+```

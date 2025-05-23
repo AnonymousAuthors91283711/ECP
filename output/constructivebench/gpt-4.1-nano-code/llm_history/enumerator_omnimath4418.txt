@@ -1,0 +1,70 @@
+[write_program]
+This problem involves exploring the existence of a polynomial P over ℚ with specific properties: for all natural numbers x with digits in non-decreasing order, P(x) evaluates to an integer, but for some integer x, P(x) never hits any integer value. Given the complexity, I will attempt small polynomials and small x values to see if such polynomials can be constructed or disproved.
+
+The approach:
+- Fix small polynomial degrees (0, 1, 2).
+- For small sample x values (say from 0 to 20).
+- Check if there's a polynomial fitting these conditions, especially focusing on the pattern of digits and the evaluation to integers.
+- As the problem involves an existential quantifier over polynomials, we mostly test candidate polynomials.
+
+Below is a Python program that enumerates simple polynomial candidates (constant, linear, quadratic) and evaluates their behavior on small sample x-values with non-decreasing digit sequences, printing promising cases for further analysis.
+
+```python
+import itertools
+
+# Generate x with non-decreasing digits in base 10, for small numbers
+def generate_non_decreasing_digit_numbers(max_digits=3):
+    results = []
+    for length in range(1, max_digits + 1):
+        for digits in itertools.product(range(10), repeat=length):
+            if all(digits[i] <= digits[i+1] for i in range(length - 1)):
+                num = 0
+                for d in digits:
+                    num = num * 10 + d
+                results.append(num)
+    return results
+
+# Evaluate candidate polynomial at x
+def evaluate_poly(coeffs, x):
+    return sum(c * (x ** i) for i, c in enumerate(coeffs))
+
+# Check if polynomial outputs integers for these xs
+def check_poly_for_integers(coeffs, xs):
+    for x in xs:
+        val = evaluate_poly(coeffs, x)
+        if abs(val - round(val)) > 1e-8:
+            return False
+    return True
+
+def main():
+    xs = generate_non_decreasing_digit_numbers()
+    print("Sample x values with non-decreasing digits:", xs)
+    max_deg = 2
+    # Enumerate constant polynomials
+    for c in range(-5, 6):
+        coeffs = [c]
+        if check_poly_for_integers(coeffs, xs):
+            print(f"Constant polynomial: P(x) = {c}")
+            for x in xs:
+                print(f"P({x}) = {evaluate_poly(coeffs, x)}")
+    # Enumerate linear polynomials
+    for a in range(-2, 3):
+        for b in range(-5, 6):
+            coeffs = [b, a]
+            if check_poly_for_integers(coeffs, xs):
+                print(f"Linear polynomial: P(x) = {a}*x + {b}")
+                for x in xs:
+                    print(f"P({x}) = {evaluate_poly(coeffs, x)}")
+    # Enumerate quadratic polynomials
+    for a in range(-1, 2):
+        for b in range(-3, 4):
+            for c in range(-5, 6):
+                coeffs = [c, b, a]
+                if check_poly_for_integers(coeffs, xs):
+                    print(f"Quadratic polynomial: P(x) = {a}*x^2 + {b}*x + {c}")
+                    for x in xs:
+                        print(f"P({x}) = {evaluate_poly(coeffs, x)}")
+
+if __name__ == "__main__":
+    main()
+```

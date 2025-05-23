@@ -1,0 +1,60 @@
+[write_program]
+This problem involves iterating a transformation on quadruples of integers and checking primality conditions after 1996 steps. To approach this, we'll:
+
+1. Implement the step function that transforms (w,x,y,z) to (w-x, x-y, y-z, z-w)
+2. Iterate this 1996 times on small integer inputs
+3. Check the primality conditions after iteration
+4. Look for patterns where the conditions fail (not all are prime)
+
+We'll test small integer values (0-3) for a,b,c,d since larger values quickly become computationally intensive.
+
+```python
+import itertools
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def step(w, x, y, z):
+    return (w - x, x - y, y - z, z - w)
+
+def check_conditions(a, b, c, d):
+    cond1 = abs(b * c - a * d)
+    cond2 = abs(a * c - b * d)
+    cond3 = abs(a * b - c * d)
+    primes = [is_prime(cond1), is_prime(cond2), is_prime(cond3)]
+    return not all(primes)
+
+max_iter = 1996
+search_range = 3  # Test values from -search_range to +search_range
+
+for a, b, c, d in itertools.product(range(-search_range, search_range+1), repeat=4):
+    current = (a, b, c, d)
+    for _ in range(max_iter):
+        current = step(*current)
+    a_final, b_final, c_final, d_final = current
+    if check_conditions(a_final, b_final, c_final, d_final):
+        print(f"Found counterexample with initial values: {a},{b},{c},{d}")
+```

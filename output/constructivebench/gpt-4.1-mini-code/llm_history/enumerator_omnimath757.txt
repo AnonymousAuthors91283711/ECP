@@ -1,0 +1,58 @@
+[write_program]
+The problem is about finding a largest subset \( s \) of \( \{0,\ldots,5\} \times \{0,\ldots,5\} \) such that for every distinct \( p,q \in s \), the differences in coordinates satisfy two inequalities involving diagonal differences. We want to find the maximum cardinality \( n \) of such a set and the count \( k \) of such maximal sets.
+
+To assist, I will write a Python program that enumerates all subsets (or carefully pruned subsets) of \( \{0,1,2,3,4,5\}^2 \) with these properties. Due to the size (36 points), enumerating all subsets is impossible, so instead, we will try subsets of increasing size and check the property, printing found sets and tracking the maximum size and count.
+
+We print each found valid set size with corresponding representative sets, and count how many sets have that size. Finally, we print the largest size found and how many sets of that size.
+
+```python
+from itertools import combinations
+
+# Set of points (x,y) where 0 <= x,y <= 5
+points = [(x,y) for x in range(6) for y in range(6)]
+
+def check_condition(s):
+    # s is a list of points
+    # For every distinct p,q in s:
+    # (p1 - q1) != (p2 - q2) and (p1 - q1) != (q2 - p2)
+    for i in range(len(s)):
+        p = s[i]
+        for j in range(i+1, len(s)):
+            q = s[j]
+            diffx = p[0] - q[0]
+            diffy = p[1] - q[1]
+            if diffx == diffy or diffx == -diffy:
+                return False
+    return True
+
+max_size = 0
+count_max = 0
+
+# To limit time, we try sizes from 1 to an upper bound and stop if no sets found for next size.
+# Since max size likely is small, let's try sizes up to 8.
+
+for size in range(1, 9):
+    found_this_size = 0
+    # Iterate over combinations of points of current size
+    # To limit output, print only first few sets for each size
+    printed = 0
+    for combo in combinations(points, size):
+        if check_condition(combo):
+            found_this_size += 1
+            if printed < 3:
+                print(f"Valid set of size {size}: {sorted(combo)}")
+                printed += 1
+    if found_this_size > 0:
+        print(f"Number of valid sets of size {size}: {found_this_size}")
+        if size > max_size:
+            max_size = size
+            count_max = found_this_size
+    else:
+        # No valid sets at this size, stop search
+        break
+
+print(f"Maximum valid set size found: {max_size}")
+print(f"Number of valid sets of maximum size: {count_max}")
+print(f"Sum n + k = {max_size + count_max}")
+```
+This program prints valid sets found for sizes from 1 up to 8 until no more large sets exist, counts how many sets per size, and outputs maximum \( n \), count \( k \), and \( n+k \). This will help conjecture the answer.

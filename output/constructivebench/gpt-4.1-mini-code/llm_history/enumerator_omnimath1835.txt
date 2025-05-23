@@ -1,0 +1,92 @@
+[write_program]
+The problem explores the existence of positive integers a,b,c satisfying a^n + b^n = c^n for integer n, which relates to Fermat's equation and generalizations.
+
+Let's enumerate integers n in a range [-10..10], and for each n, try small triples (a,b,c) with a,b,c up to 20 to find if the equation holds exactly (for n≥1) or approximately (for negative or zero powers). We'll print candidates and try to infer which n admit solutions.
+
+We focus on exact integer powers and integer triples. For non-positive n, powers can be fractions or 1, so we treat carefully.
+
+```python
+# Enumerate integer n in [-10..10], check existence of positive integers a,b,c ≤ 20 s.t a^n + b^n = c^n exactly.
+# Print each triple found and mark n as candidate.
+
+def ipow(base, exp):
+    # integer power (handle negative exponent and zero)
+    try:
+        if exp == 0:
+            return 1
+        elif exp > 0:
+            return base ** exp
+        else:
+            # For negative exponents (1/(base^|exp|)), only accept if result is integer (rare)
+            val = base ** (-exp)
+            if val != 0 and 1/val == int(1/val):
+                return 1 // val
+            else:
+                return None
+    except:
+        return None
+
+def check_n(n, limit=20):
+    found_any = False
+    # For n=0, equation is 1+1=1, no positive c satisfies 2=1. No solution.
+    if n == 0:
+        return False
+    for a in range(1, limit+1):
+        try:
+            a_n = a**n
+        except:
+            continue
+        for b in range(1, limit+1):
+            try:
+                b_n = b**n
+            except:
+                continue
+            s = None
+            try:
+                s = a_n + b_n
+            except:
+                continue
+            if s is None:
+                continue
+            # find c such that c^n == s
+            # for positive n: try integer c = round(s^{1/n})
+            # for negative n: more complicated - likely no integer solutions as powers become fractions
+            if n > 0:
+                # integer c candidate
+                c = round(s ** (1/n))
+                if c < 1 or c > limit:
+                    continue
+                try:
+                    c_n = c ** n
+                except:
+                    continue
+                if c_n == s:
+                    print(f"n={n}, a={a}, b={b}, c={c} satisfy a^{n}+b^{n}=c^{n}")
+                    found_any = True
+            else:
+                # Handling negative n:
+                # Equation: a^n + b^n = c^n with n negative means 1/(a^{|n|}) + 1/(b^{|n|}) = 1/(c^{|n|})
+                # Cross multiply:
+                # c^{|n|} (a^{|n|} + b^{|n|}) = a^{|n|} b^{|n|}
+                # We can test all a,b,c
+                en = -n
+                try:
+                    lhs = c ** en * (a ** en + b ** en)
+                    rhs = (a ** en) * (b ** en)
+                except:
+                    continue
+                if lhs == rhs and a > 0 and b > 0 and c > 0:
+                    print(f"n={n}, a={a}, b={b}, c={c} satisfy 1/a^{abs(n)} + 1/b^{abs(n)} = 1/c^{abs(n)}")
+                    found_any = True
+    return found_any
+
+def main():
+    for n in range(-10,11):
+        print(f"Checking n = {n}")
+        has_sol = check_n(n)
+        if not has_sol:
+            print(f"No solution found for n={n} with a,b,c ≤ 20")
+
+if __name__=="__main__":
+    main()
+```

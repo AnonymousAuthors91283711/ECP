@@ -1,0 +1,98 @@
+[write_program]
+This problem asks for the maximum possible 2-adic valuation (exponent of 2 in prime factorization) of a product of distinct positive integers that sum to 2021. We'll write a Python program to enumerate possible sums of distinct integers and compute their product's 2-adic valuation.
+
+The strategy is:
+1. Generate all possible sets of distinct positive integers that sum to 2021
+2. For each set, compute the product's 2-adic valuation
+3. Track the maximum valuation found
+
+Since enumerating all partitions is computationally intensive, we'll:
+- Use a greedy approach to generate likely candidates
+- Focus on numbers with high 2-adic valuations (powers of 2)
+- Limit the search space to reasonable bounds
+
+```python
+def count_twos(n):
+    """Return the exponent of 2 in prime factorization of n."""
+    count = 0
+    while n % 2 == 0 and n != 0:
+        count += 1
+        n = n // 2
+    return count
+
+def max_valuation(target_sum, max_terms=50):
+    max_v = 0
+    # Try sets with consecutive numbers starting from 1
+    current_sum = 0
+    terms = []
+    for i in range(1, max_terms+1):
+        if current_sum + i > target_sum:
+            break
+        terms.append(i)
+        current_sum += i
+    
+    # Adjust last term to reach exact sum
+    remaining = target_sum - current_sum
+    if remaining > 0:
+        if remaining <= terms[-1]:
+            terms[-1] += remaining
+        else:
+            terms.append(remaining)
+    
+    product = 1
+    for num in terms:
+        product *= num
+    current_v = count_twos(product)
+    max_v = max(max_v, current_v)
+    print(f"Consecutive set: {terms}, valuation: {current_v}")
+    
+    # Try sets with powers of 2
+    terms = []
+    current_sum = 0
+    power = 1
+    while current_sum + power <= target_sum:
+        terms.append(power)
+        current_sum += power
+        power *= 2
+    
+    remaining = target_sum - current_sum
+    if remaining > 0:
+        terms.append(remaining)
+    
+    product = 1
+    for num in terms:
+        product *= num
+    current_v = count_twos(product)
+    max_v = max(max_v, current_v)
+    print(f"Powers of 2 set: {terms}, valuation: {current_v}")
+    
+    # Try mixed strategy
+    terms = [1, 2, 3]  # Start with small numbers
+    current_sum = 6
+    next_num = 4
+    while current_sum + next_num <= target_sum:
+        terms.append(next_num)
+        current_sum += next_num
+        next_num += 1
+    
+    remaining = target_sum - current_sum
+    if remaining > 0:
+        if remaining not in terms:
+            terms.append(remaining)
+        else:
+            # Adjust to maintain distinctness
+            terms[-1] += remaining
+    
+    product = 1
+    for num in terms:
+        product *= num
+    current_v = count_twos(product)
+    max_v = max(max_v, current_v)
+    print(f"Mixed set: {terms}, valuation: {current_v}")
+    
+    return max_v
+
+print("Maximum 2-adic valuation for sum=2021:")
+result = max_valuation(2021)
+print(f"Final maximum valuation found: {result}")
+```

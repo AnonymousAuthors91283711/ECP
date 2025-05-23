@@ -1,0 +1,80 @@
+[write_program]
+The problem asks for the number of symmetric functions \( r: \text{Fin}_5 \to \text{Fin}_5 \to \text{Fin}_3 \) satisfying certain properties. These properties specify relations among 5 elements, encoding a kind of "friend-enemy-frenemy" relation matrix with rules for composition. We want to enumerate all such matrices.
+
+Approach:
+- There are 25 pairs \((a, b)\) with \(a, b \in \{0,1,2,3,4\}\).
+- Since \( r \) is symmetric, we only need to consider \(a \leq b\) to avoid double counting.
+- \( r a a = 2 \) fixed for all \(a\) (diagonal entries).
+- For off-diagonal entries \(a < b\), assign values in \(\{0,1,2\}\) and check conditions:
+  - if \(r a b = 0\) (friend)
+  - if \(r a b = 1\) (enemy)
+  - if \(r a b = 2\) (frenemy)
+- The properties impose rules:
+  - \( r a a = 2 \) (done)
+  - Transitive relations for "friend" and "enemy" interactions, etc.
+
+Since properties impose consistency constraints, I'll generate all symmetric matrices with the fixed diagonals, then check the properties.
+
+To keep within 400 tokens, we'll:
+- Generate all possibilities for the upper triangle (including diagonals).
+- Check the conditions on the full matrix.
+- Count the valid matrices and print each.
+
+```python
+# Enumerate all possible symmetric relations r: Fin_5 x Fin_5 -> Fin_3
+# respecting the constraints, then count and print each valid configuration.
+
+from itertools import product
+
+def is_valid(matrix):
+    # Check the relations according to the rules
+    n = 5
+    for a in range(n):
+        for b in range(a, n):
+            r_ab = matrix[a][b]
+            r_ba = matrix[b][a]
+            # Symmetry
+            if r_ab != r_ba:
+                return False
+            # Diagonal must be 2
+            if a == b and r_ab != 2:
+                return False
+            # For off-diagonals, check rules:
+            for c in range(n):
+                r_bc = matrix[b][c]
+                r_ac = matrix[a][c]
+                r_cb = matrix[c][b]
+                r_ca = matrix[c][a]
+                # Symmetry check for c
+                if r_bc != matrix[b][c] or r_cb != matrix[c][b]:
+                    return False
+                # Transitivity conditions
+                if r_ab == 0 and r_bc == 0:
+                    if r_ac != 0:
+                        return False
+                if r_ab == 1 and r_bc == 1:
+                    if r_ac != 0:
+                        return False
+                if r_ab == 0 and r_bc == 1:
+                    if r_ac != 1:
+                        return False
+    return True
+
+# Generate upper triangle entries
+values = [0, 1, 2]
+count = 0
+for entries in product(values, repeat=(5*6)//2):
+    # Fill matrix
+    matrix = [[2]*5 for _ in range(5)]
+    idx = 0
+    for i in range(5):
+        for j in range(i, 5):
+            matrix[i][j] = entries[idx]
+            matrix[j][i] = entries[idx]
+            idx +=1
+    if is_valid(matrix):
+        count += 1
+        print(f"Valid relation matrix {count}:\n{matrix}")
+
+print(f"Total valid matrices: {count}")
+```

@@ -1,0 +1,74 @@
+[write_program]
+This problem asks for the number of functions f from {1,2,...,9} to ℕ such that:
+1. f(f(f(x))) = x for all x in {1,...,9}
+2. f(x) - x is not divisible by 3 for all x in {1,...,9}
+
+We'll enumerate all possible functions on {1,...,9} that satisfy these conditions. Since f^3 = id, f must be a permutation composed of 1-cycles and 3-cycles. We'll generate all such permutations and count those satisfying the second condition.
+
+```python
+from itertools import permutations
+
+def solve():
+    S = set(range(1, 10))
+    total = 0
+    
+    # Generate all possible 3-cycles
+    def generate_3_cycles(elements):
+        if not elements:
+            yield []
+            return
+        first = elements[0]
+        for second in elements[1:]:
+            remaining = [x for x in elements if x != first and x != second]
+            for third in elements[1:]:
+                if third != second:
+                    for rest in generate_3_cycles(remaining):
+                        yield [(first, second, third)] + rest
+    
+    # Check all possible combinations of fixed points and 3-cycles
+    for k in range(0, 10, 3):  # Number of elements in 3-cycles (must be multiple of 3)
+        fixed = set(range(1, 10))
+        if k > 0:
+            for cycle_set in permutations(range(1, 10), k):
+                cycle_set = sorted(cycle_set)
+                for cycles in generate_3_cycles(cycle_set):
+                    f = {}
+                    valid = True
+                    # Build the function from cycles
+                    for cycle in cycles:
+                        a, b, c = cycle
+                        f[a] = b
+                        f[b] = c
+                        f[c] = a
+                        # Check condition 2 for cycle elements
+                        if (b - a) % 3 == 0 or (c - b) % 3 == 0 or (a - c) % 3 == 0:
+                            valid = False
+                            break
+                    if not valid:
+                        continue
+                    # Handle fixed points
+                    fixed_points = [x for x in range(1, 10) if x not in f]
+                    for x in fixed_points:
+                        f[x] = x
+                        # Check condition 2 for fixed points
+                        if (x - x) % 3 == 0:
+                            valid = False
+                            break
+                    if valid:
+                        total += 1
+                        print(f"Found valid function: {f}")
+        else:
+            # All fixed points case
+            valid = True
+            for x in range(1, 10):
+                if (x - x) % 3 == 0:
+                    valid = False
+                    break
+            if valid:
+                total += 1
+                print("Found identity function")
+    
+    print(f"Total number of valid functions: {total}")
+
+solve()
+```

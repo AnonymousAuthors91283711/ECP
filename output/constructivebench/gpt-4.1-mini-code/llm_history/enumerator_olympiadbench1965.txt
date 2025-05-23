@@ -1,0 +1,84 @@
+[write_program]
+This problem relates to functions \( f: \mathbb{Z} \to \mathbb{Z} \) that are strictly monotone and satisfy an inequality involving the function \(\omega\) defined on integers, which counts the number of prime factors greater than \(10^{100}\).
+
+We'll interpret and simplify the problem to enumerate candidate functions \( f \) on a small domain to get a sense of what functions satisfy the condition. Because prime factors > \(10^{100}\) are very large primes, for small integers, the count \(\omega\) will always be zero. So we can't observe differences strictly from that threshold on a small range unless numbers are quite large.
+
+Hence, we'll do the following:
+- Enumerate strictly increasing integer functions on a small domain \(\{-2,-1,0,1,2\}\).
+- For each, check the condition for all pairs \(a > b\).
+- For checking \(\omega\), count the number of prime factors greater than \(10^{100}\), which will be zero for "usual" prime factors, so we expect \(\omega(x) = 0\) for smaller numbers.
+- To create differences with large prime factors, try defining outputs as multiples of a large prime (e.g. a prime larger than \(10^{100}\)), but we can't factor such huge primes easily in Python, so instead, we will assume no large prime factors appear for these small samples.
+
+Thus, the code will:
+- Define \(\omega\) as counting prime factors greater than \(10^{100}\) using sympy for factorization.
+- Enumerate strictly increasing functions on domain \(\{-2,-1,0,1,2\}\) with outputs in a small integer range (e.g. \(-10\) to \(10\)).
+- For each candidate function, verify the condition for all pairs \(a > b\):
+
+  \[
+  \omega(f(a) - f(b)) \leq \omega(a - b).
+  \]
+
+Because \(a-b\) ranges over \(-4\) to \(4\) (excluding \(0\)), and none have large prime factors, the right side \(\omega(a-b) = 0\), so \(f(a)-f(b)\) must also have zero large prime factors.
+
+This suggests to check whether the differences \(f(a) - f(b)\) have factors > \(10^{100}\), which for the chosen ranges will be zero.
+
+In short, this will characterize all strictly increasing functions \(f\) with small outputs, as all differences have zero large prime factors.
+
+This trial will produce candidate functions; from those, conjecture the allowed functions under the problem condition.
+
+```python
+# Enumerator for strictly increasing integer functions f on domain D = {-2,-1,0,1,2}
+# Checking condition: for all a > b, omega(f(a)-f(b)) <= omega(a-b)
+# omega(x) = number of prime factors of |x| > 10^100
+# For small integers, omega = 0 almost surely.
+# Use sympy for prime factorization. Only print candidate functions.
+
+from sympy import primefactors
+from itertools import product
+
+# Threshold large prime
+THRESHOLD = 10**100
+
+# Domain
+D = [-2, -1, 0, 1, 2]
+
+def omega(n):
+    """Count prime factors > THRESHOLD with multiplicity 1 (distinct primes)"""
+    if n == 0:
+        return 0
+    n = abs(n)
+    pf = primefactors(n)
+    return sum(1 for p in pf if p > THRESHOLD)
+
+# Compute omega(a-b) for all a > b in D
+diff_omega = {}
+for a in D:
+    for b in D:
+        if a > b:
+            diff_omega[(a,b)] = omega(a - b)
+
+# Enumerate strictly increasing functions f: D -> [-10,10]
+vals = range(-10,11)
+count = 0
+
+for outputs in product(vals, repeat=len(D)):
+    # Check strict increasing
+    if all(outputs[i] < outputs[i+1] for i in range(len(D)-1)):
+        # Check omega inequality for all pairs a>b
+        failed = False
+        for a in D:
+            for b in D:
+                if a > b:
+                    left = omega(outputs[D.index(a)] - outputs[D.index(b)])
+                    right = diff_omega[(a,b)]
+                    if left > right:
+                        failed = True
+                        break
+            if failed:
+                break
+        if not failed:
+            count += 1
+            print(f"f: {dict(zip(D, outputs))}")
+
+print(f"Total candidate functions found: {count}")
+```

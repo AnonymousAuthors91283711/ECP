@@ -1,0 +1,48 @@
+[write_program]
+This problem involves counting non-increasing functions with and without fixed points. We'll write a Python program to enumerate all non-increasing functions for small values of n (starting with n=10 as in the problem), count those with and without fixed points, and compute the difference.
+
+The approach will:
+1. Generate all non-increasing functions f: {0,...,n-1} → {0,...,n-1}
+2. For each function, check if it has any fixed points (f(x) = x)
+3. Count the number of functions with and without fixed points
+4. Compute the difference between these counts
+
+```python
+from itertools import product
+
+def count_functions(n):
+    # Generate all non-increasing functions f: {0..n-1} -> {0..n-1}
+    # A function is non-increasing if f(i) >= f(j) whenever i <= j
+    
+    # We'll represent functions as tuples where f[0] >= f[1] >= ... >= f[n-1]
+    # This is equivalent to counting weak compositions of length n with sum <= n
+    
+    count_with_fp = 0
+    count_without_fp = 0
+    
+    # Use stars and bars method to generate all non-increasing functions
+    # The number of such functions is C(2n-1, n)
+    # But we'll generate them explicitly for small n
+    
+    # Recursive generator of non-increasing sequences of length n with values 0..n-1
+    def generate_func(current, remaining_depth, last_value):
+        if remaining_depth == 0:
+            yield current
+        else:
+            for v in range(min(last_value, n-1), -1, -1):
+                yield from generate_func(current + (v,), remaining_depth - 1, v)
+    
+    for func in generate_func((), n, n-1):
+        has_fixed_point = any(i == val for i, val in enumerate(func))
+        if has_fixed_point:
+            count_with_fp += 1
+        else:
+            count_without_fp += 1
+    
+    return count_with_fp - count_without_fp
+
+# Compute for n=10 (as in the problem)
+n = 10
+result = count_functions(n)
+print(f"For n={n}, the difference is: {result}")
+```

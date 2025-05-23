@@ -1,0 +1,69 @@
+[write_program]
+The problem involves sets of integers with certain modular coverage conditions and sums divisible by n. Since the theorem claims the least N for a given m, n, we will enumerate small values of m, n (e.g., 1 to 4), generate finite sets S that cover all residue classes modulo m, then check the minimal cardinality needed to guarantee a nonempty subset A of S with sum divisible by n. We'll output candidate minimal values found.
+
+```python
+# Enumerate minimal sizes N for sets S of integers covering all residues mod m,
+# such that any subset A ⊆ S (nonempty) has sum divisible by n.
+# For small m,n, we find minimal such N.
+
+from itertools import product, combinations
+
+def residues_mod(s, m):
+    return set(x % m for x in s)
+
+def check_subset_sum_mod_zero(s, n):
+    # Check if there's a nonempty subset A ⊆ s with sum(A) % n == 0.
+    # s is a list of ints
+    # We'll check all subsets of all sizes quickly (stop at first success).
+    if n == 1:
+        # sum mod 1 always 0, so always true if s nonempty
+        return True
+    sums_mod = {0}
+    for x in s:
+        new_sums = set()
+        for sm in sums_mod:
+            new_sums.add((sm + x) % n)
+        sums_mod |= new_sums
+        if 0 in sums_mod and len(s) > 0:
+            return True
+    return False
+
+def covers_all_residues(s, m):
+    return residues_mod(s, m) == set(range(m))
+
+MAX_COORD = 5  # search in [-5..5] for candidates, small to keep output short
+
+print("m,n,candidate_min_N")
+
+for m in range(1,5):
+    for n in range(1,5):
+        # Enumerate sets S with elements in [-MAX_COORD, MAX_COORD], size from m upwards.
+        # Must cover all residues mod m.
+        candidates_N = []
+        # Note: minimal possible N is at least m (need at least one per residue mod m)
+        for size in range(m, m+4): # Check up to 3 more than m for minimality
+            found = False
+            elems_range = list(range(-MAX_COORD, MAX_COORD+1))
+            # Try all combinations of given size
+            for s in combinations(elems_range, size):
+                if covers_all_residues(s, m):
+                    # Check if for all subsets A with |A|≥1, there's some A with sum % n == 0
+                    # Actually, problem is to find minimal N so that any S with
+                    # covers all residues mod m and |S|≥N has subset A with sum % n == 0.
+                    # We test if there exists a bad set S with that size that fails.
+                    # So if we find even one S without such subset, minimal N > size
+                    if not check_subset_sum_mod_zero(s, n):
+                        # Bad set found: condition fails at this size
+                        # => minimal N > size
+                        found = True
+                        break
+            if not found:
+                # No bad S found for this size => minimal N ≤ size
+                candidates_N.append(size)
+                break
+        if candidates_N:
+            print(m,n,candidates_N[0])
+        else:
+            # No determination, print upper bound
+            print(m,n,m+4)
+```

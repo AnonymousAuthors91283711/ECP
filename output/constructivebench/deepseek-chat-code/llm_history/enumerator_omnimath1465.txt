@@ -1,0 +1,54 @@
+[write_program]
+This problem involves finding all real triples (a, b, c) such that a certain quartic polynomial has exactly three distinct real roots that are tangent values of angles in arithmetic progression. We'll write a Python program to enumerate possible solutions by:
+
+1. Using trigonometric identities to relate tan(y), tan(2y), tan(3y)
+2. Finding polynomial coefficients from the roots
+3. Checking for distinct roots and proper degree conditions
+
+```python
+import math
+import numpy as np
+from itertools import count
+
+def find_solutions():
+    # We'll sample y values in (0, pi/6) to avoid periodicity and undefined cases
+    for i in count(1):
+        y = math.pi / (6 * i)  # Sample points that avoid tan(3y) being undefined
+        try:
+            r1 = math.tan(y)
+            r2 = math.tan(2*y)
+            r3 = math.tan(3*y)
+            
+            # Check if roots are distinct
+            if len({r1, r2, r3}) != 3:
+                continue
+                
+            # Coefficients from Vieta's formulas for (x-r1)(x-r2)(x-r3)(x-d)
+            # Since degree must be 3, d must be 0 (coefficient of x^4 is 1)
+            sum_roots = r1 + r2 + r3
+            sum_pairs = r1*r2 + r1*r3 + r2*r3
+            product = r1 * r2 * r3
+            
+            # The polynomial is x^4 + a x^3 + b x^2 + a x + c
+            # Comparing with (x^3 - sum_roots x^2 + sum_pairs x - product)(x)
+            a = -sum_roots
+            b = sum_pairs
+            c = -product
+            
+            # Verify the polynomial has exactly these three roots
+            poly = np.poly1d([1, a, b, a, c])
+            roots = np.roots(poly)
+            real_roots = [r for r in roots if abs(r.imag) < 1e-10]
+            distinct_real_roots = set(round(r.real, 8) for r in real_roots)
+            
+            if len(distinct_real_roots) == 3 and all(abs(poly(r)) < 1e-10 for r in distinct_real_roots):
+                print(f"Found solution: a={a:.5f}, b={b:.5f}, c={c:.5f} for y={y:.5f}")
+                
+        except Exception as e:
+            # Skip cases where tan is undefined
+            continue
+
+# Start enumeration
+print("Enumerating solutions...")
+find_solutions()
+```

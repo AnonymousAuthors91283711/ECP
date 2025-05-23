@@ -1,0 +1,57 @@
+[write_program]
+This problem asks for the smallest positive integer n such that there exist non-constant integer polynomials P and Q where:
+1. The product P*Q has coefficient 1 for x⁴ term
+2. The product P*Q has coefficient (63-n) for x term
+3. Both P and Q are non-constant (degree > 0)
+
+We'll enumerate possible combinations of polynomial degrees and coefficients to find the minimal n satisfying these conditions.
+
+```python
+from itertools import product
+
+def find_min_n():
+    min_n = float('inf')
+    # Try degree combinations (1,3) and (2,2) since deg(P*Q)=4
+    for (d1, d2) in [(1,3), (2,2), (3,1)]:
+        # Coefficients for P: a0 + a1*x (if deg=1) or a0 + a1*x + a2*x^2 (if deg=2)
+        # Similarly for Q
+        # We need to find coefficients such that:
+        # 1. x^4 coefficient in P*Q is 1
+        # 2. x coefficient in P*Q is 63 - n
+        # We'll limit coefficient search to small absolute values
+        max_coeff = 3  # Reasonable limit for manual checking
+        
+        if d1 == 1 and d2 == 3:
+            # P = a0 + a1*x, Q = b0 + b1*x + b2*x^2 + b3*x^3
+            for a0, a1, b0, b1, b2, b3 in product(range(-max_coeff, max_coeff+1), repeat=6):
+                if a1 == 0 or b3 == 0:
+                    continue  # Ensure degrees are correct
+                # x^4 coeff: a1*b3 = 1
+                if a1 * b3 != 1:
+                    continue
+                # x coeff: a0*b1 + a1*b0 = 63 - n
+                x_coeff = a0*b1 + a1*b0
+                n = 63 - x_coeff
+                if n > 0 and n < min_n:
+                    min_n = n
+                    print(f"Found n={n} with degrees (1,3) and coefficients P={[a0,a1]}, Q={[b0,b1,b2,b3]}")
+        
+        elif d1 == 2 and d2 == 2:
+            # P = a0 + a1*x + a2*x^2, Q = b0 + b1*x + b2*x^2
+            for a0, a1, a2, b0, b1, b2 in product(range(-max_coeff, max_coeff+1), repeat=6):
+                if a2 == 0 or b2 == 0:
+                    continue
+                # x^4 coeff: a2*b2 = 1
+                if a2 * b2 != 1:
+                    continue
+                # x coeff: a0*b1 + a1*b0 = 63 - n
+                x_coeff = a0*b1 + a1*b0
+                n = 63 - x_coeff
+                if n > 0 and n < min_n:
+                    min_n = n
+                    print(f"Found n={n} with degrees (2,2) and coefficients P={[a0,a1,a2]}, Q={[b0,b1,b2]}")
+    
+    print(f"Minimal n found: {min_n}")
+
+find_min_n()
+```

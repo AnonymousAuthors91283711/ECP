@@ -1,0 +1,57 @@
+[write_program]
+The problem involves finding complex numbers \( z = x + yi \) with real and imaginary parts satisfying a specific pair of cubic equations, and then computing the product of terms based on their ratios \(\frac{x}{y}\). We will enumerate possible rational \(x,y\) pairs with small integer coordinates and check the equations approximately (due to cubic complexity). Then, for those that satisfy closely, we compute the product \(\prod (1 - \frac{x}{y})\). This enumeration should help conjecture the answer.
+
+```python
+# Enumerate complex numbers z = x+yi with small integer x,y (y!=0),
+# check closeness to the system:
+# (re z)^3 - 3 * (re z) * (im z)^2 = 2005
+# (im z)^3 - 3 * (re z)^2 * (im z) = 2004
+# Then compute product over 3 such roots of (1 - x/y).
+
+def close(a,b,eps=1e-6):
+    return abs(a-b) < eps
+
+# Because the equations resemble the real and imaginary parts of (x+yi)^3,
+# where the real part of (x+yi)^3 = x^3 - 3xy^2 and imag part = 3x^2y - y^3
+# The problem's second equation is (im z)^3 - 3(re z)^2 (im z) = 2004
+# and differs by a sign from imaginary part of z^3 = 3x^2y - y^3
+# Check if they match (sign reversed)
+# Let's try z^3 = (2005 + 2004i) ?
+
+target_re = 2005
+target_im = 2004
+
+# 2005 + 2004i cube root approx (using pow)
+# use cmath
+import cmath
+
+c = complex(target_re,target_im)
+root = c**(1/3)
+
+print("Estimated roots (approx):")
+roots = []
+for k in range(3):
+    angle = cmath.phase(c)
+    magnitude = abs(c)**(1/3)
+    z = cmath.rect(magnitude, (angle+2*k*cmath.pi)/3)
+    roots.append(z)
+    print(f"Root {k+1}: {z.real:.6f} + {z.imag:.6f}i, 1 - re/im = {1 - z.real/z.imag:.6f}")
+
+# Now we can verify these roots exactly satisfy the equations by plugging:
+print("\nVerification of roots:")
+for i,z in enumerate(roots):
+    x,y = z.real,z.imag
+    lhs_re = x**3 - 3*x*y**2
+    lhs_im = y**3 - 3*x**2*y
+    print(f"Root {i+1}: lhs_re={lhs_re:.1f}, target_re=2005")
+    print(f"          lhs_im={lhs_im:.1f}, target_im=2004")
+    
+# Compute product (1 - x/y)
+prod = 1
+print("\nIndividual factors (1 - re/im):")
+for i,z in enumerate(roots):
+    val = 1 - z.real / z.imag
+    prod *= val
+    print(f"Factor {i+1}: {val:.6f}")
+print(f"\nProduct of factors: {prod:.6f}")
+```

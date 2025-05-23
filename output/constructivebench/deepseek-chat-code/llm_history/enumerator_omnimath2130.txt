@@ -1,0 +1,74 @@
+[write_program]
+This problem involves counting integer-coefficient polynomials P(x) that can be written as Q(x) + R(x), where Q(4)=0 and R has small coefficients (between -1 and 1), while P itself has coefficients between -7 and 7 and degree ≤7. We'll enumerate all possible Q and R combinations to count valid P.
+
+The approach:
+1. Generate all possible Q polynomials (degree ≤7) with Q(4)=0
+2. Generate all possible R polynomials with coefficients in {-1,0,1} and degree ≤7
+3. For each Q+R combination, check if all coefficients are in {-7,...,7}
+4. Count all valid P polynomials formed this way
+
+```python
+from itertools import product
+from collections import defaultdict
+
+def main():
+    # First generate all R polynomials (tiny 1)
+    # Coefficients are -1, 0, 1 for each term (degree 0-7)
+    possible_R = product([-1,0,1], repeat=8)
+    
+    # Precompute all Q polynomials (tricky)
+    # Q must satisfy Q(4)=0 and degree <=7
+    # Q can be written as (x-4)*T where deg(T)<=6
+    # T has integer coefficients
+    # We need to limit T coefficients so that Q+R has coefficients in [-7,7]
+    
+    # Since R coefficients are in [-1,1], Q coefficients must be in [-8,8]
+    # to make Q+R in [-7,7]
+    
+    # Generate all possible T polynomials (degree 0-6) with coefficients
+    # such that (x-4)*T has coefficients in [-8,8]
+    # The maximum coefficient of T is bounded by 8/(4+1)=1.6, so T coeffs in [-1,1]
+    
+    possible_T = product([-1,0,1], repeat=7)
+    Q_polys = []
+    for t_coeffs in possible_T:
+        # Multiply (x-4) by T polynomial
+        # T = sum_{i=0}^6 t_i x^i
+        # Q = (x-4)*T = -4t_0 + sum_{i=1}^6 (t_{i-1}-4t_i)x^i + t_6 x^7
+        q_coeffs = [-4 * t_coeffs[0]]
+        for i in range(1,7):
+            q_coeffs.append(t_coeffs[i-1] - 4*t_coeffs[i])
+        q_coeffs.append(t_coeffs[6])  # x^7 term
+        Q_polys.append(tuple(q_coeffs))
+    
+    # Now count all P = Q + R where P coefficients are in [-7,7]
+    count = 0
+    seen = set()
+    
+    for q in Q_polys:
+        for r_coeffs in product([-1,0,1], repeat=8):
+            valid = True
+            p_coeffs = []
+            for qc, rc in zip(q, r_coeffs):
+                pc = qc + rc
+                if pc < -7 or pc > 7:
+                    valid = False
+                    break
+                p_coeffs.append(pc)
+            if valid:
+                # Pad with zeros to degree 7 if needed
+                while len(p_coeffs) < 8:
+                    p_coeffs.append(0)
+                p_tuple = tuple(p_coeffs)
+                if p_tuple not in seen:
+                    seen.add(p_tuple)
+                    count += 1
+                    # Print first few examples to show progress
+                    if count <= 5:
+                        print(f"Example P: {p_coeffs}")
+    
+    print(f"Total count: {count}")
+
+if __name__ == "__main__":
+    main()
+```

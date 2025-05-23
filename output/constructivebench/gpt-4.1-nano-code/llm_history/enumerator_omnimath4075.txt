@@ -1,0 +1,58 @@
+[write_program]
+This problem seems to involve partitioning a range of integers into disjoint subsets ("boxes") with equal sums, and relates to prime numbers. To enumerate possible answers, I will:
+- pick small values for n and p,
+- generate all possible partitions of the range into p disjoint subsets,
+- check if they meet the sum condition,
+- stream any solutions found.
+
+For efficiency, I'll restrict n to small values, e.g., n ≤ 10, and p to small primes (2, 3, 5). The code will:
+- generate all candidate partitions,
+- verify disjointness and sum conditions,
+- print each candidate answer as soon as found.
+
+```python
+import itertools
+from functools import reduce
+from math import gcd
+
+def is_prime(p):
+    if p <= 1:
+        return False
+    for i in range(2, int(p ** 0.5) + 1):
+        if p % i == 0:
+            return False
+    return True
+
+def generate_partitions(range_list, p):
+    # Generate all ways to partition range_list into p non-empty disjoint subsets
+    # Using recursive approach and itertools
+    if p == 1:
+        yield [set(range_list)]
+        return
+    for indices in itertools.combinations(range(len(range_list)), p - 1):
+        splits = [0] + list(indices) + [len(range_list)]
+        parts = []
+        for i in range(len(splits) - 1):
+            part = set(range_list[splits[i]:splits[i+1]])
+            parts.append(part)
+        yield parts
+
+def test_partition(n, p):
+    total_sum = sum(range(n))
+    if total_sum % p != 0:
+        return
+    target = total_sum // p
+    range_list = list(range(n))
+    for partition in generate_partitions(range_list, p):
+        # Check sums
+        if all(sum(subset) == target for subset in partition):
+            # Check disjointness (already ensured by partition generation)
+            # Print each partition as answer
+            print(f"n={n}, p={p}, partition={partition}")
+
+# Enumerate small n and p (p prime)
+for n in range(1, 11):
+    for p in [2, 3, 5]:
+        if is_prime(p) and n >= p:
+            test_partition(n, p)
+```

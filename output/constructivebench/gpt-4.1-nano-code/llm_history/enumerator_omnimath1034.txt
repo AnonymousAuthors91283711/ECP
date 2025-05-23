@@ -1,0 +1,49 @@
+[write_program]
+This problem involves counting the number of 4x4 Boolean matrices with specific row and column constraints: each row and column contains exactly 2 true entries and 2 false entries. 
+
+To find all possible configurations, we need to enumerate matrices where each row has exactly two true values, each column also has exactly two true values, and similarly for false entries. Since the problem is small (4x4), we can generate all such matrices via combinatorial enumeration, filtering those satisfying the constraints.
+
+We will write a Python program that:
+- Represents configurations as 4x4 matrices.
+- Enumerates all possible row choices with exactly two true entries.
+- Checks for column constraints.
+- Counts valid configurations, printing each as it is found, for verification.
+
+This enumeration is feasible because of the small size, and the approach ensures efficiency.
+
+```python
+from itertools import combinations, product
+
+def generate_row_patterns(n=4, k=2):
+    """Generate all bit patterns of length n with exactly k ones."""
+    for ones_positions in combinations(range(n), k):
+        row = [False]*n
+        for pos in ones_positions:
+            row[pos] = True
+        yield tuple(row)
+
+def is_valid_configuration(matrix):
+    """Check if columns also have exactly two True entries."""
+    for col_idx in range(4):
+        col = [matrix[row_idx][col_idx] for row_idx in range(4)]
+        if col.count(True) != 2:
+            return False
+    return True
+
+def main():
+    total_count = 0
+    for rows in product(generate_row_patterns(), repeat=4):
+        # Transpose to get columns
+        cols = list(zip(*rows))
+        # Check column constraints
+        if all(c.count(True) == 2 for c in cols):
+            total_count += 1
+            # Print each valid matrix
+            for row in rows:
+                print(''.join('T' if x else 'F' for x in row))
+            print('-' * 4)
+    print("Total configurations:", total_count)
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,61 @@
+[write_program]
+The problem involves finding the minimal natural number t that satisfies a system of equations with rational variables p, h1, h2 (all positive and h1 ≠ h2). The equations relate work times on different days to productivity rates.
+
+We'll approach this by:
+1. Expressing the equations in terms of t
+2. For each t from 0 upwards, check if there exist positive rational solutions
+3. Stop when we find the smallest t that works
+
+```python
+from fractions import Fraction
+
+def find_min_t():
+    for t in range(0, 373):  # 372 is max since workTimeTue = 372-t > 0
+        # Calculate work times
+        workTimeMon = 480 - t
+        workTimeTue = 372 - t
+        workTimeWed = 672 - t
+        
+        # Check Wednesday equation first since it's simplest
+        try:
+            p = Fraction(1, 2) / workTimeWed
+            if p <= 0:
+                continue
+        except ZeroDivisionError:
+            continue
+        
+        # Check Tuesday equation
+        try:
+            h1_plus_h2 = Fraction(24, 100) / workTimeTue
+            if h1_plus_h2 <= 0:
+                continue
+        except ZeroDivisionError:
+            continue
+        
+        # Check Monday equation
+        try:
+            total = Fraction(1, 2) / workTimeMon
+            if total <= 0:
+                continue
+            # Check consistency: p + h1 + h2 = total
+            if (p + h1_plus_h2) != total:
+                continue
+        except ZeroDivisionError:
+            continue
+        
+        # Now check h1 ≠ h2 and both positive
+        # We need to find h1 and h2 that sum to h1_plus_h2, both positive and unequal
+        # The minimal condition is that h1_plus_h2 > 0 and can be split into unequal parts
+        if h1_plus_h2 <= 0:
+            continue
+        
+        # Any positive sum can be split into unequal positive rationals
+        # (e.g., h1 = h1_plus_h2/3, h2 = 2*h1_plus_h2/3)
+        print(f"Found solution at t = {t}")
+        return t
+    
+    print("No solution found in range")
+    return None
+
+find_min_t()
+```

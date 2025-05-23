@@ -1,0 +1,68 @@
+[write_program]
+The problem deals with counting pairs of divisors of \(2010^2\), splitting divisors into squares and non-squares, and finding a probability expressed as a reduced fraction \(\frac{m}{n}\) with \(m+n=97\). We want to enumerate divisors of \(2010^2\), separate square and non-square divisors, compute counts, compute the fraction \( \frac{\text{favorable_pairs}}{\text{total_pairs}} \), reduce it, and check for \(m+n=97\).
+
+We will:
+- Factor 2010, get its prime powers in \(2010^2\).
+- Generate divisor exponents.
+- Identify square divisors (all exponent must be even).
+- Count total divisors, total pairs, square & non-square divisor counts.
+- Compute the fraction and reduce it.
+- Print candidates with sum of numerator and denominator up to 100 to conjecture the answer.
+
+```python
+from math import gcd
+from itertools import product, combinations
+
+def prime_factors_exp(n):
+    # Factor n into primes with exponents
+    i = 2
+    factors = {}
+    x = n
+    while i*i <= x:
+        while x % i == 0:
+            factors[i] = factors.get(i,0)+1
+            x //= i
+        i += 1
+    if x > 1:
+        factors[x] = factors.get(x,0)+1
+    return factors
+
+def divisors_count_and_squares(powers):
+    # Count total divisors and square divisors from powers of primes in n^2
+    # n=2010^2 -> powers doubled
+    total_divs = 1
+    square_divs = 1
+    for e in powers:
+        total_divs *= (2*e+1)
+        square_divs *= (e+1)
+    return total_divs, square_divs
+
+def reduce_fraction(m, n):
+    g = gcd(m, n)
+    return m//g, n//g
+
+def main():
+    n = 2010
+    pf = prime_factors_exp(n)
+    exps = list(pf.values())
+    # total divisors of n^2: product (2*e+1)
+    total_divs, square_divs = divisors_count_and_squares(exps)
+    total_pairs = total_divs*(total_divs-1)//2
+    non_square_divs = total_divs - square_divs
+    favorable_pairs = square_divs * non_square_divs
+    # fraction = favorable_pairs / total_pairs
+    m, p = favorable_pairs, total_pairs
+    m, p = reduce_fraction(m, p)
+    s = m + p
+    print(f"Total divisors of {n}^2: {total_divs}")
+    print(f"Square divisors: {square_divs}")
+    print(f"Non-square divisors: {non_square_divs}")
+    print(f"Total pairs: {total_pairs}")
+    print(f"Favorable pairs (square x non-square): {favorable_pairs}")
+    print(f"Reduced fraction: {m}/{p} with sum numerator+denominator = {s}")
+    if s <= 100:
+        print(f"Candidate answer fraction with m+n={s}: {m}/{p}")
+
+if __name__ == "__main__":
+    main()
+```

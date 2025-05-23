@@ -1,0 +1,56 @@
+[write_program]
+The problem seeks the smallest positive integer \( n \) such that \( 3^n \equiv 1 \pmod{143^2} \). Since \(143 = 11 \times 13\), \(143^2 = 11^2 \times 13^2 = 121 \times 169\).
+
+To find the order of 3 modulo \(143^2\), we consider the orders modulo \(11^2\) and \(13^2\) separately due to the Chinese remainder theorem, then find their least common multiple.
+
+The program below explores the multiplicative orders of 3 modulo \(11^2\) and \(13^2\), for all divisors of \(\varphi(11^2) = 11 \times 10 = 110\) and \(\varphi(13^2) = 13 \times 12 = 156\) respectively, and prints candidates for orders. Finally, it prints the LCM of minimal such orders as the solution.
+
+```python
+# We want smallest n > 0: 3^n ≡ 1 mod 143^2 = 11^2*13^2 = 121*169
+# Find orders modulo 121 and 169, then lcm.
+
+from math import gcd
+from functools import reduce
+
+def euler_phi(p, k):
+    # phi(p^k) = p^k - p^(k-1)
+    return p**k - p**(k-1)
+
+def divisors(n):
+    divs = set()
+    for i in range(1, int(n**0.5)+1):
+        if n % i == 0:
+            divs.add(i)
+            divs.add(n//i)
+    return sorted(divs)
+
+def order_mod(a, m, ph):
+    # order divides ph by Fermat/Euler
+    for d in divisors(ph):
+        if pow(a, d, m) == 1:
+            return d
+    return ph
+
+def lcm(a, b):
+    return a * b // gcd(a, b)
+
+p1, k1 = 11, 2
+p2, k2 = 13, 2
+m1 = p1**k1
+m2 = p2**k2
+
+phi1 = euler_phi(p1, k1)  # 121
+phi2 = euler_phi(p2, k2)  # 156
+
+print(f"Parameters: mod1={m1}, phi1={phi1}; mod2={m2}, phi2={phi2}")
+
+ord1 = order_mod(3, m1, phi1)
+print(f"Order of 3 mod {m1} is {ord1}")
+
+ord2 = order_mod(3, m2, phi2)
+print(f"Order of 3 mod {m2} is {ord2}")
+
+answer = lcm(ord1, ord2)
+print(f"Answer (order mod {m1*m2}): {answer}")
+```
+This will enumerate possible orders modulo each prime power, print them, and finally print their LCM which is the order modulo \(143^2\). This is the minimal positive \(n\) with \(3^n \equiv 1 \pmod{143^2}\).

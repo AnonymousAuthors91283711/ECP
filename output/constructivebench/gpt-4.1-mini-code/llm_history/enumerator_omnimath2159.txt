@@ -1,0 +1,59 @@
+[write_program]
+The problem involves graph coloring on a 9-vertex cycle with adjacency defined by neighbors and their ±1 relations modulo 9, and additional triangle constraints based on residues modulo 3. We want to find the minimum number \( m \) of colors needed for a coloring that satisfies these conditions, and count how many such colorings exist for that \( m \).
+
+I will write a Python program to:
+- Set \( V = \{0, \dots, 8\} \).
+- Define adjacency based on ±1 modulo 9.
+- Define triangles as 3-element subsets of \( V \) where all differences mod 3 are equal.
+- Enumerate colorings for small \( k \) (start from 3 upwards).
+- For each \( k \), find all colorings \( c: V \to \{0,\dots,k-1\} \) that:
+  - Different colors on adjacent vertices.
+  - Injective on each triangle (all 3 vertices distinct colors).
+- Output values for the minimum \( k \) that works and count colorings \( n \).
+- Print the product \( m \times n \).
+
+We limit \( k \) to small values (e.g., 3 to 5) due to the computational size. The code prints each found coloring count during checking and finally prints \( m, n, m \times n \).
+
+```python
+from itertools import product, combinations
+
+V = list(range(9))
+
+def adj(u,v):
+    return (u== (v+1)%9) or (v== (u+1)%9)
+
+# Triangles: 3-subsets of V with all pairwise (v-w)%3 equal
+def is_triangle(tri):
+    vs = sorted(tri)
+    mods = [(vs[i]-vs[j])%3 for i in range(3) for j in range(i+1,3)]
+    # all differences mod 3 must be equal mod 3 (including reverse)
+    return len(set(mods))==1
+
+triangles = [set(t) for t in combinations(V,3) if is_triangle(t)]
+
+def valid_coloring(k):
+    count = 0
+    for c in product(range(k), repeat=9):
+        # check adjacency constraint
+        if any(c[u]==c[v] for u,v in combinations(V,2) if adj(u,v)):
+            continue
+        # check injection on each triangle (all distinct colors)
+        if any(len({c[v] for v in tri})<3 for tri in triangles):
+            continue
+        count += 1
+        print(f"Found coloring count +1 for k={k}, total={count}")
+    return count
+
+def main():
+    for k in range(3,6):
+        print(f"Checking colorings for k={k}")
+        n = valid_coloring(k)
+        if n>0:
+            print(f"Minimum k with valid coloring: m={k}")
+            print(f"Number of valid colorings n={n}")
+            print(f"Product m*n={k*n}")
+            break
+
+if __name__=="__main__":
+    main()
+```

@@ -1,0 +1,45 @@
+[write_program]
+This problem involves a combinatorial number theory condition on a set \( s \subseteq \mathbb{Z} \) with size \( n \), injective mappings, and modular arithmetic involving sums weighted by indices. To explore which integers \( n \geq 2 \) satisfy the condition, we'll try small values of \( n \), generate sets \( s \) of cardinality \( n \) with distinct integers, check the sum modulo \( n \), and verify if there's an injective function \( f \) satisfying the modular weighted sum condition.
+
+The program enumerates sets \( s \), verifies the conditions, and prints \( n \) values that pass the test for several small \( n \).
+
+```python
+# Enumerate n and finite sets s of integers with size n
+# Check condition: for all s with card=n, elements distinct,
+# if sum(s) % n != 0, then exists injective f: [0..n-1] -> s with weighted sum % n = 0
+
+from itertools import combinations, permutations
+
+def check_n(n):
+    # For each subset s of size n from range(-n,n) (excluding sum divisible by n)
+    pool = list(range(-n*2,n*2+1))
+    passed = True
+    # To reduce complexity, sample subsets instead of full enumeration
+    # but since n is small small n (2..6), full enumeration for n=2,3 is possible
+    checked_sets = 0
+    for s in combinations(pool, n):
+        total = sum(s)
+        if total % n == 0:
+            continue
+        # We must check if there exists injective f: [0..n-1] -> s with weighted sum mod n == 0
+        # f is a permutation of s assigned to i in order 0..n-1
+        found = False
+        for p in permutations(s):
+            wsum = sum((i+1)*p[i] for i in range(n))
+            if wsum % n == 0:
+                found = True
+                break
+        if not found:
+            passed = False
+            print(f"n={n} fails for set {s} with sum={total}")
+            break
+        checked_sets += 1
+        if checked_sets > 50:  # limit checking for bigger n
+            break
+    if passed:
+        print(f"n={n} passes condition")
+
+print("Checking values of n from 2 to 6")
+for n in range(2,7):
+    check_n(n)
+```

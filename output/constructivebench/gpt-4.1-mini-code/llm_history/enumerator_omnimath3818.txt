@@ -1,0 +1,70 @@
+[write_program]
+The problem describes a function \( f: \mathbb{N} \to \mathbb{Z} \) with certain conditions:
+- \( f(n) \ge 0 \) for \( n > 0 \).
+- \( f(2) = 0 \).
+- \( f(3) > 0 \).
+- \( f(9999) = 3333 \).
+- For positive \( m,n \), \( f(m+n) - f(m) - f(n) \) is either 0 or 1.
+
+Such a function resembles a "quasi-additive" or almost additive function with an increment of either 0 or 1 when sums are taken. It's strongly suggestive of a "floor division" or a function counting how many times a number can be divided by some integer, but with an offset.
+
+Main task: Enumerate possible values of \( f(1982) \) given these constraints to narrow possible candidates for \( \texttt{omnimath3818_answer} \).
+
+Strategy:
+- Because \( f(m+n) = f(m) + f(n) \) or \( f(m) + f(n) + 1 \), the function behaves like a "quasi-homomorphism".
+- Check linear functions of the form \( f(n) = \lfloor \frac{n}{k} \rfloor \) or similar.
+- Use given values \( f(2) = 0, f(3) > 0, f(9999) = 3333 \) to guess \( k \).
+- Enumerate \( k \) candidates, confirm \( f(n) = \lfloor \frac{n}{k} \rfloor \) matches constraints, and compute \( f(1982) \).
+
+The code will:
+1. Try \( k \) from 2 up to 10 (reasonable guesses).
+2. Define \( f(n) = \lfloor n/k \rfloor \).
+3. Check conditions for \( n=2,3,9999 \).
+4. Verify the quasi-additive condition for some \( m,n \).
+5. Print candidates \( f(1982) \) immediately.
+
+This enumeration will help conjecture the exact answer.
+
+```python
+# Enumerate candidate linear-like functions f(n) = floor(n/k)
+# to match given values and constraints,
+# then print possible f(1982) values.
+
+def quasi_additive_check(f, max_n=20):
+    # Check f(m+n)-f(m)-f(n) in {0,1} for all 1<=m,n<=max_n
+    for m in range(1, max_n+1):
+        for n in range(1, max_n+1):
+            diff = f(m+n) - f(m) - f(n)
+            if diff not in (0,1):
+                return False
+    return True
+
+def main():
+    # Given: f(2)=0, f(3)>0, f(9999)=3333, f(n)>=0 for n>0
+    print("Trying candidate functions f(n) = floor(n/k):")
+    candidates = []
+    for k in range(2, 20):  # k from 2 to 19
+        def f(n, k=k):
+            return n//k
+        if f(2) != 0:
+            continue
+        if f(3) <= 0:
+            continue
+        if f(9999) != 3333:
+            continue
+        if not quasi_additive_check(f, max_n=30):
+            continue
+        val1982 = f(1982)
+        print(f"k={k}: f(1982) = {val1982}")
+        candidates.append((k,val1982))
+    if candidates:
+        min_val = min(v for _,v in candidates)
+        max_val = max(v for _,v in candidates)
+        print(f"Possible f(1982) range from candidates: {min_val} to {max_val}")
+        print(f"Minimal possible f(1982): {min_val} (likely exact)")
+    else:
+        print("No candidates found with f(n)=floor(n/k).")
+
+if __name__=="__main__":
+    main()
+```

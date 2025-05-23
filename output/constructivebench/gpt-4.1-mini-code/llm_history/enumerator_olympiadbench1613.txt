@@ -1,0 +1,89 @@
+[write_program]
+The problem concerns finding the greatest natural number \( n \) such that for every monic polynomial \( P \in \mathbb{Z}[X] \) of degree at most \( n \), there exists an injective function \( x \) from a set of size \( k+1 \leq n+1 \) into integers with a certain property on sums of evaluations. 
+
+We will test small values of \( n \) and small choices of polynomials \( P \) to find values of \( n \) that satisfy or fail the condition. We fix small degrees and enumerate injective integer sequences \( x \) of length \( k+1 \), with \( k \leq n \), verifying whether for given polynomials the equality holds. For feasibility, we test:
+- Monic polynomials \( P \) with integer coefficients and degree \(\leq n\),
+- Small integer domains for \( x \).
+
+This program outputs candidates \( n \) for which the condition holds for a list of test polynomials and candidate sequences \( x \). 
+
+```python
+from itertools import product, combinations
+from sympy import symbols, Poly
+
+X = symbols('X')
+
+def monic_polys(deg, coeff_range):
+    # Generate monic polynomials of degree deg with integer coeffs in coeff_range for other terms
+    # P(x) = x^deg + a_{deg-1} x^{deg-1} + ... + a_0
+    # coeff_range: list of int coefficients for each coefficient
+    if deg == 0:
+        yield Poly(1, X, domain='ZZ')
+        return
+    for coeffs in product(coeff_range, repeat=deg):
+        # Leading coeff = 1 (monic)
+        terms = [1] + list(coeffs)
+        # Poly for x^deg + a_{deg-1} x^{deg-1} + ... + a_0
+        p = sum(coeff * X**i for i, coeff in enumerate(reversed(terms)))
+        yield Poly(p, X, domain='ZZ')
+
+def eval_poly_at(poly, x):
+    # Evaluate poly at x integer
+    return poly.eval(x)
+
+def test_n(n, max_k=None, domain_range=range(-5,6), test_poly_coeff_range=range(-1,2)):
+    # max_k is upper bound on k, default to n
+    if max_k is None:
+        max_k = n
+    # For given n, test the condition:
+    # For all monic polynomials P deg<=n, exists k<=n, injective x:{0..k}->Z, sum_{i<k} P(x_i) = P(x_k)
+    # We test a sample of polynomials and try to find such x and k.
+
+    # Generate sample polynomials of degrees 1..n
+    # To reduce testing time, test degrees d from 1 to n
+    polynomials = []
+    for d in range(1, n+1):
+        for p in monic_polys(d, test_poly_coeff_range):
+            polynomials.append(p)
+    if not polynomials:
+        # including zero degree polynomial 1
+        polynomials.append(Poly(1, X, domain='ZZ'))
+
+    # For each polynomial test existence of k, x as required
+    for P in polynomials:
+        degP = P.degree()
+        found = False
+        # Try k from 1 to max_k
+        for k in range(1, max_k+1):
+            # injective x from size k+1 to domain_range
+            # total k+1 points distinct in domain_range
+            for xs in combinations(domain_range, k+1):
+                # sum_{i<k} P(x_i)
+                s = sum(eval_poly_at(P, xi) for xi in xs[:-1])
+                pk = eval_poly_at(P, xs[-1])
+                if s == pk:
+                    # print match for confirmation
+                    print(f"n={n}, P={P.as_expr()}, k={k}, x={xs}, sum={s} == P(x_k)={pk}")
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
+            # Failed for this polynomial => condition fails for n
+            print(f"n={n}: FAIL for P={P.as_expr()}")
+            return False
+    print(f"n={n}: PASS all tested polynomials")
+    return True
+
+def main():
+    # We try n=1..5 as sample to seek max n that passes
+    for n in range(1, 6):
+        print(f"Testing n={n}")
+        ok = test_n(n)
+        if not ok:
+            print(f"Max n passing test <= {n-1}")
+            break
+
+if __name__ == '__main__':
+    main()
+```

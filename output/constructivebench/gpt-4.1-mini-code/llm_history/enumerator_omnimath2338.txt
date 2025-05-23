@@ -1,0 +1,50 @@
+[write_program]
+The problem gives a polynomial \( P \) satisfying 
+\[ P(Q(x)) = x^6 + 6x^5 + 18x^4 + 32x^3 + 35x^2 + 22x + 8 \]
+where \( Q(x) = x^2 + 2x + 3 \),
+and asks to find \( P(2) \).
+
+To assist, I'll enumerate possible polynomials \( P \) (up to some degree) by comparing coefficients after substituting \( y = Q(x) \), then calculate \( P(2) \). This helps to guess the actual value of \( P(2) \).
+
+```python
+# Enumerate polynomial P of form a*y^3 + b*y^2 + c*y + d
+# since degree(Q) = 2, degree(P)*2 = 6 => deg(P) = 3
+# solve system: P(Q(x)) = given 6th degree polynomial in x
+
+from sympy import symbols, Eq, solve, expand
+
+x, y = symbols('x y')
+# Define Q(x)
+Q = x**2 + 2*x + 3
+
+# P(y) = a*y^3 + b*y^2 + c*y + d
+a,b,c,d = symbols('a b c d')
+P = a*y**3 + b*y**2 + c*y + d
+
+# Expand P(Q(x))
+expr = P.subs(y,Q)
+expr_expanded = expand(expr)
+
+# Given polynomial R(x)
+R = x**6 + 6*x**5 + 18*x**4 + 32*x**3 + 35*x**2 + 22*x + 8
+
+# Match coefficients of expr_expanded and R for powers x^6,...,x^0
+coeffs_expanded = [expr_expanded.coeff(x,i) for i in range(6,-1,-1)]
+coeffs_R = [R.coeff(x,i) for i in range(6,-1,-1)]
+
+# Set up equations equating coefficients
+eqs = [Eq(c1,c2) for c1,c2 in zip(coeffs_expanded, coeffs_R)]
+
+# Solve for a,b,c,d
+sol = solve(eqs, (a,b,c,d), dict=True)
+
+# Print each solution and P(2)
+for solution in sol:
+    a_ = solution[a]
+    b_ = solution[b]
+    c_ = solution[c]
+    d_ = solution[d]
+    print(f"Solution found: a={a_}, b={b_}, c={c_}, d={d_}")
+    P2 = a_*2**3 + b_*2**2 + c_*2 + d_
+    print(f"P(2) = {P2}")
+```

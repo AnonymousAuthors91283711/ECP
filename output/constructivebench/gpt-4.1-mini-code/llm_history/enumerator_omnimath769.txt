@@ -1,0 +1,147 @@
+[write_program]
+The problem involves a 60-periodic 0-1 sequence \(a:\mathbb{Z} \to \{0,1\}\), with values constrained by a local mod-2 sum involving a fixed sequence \(b\).
+
+We want to explore all such sequences \(a\) satisfying the given linear congruence constraints mod 2 for \(n=0,\dots,59\):
+
+\[
+b(n) \equiv a(n-1) + a(n) + a(n+1) \pmod{2}
+\]
+
+where \(b(n) = 1\) if \(n\) is divisible by 3, else 0, and periodicity implies \(a\) is 60-periodic.
+
+This is equivalent to solving a linear system over \(\mathbb{F}_2\). Then we want to enumerate the possible values of:
+
+\[
+4 \cdot a(0) + 2 \cdot a(1) + a(2)
+\]
+
+to detect which values occur.
+
+The program below:
+
+- Represents \(a\) on one period as a length-60 vector over \(\{0,1\}\).
+- Builds the linear system \(M x = b\) over \(\mathbb{F}_2\) with each equation corresponding to the relation.
+- Solves for the space of solutions and enumerates all solutions (if feasible).
+- Prints \(4a_0 + 2a_1 + a_2\) values from all solutions immediately.
+- Prints the list of all observed values and the minimum and maximum.
+
+Because the space dimension could be large, we limit enumeration to at most 32 solutions to keep output small.
+
+```python
+# Solve the periodic mod 2 system defined by b(n), where b(n)=1 if n%3=0 else 0
+# For a 60-periodic vector a with values in {0,1}, satisfy:
+#   b(n) ≡ a(n-1)+a(n)+a(n+1) mod 2, n=0..59 (indices mod 60)
+# Enumerate possible values of 4*a_0 + 2*a_1 + a_2.
+
+def mod2_gaussian_elimination(M, b):
+    n = len(M)
+    m = len(M[0])
+    # Convert M,b to mutable lists
+    M = [row[:] for row in M]
+    b = b[:]
+    rank = 0
+    pivots = []
+    for col in range(m):
+        pivot_row = -1
+        for r in range(rank, n):
+            if M[r][col] == 1:
+                pivot_row = r
+                break
+        if pivot_row == -1:
+            continue
+        M[rank], M[pivot_row] = M[pivot_row], M[rank]
+        b[rank], b[pivot_row] = b[pivot_row], b[rank]
+        pivots.append(col)
+        for r in range(n):
+            if r != rank and M[r][col] == 1:
+                for c in range(col, m):
+                    M[r][c] ^= M[rank][c]
+                b[r] ^= b[rank]
+        rank +=1
+        if rank == n:
+            break
+    # Check for inconsistency
+    for r in range(rank,n):
+        if b[r] ==1:
+            return None,None,None
+    return M,b,pivots
+
+def back_substitution(M,b,pivots,m):
+    x = [0]*m
+    free_vars = set(range(m)) - set(pivots)
+    # Set free vars vectors later
+    # Solve for pivots
+    for i in reversed(range(len(pivots))):
+        col = pivots[i]
+        s = b[i]
+        for c in range(col+1,m):
+            s ^= (M[i][c] & x[c])
+        x[col] = s
+    return x,free_vars
+
+def enumerate_solutions(M,b,pivots,m):
+    # Find dimension = number free variables
+    pivot_set = set(pivots)
+    free_vars = [v for v in range(m) if v not in pivot_set]
+    dim = len(free_vars)
+    # Base solution
+    base, _ = back_substitution(M,b,pivots,m)
+    # Basis vectors for free vars
+    basis = []
+    for f in free_vars:
+        vec = [0]*m
+        vec[f] =1
+        for i in reversed(range(len(pivots))):
+            col = pivots[i]
+            s = 0
+            for c in range(col+1,m):
+                s ^= (M[i][c] & vec[c])
+            vec[col] = s
+        basis.append(vec)
+    # Limit enumeration to 32 solutions max
+    limit = 32
+    results = []
+    for mask in range(1<<dim):
+        if mask >= limit:
+            break
+        sol = base[:]
+        for i in range(dim):
+            if (mask>>i)&1:
+                sol = [ (sol[j]^basis[i][j]) for j in range(m)]
+        results.append(sol)
+    return results
+
+def main():
+    n = 60
+    # Build matrix M and vector b over GF(2)
+    # Equation for each 0 <= k < n:
+    # a_{k-1}+a_k+a_{k+1} = b(k) mod 2, indices mod n
+    M = []
+    b_vec = []
+    for k in range(n):
+        row = [0]*n
+        row[(k-1)%n] = 1
+        row[k] = 1
+        row[(k+1)%n] = 1
+        M.append(row)
+        b_vec.append(1 if k%3==0 else 0)
+
+    M_red,b_red,pivots = mod2_gaussian_elimination(M,b_vec)
+    if M_red is None:
+        print("No solutions")
+        return
+    sols = enumerate_solutions(M_red,b_red,pivots,n)
+    seen_values = set()
+    print("Enumerating 4*a0 + 2*a1 + a2 values from solutions (up to 32 solutions):")
+    for sol in sols:
+        v = 4*sol[0]+2*sol[1]+sol[2]
+        print(v)
+        seen_values.add(v)
+    seen_list = sorted(seen_values)
+    print("All values found:", seen_list)
+    print("Minimum value:", min(seen_list))
+    print("Maximum value:", max(seen_list))
+
+if __name__=="__main__":
+    main()
+```

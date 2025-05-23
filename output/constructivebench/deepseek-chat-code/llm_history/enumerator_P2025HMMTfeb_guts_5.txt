@@ -1,0 +1,57 @@
+[write_program]
+This problem asks for the largest radius r such that there exists a center point c where every point p within distance r from c satisfies |p₁ + |p₂|| ≤ 1. We'll approach this by:
+
+1. Parameterizing possible center points (c₁, c₂)
+2. For each center, finding the maximum radius where the condition holds
+3. Finding the maximum such radius across all possible centers
+
+We'll use symmetry and consider centers along the x-axis (c₂=0) since the condition is symmetric in p₂.
+
+```python
+import math
+
+def find_max_r():
+    max_r = 0
+    best_c = (0, 0)
+    
+    # Sample c₁ values around the interesting region [-1,1]
+    for c1 in [x/100 for x in range(-150, 151)]:
+        c = (c1, 0)
+        
+        # Find maximum r where condition holds
+        # The worst case points are where p₂=0 and p₁ + |p₂| = ±1
+        # So we need to consider p = (1,0) and p = (-1,0)
+        r1 = math.sqrt((1 - c1)**2 + 0)  # distance to (1,0)
+        r2 = math.sqrt((-1 - c1)**2 + 0)  # distance to (-1,0)
+        
+        # Also consider points where p₁ + |p₂| = 1 and p₂ ≠ 0
+        # The minimal distance occurs when p₂ is maximized
+        # Let p₁ = 1 - p₂ (for p₂ > 0)
+        # Distance squared: (1-p₂-c1)^2 + p₂^2
+        # Minimizing this gives p₂ = (1-c1)/2
+        if c1 < 1:
+            p2 = (1 - c1)/2
+            p1 = 1 - p2
+            r3 = math.sqrt((p1 - c1)**2 + p2**2)
+        else:
+            r3 = 0
+            
+        # Similarly for p₁ + |p₂| = -1 case
+        if c1 > -1:
+            p2 = (1 + c1)/2
+            p1 = -1 - p2
+            r4 = math.sqrt((p1 - c1)**2 + p2**2)
+        else:
+            r4 = 0
+            
+        current_r = min(r1, r2, r3, r4)
+        
+        if current_r > max_r:
+            max_r = current_r
+            best_c = c
+            print(f"New max r: {max_r:.5f} at c=({c[0]:.3f}, {c[1]:.3f})")
+    
+    print(f"\nFinal maximum radius: {max_r:.5f}")
+
+find_max_r()
+```

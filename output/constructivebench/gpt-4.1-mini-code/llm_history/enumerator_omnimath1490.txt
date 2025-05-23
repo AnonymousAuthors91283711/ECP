@@ -1,0 +1,71 @@
+[write_program]
+This problem asks to find the greatest prime \( p \) such that there exists a finite set of primes whose average is 27 and this set includes \( p \). The key points are:
+- \( p \) is prime,
+- There is a finite set \( s \) of primes containing \( p \),
+- The average of the primes in \( s \) is exactly 27.
+
+We want to enumerate finite sets of primes with average 27 and print possible primes \( p \) in those sets. We try small sets because sets with few elements are easier to handle, and the sum must be \( 27 \times \text{cardinality} \).
+
+We'll:
+- Generate primes up to a certain limit,
+- For each small cardinality \( n \) (from 1 to ~5 or 6),
+- Compute total sum \( = 27 \times n \),
+- Enumerate possible primes sets of size \( n \) summing to the total,
+- Print each prime in such sets,
+- Finally, print the maximum prime found.
+
+```python
+# Enumerate sets of primes of size n with sum 27*n and print primes in them,
+# aiming to find the maximum prime in any such set.
+from sympy import primerange
+from itertools import combinations
+
+def main():
+    max_prime = 0
+    max_sum = 27 * 6  # considering sets up to size 6 = max sum 162
+    primes = list(primerange(2, max_sum + 1))
+    print(f"Primes up to {max_sum}:", primes)
+
+    # We'll check sets of size 1 to 6
+    for n in range(1, 7):
+        total = 27 * n
+        # Filter primes <= total because sum must be total
+        primes_filtered = [p for p in primes if p <= total]
+
+        # To reduce search space, also filter primes; 
+        # sum of n primes = total, so largest prime <= total
+        # Use combinations with replacement to allow repeated primes if needed
+        # but original problem says set, so no repeats (Finset is a set)
+        # So combinations without replacement
+
+        # Using combinations without replacement:
+        from itertools import combinations
+
+        # As combinations is expensive for large primes, let's limit to primes <= total
+        # Generate all combinations of size n from primes_filtered that sum to total
+        # We'll break early if sum exceeds total for speed.
+
+        # Since combinations is expensive, we can use a recursive generator with pruning
+
+        def find_sets(n, total, start=0, path=[]):
+            if n == 0:
+                if total == 0:
+                    yield path
+                return
+            for i in range(start, len(primes_filtered)):
+                p = primes_filtered[i]
+                if p > total:
+                    break
+                yield from find_sets(n - 1, total - p, i + 1, path + [p])
+
+        for comb in find_sets(n, total):
+            for p in comb:
+                print(f"Found prime in set of size {n} summing to {total}: {p}")
+                if p > max_prime:
+                    max_prime = p
+
+    print(f"Maximum prime in any such set: {max_prime}")
+
+if __name__ == "__main__":
+    main()
+```

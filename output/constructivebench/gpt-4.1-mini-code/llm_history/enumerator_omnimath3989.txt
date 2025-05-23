@@ -1,0 +1,58 @@
+[write_program]
+The problem concerns characterizing functions \( f: (0, \infty) \to (0, \infty) \) satisfying a uniqueness property of a certain inequality related to \(x, y > 0\):  
+\[
+x f(y) + y f(x) \leq 2
+\] 
+with uniqueness of \( y \) for each \(x\). We want to explore possible forms of such \( f \).
+
+A natural step is to test candidate function forms \( f \) on a discrete sample of positive values and verify if for each \( x \), there exists a unique \( y \) such that the inequality holds, aiming to detect when uniqueness breaks (multiple \( y \) satisfying the inequality) or fails.
+
+We sample \( x, y \) from a small range, say \(\{1,2,...,5\}\), enumerate simple functions like constants, reciprocal, linear, and quadratic forms, and for each \( x \), check the set of valid \( y \) values.
+
+```python
+# We test candidate functions f: (0, ∞) → (0, ∞) on discrete samples to identify those satisfying:
+# For each x in samples, there exists a unique y in samples such that x*f(y) + y*f(x) ≤ 2 holds.
+# We enumerate simple functions on inputs 1..5, print those respecting uniqueness for all x.
+
+def candidate_functions():
+    # Candidate functions from {1..5} to positive floats
+    # Use lambdas representing possible types:
+    # constant, reciprocal, linear, quadratic.
+    funcs = []
+    for c in [0.1, 0.5, 1, 1.5, 2]:
+        funcs.append((f"const({c})", lambda y, c=c: c))
+    for c in [0.5, 1, 2]:
+        funcs.append((f"recip_scaled({c})", lambda y, c=c: c / y))
+    for a in [0.1, 0.5, 1]:
+        funcs.append((f"linear({a})", lambda y, a=a: a * y))
+    for a in [0.1, 0.5, 1]:
+        funcs.append((f"quadratic({a})", lambda y, a=a: a * y * y))
+    return funcs
+
+def check_uniqueness(f, xs):
+    # For each x in xs, find y in xs with the inequality holding.
+    # Check uniqueness (# solutions == 1).
+    for x in xs:
+        y_vals = []
+        fx = f(x)
+        for y in xs:
+            if x * f(y) + y * fx <= 2 + 1e-12:  # small tolerance
+                y_vals.append(y)
+        if len(y_vals) != 1:
+            return False, x, y_vals
+    return True, None, None
+
+def main():
+    xs = [1, 2, 3, 4, 5]
+    funcs = candidate_functions()
+    print("Testing candidate functions on domain", xs)
+    for name, f in funcs:
+        unique, x, ys = check_uniqueness(f, xs)
+        if unique:
+            print(f"Function {name} passes uniqueness check.")
+        else:
+            print(f"Function {name} fails at x={x}, multiple or no y: {ys}")
+
+if __name__ == "__main__":
+    main()
+```

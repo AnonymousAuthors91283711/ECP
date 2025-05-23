@@ -1,0 +1,66 @@
+[write_program]
+This problem is about finding the maximum number of pairs (a,b) with a ≤ b such that:
+1. All pairs have distinct elements (a≠b, a≠c, etc.)
+2. a + b ≤ n
+3. All pairs have distinct sums
+
+We'll write a Python program to enumerate all valid configurations for small n and find the maximum k for each n.
+
+```python
+def max_valid_pairs(n):
+    max_k = 0
+    best_pairs = set()
+    
+    # Generate all possible pairs (a,b) with a <= b and a + b <= n
+    all_pairs = [(a, b) for a in range(1, n+1) for b in range(a, n+1) if a + b <= n]
+    
+    # Try all possible subset sizes in descending order
+    for k in range(len(all_pairs), 0, -1):
+        from itertools import combinations
+        # Check all combinations of size k
+        for pairs in combinations(all_pairs, k):
+            valid = True
+            sums = set()
+            elements = set()
+            # Check all conditions
+            for a, b in pairs:
+                if a == b:
+                    valid = False
+                    break
+                if a + b in sums:
+                    valid = False
+                    break
+                sums.add(a + b)
+                elements.add(a)
+                elements.add(b)
+            
+            if not valid:
+                continue
+            
+            # Check all pairs against each other
+            pair_list = list(pairs)
+            for i in range(len(pair_list)):
+                a1, b1 = pair_list[i]
+                for j in range(i+1, len(pair_list)):
+                    a2, b2 = pair_list[j]
+                    if a1 == a2 or a1 == b2 or b1 == a2 or b1 == b2:
+                        valid = False
+                        break
+                if not valid:
+                    break
+            
+            if valid:
+                if k > max_k:
+                    max_k = k
+                    best_pairs = pairs
+                print(f"For n={n}, found valid configuration with k={k}: {pairs}")
+                return max_k
+    
+    return max_k
+
+# Test for small values of n
+for n in range(2, 12):
+    print(f"\nTesting n = {n}")
+    result = max_valid_pairs(n)
+    print(f"Maximum k for n={n}: {result}")
+```

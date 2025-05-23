@@ -1,0 +1,69 @@
+[write_program]
+This problem involves counting the number of possible functions f: ℕ → ℕ satisfying certain conditions, restricted to the first 2014 natural numbers. The conditions are:
+1. f(1) = 1
+2. f is weakly increasing (a ≤ b ⇒ f(a) ≤ f(b))
+3. f(2a) = f(a) + 1 for all a > 0
+
+We'll write a Python program to enumerate all possible functions up to n=2014 that satisfy these conditions. The key observation is that the function is determined by its values at odd numbers, since f(2^k * odd) = f(odd) + k.
+
+```python
+def count_functions(max_n=2014):
+    # The function is determined by its values at odd numbers
+    # For each odd number, we need to choose f(odd) such that:
+    # 1. f(1) = 1
+    # 2. The sequence is non-decreasing for odd numbers
+    # 3. For any odd a < odd b, f(a) ≤ f(b)
+    
+    # We'll use dynamic programming to count valid sequences
+    # dp[i][v] = number of ways to assign values up to odd number i with f(i) = v
+    
+    # First, find all odd numbers up to max_n
+    odd_numbers = [i for i in range(1, max_n + 1) if i % 2 == 1]
+    m = len(odd_numbers)
+    
+    if m == 0:
+        return 0
+    
+    # Initialize DP table
+    # The maximum possible value is f(1) + log2(max_n) = 1 + 10 (since 2^10=1024 < 2014 < 2048=2^11)
+    max_val = 1 + 11
+    
+    # dp[i][v] will represent the number of ways up to the i-th odd number with value v
+    dp_prev = [0] * (max_val + 2)
+    dp_prev[1] = 1  # f(1) must be 1
+    
+    for i in range(1, m):
+        current_odd = odd_numbers[i]
+        prev_odd = odd_numbers[i-1]
+        dp_current = [0] * (max_val + 2)
+        
+        # The current value must be >= previous value
+        for prev_v in range(1, max_val + 1):
+            if dp_prev[prev_v] == 0:
+                continue
+            for current_v in range(prev_v, max_val + 1):
+                # Check all intermediate even numbers between prev_odd and current_odd
+                valid = True
+                for x in range(prev_odd + 1, current_odd):
+                    if x % 2 == 0:
+                        k = 0
+                        y = x
+                        while y % 2 == 0:
+                            y //= 2
+                            k += 1
+                        required = dp_prev[prev_v] + k if y == prev_odd else -1
+                        if required != -1 and required > current_v:
+                            valid = False
+                            break
+                if valid:
+                    dp_current[current_v] += dp_prev[prev_v]
+        
+        dp_prev = dp_current
+    
+    total = sum(dp_prev)
+    print(f"Number of valid functions up to n={max_n}: {total}")
+    return total
+
+if __name__ == "__main__":
+    count_functions(2014)
+```

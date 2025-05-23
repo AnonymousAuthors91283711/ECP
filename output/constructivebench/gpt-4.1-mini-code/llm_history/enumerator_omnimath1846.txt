@@ -1,0 +1,46 @@
+[write_program]
+The problem counts monotone functions \(f\) from \((\mathrm{Fin } 3 \to \mathrm{Fin } 2)\) to \(\mathrm{Fin } 2\), where the domain is the set of all functions from a 3-element set to a 2-element set (with the product order), and the codomain is also a 2-element set (ordered 0 < 1).
+
+We want to enumerate all monotone functions \(f : A \to \{0,1\}\) where \(A = \{0,1\}^3\) with coordinate-wise order, and count how many such functions there are.
+
+Since the codomain is \(\{0,1\}\), monotone functions correspond exactly to order ideals (down-sets) or order filters (up-sets) of the poset \(A\). Counting monotone boolean-valued functions on a finite poset is counting order ideals of the poset.
+
+Here, \(|A|=2^3=8\). The poset is the boolean cube of dimension 3.
+
+The number of order ideals in the 3-cube is well-known as the 3rd Dedekind number \(M_3\), which is 20.
+
+We will write a program enumerating all monotone functions \(f : \{0,1\}^3 \to \{0,1\}\) by brute force, checking monotonicity, and print all valid functions and their count.
+
+```python
+# Enumerate monotone functions f: {0,1}^3 -> {0,1}
+# where {0,1}^3 is ordered coordinatewise,
+# and print all monotone functions immediately.
+# Total number of functions: 2^(2^3) = 256 feasible to brute force.
+
+def leq(a, b):
+    # Pointwise order: a <= b if all coords a[i] <= b[i]
+    return all(x <= y for x, y in zip(a, b))
+
+def is_monotone(f):
+    # f is dict from 8 points to {0,1}
+    # Check monotonicity: a <= b => f(a) <= f(b)
+    points = list(f.keys())
+    for a in points:
+        for b in points:
+            if leq(a, b):
+                if f[a] > f[b]:
+                    return False
+    return True
+
+from itertools import product
+
+domain = list(product([0,1], repeat=3))
+# All functions from 8 points to {0,1}
+count = 0
+for values in product([0,1], repeat=8):
+    f = dict(zip(domain, values))
+    if is_monotone(f):
+        count +=1
+        print(f"Monotone function #{count}: ", values)
+print("Total number of monotone functions:", count)
+```

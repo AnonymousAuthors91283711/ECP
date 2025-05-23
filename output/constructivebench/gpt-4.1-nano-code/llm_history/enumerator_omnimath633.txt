@@ -1,0 +1,55 @@
+[write_program]
+This problem asks us to find the least positive integer \( n \) such that the polynomial \((X+1)^n - 1\) can be expressed as \((X^2 + 1) P + 3 Q\), where \( P, Q \in \mathbb{Z}[X] \).
+
+Key insight:
+- The condition \((X+1)^n - 1 = (X^2 + 1) P + 3 Q\) implies the polynomial difference is divisible by \(X^2 + 1\) modulo 3.
+- Equivalently, \((X+1)^n - 1 \equiv 0 \pmod{X^2 + 1, 3}\).
+
+To understand this, work over the finite field \(\mathbb{F}_3\), considering \((X+1)^n - 1 \pmod{3}\) and \((X^2 + 1)\).
+
+The strategy:
+- Enumerate \(n\) starting from 1.
+- For each \(n\), compute \((X+1)^n - 1\) over \(\mathbb{Z}_3[X]\).
+- Check if the polynomial reduces to a multiple of \(X^2 + 1\) modulo 3, meaning it's divisible by \(X^2 + 1\) in \(\mathbb{F}_3[X]\).
+- Use polynomial division to verify divisibility.
+- Stop at the first \(n\) where this condition holds, outputting that \(n\).
+
+Let's implement this.
+
+```python
+# Enumerate n starting from 1, check divisibility condition
+from sympy import symbols, Poly, GF, binomial
+
+X = symbols('X')
+
+def polynomial_mod3(coeffs):
+    # Create polynomial over GF(3)
+    return Poly(coeffs, X, domain=GF(3))
+
+def poly_power_mod3(n):
+    # Compute (X+1)^n - 1 over GF(3)
+    # Binomial coefficients over GF(3)
+    coeffs = [binomial(n, k) % 3 for k in range(n+1)]
+    poly = Poly(coeffs[::-1], X, domain=GF(3))
+    # subtract 1 (constant term)
+    poly = poly - Poly(1, X, domain=GF(3))
+    return poly
+
+def is_divisible_by_Q(poly, Q):
+    # Check if poly divisible by Q
+    q_poly = Poly(Q, X, domain=GF(3))
+    _, remainder = divmod(poly, q_poly)
+    return remainder.as_expr() == 0
+
+Q_poly = Poly(X**2 + 1, X, domain=GF(3))
+
+n = 1
+max_n = 30  # limit to prevent long runtime
+while n <= max_n:
+    poly_n = poly_power_mod3(n)
+    if is_divisible_by_Q(poly_n, Q_poly):
+        print(n)
+        break
+    n += 1
+# If no n found within range, conclude no such n (here 30 is enough for small checks)
+```

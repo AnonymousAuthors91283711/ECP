@@ -1,0 +1,64 @@
+[write_program]
+The problem involves finding all functions \( f: \mathbb{N} \rightarrow \mathbb{N} \) satisfying
+- \( f(xy) = f(x) + f(y) \),
+- not all zero,
+- and the set of \( n \) such that \( f(k) = f(n-k) \) for all \( k < n \) is infinite.
+
+The characterization involves primes \( p \) and constants \( c \), with an explicit formula \( IMO2020SLN5\_answer(p,c) \).
+
+We will try to guess the form of \( f \) by enumerating examples. The key functional equation suggests \( f \) behaves like a logarithm (additive on multiplication). The symmetry condition on infinitely many \( n \) is special.
+
+We will enumerate pairs \((p,c)\) for small primes \(p\) and integers \(c\), define \( f \) accordingly, and check the symmetry condition for initial \( n \).
+
+```python
+import math
+
+# Check primes up to max_p
+def is_prime(x):
+    if x < 2:
+        return False
+    for i in range(2, int(math.isqrt(x)) + 1):
+        if x % i == 0:
+            return False
+    return True
+
+# Candidate functions: f(n) = c * v_p(n), where v_p(n) = exponent of prime p in n
+def v_p(n, p):
+    if n == 0:
+        return None  # undefined exponent for 0
+    cnt = 0
+    while n % p == 0 and n > 0:
+        n //= p
+        cnt += 1
+    return cnt
+
+# Check symmetry condition for a given f and n: f(k) == f(n-k) for all 1 <= k < n
+def check_symmetry(f, n):
+    for k in range(1, n):
+        if f(k) != f(n - k):
+            return False
+    return True
+
+def main():
+    max_p = 11  # small primes to check
+    candidates = [(p,c) for p in range(2, max_p+1) if is_prime(p) for c in range(1,4)]
+    for p,c in candidates:
+        def f(n):
+            if n == 0:
+                return 0
+            return c * v_p(n, p)
+
+        # We will try to find n up to 50 with symmetry
+        symmetric_ns = []
+        for n in range(2, 51):
+            if check_symmetry(f, n):
+                print(f"p={p}, c={c}, symmetric n={n} with f(k)=c*v_p(k,p)")
+                symmetric_ns.append(n)
+
+        # Output summary for this candidate
+        if len(symmetric_ns) >= 5:  # heuristic: infinite shape if many symmetric n found
+            print(f"Candidate p={p}, c={c} has many symmetric n: {symmetric_ns}")
+
+if __name__ == "__main__":
+    main()
+```

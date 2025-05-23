@@ -1,0 +1,59 @@
+[write_program]
+The problem is a classic probability setup: two independent uniform arrivals A and B in given intervals, and the event their appointment times overlap for at least some duration (here 45 minutes = 0.75 hours). We want to enumerate possible overlaps to estimate the probability of collision.
+
+We will define intervals and check pairs for overlap. Since times are continuous, enumerating all pairs is impossible; instead, we discretize both intervals finely and count pairs (a, b) where the intervals [a, a+0.75] and [b, b+0.75] overlap. Then we estimate the probability by ratio of counts to total.
+
+We pick discrete grids with a small step (e.g., 0.01 hours = 36 seconds). Smaller step is more precise but longer runtime.
+
+Output:
+- Print sampled pair parameters for illustration.
+- Print pairs where intervals overlap (collision condition).
+- After enumeration, compute and print approximate probability (count collision pairs / total pairs).
+- Print approximate probability as float.
+
+```python
+# Enumerate discrete time pairs to estimate collision probability
+def intervals_overlap(a, b, length=0.75):
+    return max(a, b) < min(a + length, b + length)
+
+def main():
+    # Intervals for A and B
+    A_start, A_end = 0.0, 5.5    # 9:00am to 2:30pm, length 5.5 hours
+    B_start, B_end = 0.5, 3.5    # 9:30am to 12:30pm, length 3 hours
+    step = 0.01                  # 0.01 hours step (36 sec)
+
+    # Generate sample arrival times for A and B
+    A_times = [A_start + i * step for i in range(int((A_end - A_start) / step) + 1)]
+    B_times = [B_start + i * step for i in range(int((B_end - B_start) / step) + 1)]
+
+    total_pairs = 0
+    collision_count = 0
+
+    print(f"Sampling with step={step}, sizes: A={len(A_times)}, B={len(B_times)}")
+
+    # Enumerate and count collisions
+    for a in A_times:
+        for b in B_times:
+            total_pairs += 1
+            if intervals_overlap(a, b):
+                collision_count += 1
+                print(f"Collision pair: A={a:.2f}, B={b:.2f}")
+
+            if total_pairs >= 2000:  # limit outputs to control output length
+                break
+        if total_pairs >= 2000:
+            break
+
+    # Continue counting without printing to improve estimate
+    for a in A_times[len(A_times)//2:]:
+        for b in B_times:
+            total_pairs += 1
+            if intervals_overlap(a, b):
+                collision_count += 1
+
+    probability = collision_count / total_pairs
+    print(f"Estimated collision probability ≈ {probability:.5f}")
+
+if __name__ == "__main__":
+    main()
+```

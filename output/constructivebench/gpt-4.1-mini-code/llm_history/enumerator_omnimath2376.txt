@@ -1,0 +1,58 @@
+[write_program]
+The problem asks us to find the least value of \( t = \frac{\operatorname{Im}(z)}{\operatorname{Re}(z)} \) for complex numbers \( z = x + yi \) with \( x, y \geq 0 \), subject to the condition
+\[
+|z^2 + 2| \leq |z|.
+\]
+In other words, we want to minimize \( t = y/x \) with \( x, y \geq 0 \) satisfying the inequality. The challenge is to enumerate candidate values \( t \) by checking many pairs \( (x,y) \) and filtering those satisfying the inequality, then output the corresponding \( t \). Finally, identify the infimum or minimum \( t \).
+
+To do this efficiently, we:
+- Loop over positive \( x \) (say from 0.01 to 10 in increments).
+- For each \( x \), loop over \( y \geq 0 \) from 0 to (some upper bound related to x).
+- Check the inequality \( |z^2 + 2| \leq |z| \).
+- If true, print \( t = y/x \).
+- Track the minimum found \( t \).
+- At the end print the minimal \( t \).
+
+Print floating values with some precision; zero denominators \(x=0\) lead to division by zero, so exclude \( x=0 \).
+
+---
+
+```python
+import math
+
+def abs_complex(re, im):
+    return math.sqrt(re*re + im*im)
+
+def check_condition(x, y):
+    # z = x + iy
+    # z^2 + 2 = (x+iy)^2 + 2 = (x^2 - y^2 + 2) + i(2xy)
+    re = x*x - y*y + 2
+    im = 2*x*y
+    lhs = abs_complex(re, im)
+    rhs = abs_complex(x, y)
+    return lhs <= rhs
+
+print("Enumerating t = y/x for x, y >=0 with |z^2+2| <= |z|:")
+min_t = None
+step_x = 0.05
+step_y = 0.05
+max_xy = 10
+
+for xi in range(1, int(max_xy/step_x)+1):
+    x = xi * step_x
+    # For each x, y ranges from 0 up to max_xy or less to speed up
+    max_y = max_xy
+    for yi in range(0, int(max_y/step_y)+1):
+        y = yi * step_y
+        if check_condition(x, y):
+            t = y / x
+            print(f"t = {t:.4f} (x={x:.2f}, y={y:.2f})")
+            if (min_t is None) or (t < min_t):
+                min_t = t
+
+if min_t is not None:
+    print(f"\nMinimum t found: {min_t:.4f}")
+else:
+    print("No values found satisfying condition.")
+```
+

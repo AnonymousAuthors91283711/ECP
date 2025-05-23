@@ -1,0 +1,61 @@
+[write_program]
+The problem asks to find the number of perfect squares \(d\) dividing the product \(\prod_{i=1}^9 i!\). We will enumerate all divisors of this large product, collect all squares among them, and count; printing each perfect square divisor found. For feasibility, we will use prime factorization properties and only enumerate divisors based on the prime powers of the product. The product involves factorials from 1! to 9!, which can be combined into exponent vectors over primes up to 9.
+
+```python
+from math import factorial
+from collections import Counter
+from functools import reduce
+import operator
+
+# primes up to 9 for factorization
+primes = [2,3,5,7]
+
+# Compute prime factorization exponents of n!
+def prime_factorization_factorial(n):
+    exps = {}
+    for p in primes:
+        count = 0
+        power = p
+        while power <= n:
+            count += n // power
+            power *= p
+        exps[p] = count
+    return exps
+
+# Multiply factorials 1! to 9! means sum exponents of each n!
+total_exp = Counter()
+for i in range(1,10):
+    fi = prime_factorization_factorial(i)
+    for p, c in fi.items():
+        total_exp[p] += c
+
+# Generate all divisors of the product: divisor exps in [0, exp_p]
+# A divisor is a perfect square if all exponents are even.
+# We enumerate all divisors and print those whose exponents are all even.
+
+# Limits for exponents
+limits = {p: total_exp[p] for p in primes}
+
+count = 0
+def gen_exponents(prime_list, prefix):
+    if not prime_list:
+        # check if all exponents even
+        if all(e % 2 == 0 for e in prefix):
+            # compute divisor from exponents
+            d = 1
+            for p,e in zip(primes, prefix):
+                d *= p**e
+            print(d)
+            global count
+            count += 1
+        return
+    p = prime_list[0]
+    max_exp = limits[p]
+    # exponent from 0 to max_exp
+    for e in range(max_exp+1):
+        gen_exponents(prime_list[1:], prefix+[e])
+
+gen_exponents(primes, [])
+
+print("Total perfect square divisors count =", count)
+```

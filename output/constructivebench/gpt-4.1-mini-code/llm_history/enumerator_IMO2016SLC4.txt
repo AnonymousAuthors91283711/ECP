@@ -1,0 +1,63 @@
+[write_program]
+The problem involves constructing \(n \times n\) tables with entries from \(\{0,1,2\}\) having specific combinatorial properties related to rows, columns, and certain diagonals or symmetric pairs. We want to enumerate possible \(n\) for which such a table exists.
+
+Since the problem is quite abstract and linked to a 2016 IMO shortlist problem, we will:
+
+- Try small \(n\) values (e.g., \(1 \le n \le 6\)).
+- For each \(n\), try to construct or partially verify existence of such a table that meets the conditions.
+- Print each \(n\) checked and whether a candidate table seems possible.
+- Due to complexity, focus on the first two conditions (rows and columns having all 3 values exactly) as a necessary condition.
+- Attempt simple heuristics or structured tables (latin squares or rotations) to generate candidates.
+
+Our goal here is to enumerate plausible \(n\) values and their constructive attempts to guide further proofs.
+
+```python
+# Enumerate n and attempt to build an n x n table with values in {0,1,2},
+# such that each row and column contains all three values exactly.
+# This is a necessary (not necessarily sufficient) condition.
+
+def all_three_in_row_and_col(table, n):
+    # Check each row and column contains all 3 values exactly once.
+    for i in range(n):
+        row = set(table[i])
+        if row != {0,1,2}:
+            return False
+        col = set(table[r][i] for r in range(n))
+        if col != {0,1,2}:
+            return False
+    return True
+
+def try_construct(n):
+    # For n < 3, impossible to have 3 distinct values in every row/col
+    if n < 3:
+        return None
+    # For n % 3 != 0, immediate fail because we can't distribute 3 values equally in a row or column of length n
+    if n % 3 != 0:
+        return None
+    # Construct a base pattern repeated n/3 times in rows and columns:
+    # Each row is a permutation of [0,1,2] repeated n//3 times.
+    base = [0,1,2] * (n//3)
+    table = []
+    # Rotate base row by i mod 3 for better mixing
+    for i in range(n):
+        row = base[i%3:] + base[:i%3]
+        table.append(row)
+    if all_three_in_row_and_col(table, n):
+        return table
+    return None
+
+def main():
+    print("Checking small n values for possible tables satisfying row/col conditions and value distribution:")
+    for n in range(1, 7):
+        print(f"n = {n}")
+        tab = try_construct(n)
+        if tab:
+            print(f"  Possible candidate table for n={n}:")
+            for row in tab:
+                print("   ", row)
+        else:
+            print(f"  No candidate table found for n={n}.")
+
+if __name__ == "__main__":
+    main()
+```

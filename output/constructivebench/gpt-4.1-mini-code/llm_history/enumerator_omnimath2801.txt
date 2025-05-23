@@ -1,0 +1,52 @@
+[write_program]
+The problem deals with sets \( s \subseteq ( \text{Fin } 6 \times \text{Fin } 6 ) \) where:
+- For every pair \((a,b) \in s\), \(a \neq b\).
+- For each \(a \in \text{Fin } 6\), the number of \(b\)'s with either \((a,b)\) or \((b,a)\) in \(s\) is exactly 3.
+
+Such an \(s\) represents an undirected 3-regular graph on the vertex set \(\{0, 1, ..., 5\}\), encoded as a set of ordered pairs to record directions arbitrarily chosen for edges. Each edge \(\{a,b\}\) corresponds to exactly one of \((a,b)\) or \((b,a)\) in \(s\). The count we want is the number of 3-regular simple graphs on 6 vertices, times \(2^{\text{number_of_edges}} = 2^{9} = 512\) to pick orientations consistently.
+
+We will enumerate all 3-regular simple graphs on 6 vertices (with no loops or multiedges), then for each, print 512 is the number of possible orientations \(s\) corresponds to. This matches the problem's count.
+
+Below, we generate all 3-regular graphs on 6 vertices using itertools and check degrees exactly 3. We will print each such graph and print cumulative counts.
+
+```python
+# Enumerate all 3-regular simple graphs on 6 vertices to assist in counting the given sets.
+
+from itertools import combinations
+
+V = 6
+E = 9  # For 3-regular graph on 6 vertices, total edges = 6*3/2 = 9
+
+edges_all = list(combinations(range(V), 2))  # all possible edges
+n_all = len(edges_all)  # 15
+
+def degrees_from_edges(edge_set):
+    deg = [0]*V
+    for (u,v) in edge_set:
+        deg[u] += 1
+        deg[v] += 1
+    return deg
+
+count_graphs = 0
+count_s = 0
+# We go through all subsets of edges of size 9 to find 3-regular graphs:
+# There are C(15,9)=5005 subsets, feasible to check exhaustively.
+
+for chosen_edges in combinations(edges_all, E):
+    degs = degrees_from_edges(chosen_edges)
+    if all(d == 3 for d in degs):
+        count_graphs += 1
+        # Each edge can be oriented in two ways, so for each 3-regular graph,
+        # there are 2^9 possible sets s that satisfy the problem's conditions.
+        candidate_count = 2**E
+        print(f"3-regular graph #{count_graphs}, edges={chosen_edges}")
+        print(f"Number of corresponding sets s = {candidate_count}")
+        count_s += candidate_count
+        # To keep output within limits, break after first few graphs
+        if count_graphs >= 5:
+            break
+
+print(f"Enumerated {count_graphs} graphs (partial), partial sets s count: {count_s}")
+print("The total number is conjectured to be count_graphs * 2^9 for all such graphs.")
+```
+This enumerates initial 3-regular graphs and prints how many sets \(s\) correspond to each. This should help conjecture and prove the exact count.

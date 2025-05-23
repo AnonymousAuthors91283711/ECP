@@ -1,0 +1,67 @@
+[write_program]
+The problem counts functions \( f: \{0,\ldots,9\} \to \{0,1,2\} \) such that \( f(a) \neq f(b) \) whenever \( a - b \) is odd. This means that for any two elements of the domain differing by an odd number, their images are distinct.
+
+Observing the domain indices mod 2:
+- Indices with even values: 0, 2, 4, 6, 8
+- Indices with odd values: 1, 3, 5, 7, 9
+
+Any two elements from different parity classes differ by an odd number, so their images must be distinct sets.
+
+Therefore, the images of even indices and odd indices must be disjoint subsets of \(\{0,1,2\}\).
+
+We can assign 3-values to evens (\(f|_{even}\)) and odds (\(f|_{odd}\)) such that their image sets are disjoint.
+
+Hence, we must count the number of pairs of functions \(f_e: \{0,\ldots,4\} \to A\) and \(f_o: \{0,\ldots,4\} \to B\) where \(A,B \subseteq \{0,1,2\}\), \(A \cap B = \emptyset\), and \(A, B \neq \emptyset\) because \(f_e\) and \(f_o\) map to their respective image sets.
+
+We enumerate all pairs of disjoint subsets of \(\{0,1,2\}\), excluding empty ones on the domain side, then count the number of surjections for the functions from size 5 domains.
+
+We will use Stirling numbers or count non-surjective functions by inclusion-exclusion to find the number of functions using all image values.
+
+Let's print all candidates and finally the total count.
+
+```python
+from itertools import chain, combinations
+
+def powerset(iterable):
+    "powerset([0,1,2]) -> [[],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]]"
+    s = list(iterable)
+    return list(chain.from_iterable(combinations(s, r) for r in range(len(s)+1)))
+
+def count_surjective_functions(n, k):
+    # Number of surjective functions from n elements to k elements = 
+    # sum_{i=0}^k (-1)^i * C(k,i) * (k - i)^n
+    if k == 0:
+        return 0
+    total = 0
+    from math import comb
+    for i in range(k+1):
+        total += ((-1)**i) * comb(k, i) * (k - i)**n
+    return total
+
+domain_size = 5  # even or odd positions count
+codomain = [0,1,2]
+
+subsets = powerset(codomain)
+
+# exclude empty image sets since f_e and f_o must use their target sets (otherwise function cannot be surjective)
+nonempty_subsets = [set(s) for s in subsets if len(s) > 0]
+
+results = []
+
+print("Enumerating all disjoint pairs of nonempty subsets of {0,1,2} and counting surjective functions:")
+
+for A in nonempty_subsets:
+    for B in nonempty_subsets:
+        if A.isdisjoint(B):
+            kA = len(A)
+            kB = len(B)
+            fA = count_surjective_functions(domain_size, kA)
+            fB = count_surjective_functions(domain_size, kB)
+            count = fA * fB
+            # Print the pair of images and count
+            print(f"A={sorted(A)} size={kA}, B={sorted(B)} size={kB}, count={count}")
+            results.append(count)
+
+total = sum(results)
+print(f"Total number of such functions: {total}")
+```

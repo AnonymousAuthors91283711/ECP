@@ -1,0 +1,50 @@
+[write_program]
+The problem is to solve for \( p \in (0, \frac{1}{2}) \) such that:
+
+\[
+\binom{4}{2} p^2 (1-p)^2 = \frac{1}{6}.
+\]
+
+We want to enumerate solutions to this equation, printing each solution we find in the interval \((0, \frac{1}{2})\).
+
+Since it's a quadratic in \(p^2\), or rather a quartic overall, exact symbolic solving might be complicated without a symbolic math library. Instead, we'll solve numerically and print all roots in \((0, 0.5)\) with a good numerical precision.
+
+We'll use `numpy` and `scipy.optimize` for root finding, scanning the interval \( (0,0.5) \) and print roots as soon as we find them.
+
+```python
+# enumerator.py
+import numpy as np
+from scipy.optimize import brentq
+
+def f(p):
+    # function corresponding to equation: 6 * C(4,2) * p^2 * (1-p)^2 -1 = 0
+    # Actually: C(4,2)*p^2*(1-p)^2 - 1/6 = 0 simplified to that in f
+    return 6 * 6 * p**2 * (1-p)**2 - 1  # Because C(4,2) = 6
+
+def main():
+    # Equation to solve: 6 * 6 * p^2 * (1-p)^2 -1 = 0
+    # But 6 * p^2 (1-p)^2 = 1/6, or p^2(1-p)^2 = 1/36,
+    # So correcting function definition:
+
+    # Let's define function correctly:
+    def func(p):
+        return 6 * p**2 * (1-p)**2 - 1/6
+
+    # Scan interval (0, 0.5) in small steps to find sign changes
+    print("p values satisfying 6 * p^2 * (1-p)^2 = 1/6 in (0,0.5):")
+    roots = set()
+    xs = np.linspace(0.001, 0.499, 1000)
+    for i in range(len(xs) - 1):
+        a, b = xs[i], xs[i+1]
+        if func(a)*func(b) < 0:
+            root = brentq(func, a, b)
+            root_rounded = round(root, 8)
+            if 0 < root < 0.5 and root_rounded not in roots:
+                roots.add(root_rounded)
+                print(root_rounded)
+
+if __name__ == "__main__":
+    main()
+```
+
+This program finds all \( p \in (0, 0.5) \) satisfying the equation, printing each root immediately. It also rounds roots to 8 decimals to avoid duplicates.

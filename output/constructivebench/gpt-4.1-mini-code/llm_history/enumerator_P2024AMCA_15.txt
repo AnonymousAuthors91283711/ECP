@@ -1,0 +1,59 @@
+[write_program]
+The problem involves roots \( p, q, r \) of the cubic equation \( x^3 + 2x^2 - x + 3 = 0 \) and asks to find the value of \((p^2 + 4)(q^2 + 4)(r^2 + 4)\). To assist, I will programmatically compute the roots numerically and print candidate values for the product. Since the polynomial is cubic with real coefficients, the roots could be real or complex.
+
+```python
+import cmath
+
+# Coefficients of the cubic equation x^3 + 2x^2 - x + 3 = 0
+a, b, c, d = 1, 2, -1, 3
+
+def cubic_roots(a, b, c, d):
+    # Using Cardano's formula to find roots exactly in complex numbers
+    # depressed cubic: t^3 + pt + q = 0 with x = t - b/(3a)
+    p = (3*a*c - b**2) / (3 * a**2)
+    q = (2*b**3 - 9*a*b*c + 27*a**2*d) / (27 * a**3)
+    delta = (q/2)**2 + (p/3)**3
+
+    roots = []
+    if abs(delta) < 1e-15:
+        # delta = 0: multiple roots
+        u = (-q/2)**(1/3) if q != 0 else 0
+        roots.append(2*u - b/(3*a))
+        roots.append(-u - b/(3*a))
+        roots.append(-u - b/(3*a))
+    elif delta > 0:
+        # One real root
+        sqrt_delta = cmath.sqrt(delta)
+        u = (-q/2 + sqrt_delta)**(1/3)
+        v = (-q/2 - sqrt_delta)**(1/3)
+        roots.append(u + v - b/(3*a))
+        # complex conjugate roots
+        omega = complex(-0.5, cmath.sqrt(3)/2)
+        roots.append(u*omega + v*omega**2 - b/(3*a))
+        roots.append(u*omega**2 + v*omega - b/(3*a))
+    else:
+        # Three real roots
+        r_ = ((-p/3)**3)**0.5
+        theta = cmath.acos(-q/(2*r_))
+        r_ = r_.real
+        for k in range(3):
+            t = 2 * r_**(1/3) * cmath.cos((theta.real + 2*k*cmath.pi)/3)
+            roots.append(t - b/(3*a))
+    return roots
+
+roots = cubic_roots(a, b, c, d)
+
+print("Roots of x^3 + 2x^2 - x + 3 = 0:")
+for i, r in enumerate(roots, 1):
+    print(f"p{i} = {r}")
+
+# Calculate product (p^2+4)(q^2+4)(r^2+4)
+prod = 1
+for r in roots:
+    val = r**2 + 4
+    prod *= val
+
+print("\nCandidates for (p^2+4)(q^2+4)(r^2+4):")
+print(prod)
+```
+This program computes the roots exactly using Cardano's formula and prints them, then computes and prints the product. This should aid in conjecturing the exact value.

@@ -1,0 +1,78 @@
+[write_program]
+The geometry problem involves points A, B, C, D, X, Y on the plane with various distance and angle conditions. To assist in conjecturing the true answer, I will enumerate configurations of points B, C on a line, place A in such a way that angle BAC is acute, then locate points X, Y on segment BC satisfying the given distances and angle condition, then find D on BC with AD=12, and print all possible values of BD.
+
+Because the problem is continuous, I will discretize positions on BC segment and search for X, Y satisfying distances and angles approximately, then compute D from AD=12 and print BD approximately. I will try few length scales for BC segment to get samples.
+
+```python
+import math
+
+# Helper functions
+def dist(p, q):
+    return math.hypot(p[0]-q[0], p[1]-q[1])
+
+def angle_at(A, B, C):
+    # angle BAC
+    a = (B[0]-A[0], B[1]-A[1])
+    b = (C[0]-A[0], C[1]-A[1])
+    dot = a[0]*b[0] + a[1]*b[1]
+    la = math.hypot(*a)
+    lb = math.hypot(*b)
+    if la==0 or lb==0:
+        return 0
+    cos_theta = dot/(la*lb)
+    # Clamp to avoid rounding errors
+    cos_theta = max(-1, min(1, cos_theta))
+    return math.acos(cos_theta)
+
+# Enumerate sample BC length values
+for BC_len in [11, 12, 13, 14]:
+    print(f"BC length: {BC_len}")
+    B = (0,0)
+    C = (BC_len,0)
+
+    # Points X,Y lie on BC with distances BX=2, XY=6, YC=3
+    # So BX+XY+YC = 2+6+3=11 must equal BC length for X,Y in order
+    # Since BC_len varies, check if distances fit
+    if abs(BC_len - 11)>1e-6:
+        print(f"Skipping BC length {BC_len}, distances sum to 11")
+        continue
+
+    # Positions along BC:
+    x_pos = 2
+    y_pos = x_pos + 6  # 8
+
+    X = (x_pos, 0)
+    Y = (y_pos, 0)
+
+    # Now, A is somewhere above BC forming an acute angle BAC < π/2
+    # We try vertical position h for A at midpoint of BC x=BC_len/2=5.5
+    # Try h from 0.1 to 10 in steps
+    for h in [0.5, 1, 2, 3, 4]:
+        A = (BC_len/2, h)
+        angle_BAC = angle_at(A, B, C)
+        if angle_BAC >= math.pi/2:
+            continue
+
+        # Check angle condition ∠B A X = ∠Y A C
+        angle_BAX = angle_at(A, B, X)
+        angle_YAC = angle_at(A, Y, C)
+        if abs(angle_BAX - angle_YAC) > 1e-3:
+            continue
+
+        # Now find D on BC (between B and C) so that dist(A,D) = 12
+        # D = (d,0) with 0<=d<=BC_len
+        # dist(A,D)^2 = (d - 5.5)^2 + h^2 =144
+        # => (d-5.5)^2 = 144 - h^2
+
+        val = 144 - h*h
+        if val < 0:
+            continue
+        root = math.sqrt(val)
+        candidates = [5.5 - root, 5.5 + root]
+        for d in candidates:
+            if 0 <= d <= BC_len:
+                BD = d - 0
+                print(f"h={h:.2f} D=({d:.2f},0) BD={BD:.5f} angle_BAC={angle_BAC:.5f}")
+
+```
+This code enumerates BC lengths near 11 (based on distances BX=2, XY=6, YC=3), tries vertical positions for A ensuring acute angle BAC, checks angle condition on points X, Y, and locates D on BC with AD=12, printing candidates for BD and corresponding parameters. This should help conjecture the true BD.

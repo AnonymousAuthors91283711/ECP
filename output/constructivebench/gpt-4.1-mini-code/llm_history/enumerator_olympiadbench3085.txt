@@ -1,0 +1,79 @@
+[write_program]
+The problem involves counting polynomials with integer coefficients, degree at most 7, leading coefficient nonzero, content 1, and equal root sets with their reverses, where all roots are integers. We enumerate such polynomials by trying integer roots and checking the given conditions.
+
+```python
+from sympy import Poly, symbols, divisors, LC, degree, content, roots
+
+X = symbols('x')
+
+def reverse_poly(p):
+    # Reverse coefficients polynomial (coefficients reversed)
+    c = p.all_coeffs()
+    r_coeffs = list(reversed(c))
+    return Poly(r_coeffs, X, domain='ZZ')
+
+def is_content_one(p):
+    return content(p)[0] == 1
+
+def has_integer_roots(p):
+    rts = roots(p, multiple=True)
+    # Check all roots integer
+    return all(r.is_Integer for r in rts)
+
+def same_rootsets(p):
+    rp = reverse_poly(p)
+    rts_p = set(roots(p).keys())
+    rts_rp = set(roots(rp).keys())
+    return rts_p == rts_rp
+
+def monic_and_degree_at_most_7(p):
+    return p.LC() != 0 and degree(p) <= 7
+
+# Enumerate polynomials with degree <=7, integer coeffs, content=1
+# and satisfying the rest, with coefficients in a reasonable range (-5..5)
+candidate_count = 0
+
+print("Enumerating polynomials p with degree ≤7, content=1, integer roots, and p.reverse roots = p.roots")
+
+for deg in range(1,8):
+    # We loop over all integer coefficient vectors length deg+1 with first coeff != 0
+    # Coefficients range small to limit search space
+    coeff_ranges = [range(-3,4) for _ in range(deg+1)]
+    
+    # First coeff (leading) cannot be zero:
+    for leading in range(1,4):
+        coeff_ranges[0] = [leading]
+        
+        # Cartesian product of coefficients
+        from itertools import product
+        for coeffs_rest in product(*coeff_ranges[1:]):
+            coeffs = (leading,) + coeffs_rest
+            if coeffs[-1] == 0:
+                # Zero constant coeff may cause issues with roots possibly zero; still allowed
+                pass
+            
+            p = Poly(coeffs, X, domain='ZZ')
+            if not is_content_one(p):
+                continue
+            if not monic_and_degree_at_most_7(p):
+                continue
+            try:
+                if not has_integer_roots(p):
+                    continue
+                if not same_rootsets(p):
+                    continue
+            except Exception:
+                continue
+
+            candidate_count += 1
+            print(f"Polynomial found with degree={deg}: coeffs={coeffs}")
+            if candidate_count >= 20:
+                break
+        if candidate_count >= 20:
+            break
+    if candidate_count >= 20:
+        break
+
+print(f"Total candidates found (up to 20 shown): {candidate_count}")
+```
+

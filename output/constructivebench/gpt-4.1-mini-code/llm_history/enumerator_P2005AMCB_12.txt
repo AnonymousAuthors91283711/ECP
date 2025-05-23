@@ -1,0 +1,86 @@
+[write_program]
+The problem involves quadratic polynomials with rational roots and a relation between their roots. We want to investigate tuples (m,n,p) of nonzero rationals such that the roots of X² + pX + m are {r,s} and the roots of X² + mX + n are {2r, 2s}. We must find the ratio n/p.
+
+We will enumerate small integer values for m, p (nonzero), find roots r,s of X² + pX + m, then check if roots 2r,2s are roots of some quadratic with coefficients related to m, and try to deduce n to satisfy the conditions. We then print m,n,p,n/p for those tuples.
+
+```python
+# Enumerate possible rational m,n,p for the problem:
+# (X^2 + pX + m) has roots r,s;
+# (X^2 + mX + n) has roots 2r,2s;
+# all nonzero rationals. Print n/p.
+
+from fractions import Fraction
+from math import isclose
+
+def roots_of_quadratic(a,b,c):
+    # Returns roots of aX^2+bX+c=0 using exact fractions if possible, else float approximations
+    D = b*b - 4*a*c
+    if D < 0:
+        return None
+    # Check if D is a perfect square rational
+    # For fractions: D = (num/den)^2 => check numerator and denominator
+    # We can check numerator and denominator perfect squares for small cases
+    # Otherwise approximate sqrt
+    # For efficiency, try floats:
+    Df = float(D)
+    sqrtDf = Df**0.5
+    if isclose(round(sqrtDf)**2, Df, abs_tol=1e-10):
+        root = Fraction(round(sqrtDf)).limit_denominator()
+        r1 = Fraction(-b,2*a) + root/(2*a)
+        r2 = Fraction(-b,2*a) - root/(2*a)
+        return (r1,r2)
+    else:
+        # irrational roots, return approximate float roots
+        r1 = (-b + sqrtDf)/(2*a)
+        r2 = (-b - sqrtDf)/(2*a)
+        return (r1,r2)
+
+def is_rational(x):
+    return isinstance(x, Fraction)
+
+def rat_to_float(x):
+    return float(x) if isinstance(x,Fraction) else x
+
+def main():
+    # try integer m,p in range -5..5 excluding 0
+    rng = range(-5,6)
+    rng = [x for x in rng if x != 0]
+    solutions = []
+    for m in rng:
+        for p in rng:
+            # roots of X^2 + pX + m: a=1,b=p,c=m
+            rs = roots_of_quadratic(1,p,m)
+            if rs is None:
+                continue
+            r,s = rs
+            # roots 2r, 2s are roots of X^2 + mX + n
+            # sum of roots = -m, product = n
+            # sum of 2r,2s = 2(r+s) = -m => m = -2(r+s)
+            # product of roots = 4*r*s = n
+            # already m fixed integer, check if m = -2(r+s)
+            # Check if close for floats or exactly equal for fractions
+            lhs = Fraction(m)
+            rhs = Fraction(-2)*(Fraction(r)+Fraction(s)) if (is_rational(r) and is_rational(s)) else -2*(rat_to_float(r)+rat_to_float(s))
+            if (is_rational(r) and is_rational(s) and lhs == rhs) or (not(is_rational(r) and is_rational(s)) and abs(float(lhs)-rhs) < 1e-8):
+                # then n=4*r*s
+                n = 4*Fraction(r)*Fraction(s) if is_rational(r) and is_rational(s) else 4*rat_to_float(r)*rat_to_float(s)
+                # skip zero n or p to satisfy conditions
+                if n == 0:
+                    continue
+                # n/p = ?
+                try:
+                    ratio = n/Fraction(p)
+                except:
+                    ratio = float(n)/p
+                print(f"m={m}, n={n}, p={p}, n/p={ratio}")
+                solutions.append((m,n,p,ratio))
+    # Find unique ratios printed
+    unique_ratios = set(sol[3] for sol in solutions)
+    # If all ratios equal, print the extremal
+    if len(unique_ratios) == 1:
+        r = unique_ratios.pop()
+        print(f"All found ratios equal to: {r}")
+
+if __name__=="__main__":
+    main()
+```

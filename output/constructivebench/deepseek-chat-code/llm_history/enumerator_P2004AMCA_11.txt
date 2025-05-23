@@ -1,0 +1,59 @@
+[write_program]
+This problem involves finding the number of dimes (d) in a collection of coins (pennies, nickels, dimes, quarters) given two average value conditions. We'll translate the Lean problem into Python to enumerate possible solutions.
+
+The key equations are:
+1. (p + 5n + 10d + 25q)/(p+n+d+q) = 20
+2. (p + 5n + 10d + 25(q+1))/(p+n+d+q+1) = 21
+
+We'll:
+1. Iterate through reasonable values for q (quarters)
+2. For each q, solve for possible d (dimes) values
+3. Check if the equations hold with integer solutions
+4. Output valid (q,d) pairs and eventually the solution for d
+
+```python
+def solve():
+    # Iterate possible quarter counts (q)
+    for q in range(0, 20):
+        # From first equation: total coins (tc) = p + n + d + q
+        # total value (tv) = p + 5n + 10d + 25q = 20*tc
+        # From second equation: (tv + 25)/(tc + 1) = 21 => tv + 25 = 21tc + 21
+        # Substitute tv = 20tc => 20tc + 25 = 21tc + 21 => tc = 4
+        tc = 4
+        tv = 20 * tc
+        
+        # Now we have p + n + d = tc - q = 4 - q
+        # and p + 5n + 10d = tv - 25q = 80 - 25q
+        
+        # Let s = p + n + d = 4 - q
+        # Let t = p + 5n + 10d = 80 - 25q
+        s = 4 - q
+        if s < 0:
+            continue  # q too large
+        
+        # We have two equations:
+        # p + n + d = s
+        # p + 5n + 10d = t
+        
+        # Subtract first from second: 4n + 9d = t - s
+        rhs = (80 - 25*q) - (4 - q)
+        # 4n + 9d = 76 - 24q
+        
+        # Now iterate possible d values
+        max_d = (76 - 24*q) // 9 if (76 - 24*q) >= 0 else -1
+        for d in range(0, max_d + 1):
+            remaining = 76 - 24*q - 9*d
+            if remaining >= 0 and remaining % 4 == 0:
+                n = remaining // 4
+                p = s - n - d
+                if p >= 0 and n >= 0:
+                    print(f"q={q}, d={d}, n={n}, p={p}")
+                    # Verify equations
+                    tc = p + n + d + q
+                    tv = p + 5*n + 10*d + 25*q
+                    if tc == 4 and tv == 80:
+                        print(f"Valid solution found: d={d}")
+                        return  # We found the minimal solution
+
+solve()
+```

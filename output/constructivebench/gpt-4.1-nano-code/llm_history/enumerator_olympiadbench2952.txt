@@ -1,0 +1,64 @@
+[write_program]
+This problem involves identifying the smallest positive integer `n` with exactly 11 adjacent digit pairs that are prime when combined, and the first digit is non-zero. To efficiently find this, we will:
+- Generate candidates with increasing digit lengths,
+- For each candidate, compute the count of prime-digit pairs,
+- Check the conditions, and stop when the minimum is found,
+- Stream answers as soon as they are identified.
+
+We'll limit the search to reasonable sizes for demonstration, and since the problem asks for the least such `n`, we'll keep track of minimal candidates. We won't hardcode the answer, but demonstrate an enumeration approach.
+
+```python
+# Python code to enumerate candidates with increasing number of digits,
+# check when exactly 11 prime pairs occur, and if the first digit is non-zero.
+# Stops when the smallest such n is found.
+
+from itertools import product
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    if n in (2, 3):
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, int(math.isqrt(n)) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+# Generate all digit sequences of length `length` with first digit != 0
+def generate_candidates(length):
+    for digits in product(range(1, 10), *([range(10)] * (length - 1))):
+        yield digits
+
+def count_prime_pairs(digits):
+    count = 0
+    for a, b in zip(digits, digits[1:]):
+        if is_prime(a * 10 + b):
+            count += 1
+    return count
+
+# Search for minimum n satisfying conditions
+found_n = None
+min_n = None
+
+# Increase length gradually; limit to avoid excessive runtime.
+for length in range(2, 15):  # Arbitrary upper bound
+    for digits in generate_candidates(length):
+        c = count_prime_pairs(digits)
+        # Check conditions:
+        # 1) count of prime pairs = 11
+        # 2) first digit != 0 (guaranteed by generation)
+        if c == 11:
+            n = int(''.join(map(str, digits)))
+            print(f"Found candidate n = {n} with {c} prime pairs and length {length}")
+            if (min_n is None) or (n < min_n):
+                min_n = n
+                found_n = n
+    if found_n is not None:
+        break  # Found the minimal candidate
+
+# Output the minimum answer found
+print(f"Enumerated smallest n with 11 prime pairs: {min_n}")
+```

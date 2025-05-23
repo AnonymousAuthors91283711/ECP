@@ -1,0 +1,74 @@
+[write_program]
+The problem is to characterize functions \( f:\mathbb{R}\to\mathbb{R} \) positive on positive reals such that for all positive \( w, x, y, z \) with \( w x = y z \),
+\[
+\frac{(f(w))^2 + (f(x))^2}{f(y^2) + f(z^2)} = \frac{w^2 + x^2}{y^2 + z^2}.
+\]
+We want to enumerate candidate functions \( f \) that approximately satisfy this on positive inputs.
+
+This is a functional equation problem, quite challenging symbolically. We'll numerically test some small parameterized families. Natural guesses might be \( f(t) = c t^k \) functions or linear functions.
+
+We'll check the equation on sample quadruples \((w,x,y,z)\) such that \(wx=yz\), using several forms of \( f \) to see when the eqn holds approximately.
+
+```python
+# Enumerate candidate functions f(t) = c * t^k + d for small c,d,k to see if they satisfy the condition approximately
+import math
+
+def lhs(f,w,x,y,z):
+    return (f(w)**2 + f(x)**2)/(f(y**2)+f(z**2))
+
+def rhs(w,x,y,z):
+    return (w**2 + x**2)/(y**2 + z**2)
+
+def test_candidate(f):
+    # Test on several samples w,x,y,z >0 with w*x = y*z
+    samples = [
+        (1.0, 2.0, 1.5, 4/3), # 1*2=1.5*(4/3)=2
+        (0.5, 3.0, 1.0, 1.5), # 0.5*3=1*1.5=1.5
+        (2.0, 2.0, 1.5,8/3),  # 2*2=4=1.5*(8/3)=4
+        (1.0, 1.0, 0.5, 2.0), # 1*1=0.5*2=1
+    ]
+    max_diff = 0
+    for w,x,y,z in samples:
+        left = lhs(f,w,x,y,z)
+        right = rhs(w,x,y,z)
+        diff = abs(left - right)
+        max_diff = max(max_diff,diff)
+        if diff > 1e-6:
+            return False
+    return True
+
+print("Testing functions of form f(t)=c*t^k + d with small c,d,k")
+
+for c in [0.5,1,2]:
+    for k in [-1,0,0.5,1,2]:
+        for d in [0]:
+            def f(t,c=c,k=k,d=d):
+                return c*(t**k)+d
+            if test_candidate(f):
+                print(f"Candidate function: f(t) = {c}*t^{k} + {d}")
+
+print("Testing function f(t)=c*t, c>0")
+for c in [0.5,1,2]:
+    def f(t,c=c): return c*t
+    if test_candidate(f):
+        print(f"Candidate function: f(t) = {c}*t")
+
+print("Testing function f(t)=c*t^2")
+for c in [0.5,1,2]:
+    def f(t,c=c): return c*t**2
+    if test_candidate(f):
+        print(f"Candidate function: f(t) = {c}*t^2")
+
+print("Testing constant functions f(t)=c")
+for c in [1,2,3]:
+    def f(t,c=c): return c
+    if test_candidate(f):
+        print(f"Candidate function: f(t) = {c}")
+
+print("Testing linear functions f(t)=a*t+b for a,b small")
+for a in [0.5,1,2]:
+    for b in [0,0.1]:
+        def f(t,a=a,b=b): return a*t+b
+        if test_candidate(f):
+            print(f"Candidate function: f(t) = {a}*t + {b}")
+```

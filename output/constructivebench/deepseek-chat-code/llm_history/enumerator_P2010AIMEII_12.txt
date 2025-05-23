@@ -1,0 +1,67 @@
+[write_program]
+This problem involves finding the smallest perimeter p of two distinct isosceles triangles with integer side lengths that satisfy certain conditions. The triangles have perimeters p, sides (a₁, a₁, b₁) and (a₂, a₂, b₂), with a₁ > b₁ and a₂ > b₂. The product of their bases is 56 (8*7), and their areas are equal.
+
+We'll write a Python program to:
+1. Enumerate all possible (b₁, b₂) pairs where b₁*b₂=56 and b₁≠b₂
+2. For each pair, find possible a values that make integer perimeters and satisfy the area condition
+3. Track the minimal perimeter found
+
+```python
+import math
+
+def find_min_perimeter():
+    min_p = float('inf')
+    # All possible (b1, b2) pairs where b1*b2=56 and b1 != b2
+    b_pairs = [(1,56), (2,28), (4,14), (7,8), (8,7), (14,4), (28,2), (56,1)]
+    
+    for b1, b2 in b_pairs:
+        # Find possible a1 values for triangle (a1,a1,b1)
+        a1_min = (b1 + 1) // 2 + 1  # a1 > b1 and triangle inequality
+        a1_max = 200  # reasonable upper bound
+        valid_a1 = []
+        
+        for a1 in range(a1_min, a1_max + 1):
+            # Check triangle inequality: 2a1 > b1
+            if 2*a1 <= b1:
+                continue
+            # Calculate area squared (4a1^2 - b1^2) must be perfect square
+            discriminant = 4*a1*a1 - b1*b1
+            if discriminant <= 0:
+                continue
+            sqrt_disc = int(math.isqrt(discriminant))
+            if sqrt_disc * sqrt_disc != discriminant:
+                continue
+            valid_a1.append(a1)
+        
+        # Similarly for a2 with b2
+        a2_min = (b2 + 1) // 2 + 1
+        a2_max = 200
+        valid_a2 = []
+        
+        for a2 in range(a2_min, a2_max + 1):
+            if 2*a2 <= b2:
+                continue
+            discriminant = 4*a2*a2 - b2*b2
+            if discriminant <= 0:
+                continue
+            sqrt_disc = int(math.isqrt(discriminant))
+            if sqrt_disc * sqrt_disc != discriminant:
+                continue
+            valid_a2.append(a2)
+        
+        # Find pairs (a1,a2) where b1*sqrt(4a1^2-b1^2) = b2*sqrt(4a2^2-b2^2)
+        for a1 in valid_a1:
+            area1 = b1 * math.isqrt(4*a1*a1 - b1*b1)
+            for a2 in valid_a2:
+                area2 = b2 * math.isqrt(4*a2*a2 - b2*b2)
+                if area1 == area2 and a1 != a2:
+                    p1 = 2*a1 + b1
+                    p2 = 2*a2 + b2
+                    if p1 == p2 and p1 < min_p:
+                        min_p = p1
+                        print(f"Found perimeter {p1} with (a1,b1)=({a1},{b1}), (a2,b2)=({a2},{b2})")
+    
+    print(f"Minimum perimeter found: {min_p}")
+
+find_min_perimeter()
+```

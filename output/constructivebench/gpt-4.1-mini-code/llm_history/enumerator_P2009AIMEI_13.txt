@@ -1,0 +1,43 @@
+[write_program]
+The problem involves finding the least natural number \( s \) such that there exists a sequence \( a: \mathbb{N} \to \mathbb{N} \) satisfying:
+- \( a_1 + a_2 = s \),
+- and for all \( n \geq 1 \), \( a_{n+2} = \frac{a_n + 2009}{1 + a_{n+1}} \), with all \( a_n \in \mathbb{N} \).
+
+We want to enumerate possible initial pairs \((a_1, a_2)\) with small values, compute subsequent \( a_n \) terms using the recurrence (only if the division yields an integer), and identify the smallest sum \( s = a_1 + a_2 \) producing a full infinite sequence of natural numbers. Since an infinite sequence is impossible to test, we limit \( n \) to some small number (e.g., 10) to check feasibility and print sums as soon as sequences behave nicely.
+
+```python
+# Enumerate possible initial pairs (a1, a2) with small values
+# and attempt to generate terms using the recurrence:
+# a_{n+2} = (a_n + 2009)/(1 + a_{n+1}) if divisible,
+# all terms must be natural numbers.
+# Print candidate sums a1 + a2 as soon as found (streaming output).
+# Limit n to 10 to check feasibility.
+
+def enumerate_solutions(max_start=50, max_len=10):
+    target = 2009
+    for a1 in range(1, max_start+1):
+        for a2 in range(1, max_start+1):
+            seq = [a1, a2]
+            valid = True
+            for n in range(max_len - 2):
+                numerator = seq[n] + target
+                denom = 1 + seq[n+1]
+                if numerator % denom != 0:
+                    valid = False
+                    break
+                next_term = numerator // denom
+                if next_term <= 0:
+                    valid = False
+                    break
+                seq.append(next_term)
+            if valid:
+                s = a1 + a2
+                # Print the discovered feasible sequence starting sum and sequence
+                print(f"s = {s}, sequence start = {seq[:max_len]}")
+                # Since we want minimal s, note down minimal found
+                # but continue enumerating all ≤ max_start*2
+
+enumerate_solutions()
+
+```
+This script tests all pairs \((a_1, a_2)\) where each is up to 50, prints sums \( s = a_1 + a_2 \) and the first 10 terms of the sequence if the recurrence holds for 10 terms without remainder and positivity. This can guide conjecturing minimal \( s \).

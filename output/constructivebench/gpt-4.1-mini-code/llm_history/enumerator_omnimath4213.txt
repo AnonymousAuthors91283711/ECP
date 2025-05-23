@@ -1,0 +1,60 @@
+[write_program]
+The problem involves finding integer pairs \((a,b)\) such that the polynomial \(X^2 + aX + b\) divides a polynomial of the form
+\[
+\sum_{i=0}^n c_i X^i, \quad \text{where } c_n = 1, \quad c_{n-1} = 1, \quad c_i = (-1)^i \text{ for } i < n-1.
+\]
+
+This means \((X^2 + aX + b)P(X) = Q_n(X)\) where
+\[
+Q_n(X) = X^n + X^{n-1} + \sum_{i=0}^{n-2} (-1)^i X^i.
+\]
+
+The program will:
+- Enumerate small integer values of \(a, b\) in some range,
+- Try small \(n\) (degree of \(Q_n\)) up to a threshold,
+- Check if \(X^2 + aX + b\) divides \(Q_n(X)\) in \(\mathbb{Z}[X]\),
+- Print pairs \((a,b)\) and associated \(n\).
+
+We'll use Python's `sympy` for exact polynomial computations and division.
+
+```python
+# Enumerate integer pairs (a,b) and degrees n to check divisibility of Q_n(X) by X^2 + aX + b
+from sympy import symbols, poly, div, ZZ
+
+X = symbols('X')
+
+def Q_poly(n):
+    # Construct Q_n(X) = X^n + X^{n-1} + sum_{i=0}^{n-2} (-1)^i X^i for n >= 1
+    coeffs = []
+    for i in range(n+1):
+        if i == n:
+            coeffs.append(1)
+        elif i == n-1:
+            coeffs.append(1)
+        else:
+            coeffs.append(((-1)**i) if i <= n-2 else 0)
+    # Polynomial from coeff list
+    return poly(sum(c*X**i for i,c in enumerate(coeffs)), X, domain=ZZ)
+
+print("Enumerating possible (a,b) and degrees n with divisibility check:")
+
+# Limits chosen to keep output concise
+A_range = range(-3,4)
+B_range = range(-5,6)
+N_range = range(2,8)  # n >= 2 since deg(Q_n) = n and divisor poly is degree 2
+
+seen = set()
+
+for a in A_range:
+    for b in B_range:
+        divisor = poly(X**2 + a*X + b, X, domain=ZZ)
+        for n in N_range:
+            Qn = Q_poly(n)
+            quotient, remainder = div(Qn, divisor, domain=ZZ)
+            if remainder.as_expr() == 0:
+                key = (a,b)
+                if key not in seen:
+                    print(f"(a,b)=({a},{b}) divides Q_{n}(X) with quotient {quotient.as_expr()}")
+                    seen.add(key)
+```
+

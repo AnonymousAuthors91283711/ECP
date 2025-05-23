@@ -1,0 +1,56 @@
+[write_program]
+This problem involves finding the smallest positive integer \( N \) such that there exists a function \( p: \mathbb{N} \to \mathbb{Z} \) satisfying:
+- \( p(d) = 1 \) if \( d \mid N \),
+- \( p(d) = 0 \) otherwise,
+and
+- \( X^2 + X + 1 \mid 166 - \sum_{d \mid N} X^d \) in \(\mathbb{Z}[X]\).
+
+The polynomial \(X^2 + X + 1\) is the 3rd cyclotomic polynomial and roots of it are primitive 3rd roots of unity, \(\omega\). 
+
+The divisibility means that evaluating at \(\omega\) must make \(166 - \sum_{d \mid N} \omega^d = 0\), i.e.,
+
+\[
+\sum_{d \mid N} \omega^d = 166.
+\]
+
+Since \(\omega^3 = 1\), \(\omega^d\) depends only on \(d \mod 3\). The sum of \(\omega^d\) over divisors \(d\) of \(N\) is a sum of roots of unity 1, \(\omega\), and \(\omega^2\). Its absolute value never exceeds the number of divisors. The number 166 is large; the sum of roots of unity cannot be 166 directly unless many terms equal 1.
+
+Re-expressing the polynomial divisibility directly in a computational way involves checking divisibility modulo \( X^2 + X + 1 \), equivalently verifying if the polynomial's remainder mod \(X^2+X+1\) is zero.
+
+I will enumerate small \(N\) and check the polynomial divisibility condition.
+
+The code below:
+- Enumerates \(N\) from 1 to a threshold.
+- Computes the sum polynomial \( S = \sum_{d \mid N} X^{d} \).
+- Checks if \(X^2 + X + 1\) divides \(166 - S\).
+- Prints each valid \(N\) immediately.
+- Finally prints the smallest \(N\) found.
+
+```python
+from sympy import symbols, Poly, div, ZZ
+
+# Polynomial ring over integers
+X = symbols('X')
+Q = Poly(X**2 + X + 1, X, domain=ZZ)
+
+def divisors(n):
+    return [d for d in range(1,n+1) if n % d == 0]
+
+maxN = 100  # limit search to speed and output length
+results = []
+
+for N in range(1, maxN+1):
+    # sum over divisors of X^d
+    S = sum(Poly(X**d, X, domain=ZZ) for d in divisors(N))
+    P = Poly(166, X, domain=ZZ) - S
+    # division: check remainder modulo Q
+    _, r = div(P, Q, domain=ZZ)
+    if r.is_zero:
+        print(f"Valid N = {N}")
+        results.append(N)
+
+if results:
+    print(f"Smallest valid N = {min(results)}")
+else:
+    print("No valid N found up to", maxN)
+```

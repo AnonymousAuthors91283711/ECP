@@ -1,0 +1,44 @@
+[write_program]
+This problem involves summing binomial coefficients modulo 3 over a triangular region and normalizing by 81*81. We'll write a Python program to compute this sum empirically for small values up to 81 to help conjecture the pattern.
+
+The key observations:
+1. We need to compute binomial coefficients mod 3 (using Lucas' theorem for efficiency)
+2. Sum over a triangular region where b ≤ a
+3. Normalize by n² where n=81
+
+```python
+def binomial_mod3(a, b):
+    """Compute binomial(a,b) mod 3 using Lucas theorem"""
+    res = 1
+    while a > 0 or b > 0:
+        a_digit = a % 3
+        b_digit = b % 3
+        if b_digit > a_digit:
+            return 0
+        # Multiply by binomial(a_digit, b_digit) mod 3
+        res *= (1 if b_digit == 0 else (a_digit if b_digit == 1 else a_digit*(a_digit-1)//2))
+        res %= 3
+        a = a // 3
+        b = b // 3
+    return res
+
+def compute_sum(n):
+    total = 0
+    for a in range(n):
+        for b in range(a + 1):
+            total += binomial_mod3(a, b)
+    return total
+
+# Compute for powers of 3 up to 81 (3^4)
+for k in range(5):
+    n = 3**k
+    sum_val = compute_sum(n)
+    normalized = sum_val / (n * n)
+    print(f"n={n}: sum={sum_val}, normalized={normalized}")
+
+# Output the result for n=81 (3^4)
+n = 81
+sum_val = compute_sum(n)
+normalized = sum_val / (n * n)
+print(f"\nFinal result for n=81: {normalized}")
+```

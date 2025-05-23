@@ -1,0 +1,55 @@
+[write_program]
+The problem relates to finding \(p \in [0,1]\) such that
+\[
+\binom{4}{2}p^2(1-p)^2 = \binom{4}{3}p^3(1-p).
+\]
+We want to enumerate possible values of \(p\), ideally exact or with good approximations for the root(s) of this equation.
+
+```python
+from math import comb, isclose
+
+# Equation: C(4,2) * p^2 * (1-p)^2 == C(4,3) * p^3 * (1-p)
+# Let f(p) = LHS - RHS = 0
+
+C42 = comb(4, 2)
+C43 = comb(4, 3)
+
+def f(p):
+    return C42*p**2*(1-p)**2 - C43*p**3*(1-p)
+
+# Enumerate p in [0, 1], step by 0.01 for quick scanning; print candidates where sign changes (roots approx)
+step = 0.01
+prev_p = 0.0
+prev_val = f(prev_p)
+print("Checking roots of equation: C(4,2)*p^2*(1-p)^2 = C(4,3)*p^3*(1-p)")
+
+for i in range(1, 101):
+    p = i*step
+    val = f(p)
+    if prev_val == 0:
+        print(f"p = {prev_p:.2f} is a root exactly")
+    elif val == 0:
+        print(f"p = {p:.2f} is a root exactly")
+    elif prev_val * val < 0:
+        # sign change detected, approximate root between prev_p and p
+        # refine with bisection for 10 steps
+        a, b = prev_p, p
+        for _ in range(10):
+            mid = (a + b)/2
+            fmid = f(mid)
+            if isclose(fmid, 0, abs_tol=1e-10):
+                break
+            if prev_val * fmid < 0:
+                b = mid
+            else:
+                a = mid
+        root = (a + b)/2
+        print(f"Approximate root near p = {root:.5f}")
+    prev_p, prev_val = p, val
+
+# Also check endpoints
+if isclose(f(0), 0, abs_tol=1e-14):
+    print("p = 0 is a root exactly")
+if isclose(f(1), 0, abs_tol=1e-14):
+    print("p = 1 is a root exactly")
+```

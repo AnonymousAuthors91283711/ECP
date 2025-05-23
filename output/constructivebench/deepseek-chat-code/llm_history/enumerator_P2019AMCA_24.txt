@@ -1,0 +1,57 @@
+[write_program]
+This problem asks for the count of numbers n between 1 and 50 where (n²)! is divisible by (n!)^n. We'll write a Python program to check this condition for each n from 1 to 50.
+
+The key observation is that (n²)! must contain at least as many prime factors as (n!)^n. We'll compute this by:
+1. For each n from 1 to 50
+2. Check if for every prime p ≤ n, the exponent of p in (n²)! is ≥ n times its exponent in n!
+3. Count all n where this holds true
+
+```python
+import math
+from collections import defaultdict
+
+def prime_factors(n):
+    factors = defaultdict(int)
+    while n % 2 == 0:
+        factors[2] += 1
+        n = n // 2
+    i = 3
+    while i * i <= n:
+        while n % i == 0:
+            factors[i] += 1
+            n = n // i
+        i += 2
+    if n > 2:
+        factors[n] += 1
+    return factors
+
+def legendre(n, p):
+    count = 0
+    power = p
+    while power <= n:
+        count += n // power
+        power *= p
+    return count
+
+count = 0
+for n in range(1, 51):
+    valid = True
+    # Get all primes <= n
+    primes = set()
+    for i in range(2, n+1):
+        if all(i % p != 0 for p in primes):
+            primes.add(i)
+    
+    for p in primes:
+        exp_n_fact = legendre(n, p)
+        exp_n_sq_fact = legendre(n*n, p)
+        if exp_n_sq_fact < n * exp_n_fact:
+            valid = False
+            break
+    
+    if valid:
+        print(n)
+        count += 1
+
+print(f"Total count: {count}")
+```

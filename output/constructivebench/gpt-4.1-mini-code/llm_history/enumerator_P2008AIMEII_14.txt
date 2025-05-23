@@ -1,0 +1,92 @@
+[write_program]
+This problem involves variables \(a, b, x, y\) with constraints and relations involving squares and sums. We want to find the greatest \(\rho\) such that there exist \(x, y \geq 0\) with \(x < a, y < b\), and the two given equations hold:
+
+\[
+a^2 = x^2 + y^2 + xy \quad \text{and} \quad b^2 = x^2 + y^2
+\]
+
+with \(b \leq a\) and \(b > 0\).
+
+To investigate this, let's fix some small rational pairs \((a,b)\) with \(b \leq a\), \(b > 0\), and try to find \(\rho = \frac{a}{b}\) that works (by solving for \(x,y\) satisfying the system and constraints). The problem likely wants the supremum of \(\rho = \frac{a}{b}\) for which the conditions hold.
+
+We can attempt enumerations over small positive integer pairs \((a,b)\), with \(1 \leq b \leq a \leq 10\), and for each pair try to solve for \(x,y\) with the constraints. Since \(x^2 + y^2 = b^2\), and \(x,y\) nonnegative real, we parametrize \(x = r \cos \theta, y = r \sin \theta\) or directly check values on the circle \(x^2 + y^2 = b^2\).
+
+Then we check if \(a^2 = x^2 + y^2 + xy = b^2 + xy\), so \(a^2 = b^2 + xy\), so \(xy = a^2 - b^2\).
+
+Given \(x^2 + y^2 = b^2\), and \(xy = a^2 - b^2\), the problem boils down to finding \(x,y \ge 0\), \(x < a\), \(y < b\), and their product equal to \(a^2 - b^2\), with sum of squares equal to \(b^2\).
+
+Because \(xy\) cannot exceed \(\frac{(x + y)^2}{4} \leq \frac{(a + b)^2}{4}\), and \(x,y\) constrained by \(x^2 + y^2 = b^2\), we may try to enumerate pairs \((a,b)\), attempt to find \(x,y\), print the approximate ratio \(\frac{a}{b}\).
+
+We will enumerate rational values of \(a,b\), try solving quadratic for \(x,y\) (or parametrize \(x = t\), \(y = \sqrt{b^2 - t^2}\)), then check if \(t \cdot y = a^2 - b^2\).
+
+We print each \(\frac{a}{b}\) where a solution with constraints is found.
+
+```python
+# Enumerate candidate pairs (a,b) with 1 <= b <= a <= 10 integers
+# For each (a,b), attempt to find x,y >=0 with x^2 + y^2 = b^2, xy = a^2 - b^2,
+# and check x < a, y < b.
+
+import math
+
+def approx_equal(a, b, tol=1e-9):
+    return abs(a - b) < tol
+
+def try_find_xy(a, b):
+    # Given a,b, need to find x,y >=0 with:
+    # x^2 + y^2 = b^2
+    # xy = a^2 - b^2
+    # Also x < a, y < b
+    delta = (x_plus_y := None)
+    # From x+y = s, xy = p,
+    # x,y roots of t^2 - s t + p=0
+    # Also x^2 + y^2 = (x + y)^2 - 2xy = b^2
+    # So b^2 = s^2 - 2p
+    # So s^2 = b^2 + 2p = b^2 + 2(a^2 - b^2) = 2 a^2 - b^2
+    p = a*a - b*b
+    s_sq = 2 * a*a - b*b
+    if s_sq < 0:
+        return None
+    s = math.sqrt(s_sq)
+    # Quadratic equation t^2 - s t + p = 0
+    discrim = s*s - 4*p
+    if discrim < 0:
+        return None
+    sqrt_disc = math.sqrt(discrim)
+    t1 = (s + sqrt_disc) / 2
+    t2 = (s - sqrt_disc) / 2
+    candidates = [(t1, s - t1), (t2, s - t2)]
+    for (x, y) in candidates:
+        if x < 0 or y < 0:
+            continue
+        if x >= a or y >= b:
+            continue
+        # Check x^2 + y^2 = b^2 approx, xy = p approx
+        if not approx_equal(x*x + y*y, b*b):
+            continue
+        if not approx_equal(x*y, p):
+            continue
+        return (x,y)
+    return None
+
+def main():
+    # For each integer pair b <= a in 1..10
+    # print all found a/b with a solution
+    found = []
+    print("Testing integer pairs (a,b) with 1 <= b <= a <= 10")
+    for b in range(1, 11):
+        for a in range(b, 11):
+            xy = try_find_xy(a, b)
+            if xy is not None:
+                ratio = a / b
+                print(f"a={a}, b={b}, x={xy[0]:.6f}, y={xy[1]:.6f}, ratio a/b={ratio:.6f}")
+                found.append(ratio)
+    if found:
+        max_ratio = max(found)
+        print(f"\nMaximum ratio a/b found: {max_ratio:.6f}")
+    else:
+        print("No valid (a,b,x,y) found.")
+
+if __name__ == "__main__":
+    main()
+```
+

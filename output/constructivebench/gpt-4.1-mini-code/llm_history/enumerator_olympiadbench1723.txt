@@ -1,0 +1,59 @@
+[write_program]
+The problem relates to finding the smallest integer M such that any set of M Boolean functions on an N-element domain contains an N-sized subset "monochromatic" in some coordinate. To explore this, we'll enumerate sets of Boolean functions and check this property for small N. We print candidate M values that suffice.
+
+```python
+from itertools import product, combinations
+
+def monocolor_subset(flags, N):
+    # flags: list of functions from {0..N-1} to {0,1}
+    # Check if there exists c in {0,1} so that for all i in [0..N-1],
+    # exists f in subset with f(i) == c
+    for c in [0,1]:
+        if all(any(f[i] == c for f in flags) for i in range(N)):
+            return True
+    return False
+
+def is_sufficient(M, N):
+    # Check if for every flags set of size M (subset of all 2**N functions),
+    # there exists subset s of size N fulfilling the condition
+    funcs = list(product((0,1), repeat=N))
+    # Enumerate all subsets of size M of funcs
+    # Check that for every such flags, there is s subset of size N with monochromatic coverage
+    # Too large for exhaustive; test random or partial enumeration.
+    # Here, we test some large random samples and also partial enumeration for small values.
+    from random import sample
+    tries = 0
+    max_tries = 500
+    total = len(funcs)
+    if M > total:
+        return True
+    # Early test: For small N, do full check if feasible (M small)
+    if N <= 4 and M <= 8:
+        from itertools import combinations
+        for flags in combinations(funcs, M):
+            # For this flags, check no suitable s of size N exists => fail
+            # We check all s of size N subsets of flags
+            if not any(monocolor_subset(s, N) for s in combinations(flags, N)):
+                return False
+        return True
+    # Else random checks
+    while tries < max_tries:
+        flags = sample(funcs, M)
+        if not any(monocolor_subset(s, N) for s in combinations(flags, N)):
+            return False
+        tries += 1
+    return True
+
+def enumerate_candidates():
+    # We test small N from 4 to 6, search minimal M satisfing
+    for N in range(4,7):
+        funcs_count = 2**N
+        print(f"N = {N}, total funcs = {funcs_count}")
+        for M in range(N, funcs_count+1):
+            if is_sufficient(M, N):
+                print(f"Minimal M for N={N} might be {M}")
+                break
+
+if __name__=="__main__":
+    enumerate_candidates()
+```

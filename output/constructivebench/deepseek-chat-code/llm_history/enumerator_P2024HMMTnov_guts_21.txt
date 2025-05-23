@@ -1,0 +1,54 @@
+[write_program]
+This problem involves calculating the probability that two randomly selected points from an X-shaped pentomino (union of 4 rectangles) have the property that the line segment connecting them lies entirely within the pentomino. We'll approach this by discretizing the problem and enumerating possible pairs.
+
+```python
+import itertools
+
+# Define the X-pentomino as a union of rectangles (x ranges, y ranges)
+rectangles = [
+    ((0, 1), (1, 2)),   # Center-left
+    ((1, 2), (0, 3)),   # Middle vertical
+    ((2, 3), (1, 2)),   # Center-right
+    ((-1, 0), (1, 2))   # Leftmost
+]
+
+def point_in_pentomino(x, y):
+    """Check if a point (x,y) is in the X-pentomino"""
+    for (x1, x2), (y1, y2) in rectangles:
+        if x1 <= x <= x2 and y1 <= y <= y2:
+            return True
+    return False
+
+def line_in_pentomino(p1, p2, steps=10):
+    """Check if line segment between p1 and p2 stays in pentomino"""
+    x1, y1 = p1
+    x2, y2 = p2
+    for t in (i/steps for i in range(steps+1)):
+        x = t*x1 + (1-t)*x2
+        y = t*y1 + (1-t)*y2
+        if not point_in_pentomino(x, y):
+            return False
+    return True
+
+# Sample points from each rectangle (discretized)
+sample_points = []
+for (x1, x2), (y1, y2) in rectangles:
+    for x in [x1 + 0.25, x1 + 0.5, x1 + 0.75]:
+        for y in [y1 + 0.25, y1 + 0.5, y1 + 0.75]:
+            if point_in_pentomino(x, y):
+                sample_points.append((x, y))
+
+# Count valid pairs
+total_pairs = 0
+valid_pairs = 0
+for p1, p2 in itertools.product(sample_points, repeat=2):
+    total_pairs += 1
+    if line_in_pentomino(p1, p2):
+        valid_pairs += 1
+        print(f"Valid pair: {p1} - {p2}")
+
+if total_pairs > 0:
+    print(f"Probability estimate: {valid_pairs/total_pairs:.4f}")
+else:
+    print("No pairs found")
+```

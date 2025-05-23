@@ -1,0 +1,37 @@
+[write_program]
+The problem searches for 5 distinct integers (V, U, Q, A, R) from {1, 2, 3, 4, 5} satisfying a complex equation involving powers and sums with division. We will enumerate all 5! = 120 permutations of {1,2,3,4,5} to find all candidates. For each tuple, we check if
+
+((V + U + Q + A + R)^2) / (V - U - Q + A + R) == V^(U^(Q^(A^R)))
+
+and print those that satisfy the equation exactly.
+
+We must be careful about division by zero, integer division vs float division, and large exponentials. Use integer arithmetic whenever possible, and skip invalid cases.
+
+```python
+from itertools import permutations
+
+S = {1,2,3,4,5}
+
+def power_tower(v,u,q,a,r):
+    # Compute v^{u^{q^{a^r}}} carefully using pow with three arguments to avoid overflow if needed
+    # But here exponents are small, so normal pow is okay.
+    return pow(v, pow(u, pow(q, pow(a, r))))
+
+for tup in permutations(S):
+    V,U,Q,A,R = tup
+    sum_val = V+U+Q+A+R
+    denom = V - U - Q + A + R
+    if denom == 0:
+        continue
+    numerator = sum_val*sum_val
+    if numerator % denom != 0:
+        continue
+    left = numerator // denom
+    try:
+        right = power_tower(V,U,Q,A,R)
+    except OverflowError:
+        continue
+    if left == right:
+        print(f"Found solution: V={V}, U={U}, Q={Q}, A={A}, R={R}")
+```
+

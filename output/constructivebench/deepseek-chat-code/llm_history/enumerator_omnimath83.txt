@@ -1,0 +1,75 @@
+[write_program]
+This problem asks for the minimal constant L such that for any real numbers a₁,...,aₙ and b, the given inequality holds. We'll write a Python program to explore small values of n (starting from 2) and try to conjecture the pattern for L.
+
+The approach will:
+1. Test small integer values of n (2 through 5)
+2. For each n, test various candidate L values
+3. Check the inequality for simple cases (like all a_i equal, or alternating patterns)
+4. Output promising candidates that satisfy these test cases
+
+```python
+import math
+
+def test_inequality(n, L, test_cases):
+    """Test if L satisfies the inequality for given test cases."""
+    for a, b in test_cases:
+        sum_sqrt_diff = sum(math.sqrt(abs(ai - b)) for ai in a)
+        sum_sqrt_a = sum(math.sqrt(abs(ai)) for ai in a)
+        sum_a = sum(a)
+        lhs = L * sum_sqrt_diff + math.sqrt(n * abs(sum_a))
+        if lhs < sum_sqrt_a - 1e-10:  # Account for floating point errors
+            return False
+    return True
+
+def generate_test_cases(n):
+    """Generate simple test cases for given n."""
+    cases = []
+    # Case 1: all a_i equal to 1
+    cases.append(([1]*n, 0))
+    cases.append(([1]*n, 1))
+    cases.append(([1]*n, 2))
+    
+    # Case 2: alternating 1 and 0
+    if n >= 2:
+        a = [1 if i%2 == 0 else 0 for i in range(n)]
+        cases.append((a, 0))
+        cases.append((a, 0.5))
+        cases.append((a, 1))
+    
+    # Case 3: all zeros except one 1
+    for i in range(n):
+        a = [0]*n
+        a[i] = 1
+        cases.append((a, 0))
+        cases.append((a, 0.5))
+        cases.append((a, 1))
+    
+    return cases
+
+def find_min_L(n):
+    """Find minimal L that satisfies inequality for given n."""
+    test_cases = generate_test_cases(n)
+    
+    # Binary search for minimal L
+    low = 0.0
+    high = 2.0  # Initial guess
+    while not test_inequality(n, high, test_cases):
+        high *= 2
+    
+    for _ in range(50):  # Precision iterations
+        mid = (low + high) / 2
+        if test_inequality(n, mid, test_cases):
+            high = mid
+        else:
+            low = mid
+    
+    return high
+
+for n in range(2, 6):
+    min_L = find_min_L(n)
+    print(f"n = {n}, minimal L ≈ {min_L:.6f}")
+    # Check if L = sqrt(n) - sqrt(n-1) matches
+    conjectured = math.sqrt(n) - math.sqrt(n-1)
+    print(f"  Conjectured value sqrt({n}) - sqrt({n-1}) ≈ {conjectured:.6f}")
+    print(f"  Difference: {abs(min_L - conjectured):.6f}")
+```

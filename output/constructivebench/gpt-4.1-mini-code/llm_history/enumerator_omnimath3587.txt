@@ -1,0 +1,74 @@
+[write_program]
+The problem is about graphs with a fixed number of edges (2022), vertices having degrees all at least 3 and degrees differing by at most 1, and edge-colorings with k colors that yield monochromatic paths connecting any two vertices. The goal is to find the greatest such k.
+
+To assist in conjecturing the answer, we enumerate graphs with a small number of edges (e.g. up to 10) and try various k values, printing results about possible k and colorings.
+
+We will:
+- Pick small edge counts (e.g. 4, 5,... 10) and try k = 1, 2, 3.
+- Enumerate simple graphs where degrees differ by at most 1 and are at least 3.
+- For found graphs, try edge colorings with k colors and print if the monochromatic path connectivity holds.
+  
+We print each k, edges, and result to assist in understanding the problem. We keep output short and simple due to problem complexity.
+
+```python
+from itertools import combinations, product
+from collections import defaultdict, deque
+
+def degree_condition(graph, n):
+    degs = [0]*n
+    for u,v in graph:
+        degs[u] += 1
+        degs[v] += 1
+    min_deg = min(degs)
+    max_deg = max(degs)
+    return min_deg >= 3 and max_deg - min_deg <= 1
+
+def is_connected_after_filter(edges, vertices, color, c):
+    # check if for any v1,v2 there's a monochromatic path with edges colored c
+    adj = [[] for _ in range(vertices)]
+    for (u,v), col in zip(edges, color):
+        if col == c:
+            adj[u].append(v)
+            adj[v].append(u)
+    # BFS from each vertex to check connectivity to all others
+    for start in range(vertices):
+        visited = [False]*vertices
+        queue = deque([start])
+        visited[start] = True
+        while queue:
+            curr = queue.popleft()
+            for w in adj[curr]:
+                if not visited[w]:
+                    visited[w] = True
+                    queue.append(w)
+        if not all(visited[v] for v in range(vertices)):
+            return False
+    return True
+
+def check_coloring(edges, vertices, k):
+    # Try all colorings with k colors (limit for efficiency, max 3 colors here)
+    m = len(edges)
+    for coloring in product(range(k), repeat=m):
+        if all(is_connected_after_filter(edges, vertices, coloring, c) for c in range(k)):
+            return True
+    return False
+
+def main():
+    print("Enumerating graphs with edges up to 7 and testing k=1..3")
+    max_edges = 7
+    for edges_count in range(4, max_edges+1):
+        # Assume vertices from 0..n-1 for some n, try small n (estimate n ~ edges_count*2)
+        max_vertices = min(edges_count * 2, 8)
+        for n in range(4, max_vertices+1):
+            all_possible_edges = list(combinations(range(n), 2))
+            # Choose edges_count edges from all_possible_edges
+            for edges in combinations(all_possible_edges, edges_count):
+                if degree_condition(edges, n):
+                    for k in range(1,4):
+                        if check_coloring(edges, n, k):
+                            print(f"Edges: {edges_count}, Vertices: {n}, k = {k} valid")
+                            # Print partial result, no break to get multiple samples
+
+if __name__ == "__main__":
+    main()
+```

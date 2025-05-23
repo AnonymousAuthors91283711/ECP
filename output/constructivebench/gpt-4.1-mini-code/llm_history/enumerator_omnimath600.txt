@@ -1,0 +1,82 @@
+[write_program]
+The problem involves finding the optimal constant \(\alpha\) satisfying a certain inequality over all strictly monotone sequences \(y\) with \(y_0 = 0\) and positive terms. I will write a Python program to numerically explore candidates for \(\alpha\) by considering small values of \(n\) and simple monotone sequences \(y\). This can help conjecture the true value of \(\alpha\).
+
+```python
+import math
+
+def lhs(alpha, n, y):
+    # Compute: sum_{k=0}^{n-1} (k+1)^{3/2} / sqrt(y((k+1)^2) - y(k^2))
+    total = 0.0
+    for k in range(n):
+        diff = y((k+1)**2) - y(k**2)
+        if diff <= 0:
+            return None
+        total += (k+1)**1.5 / math.sqrt(diff)
+    return alpha * total
+
+def rhs(n, y):
+    # Compute: sum_{k=0}^{n-1} ((k+1)^2 + 3(k+1) +3) / y(k+1)
+    total = 0.0
+    for k in range(n):
+        denom = y(k+1)
+        if denom <= 0:
+            return None
+        numerator = (k+1)**2 + 3*(k+1) + 3
+        total += numerator/denom
+    return total
+
+# Test with simple sequences y(x) = c*x for c > 0, which is strictly monotone and y(0)=0
+# y(k) = c*k, so y(k^2) = c*k^2
+# Let's test small n and vary alpha to find boundary values
+
+print("Testing linear y(k)=k and n=1..5 to estimate alpha")
+
+for n in range(1,6):
+    # For y(k)=k, lookup sums
+    def y(x): return float(x)
+    # Compute sums:
+    lhs_val = lambda alpha: lhs(alpha, n, y)
+    rhs_val = rhs(n, y)
+    if rhs_val is None:
+        continue
+    # Solve alpha * sum(...) >= sum(...)
+    # so alpha >= sum(...) / sum(...)
+    denom = 0.0
+    numer = 0.0
+    s1 = 0.0
+    s2 = 0.0
+    for k in range(n):
+        diff = y((k+1)**2) - y(k**2)  # (k+1)^2 - k^2
+        if diff == 0:
+            break
+        s1 += (k+1)**1.5 / math.sqrt(diff)
+        s2 += ((k+1)**2 + 3*(k+1) +3) / y(k+1)
+    if s1 > 0:
+        alpha_candidate = s2 / s1
+        print(f"n={n}, linear y(k)=k, candidate alpha = {alpha_candidate}")
+
+# Try quadratic sequences y(k)=k^2 (then y(k^2) = (k^2)^2 = k^4)
+print("\nTesting quadratic y(k)=k^2 for n=1..5:")
+
+for n in range(1,6):
+    def y(x): return float(x**2)
+    s1 = 0.0
+    s2 = 0.0
+    valid = True
+    for k in range(n):
+        diff = y((k+1)**2) - y(k**2)
+        if diff <= 0:
+            valid = False
+            break
+        s1 += (k+1)**1.5 / math.sqrt(diff)
+        denom = y(k+1)
+        if denom <= 0:
+            valid = False
+            break
+        s2 += ((k+1)**2 + 3*(k+1) +3) / denom
+    if valid and s1 > 0:
+        alpha_candidate = s2 / s1
+        print(f"n={n}, quadratic y(k)=k^2, candidate alpha = {alpha_candidate}")
+```
+
+This program tests two families of monotone sequences \(y\), linear and quadratic, computes sums for small \(n\), then prints candidate values of \(\alpha\). This aids conjecturing the infimum \(\alpha\) satisfying the inequality.

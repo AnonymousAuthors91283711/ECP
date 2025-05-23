@@ -1,0 +1,90 @@
+[write_program]
+The problem involves finding the least \( n \in \mathbb{N} \) such that for any assignment of values to `chelsea_remaining` and `opponent_remaining` variables (with given restrictions), the inequality \( chelsea\_total > opponent\_total \) holds. The values for `chelsea_remaining i` come from \(\{4,8,10\}\), and for `opponent_remaining i` come from \(\{0,2,4,8,10\}\). The sums are split: Chelsea has 50 fixed points plus the sum of her 50 remaining slots plus \(10 \times n\), while the opponent's total is the sum of the first 50 opponent values plus those from index 50 up to \(50 + (50 - n) = 100 - n\), i.e., a total length of 100.
+
+This is an optimization problem with combinatorial components, looking for the minimal \( n \) to guarantee inequality regardless of values chosen.
+
+We will enumerate possible \( n \) values starting from 0 upwards, and test whether the inequality can be broken, i.e., find assignments where \( chelsea\_total \leq opponent\_total \). For each \( n \), we try to find adversarial setups maximizing opponent total and minimizing Chelsea total within their value constraints.
+
+Since enumerating all assignments is combinatorially huge, we proceed with worst-case assumptions:
+
+- Chelsea tries minimal sum of chelsea_remaining: all 4's (because she wants to possibly fail inequality).
+
+- Opponent tries maximal sum of opponent_remaining: all 10's (best for opponent to break the inequality).
+
+- But opponent sums split across ranges: first 50 indices and then \(50 - n\) values from indices \(50\) to \(99\). So opponent total depends on the length \(100 - n\).
+
+We compute for each \( n \in [0,50] \):
+
+- Chelsea total minimal: \(50 + 50 \times 4 + 10 \times n = 50 + 200 + 10n = 250 + 10n.\)
+
+- Opponent total maximal: \(100 \times 10 = 1000,\) but note opponent sums the first 50 slots plus \(50 - n\) slots (total \(100 - n\)), so number of opponent terms is \(100 - n\).
+
+Thus opponent total maximal: \((100 - n) \times 10 = 1000 - 10 n.\)
+
+Inequality holds if:
+
+\[
+250 + 10 n > 1000 - 10 n \implies 20 n > 750 \implies n > 37.5.
+\]
+
+Therefore minimal integer \( n = 38 \).
+
+We confirm with the program by enumerating \( n \) from 0 to 50, checking within the above reasoning.
+
+Now, to comply with the problem statement and requirements (streaming, exact values, sample parameters), the program will:
+
+- Enumerate \( n \) from 0 to 50.
+
+- For each \( n \), compute minimal Chelsea sum, maximal opponent sum.
+
+- Check if inequality holds.
+
+- Print all candidate \( n \) values where inequality fails (Chelsea total ≤ opponent total).
+
+- Then print minimal \( n \) satisfying the condition.
+
+```python
+# Enumerate minimal n such that for any allowed assignments, Chelsea's total > Opponent's total
+# Using minimal Chelsea sums (all 4's) and maximal Opponent sums (all 10's), exact arithmetic
+
+def main():
+    chelsea_fixed = 50
+    opponent_slots_total = 100
+    
+    chelsea_remaining_options = [4, 8, 10]
+    opponent_remaining_options = [0, 2, 4, 8, 10]
+    
+    # For minimal Chelsea total, pick lowest chelsea_remaining = 4 for all 50
+    chelsea_remaining_sum_min = 50 * 4
+    
+    # For maximal opponent total, pick highest opponent_remaining = 10
+    opponent_value_max = 10
+    
+    # Enumerate n = 0 to 50
+    failing_n = []
+    for n in range(0, 51):
+        # Chelsea total minimal
+        chelsea_total_min = chelsea_fixed + chelsea_remaining_sum_min + 10 * n
+        # Opponent total maximal: first 50 + (50 - n) slots from opponent_remaining (all 10)
+        opponent_slots = 50 + (50 - n)
+        opponent_total_max = opponent_slots * opponent_value_max
+        
+        # Check if inequality fails
+        if chelsea_total_min <= opponent_total_max:
+            print(f"Fails for n={n}: Chelsea total min={chelsea_total_min} <= Opponent total max={opponent_total_max}")
+            failing_n.append(n)
+        else:
+            # Inequality holds for all assignments, print confirmation
+            print(f"Holds for n={n}: Chelsea total min={chelsea_total_min} > Opponent total max={opponent_total_max}")
+    
+    # Minimal n passing the inequality:
+    candidates = [n for n in range(51) if n not in failing_n]
+    if candidates:
+        minimal_n = min(candidates)
+        print(f"Minimal n satisfying inequality: {minimal_n}")
+    else:
+        print("No n in 0..50 satisfies the inequality.")
+
+if __name__ == "__main__":
+    main()
+```

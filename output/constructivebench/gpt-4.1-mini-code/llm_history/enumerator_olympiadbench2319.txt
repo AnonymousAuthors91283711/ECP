@@ -1,0 +1,114 @@
+[write_program]
+The problem involves Skolem sequences of order 9, length 18, with specific value constraints and uniqueness properties for certain positions. We want to find all sequences s of length 18 satisfying the Skolem property, s[2] = 1, s[17] = 8, and the parity/uniqueness condition for even k.
+
+We'll enumerate all candidate Skolem sequences length 18, constrained by the values at positions 2 and 17, then print each candidate sequence as exact values. Finally, we print the sequences satisfying all conditions.
+
+```python
+# Enumerate Skolem sequences of order 9 with s[2]=1, s[17]=8 satisfying parity/uniqueness condition.
+# Output sequences as lists immediately upon verification.
+
+def count_occurrences(s, k):
+    return s.count(k)
+
+def check_skolem(n, s):
+    if len(s) != 2*n:
+        return False
+    # Check count and distance conditions of Skolem sequence
+    for k in range(1, n+1):
+        if count_occurrences(s, k) != 2:
+            return False
+        # find indices of k
+        idx = [i for i,x in enumerate(s) if x == k]
+        if idx[1] - idx[0] != k:
+            return False
+    return True
+
+def even(k):
+    return k % 2 == 0
+
+def odd(k):
+    return k % 2 == 1
+
+def check_parity_uniqueness(n, s):
+    # For all even k in 1..n
+    length = len(s)
+    for k in range(1,n+1):
+        if even(k):
+            # find all pairs i<j with s[i]=s[j]=k and j - i = k
+            idxs = [i for i,x in enumerate(s) if x==k]
+            i, j = idxs
+            if j - i != k:
+                return False
+            # check there exists unique m with i < m < j and s[m] odd
+            odd_positions = [m for m in range(i+1,j) if odd(s[m])]
+            if len(odd_positions) != 1:
+                return False
+    return True
+
+def places_for_value(n, s, v):
+    # Return possible pairs (i,j) where s[i]=s[j]=v and j-i=v, and s[i], s[j] unassigned.
+    length = len(s)
+    pairs = []
+    for i in range(length - v):
+        j = i + v
+        if s[i] == 0 and s[j] == 0:
+            pairs.append((i,j))
+        elif (s[i] == 0 or s[i] == v) and (s[j] == 0 or s[j] == v):
+            pairs.append((i,j))
+    return pairs
+
+def backtrack(n, s, used, pos=0):
+    if pos == n+1:
+        # All values placed
+        # Check s[2]==1 and s[17]==8 as 0-based index: s[2]=s[2], s[17]=s[17]
+        if s[2] != 1 or s[17] != 8:
+            return
+        if check_parity_uniqueness(n, s):
+            print(s)
+        return
+    if pos == 0:
+        # skip zero (no value)
+        backtrack(n, s, used, pos+1)
+        return
+    if used[pos]:
+        backtrack(n, s, used, pos+1)
+        return
+    for i in range(len(s) - pos):
+        j = i + pos
+        if j >= len(s):
+            continue
+        if s[i] == 0 and s[j] == 0:
+            s[i], s[j] = pos, pos
+            used[pos] = True
+            backtrack(n, s, used, pos+1)
+            used[pos] = False
+            s[i], s[j] = 0, 0
+
+def main():
+    n = 9
+    s = [0]*(2*n)
+    s[2] = 1  # Given
+    s[17] = 8 # Given
+    used = [False]*(n+1)
+    used[1] = True  # 1 placed, artificially assigned at index 2
+    used[8] = True  # 8 placed at index 17
+
+    # Place 1's pair:
+    # since s[2]=1 fixed, its pair must be at index 3 (2+1=3)
+    if s[3] == 0:
+        s[3] = 1
+    else:
+        # can't place pair for 1
+        return
+    # Place 8's pair:
+    # s[17] = 8 means other 8 at index 17-8=9
+    if s[9] == 0:
+        s[9] = 8
+    else:
+        return
+
+    backtrack(n, s, used, 2)   # start from value 2
+
+if __name__ == "__main__":
+    main()
+```

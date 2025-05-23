@@ -1,0 +1,51 @@
+[write_program]
+The problem involves the polynomial \( p(x) = 2000 x^6 + 100 x^5 + 10 x^3 + x - 2 \) which has exactly two roots \( x_1, x_2 \), and one root \( x \) that can be expressed in the form \(\frac{m + \sqrt{n}}{r}\), where \(m, r\) are integers, \(n\) a natural number, such that \(\gcd(m, r) = 1\) and \(r > 0\). The goal is to find the sum \( m + n + r \).
+
+To assist, we will:
+- Numerically find roots of the polynomial.
+- Approximate roots to check if any roots are quadratic surds of the form \((m + \sqrt{n}) / r\).
+- Enumerate possible \(m, r, n\) to fit each root.
+- Print each candidate triple \((m, n, r)\) and the sum \(m + n + r\).
+
+We use small integer ranges for \(m, r\) to find candidates with minimal values. This may help conjecture the answer.
+
+```python
+from math import sqrt, gcd, isclose
+import numpy as np
+
+def p(x):
+    return 2000*x**6 + 100*x**5 + 10*x**3 + x - 2
+
+# Find roots numerically (using numpy)
+coeffs = [2000, 100, 0, 10, 0, 1, -2]  # descending powers: x^6 ... + const
+roots = np.roots(coeffs)
+# Filter real roots only
+real_roots = [r.real for r in roots if abs(r.imag) < 1e-12]
+
+print(f"Found {len(real_roots)} real roots:", real_roots)
+
+# Try to express root as (m + sqrt(n)) / r for small m, r, n
+# We'll test m, r in range -20..20 (r>0), n in 1..200
+# and check if (m + sqrt(n))/r approx equals root
+# and also check gcd(m,r)=1
+tol = 1e-9
+for x in real_roots:
+    print(f"\nChecking root approx {x:.12f}")
+    for r in range(1, 21):
+        for m in range(-20, 21):
+            if gcd(m, r) != 1:
+                continue
+            # Guess n = ((x*r - m))^2, must be a natural number close to integer
+            val = x*r - m
+            if val < 0:
+                continue
+            n_approx = val*val
+            n_int = round(n_approx)
+            if n_int >= 1 and abs(n_approx - n_int) < tol:
+                # Check exact reconstruction
+                val_check = (m + sqrt(n_int))/r
+                if isclose(val_check, x, abs_tol=tol):
+                    s = m + n_int + r
+                    print(f"Possible representation: x = ({m} + sqrt({n_int})) / {r}, sum = {s}")
+```
+

@@ -1,0 +1,47 @@
+[write_program]
+This problem involves counting the number of functions `f : Fin 15 → Bool` such that:
+
+- Exactly 6 inputs map to `true`.
+- For every `x` where `f x = false`, at least one neighbor `(x+1) % 15` or `(x-1) % 15` maps to `true`.
+
+We need to enumerate all such functions satisfying these conditions, then count their number.
+
+The core challenge: these are equivalent to arrangements of `true` and `false` on a circle of length 15, with exactly 6 `true`s, where each `false` is adjacent to at least one `true`. We will generate all subsets of size 6, verify the neighbor condition, and count valid functions.
+
+Here is the Python code that enumerates all such functions.
+
+```python
+from itertools import combinations
+
+# Total number of elements
+N = 15
+# Number of true values required
+K = 6
+
+def is_valid_mask(mask):
+    # For each position where f(x) = false, check neighbors
+    for x in range(N):
+        if not (mask & (1 << x)):
+            left = (x - 1) % N
+            right = (x + 1) % N
+            # Check if at least one neighbor is true
+            if not ((mask & (1 << left)) or (mask & (1 << right))):
+                return False
+    return True
+
+valid_counts = 0
+for comb in combinations(range(N), K):
+    # Construct bitmask for selected positions
+    mask = 0
+    for x in comb:
+        mask |= 1 << x
+    if is_valid_mask(mask):
+        valid_counts += 1
+        # Print the function as a list of booleans
+        answer = [False] * N
+        for x in comb:
+            answer[x] = True
+        print(answer)
+
+print("Total valid functions:", valid_counts)
+```

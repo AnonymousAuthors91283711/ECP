@@ -1,0 +1,57 @@
+[write_program]
+This problem asks for a unique polynomial P of degree less than 4 that satisfies two modular conditions and has a specific sum of squared coefficients. We'll enumerate all cubic polynomials with rational coefficients that satisfy the given conditions.
+
+The approach is:
+1. Generate all possible cubic polynomials P = a + bX + cX² + dX³
+2. Apply the two modular conditions to reduce the degrees
+3. Solve the resulting system of equations
+4. Calculate the sum of squared coefficients for the solution
+
+```python
+from sympy import symbols, Poly, div, solve
+
+def solve_problem():
+    X = symbols('X')
+    # General cubic polynomial
+    a, b, c, d = symbols('a b c d')
+    P = Poly(a + b*X + c*X**2 + d*X**3, X)
+    
+    # First condition: P mod (X^2 + X + 1) = X + 2
+    # We can write P = (X^2 + X + 1)*Q + (X + 2)
+    # For degree < 4, Q must be linear: q0 + q1*X
+    # Expanding gives constraints on a,b,c,d
+    # Similarly for second condition
+    
+    # First condition equations
+    # P = (X^2 + X + 1)(d*X + (c - d)) + (X + 2)
+    # Comparing coefficients gives:
+    eq1 = a - (c - d) - 2  # constant term
+    eq2 = b - (c - d) - d - 1  # X term
+    eq3 = c - d  # X^2 term
+    
+    # Second condition: P mod (X^2 + 1) = 2X + 1
+    # P = (X^2 + 1)(d*X + c) + (2X + 1)
+    # Comparing coefficients:
+    eq4 = a - c - 1  # constant term
+    eq5 = b - d - 2  # X term
+    eq6 = c  # X^2 term
+    
+    # Solve the system
+    solution = solve([eq1, eq2, eq3, eq4, eq5, eq6], (a, b, c, d))
+    if not solution:
+        print("No solution found")
+        return
+    
+    a_val, b_val, c_val, d_val = solution[a], solution[b], solution[c], solution[d]
+    
+    # Construct the polynomial
+    P_sol = Poly(a_val + b_val*X + c_val*X**2 + d_val*X**3, X)
+    print(f"Found polynomial: {P_sol.as_expr()}")
+    
+    # Calculate sum of squared coefficients
+    coeffs = P_sol.all_coeffs()
+    sum_sq = sum(c**2 for c in coeffs)
+    print(f"Sum of squared coefficients: {sum_sq}")
+
+solve_problem()
+```

@@ -1,0 +1,65 @@
+[write_program]
+This problem involves counting certain constrained functions and computing a ratio. We'll write a Python program to enumerate all possible functions f: Fin m → Finset (Fin n) under the given constraints and compute the required ratio.
+
+Key constraints:
+1. For each i, f(i) has exactly k elements (cardinality k)
+2. For each i, if x ∈ f(i) then (x+1) mod n ∈ f(i) (circular consecutive condition)
+3. We need to count functions where there exists at least one x not in any f(i)
+
+We'll implement this for n=10, k=5, m=4 as specified.
+
+```python
+from itertools import combinations
+
+def main():
+    n = 10
+    k = 5
+    m = 4
+    
+    # Generate all possible circular consecutive k-subsets of [0..n-1]
+    def generate_subsets():
+        subsets = []
+        for start in range(n):
+            subset = [(start + i) % n for i in range(k)]
+            subsets.append(frozenset(subset))
+        return subsets
+    
+    subsets = generate_subsets()
+    total_functions = len(subsets) ** m
+    
+    # Count functions where at least one element is missing from all subsets
+    count = 0
+    for x in range(n):
+        # Subsets that don't contain x
+        valid_subsets = [s for s in subsets if x not in s]
+        count += len(valid_subsets) ** m
+    
+    # Using inclusion-exclusion to avoid overcounting
+    # We'll subtract cases where multiple elements are missing
+    for a in range(n):
+        for b in range(a+1, n):
+            valid_subsets = [s for s in subsets if a not in s and b not in s]
+            count -= len(valid_subsets) ** m
+    
+    # Add back triple intersections
+    for a in range(n):
+        for b in range(a+1, n):
+            for c in range(b+1, n):
+                valid_subsets = [s for s in subsets if a not in s and b not in s and c not in s]
+                count += len(valid_subsets) ** m
+    
+    # Subtract quadruple intersections
+    for a in range(n):
+        for b in range(a+1, n):
+            for c in range(b+1, n):
+                for d in range(c+1, n):
+                    valid_subsets = [s for s in subsets if a not in s and b not in s and c not in s and d not in s]
+                    count -= len(valid_subsets) ** m
+    
+    # Compute the ratio and scale by 10000
+    ratio = (count / total_functions) * 10000
+    print(f"Computed value: {ratio}")
+    
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,50 @@
+[write_program]
+This problem involves finding the maximum possible quadratic coefficient 'a' for a quadratic sequence p(n) = a*n² + b*n + c that matches the real parts of powers of a complex number z (f(n) = Re(z^n)) at n=0,1,2,3, under the condition that z^k is real but not 1 for some minimal k>0.
+
+We'll approach this by:
+1. Considering small values of k (the minimal exponent making z^k real)
+2. For each k, find possible z values (roots of unity scaled by phase)
+3. Compute the corresponding quadratic coefficients
+4. Track the maximum 'a' found
+
+```python
+import cmath
+import math
+
+def find_max_quadratic_coefficient():
+    max_a = -float('inf')
+    
+    # Check k from 2 to 6 (higher k give smaller a)
+    for k in range(2, 7):
+        # z must be a primitive k-th root of unity multiplied by e^(iθ)
+        # We can restrict to θ=0 since other phases give same |a|
+        for m in range(1, k):
+            if math.gcd(m, k) == 1:  # primitive roots only
+                z = cmath.exp(2j * math.pi * m / k)
+                
+                # Compute f(n) = Re(z^n) for n=0,1,2,3
+                f = [cmath.exp(2j * math.pi * m * n / k).real for n in range(4)]
+                
+                # Solve for quadratic coefficients a,b,c using first 3 points
+                # p(n) = a*n² + b*n + c
+                # p(0)=f[0], p(1)=f[1], p(2)=f[2]
+                c = f[0]
+                a_plus_b = f[1] - c
+                foura_plus_twob = f[2] - c
+                
+                # Solving:
+                # a + b = f1 - c
+                # 4a + 2b = f2 - c
+                a = (foura_plus_twob - 2*a_plus_b)/2
+                b = a_plus_b - a
+                
+                # Verify it matches p(3)
+                if abs(a*9 + b*3 + c - f[3]) < 1e-6:
+                    print(f"k={k}, m={m}, a={a:.4f}, b={b:.4f}, c={c:.4f}")
+                    if a > max_a:
+                        max_a = a
+    
+    print(f"\nMaximum quadratic coefficient found: {max_a:.4f}")
+
+find_max_quadratic_coefficient()
+```

@@ -1,0 +1,51 @@
+[write_program]
+This problem involves finding the greatest integer \(k\) such that there exists a subset \(s\) of the finite set \(\text{Fin}(100)\) satisfying the condition: the number of primes in \(s\) (where primes are \(\{i : i + 1 \text{ is prime}\}\)) is greater than the number of multiples of 4 in \(s\). We interpret the problem as searching for the maximum \(k\) where a subset of size \(k\) satisfies the given inequality with the prime and multiple-of-4 counts. Since the problem is complex for large sets, we'll explore small values systematically, focusing on feasible sizes, and identify the maximum \(k\) for which such a subset exists.
+
+```python
+# Program to find the maximum k satisfying the problem's inequality over subsets of Fin(100).
+# It enumerates small subset sizes and checks whether a subset exists with the required property,
+# prioritizing the maximal k.
+
+import itertools
+
+# Generate primes up to 100 using a simple sieve
+def generate_primes(n):
+    sieve = [True]*(n+1)
+    sieve[0], sieve[1] = False, False
+    for i in range(2, int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i, n+1, i):
+                sieve[j] = False
+    return {i for i in range(2, n+1) if sieve[i]}
+
+primes_set = generate_primes(100)
+multiples_of_4 = {i for i in range(1, 101) if (i+1) % 4 == 0}
+
+# Convert to zero-based indices for Fin(100)
+def is_prime(i): return (i+1) in primes_set
+def is_mult4(i): return (i+1) % 4 == 0
+
+max_k_found = 0
+max_k_set = None
+
+# We try subset sizes from larger to smaller for early stopping
+for k in reversed(range(1, 101)):
+    found = False
+    # Generate all subsets of size k
+    for s in itertools.combinations(range(100), k):
+        s_set = set(s)
+        primes_in_s = sum(1 for i in s if is_prime(i))
+        mult4_in_s = sum(1 for i in s if is_mult4(i))
+        if primes_in_s > mult4_in_s:
+            print(f"Found subset of size {k} with primes {primes_in_s} > multiples of 4 {mult4_in_s}")
+            max_k_found = k
+            max_k_set = s
+            found = True
+            break
+    if found:
+        # No need to check smaller sizes
+        break
+
+print(f"Maximum k satisfying the condition is: {max_k_found}")
+# For their actual size aligns to what the code finds, the subset is printed if needed
+```

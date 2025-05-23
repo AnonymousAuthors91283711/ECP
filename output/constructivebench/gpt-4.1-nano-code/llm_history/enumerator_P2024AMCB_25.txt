@@ -1,0 +1,43 @@
+[write_program]
+This problem involves counting configurations with certain color and pattern choices, computing ratios, and checking for coprimality. To enumerate possible ratios, we'll generate all numerator-denominator pairs up to some manageable limit, verify the ratios, and check for coprimality. Since the total number of configurations is small, we can do this efficiently.
+
+Here's the approach:
+- Compute totalConfigurations and independentConfigurations.
+- For the ratio `independentConfigurations / totalConfigurations`, generate numerator and denominator pairs within a range.
+- For each pair, reduce the fraction to simplest form and check if it matches the ratio.
+- Output the ratio whenever found, streaming results.
+
+```python
+from math import gcd
+
+# Parameters
+n = 6
+color_choices = 2
+pattern_choices = 2
+total_configurations = (color_choices * pattern_choices) ** n
+independent_configurations = (color_choices * pattern_choices * (color_choices + pattern_choices - 1)) ** n
+
+# To normalize, compute the ratio as a float for comparison
+ratio_value = independent_configurations / total_configurations
+
+max_trial = 20  # limit numerator and denominator to reduce computations
+found = set()
+
+print("Total configurations:", total_configurations)
+print("Independent configurations:", independent_configurations)
+print("Ratio:", ratio_value)
+
+for denom in range(1, max_trial + 1):
+    for num in range(1, max_trial + 1):
+        # Reduce the fraction to lowest terms
+        g = gcd(num, denom)
+        num_red, denom_red = num // g, denom // g
+        # Compare reduced ratio to the exact ratio within a small epsilon
+        if abs((num/denom) - ratio_value) < 1e-9:
+            if (num_red, denom_red) not in found:
+                print(f"Found ratio: {num_red}/{denom_red}")
+                # Check coprimality
+                if gcd(num_red, denom_red) == 1:
+                    print(f" coprime: {num_red} and {denom_red}")
+                found.add((num_red, denom_red))
+```

@@ -1,0 +1,46 @@
+[write_program]
+The problem examines the probability that a randomly chosen 3-element subset (with elements > 0) from {1,...,9} chosen by Bernardo and {1,...,8} chosen by Silvia satisfies a certain inequality involving factorial-weighted sums. We enumerate all 3-element subsets for both, compute their corresponding numbers, then count how many pairs (B, S) satisfy B > S, printing intermediate results as found.
+
+```python
+from math import factorial
+from itertools import combinations
+
+def bernardo_numbers():
+    # subsets of 3 from {1,...,9}
+    nums = list(range(1, 10))
+    for c in combinations(nums, 3):
+        l = sorted(c, reverse=True)
+        # number = l[0]! * 100 + l[1]! * 10 + l[2]!
+        val = factorial(l[0]) * 100 + factorial(l[1]) * 10 + factorial(l[2])
+        yield val
+
+def silvia_numbers():
+    # subsets of 3 from {1,...,8}
+    nums = list(range(1, 9))
+    for c in combinations(nums, 3):
+        l = sorted(c, reverse=True)
+        val = factorial(l[0]) * 100 + factorial(l[1]) * 10 + factorial(l[2])
+        yield val
+
+def main():
+    B = sorted(set(bernardo_numbers()))
+    S = sorted(set(silvia_numbers()))
+    total_pairs = len(B) * len(S)
+    print(f"Total bernardoNumbers: {len(B)}")
+    print(f"Total silviaNumbers: {len(S)}")
+    print(f"Total pairs: {total_pairs}")
+
+    favorable = 0
+    # Efficient counting: since B and S sorted, for each b count how many s < b by binary search
+    import bisect
+    for b in B:
+        count = bisect.bisect_left(S, b)  # count of s < b
+        favorable += count
+        # print partial results streaming
+        print(f"Bernardo number {b}, Silvia numbers less than it: {count}")
+    print(f"Favorable pairs: {favorable}")
+    print(f"Probability = {favorable} / {total_pairs} = {favorable/total_pairs}")
+
+if __name__ == "__main__":
+    main()
+```

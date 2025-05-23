@@ -1,0 +1,89 @@
+[write_program]
+The problem asks to characterize all functions \( f:\mathbb{R} \to \mathbb{R} \) that satisfy the functional equation:
+\[
+\forall x,y \in \mathbb{R}, \quad (x + y^2) \cdot f\big(y \cdot f(x)\big) = x y \cdot f\big(y^2 + f(x)\big).
+\]
+
+The goal is to explore possible functions \( f \) that satisfy this relation, and to help conjecture the exact form.
+
+We'll try to enumerate candidate functions to check:
+
+- Constant functions: \(f(x) = c\)
+- Linear functions: \(f(x) = a x + b\)
+- Quadratic functions and others with small integer coefficients.
+
+For each candidate, we test the functional equation for some sample values \(x,y\).
+
+We print exact functions that satisfy the equation for all tested values (as far as we check). This exploration is partial but might hint at the solution set.
+
+```python
+# enumerator.py
+# Enumerate candidate functions f: R->R to check 
+# if they satisfy (x + y^2) * f(y*f(x)) = x*y * f(y^2 + f(x))
+# for some test values (x,y).
+
+import math
+
+def check_eq(f, samples):
+    # Check the functional equation for list of (x,y)
+    # Returns True if equation holds for all tested pairs
+    for x,y in samples:
+        lhs = (x + y**2)*f(y*f(x))
+        rhs = x*y*f(y**2 + f(x))
+        # Check equality exactly or within small tolerance for floats
+        if isinstance(lhs, complex) or isinstance(rhs, complex):
+            return False
+        # Use a tolerance for floats because of repeated function calls
+        if abs(lhs - rhs) > 1e-9:
+            return False
+    return True
+
+def try_constant(c):
+    def f(x): return c
+    return f
+
+def try_linear(a,b):
+    def f(x): return a*x + b
+    return f
+
+def try_quadratic(a,b,c):
+    def f(x): return a*x**2 + b*x + c
+    return f
+
+def main():
+    # Some sample (x,y)
+    samples = [
+        (1,1),(0,1),(1,0),(2,3),(3,-1),(0,0.5),(0.5,0),
+        (-1,1),(1,-1),(-2,-2),(0,0)
+    ]
+    print("Testing constant functions f(x)=c for c in -2..2")
+    for c in range(-2,3):
+        f = try_constant(c)
+        if check_eq(f, samples):
+            print(f"Found function f(x) = {c}, constant")
+
+    print("Testing linear functions f(x)=a*x + b for a,b in -2..2")
+    for a in range(-2,3):
+        for b in range(-2,3):
+            f=try_linear(a,b)
+            if check_eq(f, samples):
+                print(f"Found function f(x) = {a}*x + {b}")
+
+    print("Testing f(x) = 0 function explicitly")
+    f = try_constant(0)
+    if check_eq(f, samples):
+        print("Found f(x)=0")
+
+    print("Testing f(x)=x")
+    f = try_linear(1,0)
+    if check_eq(f, samples):
+        print("Found f(x)=x")
+
+    print("Testing f(x)=-x")
+    f = try_linear(-1,0)
+    if check_eq(f, samples):
+        print("Found f(x)=-x")
+
+if __name__=="__main__":
+    main()
+```

@@ -1,0 +1,71 @@
+[write_program]
+The problem involves finding the greatest natural number \( n \) such that there exists a family of finite sets \( X_i \) indexed by \( \text{Fin}\, n \), with the property that for any triple of indices \( a < b < c \), the cardinality of the union \( X_a \cup X_b \cup X_c \) equals the ceiling of the square root of the product \( a \cdot b \cdot c \).
+
+To explore this, I'll write a Python program that tries small values of \( n \), constructs candidate families \( X_i \) (or at least tests feasible cardinalities), and enumerates possible \(|X_i|\). To keep the program efficient and output short, the program will:
+
+- Iterate over small \( n \) values (e.g., \( n = 2, 3, 4, 5 \)).
+- For each \( n \), iterate over possible cardinalities of \( X_i \), given the constraints.
+- Attempt to check feasibility of the union cardinalities, using set cardinalities that respect the ceiling of the square root condition.
+- Print candidate \( n \) values with example cardinalities or failures.
+- Print all candidate \( n \)'s up to 5 and then conjecture the maximal \( n \).
+
+Due to combinatorial explosion, the program will not attempt to build actual explicit sets but will handle cardinalities abstractly.
+
+```python
+# We want to find the greatest n such that there exists X_i (finite sets) with:
+# For all a < b < c in [0..n-1], |X_a ∪ X_b ∪ X_c| = ceil(sqrt(a*b*c)),
+# where a,b,c are indices treated as natural numbers (positive, with 0< n, indices start from 0).
+# Since a,b,c are from Fin n (0-based), but conditions use values (a.val), 
+# we adjust: indices from 1 to n, so sets indexed from 1 to n.
+# We'll check feasibility of cardinalities |X_i| for i=1..n.
+
+import math
+from itertools import combinations
+
+def ceil_sqrt(x):
+    return math.ceil(math.sqrt(x))
+
+def possible_cardinalities(n):
+    # For n, produce possible sets of cardinalities (k_i) with k_i in [0..max_card]
+    # that can satisfy the union condition for all triples.
+    # We want to find any k = (k_1,...,k_n) with each k_i >=0 and integer
+    # and for all triples (a,b,c) with 1 ≤ a < b < c ≤ n
+    # ceil(sqrt(a*b*c)) = |X_a ∪ X_b ∪ X_c| ≤ sum |X_i| = k_a + k_b + k_c
+
+    max_val = ceil_sqrt(n*(n-1)*(n-2))  # upper bound of ceil sqrt product
+    # Since ceiling is relatively small, max element count needed is small.
+
+    # We'll iterate over k_i in [0..max_val] but restrict search space to avoid explosion.
+    # We'll use a heuristic: k_i in [1 .. max_val], since sets are nonempty for positive indices.
+
+    from itertools import product
+
+    domain = range(1, max_val+1)
+    # For efficiency, try only n up to 5.
+    # Check brute-force over all k in domain^n:
+    # n is small, domain size up to ~ceil(sqrt(n^3)), so feasible for n<=5.
+
+    # For brevity, we stop at first satisfying k to print.
+
+    for k in product(domain, repeat=n):
+        valid = True
+        for a,b,c in combinations(range(n),3):
+            lhs = ceil_sqrt((a+1)*(b+1)*(c+1))
+            rhs = k[a] + k[b] + k[c]
+            if rhs < lhs:
+                valid = False
+                break
+        if valid:
+            print(f"n={n}, cardinalities = {k}")
+            break
+    else:
+        print(f"n={n} no solution found")
+
+def main():
+    print("Enumerating candidate n and cardinalities for sets X_i")
+    for n in range(2,6):
+        possible_cardinalities(n)
+
+main()
+```
+

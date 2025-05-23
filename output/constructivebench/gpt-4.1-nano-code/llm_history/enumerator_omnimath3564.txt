@@ -1,0 +1,70 @@
+[write_program]
+The problem appears to involve finding polynomials \( P \in \mathbb{R}[x] \) satisfying a particular functional equation:
+
+\[ P(x)^2 + P\left(\frac{1}{x}\right)^2 = P(x^2) \times P\left(\frac{1}{x^2}\right) \quad \text{for all } x \neq 0. \]
+
+The goal is to enumerate possible solutions—specifically, the polynomials \( P \)—by checking candidate polynomials with small degrees and coefficients, and then outputting those solutions that satisfy the equation.
+
+Given the structure, starting with constant and linear polynomials is reasonable. For the enumeration:
+- For constants \( P(x) = c \), the equation simplifies dramatically.
+- For linear \( P(x) = ax + b \), check if it satisfies the relation.
+- For quadratic or higher polynomials, the number of candidates could grow large, so we limit to small degrees and coefficients.
+
+Below is the Python program that systematically tests small candidates for \( P(x) \), evaluates the given equation numerically over a grid of \( x \neq 0 \) values, and prints solutions that satisfy the relation within some numerical tolerance.
+
+```python
+import numpy as np
+
+# Define the degree of polynomial candidates
+max_degree = 2
+# Coefficient range
+coeff_range = range(-2, 3)
+
+# Generate polynomials with small coefficients
+def generate_polynomials(degree):
+    if degree == 0:
+        for c in coeff_range:
+            yield [c]
+    elif degree == 1:
+        for a in coeff_range:
+            for b in coeff_range:
+                yield [a, b]
+    elif degree == 2:
+        for a in coeff_range:
+            for b in coeff_range:
+                for c in coeff_range:
+                    yield [a, b, c]
+
+# Evaluate polynomial at x
+def eval_poly(coefs, x):
+    val = 0
+    for coeff in coefs:
+        val = val * x + coeff
+    return val
+
+# Numerical check for candidate polynomial
+def check_poly(coefs, xs, tol=1e-4):
+    for x in xs:
+        if x == 0:
+            continue
+        p_x = eval_poly(coefs, x)
+        p_1_over_x = eval_poly(coefs, 1 / x)
+        p_x2 = eval_poly(coefs, x * x)
+        p_1_x2 = eval_poly(coefs, 1 / (x * x))
+        left = p_x ** 2 + p_1_over_x ** 2
+        right = p_x2 * p_1_x2
+        if abs(left - right) > tol:
+            return False
+    return True
+
+# Sample x values (excluding zero)
+x_samples = np.linspace(0.1, 10, 100)
+x_samples = np.concatenate([-x_samples[::-1], x_samples])  # include negative values
+
+print("Enumerating candidate polynomials and checking the relation:")
+for degree in range(max_degree + 1):
+    for coeffs in generate_polynomials(degree):
+        if check_poly(coeffs, x_samples):
+            # Output polynomial coefficient list
+            print("Found solution: P(x) =", " + ".join(f"{c}*x^{i}" if i > 0 else f"{c}" for i, c in enumerate(reversed(coeffs))))
+```

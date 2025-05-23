@@ -1,0 +1,56 @@
+[write_program]
+This problem asks for all real polynomials P where for all non-zero real x, P(x)^2 + P(1/x)^2 = P(x^2)*P(1/x^2). We'll enumerate low-degree polynomials to find patterns.
+
+The approach:
+1. Consider polynomials up to degree 4 (higher degrees become complex)
+2. For each degree, generate general form with coefficients
+3. Test the functional equation at specific x values to constrain coefficients
+4. Output valid polynomials that satisfy the equation
+
+```python
+import numpy as np
+from itertools import product
+
+def test_poly(coeffs, x=2.0):
+    """Test if polynomial satisfies the functional equation at x."""
+    P = np.poly1d(coeffs)
+    x_inv = 1/x
+    x_sq = x**2
+    x_sq_inv = 1/x_sq
+    
+    lhs = P(x)**2 + P(x_inv)**2
+    rhs = P(x_sq) * P(x_sq_inv)
+    
+    return abs(lhs - rhs) < 1e-8
+
+def generate_and_test(max_degree=4):
+    """Generate and test polynomials up to given degree."""
+    found = set()
+    
+    for degree in range(max_degree + 1):
+        # Generate coefficient combinations (-2 to 2 range sufficient for patterns)
+        for coeffs in product([-2, -1, 0, 1, 2], repeat=degree+1):
+            if coeffs[-1] == 0:  # Skip if not actually this degree
+                continue
+                
+            # Test at multiple x values to be thorough
+            valid = True
+            for x_test in [0.5, 1.5, 2.0, 3.0]:
+                if not test_poly(coeffs, x_test):
+                    valid = False
+                    break
+                    
+            if valid:
+                # Normalize by leading coefficient
+                normalized = np.poly1d(coeffs) / coeffs[0]
+                poly_str = str(normalized).replace('\n', '').replace(' ', '')
+                if poly_str not in found:
+                    found.add(poly_str)
+                    print(f"Found: {poly_str}")
+    
+    print("\nPotential solutions found:")
+    for p in sorted(found):
+        print(p)
+
+generate_and_test()
+```

@@ -1,0 +1,58 @@
+[write_program]
+The problem looks for the smallest positive integer \( n \) such that \( 3^3 \cdot 5^5 \cdot 7^7 \) divides \( 149^n - 2^n \). Then, it wants the number of divisors of that \( n \).
+
+To help, we can write a program that:
+- Calculates \( M = 3^3 \cdot 5^5 \cdot 7^7 \).
+- For increasing \( n \), checks if \( M \mid 149^n - 2^n \).
+- Prints \( n \) when found.
+- Prints the divisors count of \( n \).
+
+Since \( M \) is large, use modular exponentiation to efficiently check divisibility.
+
+Because \( M \) factors into powers of primes, it's more efficient to check modular congruences modulo each prime power and find the least common multiple of the orders mod each prime power. But here, we do a direct brute force for relatively small \( n \), printing reasonable intermediate steps.
+
+```python
+# Enumerate smallest n > 0 with (3^3 * 5^5 * 7^7) | (149^n - 2^n),
+# then print number of divisors of such n.
+
+from math import gcd
+
+def mod_exp(base, exp, mod):
+    result = 1
+    base %= mod
+    while exp > 0:
+        if exp & 1:
+            result = (result * base) % mod
+        base = (base * base) % mod
+        exp >>= 1
+    return result
+
+def divisors_count(x):
+    count = 0
+    i = 1
+    while i*i <= x:
+        if x % i == 0:
+            count += 2 if i*i != x else 1
+        i += 1
+    return count
+
+def main():
+    p3 = 3**3
+    p5 = 5**5
+    p7 = 7**7
+    M = p3 * p5 * p7
+
+    print(f"M = 3^3*5^5*7^7 = {M}")
+
+    # Check for n from 1 up to some limit (try up to 10^6)
+    # but break early when found
+    for n in range(1, 10**6+1):
+        mod_val = (mod_exp(149, n, M) - mod_exp(2, n, M)) % M
+        if mod_val == 0:
+            print(f"Found n = {n} with M | (149^n - 2^n)")
+            print(f"Number of divisors of n: {divisors_count(n)}")
+            break
+
+if __name__ == "__main__":
+    main()
+```

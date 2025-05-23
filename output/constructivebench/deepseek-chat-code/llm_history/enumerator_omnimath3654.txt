@@ -1,0 +1,51 @@
+[write_program]
+This problem involves finding the maximum size of a set C of coordinate pairs (i,j) such that there exists exactly one subset T of size n where all pairs in T are non-attacking (no shared row or column). We'll write a Python program to enumerate possible values for small n.
+
+The approach:
+1. For small n (1-4), we'll generate all possible grid sizes and configurations
+2. For each grid size, we'll count valid configurations
+3. We'll track the maximum C size where exactly one T exists
+
+```python
+from itertools import combinations, product
+
+def is_non_attacking(pairs):
+    """Check if all pairs in the set are non-attacking (no shared row/column)"""
+    rows = set()
+    cols = set()
+    for i, j in pairs:
+        if i in rows or j in cols:
+            return False
+        rows.add(i)
+        cols.add(j)
+    return True
+
+def count_valid_subsets(C, n):
+    """Count how many size-n non-attacking subsets exist in C"""
+    count = 0
+    for subset in combinations(C, n):
+        if is_non_attacking(subset):
+            count += 1
+            if count > 1:  # Early exit if multiple found
+                return count
+    return count
+
+def find_max_C(n, max_grid=6):
+    """Find maximum C size with exactly one non-attacking n-subset for grid up to max_grid"""
+    max_k = 0
+    for grid_size in range(1, max_grid + 1):
+        coords = list(product(range(grid_size), repeat=2))
+        for k in range(n, len(coords) + 1):
+            for C in combinations(coords, k):
+                if count_valid_subsets(C, n) == 1:
+                    if k > max_k:
+                        max_k = k
+                        print(f"n={n}: new max k={k} (grid {grid_size}x{grid_size})")
+                    break  # Found one, no need to check other C's of same size
+    return max_k
+
+for n in range(1, 5):
+    print(f"\nSearching for n={n}:")
+    result = find_max_C(n)
+    print(f"Final maximum for n={n}: {result}")
+```

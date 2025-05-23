@@ -1,0 +1,70 @@
+[write_program]
+This problem involves finding a 3x3 integer matrix with entries between 1 and 9, where every entry is unique, and certain difference conditions are satisfied. The key constraints include:
+- Entries are between 1 and 9.
+- All entries are distinct.
+- If the absolute difference of two entries is 1, their indices differ by exactly 1 in Manhattan distance.
+- The sum of the four corner entries equals 18.
+- The middle entry (M 1 1) is to be determined.
+
+Since the problem involves small fixed bounds, we can enumerate all possible matrices satisfying the constraints and check conditions. The main challenge is efficiency; we'll optimize by fixing the center and corners, then constructing possible matrices that satisfy the derivative constraints.
+
+Below is a Python program that performs such enumeration:
+- Uses itertools.product to generate candidate matrices.
+- Checks all constraints, including entry ranges, distinctness, difference conditions, and sum of corners.
+- Prints partial and final candidates immediately.
+
+The code avoids unnecessary computations by filtering early and only enumerating promising configurations.
+
+```python
+import itertools
+
+def is_valid_matrix(M):
+    # Check all entries between 1 and 9
+    if any(entry < 1 or entry > 9 for row in M for entry in row):
+        return False
+    # Check that all entries are distinct
+    if len({entry for row in M for entry in row}) != 9:
+        return False
+    # Check the sum of corners
+    if M[0][0] + M[0][2] + M[2][0] + M[2][2] != 18:
+        return False
+    # Check the difference condition: if abs difference is 1, indices differ by Manhattan distance 1
+    for i1 in range(3):
+        for j1 in range(3):
+            for i2 in range(3):
+                for j2 in range(3):
+                    if (i1, j1) != (i2, j2):
+                        diff = abs(M[i1][j1] - M[i2][j2])
+                        if diff == 1:
+                            # Manhattan distance
+                            if abs(i1 - i2) + abs(j1 - j2) != 1:
+                                return False
+    return True
+
+# Fix center value and attempt to find suitable matrices
+for center in range(1, 10):
+    # Generate all permutations of remaining 8 values
+    remaining_values = [x for x in range(1, 10) if x != center]
+    for perm in itertools.permutations(remaining_values):
+        # Construct the matrix
+        M = [
+            [0, 0, 0],
+            [0, center, 0],
+            [0, 0, 0]
+        ]
+        # Fill the matrix entries from permutation
+        # Assign positions systematically, e.g.,
+        # corners and edges
+        # Corners: (0,0), (0,2), (2,0), (2,2)
+        # Edges: (0,1), (1,0), (1,2), (2,1)
+        candidates_positions = [
+            (0,0), (0,2), (2,0), (2,2),
+            (0,1), (1,0), (1,2), (2,1)
+        ]
+        for val, pos in zip(perm, candidates_positions):
+            M[pos[0]][pos[1]] = val
+        # Check all constraints
+        if is_valid_matrix(M):
+            # Output the middle answer
+            print(f'Middle entry (M 1 1): {center}')
+```

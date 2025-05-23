@@ -1,0 +1,74 @@
+[write_program]
+The problem describes an equilateral triangle ABC and points D, E, F with given distance and geometric conditions. We want to find and verify the distance EF.
+
+Below is a Python program that:
+- Sets up coordinates for the equilateral triangle ABC,
+- Enumerates possible positions of D on BC satisfying dist(BD)=1 and dist(DC)=4,
+- Computes E and F on rays AC and AB respectively with D the midpoint of EF,
+- Prints out the computed lengths EF for each valid configuration.
+
+This enumeration helps conjecture the exact value of EF.
+
+```python
+import math
+
+def dist(p, q):
+    return math.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2)
+
+# Coordinates for A,B,C of equilateral triangle side length s
+# We pick side length s=5 to fit BD=1 and DC=4 (as 1+4=5)
+s = 5.0
+print(f"Using side length s = {s}")
+
+A = (0.0, 0.0)
+B = (s, 0.0)
+C = (s/2, s * math.sqrt(3)/2)
+
+def point_on_segment(P, Q, t):
+    return (P[0] + t*(Q[0]-P[0]), P[1] + t*(Q[1]-P[1]))
+
+# D is on segment BC, with BD=1 and DC=4; since BC=s=5, t=BD/BC=1/5=0.2
+t_D = 1.0 / s
+D = point_on_segment(B, C, t_D)
+print(f"D on BC with t={t_D:.3f}: {D}")
+
+# We know D is midpoint of E and F:
+# E lies on ray A->C: E = A + e*(C - A), e>=0
+# F lies on ray A->B: F = A + f*(B - A), f>=0
+# and D = (E + F)/2 => E + F = 2D
+# So:
+# E = (e*(C_x), e*(C_y))
+# F = (f*(B_x), 0)
+# Sum E + F = (e*C_x + f*B_x, e*C_y + 0) = (2*D_x, 2*D_y)
+# Solve for e and f:
+
+Cx, Cy = C[0], C[1]
+Bx, By = B[0], B[1]
+Dx, Dy = D[0], D[1]
+
+# From y-coordinate: e*Cy = 2*Dy => e = 2*Dy / Cy
+if Cy == 0:
+    print("Invalid geometry, Cy=0")
+else:
+    e = 2*Dy / Cy
+    # From x-coordinate: e*Cx + f*Bx = 2*Dx => f = (2*Dx - e*Cx)/Bx
+    if Bx == 0:
+        print("Invalid geometry, Bx=0")
+    else:
+        f = (2*Dx - e*Cx)/Bx
+
+        if e >= 0 and f >= 0:
+            E = (e*Cx, e*Cy)
+            F = (f*Bx, 0.0)
+            d_EF = dist(E, F)
+            print(f"e = {e:.6f}, f = {f:.6f}")
+            print(f"E = {E}")
+            print(f"F = {F}")
+            print(f"Distance EF = {d_EF:.6f}")
+        else:
+            print(f"No valid e,f with e={e}, f={f}")
+
+# The printed value of EF is the conjectured answer to dist(E,F).
+```
+
+This program outputs the numerical value of EF under the problem constraints, facilitating conjecture and proof.

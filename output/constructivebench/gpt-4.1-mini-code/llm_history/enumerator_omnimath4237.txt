@@ -1,0 +1,65 @@
+[write_program]
+The problem involves functions \( f: \mathbb{Q} \to \mathbb{Q} \) satisfying a functional equation and bounding the size of the finite set \(\{k = f(r) + f(-r) \mid r \in \mathbb{Q}\}\). To get insight, I'll enumerate small rational examples with functions that satisfy the conditions, look at the sets, and identify bounds on their cardinalities.
+
+We test simple rational-valued functions on small sets and check the cardinality of these sets. We print functions and cardinalities as we find them.
+
+```python
+from fractions import Fraction as F
+
+# Small sample of Q: rationals with denominator in {1,2} and numerators in -2..2
+# Define simple candidate functions f : Q->Q and check the property and resulting set size.
+# Because the problem is complex, we test:
+# 1) f(r) = r  (identity)
+# 2) f(r) = -r (negation)
+# 3) f(r) = 0  (constant zero)
+# 4) f(r) = 1 (constant one)
+# 5) f(r) = r/2
+# 6) f(r) = -r/2
+# 7) f(r) = floor(r) (approximate by int part, but need rational outputs)
+# For each, check if they satisfy:
+# For all x,y in Q: f(x + f(y)) = f(x) + y OR f(f(x) + y) = x + f(y)
+
+# Due to Q infinite and complexity, test limited samples of x,y
+x_vals = [F(n, d) for n in range(-2,3) for d in [1,2]]
+y_vals = x_vals
+
+def check_condition(f):
+    # check condition for all x,y in x_vals,y_vals
+    for x in x_vals:
+        for y in y_vals:
+            lhs1 = f(x + f(y))
+            rhs1 = f(x) + y
+            lhs2 = f(f(x) + y)
+            rhs2 = x + f(y)
+            if not (lhs1 == rhs1 or lhs2 == rhs2):
+                return False
+    return True
+
+def build_set(f):
+    s = set()
+    for r in x_vals:
+        val = f(r) + f(-r)
+        s.add(val)
+    return s
+
+def print_candidate(name, f):
+    if check_condition(f):
+        s = build_set(f)
+        print(f"Function {name} satisfies condition. Set size: {len(s)} Elements: {sorted(s)}")
+
+# Define candidates
+candidates = {
+    "identity": lambda r: r,
+    "negation": lambda r: -r,
+    "zero": lambda r: F(0,1),
+    "one": lambda r: F(1,1),
+    "half": lambda r: r/2,
+    "neg_half": lambda r: -r/2,
+    "const2": lambda r: F(2,1)
+}
+
+print("Testing candidate functions on small rationals:")
+for name, f in candidates.items():
+    print_candidate(name, f)
+```
+

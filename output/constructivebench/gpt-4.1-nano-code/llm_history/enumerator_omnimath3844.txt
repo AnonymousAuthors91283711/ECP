@@ -1,0 +1,61 @@
+[write_program]
+This problem asks us to find the minimal number n such that for **every** finite subset T of the interval [1, 280] with size n, there exists a subset s of size 5 in T where **all pairs** are coprime. We want the least such n.
+
+**Approach:**
+- To find the least n that guarantees such a 5-element coprime subset inside any large enough T, we reason about the maximum size of sets that do **not** contain such a subset.
+- As the problem is complex, we'll approximate by constructing large subsets that lack 5 pairwise coprime numbers, then determine when adding more elements inevitably yields such a subset.
+- Since the maximal size of a set with no 5-element pairwise coprime subset is what we're after, we perform an enumeration over small candidate sets, focusing on sets avoiding large coprime subsets.
+
+**Implementation plan:**
+- Use small sample sets, starting from the largest known sets that avoid having 5 pairwise coprime numbers.
+- For each candidate size, generate such sets and check whether they contain a coprime 5-element subset.
+- When we find the smallest size where the property always holds, output that size.
+
+**Note:**
+- Due to computational constraints, we approximate by testing constructed sets.
+- The actual minimal number is theoretically hard to find exactly; this code sketches a search that might help conjecture the minimal value.
+
+```python
+import itertools
+import math
+
+# Define the interval
+interval = list(range(1, 281))
+
+def are_pairwise_coprime(lst):
+    for a, b in itertools.combinations(lst, 2):
+        if math.gcd(a, b) != 1:
+            return False
+    return True
+
+def has_coprime_subset_of_size_five(T):
+    for subset in itertools.combinations(T, 5):
+        if are_pairwise_coprime(subset):
+            return True
+    return False
+
+# Generate a large subset avoiding a coprime-5 subset
+# Strategy: build a set with common prime factors to restrict coprimality
+# e.g., all numbers divisible by 2 or 3, avoiding possibility of 5 coprime numbers
+candidate_sets = []
+
+# Generate sets avoiding coprime 5-subset by restricting to composite numbers or those sharing factors
+# For simplicity, take multiples of 2 and 3 within the interval
+set1 = [x for x in interval if x % 2 == 0 or x % 3 == 0]
+max_size = len(set1)
+
+# Check if this set avoids a 5-element pairwise coprime subset
+# If it does not contain such subset, then size is a candidate
+if not has_coprime_subset_of_size_five(set1):
+    candidate_sets.append(set1)
+
+# Now test increasing subsets by removing elements, but for brevity, we'll focus on this set
+# The size of such a set gives an upper bound for how big T can be without guaranteeing a coprime 5-subset
+# Once the size surpasses this, the property must hold
+
+# For demonstration, print the size of the largest set avoiding the property
+print("Sample avoiding set size:", max_size)
+
+# As an approximation, we conjecture the minimal n is max_size + 1
+print("Conjectured minimal n:", max_size + 1)
+```

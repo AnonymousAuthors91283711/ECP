@@ -1,0 +1,60 @@
+[write_program]
+The problem concerns triples of points on a 999x999 grid with certain coloring conditions (defined by function f returning Bool). We want to find the greatest possible size T of the set of all such triples that follow the pattern: same row (r1 = r2), consecutive columns (c2 = c3), with colors true/false/true in those positions respectively. The theorem claims the existence of a maximum, called olympiadbench2152_answer.
+
+To help conjecture an upper bound or exact max T, we'll:
+- Enumerate over small grids, for example 3x3 or 4x4, to count the maximum number of such triples for each possible Boolean function f.
+- Since 2^(n^2) is huge to enumerate fully, limit to very small n (like 3 or 4).
+- Print each f and the count of triples fitting the pattern for that f.
+- Keep track of max counts found.
+- Output the max found for the test grids.
+
+This approach respects the requirements:
+- prints partial results immediately,
+- uses small examples,
+- prioritizes exact (integral) counts,
+- finds max count and prints it.
+
+```python
+# Enumerate on small grids n x n
+# For each f : {0,...,n-1}x{0,...,n-1} → {True,False}
+# Count triples ((r1,c1),(r2,c2),(r3,c3)) where:
+# r1 = r2, c2 = c3, f(r1,c1)=True, f(r2,c2)=False, f(r3,c3)=True
+
+from itertools import product
+
+def count_triples(n, f):
+    count = 0
+    # r1=r2 means row fixed, iterate over rows
+    for r in range(n):
+        # possible (c1,c2,c3) with c2=c3
+        for c1 in range(n):
+            for c2 in range(n):
+                c3 = c2
+                if f[(r,c1)] and (not f[(r,c2)]) and f[(r,c3)]:
+                    count += 1
+    return count
+
+def main():
+    n = 3  # small grid for enumeration
+    cells = [(r,c) for r in range(n) for c in range(n)]
+    max_count = -1
+    max_fs = []
+    total_fs = 2**(n*n)
+    print(f"Enumerating all {total_fs} functions f on {n}x{n} grid")
+    for i, bits in enumerate(product([False,True], repeat=n*n)):
+        f = dict(zip(cells, bits))
+        T = count_triples(n, f)
+        print(f"Function {i+1}/{total_fs} count = {T}")
+        if T > max_count:
+            max_count = T
+            max_fs = [f]
+        elif T == max_count:
+            max_fs.append(f)
+        if i >= 511:  # limit output to avoid too much printing
+            print("... enumeration truncated at 512 functions ...")
+            break
+    print(f"Max count encountered: {max_count}")
+
+if __name__ == "__main__":
+    main()
+```

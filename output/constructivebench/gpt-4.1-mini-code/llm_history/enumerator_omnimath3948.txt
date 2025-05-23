@@ -1,0 +1,89 @@
+[write_program]
+The problem describes functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying:
+- \( f(0) \neq 0 \)
+- \( f(f(x)) + f(f(y)) = f(x+y) \cdot f(xy) \) for all real \(x,y\).
+
+We want to enumerate possible functions \(f\). Since testing arbitrary functions is impossible, I will focus on simple candidates:
+- constant functions,
+- linear functions \(f(x) = ax + b\),
+- quadratic functions \(f(x) = a x^2 + b x + c\),
+
+and evaluate the functional equation symbolically or numerically for sample values.
+
+I will quickly test candidates over rational parameters and print those satisfying the equation (up to some tolerance).
+
+```python
+# Enumerate simple candidate functions for f: R->R,
+# check if f(0)!=0 and if functional equation approx holds for sample x,y.
+# Output candidates found; no hardcoded answer.
+
+import math
+
+def approx_eq(a,b,eps=1e-8):
+    return abs(a-b)<eps
+
+print("Testing candidate functions f with f(0)!=0")
+xs = [-1,0,1]
+ys = [-2,0,2]
+
+# 1) Constant functions f(x)=c
+for c in [1,-1,2,-2,0.5,-0.5]:
+    f0 = c
+    if abs(f0)<1e-14: continue
+    lhs_vals = []
+    rhs_vals = []
+    ok = True
+    for x in xs:
+        for y in ys:
+            lhs = c + c
+            rhs = c * c
+            if not approx_eq(lhs,rhs):
+                ok = False
+                break
+        if not ok:
+            break
+    if ok:
+        print(f"Constant function f(x)={c} satisfies eq and f(0)={f0}")
+
+# 2) Linear functions f(x)=a*x + b, with f(0)=b != 0
+# Try integer a,b in small range [-3,3] excluding b=0
+for a in range(-3,4):
+    for b in range(-3,4):
+        if b==0:
+            continue
+        def f(x): return a*x + b
+        ok = True
+        for x in xs:
+            for y in ys:
+                val1 = f(f(x)) + f(f(y))
+                val2 = f(x+y)*f(x*y)
+                if not approx_eq(val1,val2):
+                    ok = False
+                    break
+            if not ok:
+                break
+        if ok:
+            print(f"Linear function f(x) = {a}*x + {b} satisfies eq and f(0)={b}")
+
+# 3) Quadratic functions f(x)=a*x^2 + b*x + c, c!=0 from -2 to 2 step 1
+# with a,b,c in small integer range [-1,1]
+for a in range(-1,2):
+    for b in range(-1,2):
+        for c in range(-2,3):
+            if c == 0:
+                continue
+            def f(x, a=a, b=b, c=c): return a*x**2 + b*x + c
+            ok = True
+            for x in xs:
+                for y in ys:
+                    val1 = f(f(x)) + f(f(y))
+                    val2 = f(x+y)*f(x*y)
+                    if not approx_eq(val1,val2):
+                        ok = False
+                        break
+                if not ok:
+                    break
+            if ok:
+                print(f"Quadratic f(x)={a}*x^2 + {b}*x + {c} satisfies eq and f(0)={c}")
+```
+

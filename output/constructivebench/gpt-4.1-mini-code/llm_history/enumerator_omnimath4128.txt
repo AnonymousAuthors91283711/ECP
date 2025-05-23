@@ -1,0 +1,81 @@
+[write_program]
+The provided problem involves studying sequences \(a : \mathbb{N} \to \mathbb{N}\) for which there exists a polynomial \(P\) of degree \(k\) with nonnegative coefficients (except possibly the leading one) satisfying:
+
+\[
+P(a(n)) = \prod_{i=0}^{k-1} a(n+1+i)
+\]
+
+for each natural number \(n\), where \(k \geq 2\).
+
+Our goal is to experimentally enumerate sequences \(a\) and check such polynomial relations for small values of \(k\) and small values of inputs \(a(n)\).
+
+We will:
+
+- Select small \(k\) (e.g., 2 and 3).
+- Enumerate candidate polynomials \(P = c_k x^k + \dots + c_0\) with nonnegative integer coefficients and degree exactly \(k\), coefficient count is \(k+1\).
+- For fixed sequences \(a\) with small values, check whether \(P(a(n)) = \prod_{i=0}^{k-1} a(n+1+i)\) for a range of \(n\).
+- Print sequences \(a\) that satisfy such \(P\) for initial \(n\).
+- Show the polynomial \(P\) coefficients found.
+- This may help conjecture the structure of \(a\) and \(P\).
+
+We limit the search space significantly to keep output short.
+
+```python
+# enumerator.py
+# Enumerate sequences a(n) and polynomials P(x) s.t.
+# P degree k, coeffs >=0, with P(a(n)) = product_{i=0}^{k-1} a(n+1+i)
+# for small k, small ranges.
+
+from itertools import product
+
+def apply_poly(coeffs, x):
+    # coeffs: [c0, c1, ..., ck], P(x) = sum c_i x^i
+    return sum(c * x**i for i, c in enumerate(coeffs))
+
+def product_of_terms(seq):
+    p = 1
+    for v in seq:
+        p *= v
+    return p
+
+def check_sequence_poly(k, coeffs, seq):
+    # seq: list of length at least k+1 for checking n=0..1
+    # Check P(a(n)) = product of a(n+1)..a(n+k)
+    # Test n=0 and n=1 as partial verification
+    for n in range(2):
+        lhs = apply_poly(coeffs, seq[n])
+        rhs = product_of_terms(seq[n+1:n+1+k])
+        if lhs != rhs:
+            return False
+    return True
+
+def main():
+    max_coeff = 3  # limit coefficient size
+    max_a = 4  # max value of a(n) to keep search small
+    ks = [2,3]
+    print("Enumerating for small k and sequences a with values in [1..%d]" % max_a)
+    for k in ks:
+        print(f"\nk = {k}")
+        # Generate candidate polynomials:
+        # c_k >=1 for degree=k
+        # coeffs: c0..c_k
+        polys = []
+        ranges = [range(max_coeff+1) for _ in range(k)]
+        for tail_coeffs in product(*ranges):
+            # last coeff c_k >=1 to get exact degree k
+            for c_k in range(1, max_coeff+1):
+                coeffs = list(tail_coeffs) + [c_k]  # length k+1
+                # coeffs represents P(x) = c0 + c1 x + ... + c_k x^k
+                polys.append(coeffs)
+        # Generate sequences a0..a_{k+2}
+        # length k+3 to test at least n=0..1 with prod of size k
+        seq_len = k + 3
+        for seq in product(range(1, max_a+1), repeat=seq_len):
+            for coeffs in polys:
+                if check_sequence_poly(k, coeffs, seq):
+                    # Print found sequence and polynomial:
+                    print(f"seq={seq} poly coeffs={coeffs}")
+
+if __name__ == "__main__":
+    main()
+```

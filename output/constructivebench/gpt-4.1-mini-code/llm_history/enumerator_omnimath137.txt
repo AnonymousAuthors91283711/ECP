@@ -1,0 +1,42 @@
+[write_program]
+This problem involves finding integer coefficients \((a,b,c,d,e,f)\) for a rational function approximation to \(\sqrt[3]{2}\), improving the approximation near \(R=2^{1/3}\). To assist, we enumerate candidate integer tuples \((a,b,c,d,e,f)\) over a small range and calculate the ratio of approximation errors at some rational \(R\) values near the cube root of 2. The goal is to find tuples where the rational function gets closer to \(2^{1/3}\) than \(R\) itself does.
+
+```python
+from fractions import Fraction
+from math import isclose
+
+# Enumerate small integers for coefficients a,b,c,d,e,f
+# For sample R values near 2^(1/3) (~1.26), test if the ration
+# (|f(R) - cbrt2|)/(|R - cbrt2|) < 1 holds (approximation improves).
+
+cbrt2 = 2 ** (1 / 3)
+sample_Rs = [Fraction(5,4), Fraction(6,5), Fraction(7,6)]  # near 1.25 to 1.33
+
+def eval_rat(a,b,c,d,e,f,R):
+    num = a*R**2 + b*R + c
+    den = d*R**2 + e*R + f
+    if den == 0:
+        return None
+    return num / den
+
+for a in range(-2,3):
+    for b in range(-2,3):
+        for c in range(-2,3):
+            for d in range(1,4):  # avoid zero denominator polynomials with 0-leading coeff
+                for e in range(-2,3):
+                    for f in range(-2,3):
+                        all_improve = True
+                        for R in sample_Rs:
+                            val = eval_rat(a,b,c,d,e,f,R)
+                            if val is None:
+                                all_improve = False
+                                break
+                            err_num = abs(float(val) - cbrt2)
+                            err_den = abs(float(R) - cbrt2)
+                            # Check improvement factor < 1 (strict)
+                            if err_den == 0 or err_num >= err_den:
+                                all_improve = False
+                                break
+                        if all_improve:
+                            print(f"a={a}, b={b}, c={c}, d={d}, e={e}, f={f}")
+```

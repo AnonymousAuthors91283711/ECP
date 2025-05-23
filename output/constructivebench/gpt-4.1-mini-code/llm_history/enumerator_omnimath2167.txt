@@ -1,0 +1,59 @@
+[write_program]
+The problem is about the minimal absolute value of a complex number of the form \(a + b\omega + c\omega^2\), where \(\omega\) is a complex cube root of unity different from 1, and \(a, b, c\) are integers with product 60. We want to find the smallest possible absolute value (modulus) of such numbers.
+
+To explore this, we'll:
+- Use \(\omega = e^{2\pi i/3}\).
+- Enumerate all integer triples \((a,b,c)\) with \(|a|, |b|, |c| \leq 60\) and \(a \times b \times c = 60\) (positive 60, as negative would just reflect results).
+- Compute \(|a + b\omega + c\omega^2|\).
+- Print all found values and track the minimal one.
+
+This will help conjecture the minimum and verify candidate values. We prioritize exact values by also printing \(|z|^2\) as rational numbers when possible.
+
+```python
+import cmath
+
+# Primitive cube root of unity (excluding 1)
+omega = cmath.rect(1, 2 * cmath.pi / 3)  # e^{2pi i/3}
+
+def abs_squared(z):
+    # Returns exact squared magnitude (float here), exact if z components are integers/fractions
+    return z.real*z.real + z.imag*z.imag
+
+def factors(n):
+    # Enumerate integer factors of n
+    res = []
+    for i in range(1, abs(n)+1):
+        if n % i == 0:
+            res.append(i)
+            res.append(-i)
+    return sorted(set(res))
+
+if __name__ == '__main__':
+    n = 60
+    fs = factors(n)
+    min_abs = None
+    min_tuple = None
+    printed = set()
+    # Enumerate all triples (a,b,c) with a*b*c=60 from factors
+    for a in fs:
+        for b in fs:
+            if a * b == 0:
+                continue
+            if n % (a*b) != 0:
+                continue
+            c = n // (a * b)
+            if c not in fs:
+                continue
+            z = a + b*omega + c*omega**2
+            val = abs(z)
+            val_sq = abs_squared(z)
+            key = (round(val_sq, 10), a, b, c)
+            if key in printed:
+                continue
+            printed.add(key)
+            print(f"a={a:2d}, b={b:2d}, c={c:2d} => |a+bω+cω²| = {val:.6f} (|z|²={val_sq:.6f})")
+            if (min_abs is None) or (val < min_abs):
+                min_abs = val
+                min_tuple = (a,b,c,val)
+    print(f"\nMinimum |a+bω+cω²| found: {min_abs:.6f} for (a,b,c) = {min_tuple[:3]}")
+```

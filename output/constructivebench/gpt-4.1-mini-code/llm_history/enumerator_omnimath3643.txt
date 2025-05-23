@@ -1,0 +1,57 @@
+[write_program]
+The problem asks if the sum of the square roots of two consecutive integers around n (specifically sqrt(n-1) + sqrt(n+1)) can be rational for some integer n.
+
+We'll enumerate integer values n and try to check if sqrt(n-1) + sqrt(n+1) is rational. Since sqrt values typically are irrational, we start with small integers where n-1 and n+1 are perfect squares, for which we might get rational sums.
+
+For simplicity, we'll check integers n from 1 up to some small limit, and look for rational outputs using fraction approximation with limited denominators. We print any found candidates immediately.
+
+We should focus on exact checks or very close approximations, avoiding floats when possible.
+
+```python
+# enumerator.py
+from fractions import Fraction
+import math
+
+def is_perfect_square(x):
+    if x < 0:
+        return False
+    r = int(math.isqrt(x))
+    return r*r == x
+
+def rational_sum_possible(n, max_den=1000, tol=1e-12):
+    # Check if sqrt(n-1) + sqrt(n+1) is rational by approaching denominator up to max_den
+    a = n - 1
+    b = n + 1
+    if a < 0:
+        return None  # sqrt negative invalid for real numbers here
+    val = math.sqrt(a) + math.sqrt(b)
+    # Search best rational approximation with denominator <= max_den:
+    # We try fractions near val
+    # This is costly, so we limit denominator, and search fractions in (val - tol, val + tol)
+    # Instead let's check if val is very close to some simple fractions with denominator<=max_den
+    # But first avoid approximation if perfect squares can help:
+    if is_perfect_square(a) and is_perfect_square(b):
+        # sum is integer, definitely rational
+        r = int(math.isqrt(a)) + int(math.isqrt(b))
+        print(f"n={n}: sqrt({a}) + sqrt({b}) = {r} (exact rational)")
+        return Fraction(r,1)
+    # else approximate
+    approx = Fraction(val).limit_denominator(max_den)
+    if abs(float(approx) - val) < tol:
+        print(f"n={n}: sqrt({a}) + sqrt({b}) ≈ {approx} (approx rational)")
+        return approx
+    return None
+
+def main():
+    print("Enumerating n values for sqrt(n-1)+sqrt(n+1) rationality check (1 ≤ n ≤ 100):")
+    found = False
+    for n in range(1, 101):
+        r = rational_sum_possible(n)
+        if r is not None:
+            found = True
+    if not found:
+        print("No rational sums found for n in 1..100")
+
+if __name__ == "__main__":
+    main()
+```

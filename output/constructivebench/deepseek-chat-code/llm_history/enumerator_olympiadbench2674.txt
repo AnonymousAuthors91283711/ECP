@@ -1,0 +1,58 @@
+[write_program]
+This problem asks for the smallest base `b > 1` where the factorial of 11 (11!) can be written as `k*b²` with `b` not dividing `k`, and no smaller exponent than 2 satisfies this condition. We'll write a Python program to enumerate possible bases `b` and check these conditions.
+
+The approach:
+1. Compute 11! (39916800)
+2. For each candidate base `b` from 2 upwards:
+   - Check if b² divides 11!
+   - Find the maximal exponent e where b^e divides 11!
+   - Verify e = 2 (the minimal exponent satisfying the condition)
+   - Check that b doesn't divide the cofactor k = 11!/b²
+
+```python
+import math
+
+def main():
+    T = 11
+    fact = math.factorial(T)
+    print(f"Computing for 11! = {fact}")
+    
+    for b in range(2, 1000):  # Reasonable upper bound
+        b_squared = b * b
+        if fact % b_squared != 0:
+            continue
+        
+        # Find maximal exponent e where b^e divides fact
+        e = 0
+        temp = fact
+        while temp % b == 0:
+            e += 1
+            temp = temp // b
+        
+        if e != 2:
+            continue
+        
+        k = fact // b_squared
+        if k % b == 0:
+            continue
+        
+        # Check no smaller exponent works
+        valid = True
+        for m in range(1, 2):  # Only need to check m=1
+            b_power = b ** (m + 1)
+            if fact % b_power != 0:
+                continue
+            k_m = fact // b_power
+            if k_m % b != 0:
+                valid = False
+                break
+        
+        if valid:
+            print(f"Found candidate: b = {b}")
+            # Since we're checking in order, first found is minimal
+            print(f"Minimal b found: {b}")
+            return
+
+if __name__ == "__main__":
+    main()
+```

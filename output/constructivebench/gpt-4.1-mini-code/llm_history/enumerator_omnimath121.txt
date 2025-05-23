@@ -1,0 +1,77 @@
+[write_program]
+The problem is about functions \( f: \mathbb{N}^+ \to \mathbb{R} \) satisfying a functional equation related to inequalities involving \(\alpha > 0\). Specifically:
+\[
+\forall k, m \in \mathbb{N}^+, \quad \text{if } \alpha m \leq k \leq (\alpha + 1)m, \text{ then } f(k + m) = f(k) + f(m).
+\]
+
+The task is to understand this set of functions and conjecture their form, which the theorem claims is parametrized by a real constant \(c\).
+
+To gather insight, I'll enumerate values of \(f\) for sample \(\alpha\) (e.g., 1 and 2), assuming \(f(1) = c\), then try to deduce values for other integers based on the functional equation. This will help to conjecture the explicit form of \(f\).
+
+```python
+# Enumerate values of f : ℕ+ → ℝ satisfying
+# f(k+m) = f(k) + f(m) whenever α*m ≤ k ≤ (α+1)*m, for α > 0 fixed.
+#
+# We'll pick small α (e.g. 1, 2) and try values m,k ≤ 10, assuming f(1) = c.
+# We print constraints from the functional equation and deduce f values.
+#
+# We'll store known values of f in a dict to propagate sums.
+
+def enumerate_f(alpha, max_n=10):
+    print(f"Enumerating possible f for α = {alpha}")
+    # f: map n in ℕ+ → ℝ; start with unknown f(1) = c (symbolic)
+    # We represent f(n) as expressions in c: f(n) = c * r_n for unknown r_n
+    # The equation f(k+m) = f(k) + f(m), so r_{k+m} = r_k + r_m if α*m ≤ k ≤ (α+1)*m
+    
+    # We'll represent r_n as fractions for exactness if possible
+    from fractions import Fraction
+    import sympy
+    c = sympy.symbols('c')
+    
+    # Initialize r values: r_1 = 1, for unit linearity basis
+    r = {1: Fraction(1,1)}
+    
+    # We'll keep a set of equations relating r_n values
+    # r[k+m] = r[k] + r[m] for certain k,m with α m ≤ k ≤ (α+1) m
+    
+    # Use symbolic representation to solve linear system on r_n
+    # Let's generate all relevant equalities:
+    eqs = []
+    
+    # Variables r_1 ... r_max_n
+    sym_vars = {n: sympy.Symbol(f'r_{n}') for n in range(1, max_n+max_n+1)}
+    
+    # We know r_1 = 1
+    eqs.append(sym_vars[1] - 1)
+    
+    for m in range(1, max_n+1):
+        for k in range(max(1, int(alpha*m)), min((int((alpha+1)*m)+1), max_n+1)):
+            # Condition α*m ≤ k ≤ (α+1)*m
+            # Equation: r_{k+m} = r_k + r_m
+            if k+m <= max_n+max_n:
+                eqs.append(sym_vars[k+m] - sym_vars[k] - sym_vars[m])
+    
+    # Now solve the linear system
+    sol = sympy.linsolve(eqs, tuple(sym_vars[n] for n in range(1, max_n+max_n+1)))
+    
+    if not sol:
+        print("No solutions found.")
+        return
+    
+    sol = list(sol)[0]
+    # Print found values r_n
+    for n in range(1, max_n+max_n+1):
+        val = sol[n-1]
+        print(f"r_{n} = {val}")
+        
+    print("This suggests f(n) = c * r_n for all n ≥ 1.")
+    print("r_1 fixed to 1 defines all others.")
+    print()
+
+def main():
+    for alpha in [1, 2]:
+        enumerate_f(alpha)
+        
+if __name__ == "__main__":
+    main()
+```

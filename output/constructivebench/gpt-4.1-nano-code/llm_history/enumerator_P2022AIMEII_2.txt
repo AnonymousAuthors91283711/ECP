@@ -1,0 +1,43 @@
+[write_program]
+This problem involves evaluating probabilities for different match pairings in a semifinal tournament scenario and then expressing the average probability as a simplified rational number p/q with coprime numerator and denominator. Our goal is to write a Python program that enumerates all candidate fractions from the computed probabilities, checks for coprimality, and outputs promising results to assist in conjecturing the exact answer, prioritizing exact rational approximations.
+
+The key steps:
+- Define the three cases based on the probabilities given.
+- Compute their exact rational values.
+- Compute the average of the three cases.
+- Generate candidates with denominators up to a certain small threshold.
+- Check for simplified fractions and coprimality.
+- Output all candidate fractions.
+
+```python
+from fractions import Fraction
+from math import gcd
+
+# Define individual case probabilities
+case1 = Fraction(2, 3) * Fraction(3, 4) * Fraction(3, 4) + Fraction(1, 3) * Fraction(3, 4) * Fraction(1, 4)
+case2 = Fraction(3, 4) * Fraction(3, 4) * Fraction(2, 3) + Fraction(1, 4) * Fraction(3, 4) * Fraction(3, 4)
+case3 = Fraction(3, 4) * Fraction(3, 4) * Fraction(2, 3) + Fraction(1, 4) * Fraction(3, 4) * Fraction(3, 4)
+
+# Compute total average probability
+total_prob = (case1 + case2 + case3) / 3
+
+# Since total_prob is a Fraction, generate all potential simplified fractions
+max_den = 50  # limit denominator size for enumeration
+results = []
+
+for denom in range(1, max_den + 1):
+    # Generate possible numerators within the range
+    num = total_prob.numerator * denom // total_prob.denominator
+    # Adjust numerator to check nearby fractions
+    for candidate_num in [num, num + 1, num - 1]:
+        if 0 <= candidate_num <= denom:
+            candidate_frac = Fraction(candidate_num, denom)
+            # Check if close to total_prob
+            if abs(candidate_frac - total_prob) < Fraction(1, 1000):
+                # Check gcd to ensure simplified form
+                if gcd(candidate_frac.numerator, candidate_frac.denominator) == 1:
+                    print(f"Candidate fraction: {candidate_frac} (approx {float(candidate_frac):.4f})")
+
+# Also print the exact total probability
+print(f"Exact probability: {total_prob} (which is {float(total_prob):.4f})")
+```

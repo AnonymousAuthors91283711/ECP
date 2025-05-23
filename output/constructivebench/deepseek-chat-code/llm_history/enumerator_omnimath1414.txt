@@ -1,0 +1,61 @@
+[write_program]
+This problem involves finding integer coefficients a, b, c of a quadratic function f(x) = ax² + bx + c such that when evaluated at four specific inputs, the outputs match exactly four given values. We'll write a Python program to search for such coefficients.
+
+The approach:
+1. The problem gives us four (x, y) pairs where y = f(x)
+2. We'll solve the system of equations to find a, b, c
+3. Since we have more equations than unknowns, we'll check all combinations of 3 points to find consistent solutions
+4. Then verify if the fourth point satisfies the found quadratic
+
+```python
+def find_quadratic_coefficients():
+    # Given data points (x, f(x))
+    points = [
+        (177883, 1324754875645),
+        (348710, 1782225466694),
+        (796921, 1984194627862),
+        (858522, 4388794883485)
+    ]
+    
+    # Try all combinations of 3 points to find possible quadratics
+    from itertools import combinations
+    from sympy import symbols, Eq, solve
+    
+    a, b, c = symbols('a b c')
+    found_solutions = set()
+    
+    for triplet in combinations(points, 3):
+        (x1, y1), (x2, y2), (x3, y3) = triplet
+        eq1 = Eq(a*x1**2 + b*x1 + c, y1)
+        eq2 = Eq(a*x2**2 + b*x2 + c, y2)
+        eq3 = Eq(a*x3**2 + b*x3 + c, y3)
+        
+        solution = solve((eq1, eq2, eq3), (a, b, c))
+        if solution:
+            sol = (solution[a], solution[b], solution[c])
+            found_solutions.add(sol)
+    
+    # Now verify which solutions work for all 4 points
+    valid_solutions = []
+    for a_val, b_val, c_val in found_solutions:
+        valid = True
+        for x, y in points:
+            if a_val*x*x + b_val*x + c_val != y:
+                valid = False
+                break
+        if valid:
+            valid_solutions.append((a_val, b_val, c_val))
+    
+    # Output all valid solutions
+    for sol in valid_solutions:
+        print(f"Found solution: a={sol[0]}, b={sol[1]}, c={sol[2]}")
+    
+    if valid_solutions:
+        print("The quadratic coefficients are:")
+        for sol in valid_solutions:
+            print(sol)
+    else:
+        print("No valid quadratic found that satisfies all four points")
+
+find_quadratic_coefficients()
+```

@@ -1,0 +1,62 @@
+[write_program]
+This problem asks for the smallest positive integer k such that there exists a coloring of natural numbers with k colors and a function f that is additive only when the inputs have the same color, but not additive in general. We'll write a Python program to search for the minimal k by testing small values.
+
+The approach:
+1. For each k starting from 1 upwards, we'll try to find a coloring and function satisfying the conditions
+2. We'll use small natural numbers (up to some limit) to test the conditions
+3. The program stops when it finds the smallest k that works
+
+```python
+def main():
+    max_n = 5  # Test numbers up to this value
+    for k in range(1, 6):  # Try k from 1 to 5
+        print(f"Testing k = {k}")
+        found = False
+        
+        # Try all possible colorings of {1..max_n} with k colors
+        from itertools import product
+        for coloring in product(range(k), repeat=max_n):
+            # Try all possible function values for f(1)..f(max_n)
+            for f_values in product(range(1, 4), repeat=max_n):
+                f = lambda n: f_values[n-1] if n <= max_n else 0
+                color = lambda n: coloring[n-1] if n <= max_n else 0
+                
+                # Check the additive condition for same-colored pairs
+                same_color_ok = True
+                for m in range(1, max_n+1):
+                    for n in range(1, max_n+1):
+                        if m + n > max_n:
+                            continue
+                        if color(m) == color(n) and f(m+n) != f(m) + f(n):
+                            same_color_ok = False
+                            break
+                    if not same_color_ok:
+                        break
+                
+                # Check there exists at least one pair where additivity fails
+                exists_failure = False
+                for m in range(1, max_n+1):
+                    for n in range(1, max_n+1):
+                        if m + n > max_n:
+                            continue
+                        if color(m) != color(n) and f(m+n) != f(m) + f(n):
+                            exists_failure = True
+                            break
+                    if exists_failure:
+                        break
+                
+                if same_color_ok and exists_failure:
+                    print(f"Found solution for k = {k}")
+                    print(f"Coloring: {[coloring[i] for i in range(max_n)]}")
+                    print(f"Function values: {[f_values[i] for i in range(max_n)]}")
+                    found = True
+                    break
+            if found:
+                break
+        if found:
+            print(f"Minimal k found: {k}")
+            return
+
+if __name__ == "__main__":
+    main()
+```

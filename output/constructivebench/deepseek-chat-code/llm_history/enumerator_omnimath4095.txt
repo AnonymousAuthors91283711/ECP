@@ -1,0 +1,43 @@
+[write_program]
+This problem is about finding the smallest degree k in a regular graph of order n (where n ≥ 3) that guarantees the existence of a triangle (3 vertices all connected to each other). We'll write a Python program to enumerate possible k values for small n and observe the pattern.
+
+The approach:
+1. For small values of n (3 to 10), we'll determine the minimal k that forces a triangle
+2. We'll use networkx to generate regular graphs and check for triangles
+3. For each n, we'll test k values from 1 upwards until we find the minimal k that always produces a triangle
+
+```python
+import networkx as nx
+
+def has_triangle(G):
+    """Check if graph G has a triangle."""
+    for u in G.nodes():
+        neighbors = list(G.neighbors(u))
+        for i in range(len(neighbors)):
+            for j in range(i+1, len(neighbors)):
+                if G.has_edge(neighbors[i], neighbors[j]):
+                    return True
+    return False
+
+def find_min_k(n):
+    """Find minimal k where every k-regular n-vertex graph has a triangle."""
+    for k in range(1, n):
+        all_have_triangle = True
+        # Try several random regular graphs (not exhaustive but practical)
+        for _ in range(10):  # Number of trials to increase confidence
+            try:
+                G = nx.random_regular_graph(k, n)
+                if not has_triangle(G):
+                    all_have_triangle = False
+                    break
+            except nx.NetworkXError:  # When k,n combination is impossible
+                all_have_triangle = False
+                break
+        if all_have_triangle:
+            return k
+    return n-1  # Complete graph case
+
+for n in range(3, 11):
+    min_k = find_min_k(n)
+    print(f"n={n}, minimal k={min_k}")
+```

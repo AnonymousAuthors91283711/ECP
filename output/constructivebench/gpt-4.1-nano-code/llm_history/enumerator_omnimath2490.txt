@@ -1,0 +1,79 @@
+[write_program]
+This problem asks us to compute the sum of `k^k` for `k` from 1 to 30303, then find the result modulo 101. Since direct computation is infeasible, we use properties of modular arithmetic and patterns in `k^k mod 101`.
+
+Key observations:
+- 101 is prime, so Fermat's little theorem applies: for any `a` not divisible by 101, `a^{100} ≡ 1 mod 101`.
+- The pattern of `k^k mod 101` repeats periodically because of `k mod 101`.
+
+Our plan:
+- For large sums, inspect the sum over one full cycle of length 101.
+- Calculate `k^k mod 101` for `k` in 1..101.
+- Sum these, then multiply by the number of full cycles in 1..30303.
+- Add any remaining terms for the partial cycle at the end.
+
+Number of full cycles:
+- 30303 // 101 = 299
+
+Remaining terms:
+- 30303 % 101 = 30303 - (299 * 101) = 30303 - 30099 = 204
+
+But since 101 divides 30303 exactly, no extra partial cycle exists (since 101 * 299 = 30099, sum of 101 * 299 = 299 full cycles, remainder sum over 1..204). Wait, but 30303 is divisible by 101? Let's confirm:
+
+`30303 / 101`:
+- 101 * 300 = 30,300
+- 30303 - 30,300 = 103
+- 103 / 101 ≈ 1.02; so 30303 mod 101:
+`30303 ≡ 30303 - 101 * 300 = 30303 - 30,300 = 103`, which is less than 101, so remainder is 103.
+
+Thus, total sum is:
+- sum over 299 full cycles (each cycle of length 101)
+- plus sum over 1..103
+
+But 103 > 101, so the last partial cycle is 1..103, which exceeds one cycle, so we only take first 103 terms of that cycle.
+
+However, since the pattern repeats every 101, the partial cycle is for k=1..103:
+
+- For the first 102 terms: complete cycles (since 299 * 101 = 30,299 terms used)
+- Remaining 4 terms: 30000..30303 (additional 3 terms, since total is 30303)
+
+Altogether, 30303 terms.
+
+Implementing in code:
+
+- Compute sum of `k^k mod 101` for `k` in 1..101, store in a list.
+- Compute total sum: `full_sum = sum over cycles * number of cycles + partial sum`.
+- Output remainder modulo 101.
+
+Here's the code implementing that:
+
+```python
+# Compute the sum of k^k modulo 101 for one full cycle of length 101
+cycle_length = 101
+full_cycles = 30303 // cycle_length
+remainder = 30303 % cycle_length
+
+modulus = 101
+
+# Precompute k^k mod 101 for k in 1..101
+power_mods = []
+for k in range(1, cycle_length + 1):
+    # To compute k^k mod 101 efficiently
+    base = k % modulus
+    exponent = k
+    # Use built-in pow with modulus
+    val = pow(base, exponent, modulus)
+    power_mods.append(val)
+
+full_cycle_sum = sum(power_mods) % modulus
+
+# Sum over full cycles
+total_sum = (full_cycle_sum * full_cycles) % modulus
+
+# Sum over remaining terms
+partial_sum = sum(power_mods[:remainder]) % modulus
+
+# Total sum modulo 101
+answer = (total_sum + partial_sum) % modulus
+
+print(answer)
+```

@@ -1,0 +1,62 @@
+[write_program]
+This problem involves constructing or analyzing a function \(a: \mathbb{N} \to \mathbb{Z}\) with specific properties related to its values at squares, certain linear bounds on the difference between consecutive terms, and injectivity. To explore possible solutions and formulate conjectures, I will write a Python program that enumerates candidate sequences \(a(n)\) for small values of \(n\), respecting the constraints as much as possible.
+
+Key points:
+- For each \(k\), check \(a(k^2) > 0\) and \(a(k^2 + k) < 0\).
+- For each \(n > 0\), ensure \(|a(n+1) - a(n)| \le 2023 \sqrt{n}\).
+- Ensure injectedness: \(a(i) \neq a(j)\) for \(i \neq j\).
+
+Since enumerating all infinite sequences directly is impossible, I restrict to small \(k\) and \(n\), with small ranges for \(a(n)\) (e.g., between -10 and 10), to see patterns and possible constructions.
+
+The code will:
+- Fix small parameters.
+- Generate candidate sequences.
+- Check constraints.
+- Print viable solutions for inspection.
+
+```python
+import math
+from itertools import product
+
+# Define the bounds for n to enumerate
+max_n = 20
+# Range of possible a(n) values for small n
+value_range = range(-10, 11)
+
+# Generate candidate sequences for n from 1 to max_n
+# To reduce combinatorial explosion, fix some initial sequence and extend
+# We'll test all sequences of length max_n within the value range
+
+def check_constraints(seq):
+    # seq is list of a(n) for n=1..max_n
+    for k in range(1, int(math.sqrt(max_n))+1):
+        sq = k*k
+        if sq <= max_n:
+            a_sq = seq[sq -1]
+            if not (a_sq > 0):
+                return False
+        # Check for a(k^2 + k)
+        index = sq + k
+        if index <= max_n:
+            a_idx = seq[index -1]
+            if not (a_idx < 0):
+                return False
+    # Check difference bounds for all n
+    for i in range(max_n -1):
+        diff = abs(seq[i+1] - seq[i])
+        if diff > 2023 * math.sqrt(i+1):
+            return False
+    # Check injectivity
+    if len(seq) != len(set(seq)):
+        return False
+    return True
+
+# Enumerate candidate sequences
+count = 0
+for candidate in product(value_range, repeat=max_n):
+    if check_constraints(candidate):
+        print("Candidate sequence (n=1..20):", candidate)
+        count +=1
+
+print(f"Total candidate sequences found: {count}")
+```

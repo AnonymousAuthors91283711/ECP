@@ -1,0 +1,75 @@
+[write_program]
+The problem appears to involve computing a probability with combinatorial terms, specifically involving drawing balls of two colors from a group of red and blue balls in two stages (Terry's draw and Mary's draw) and then combining these probabilities. We want to find the simplified fraction for the total probability, expressed as coprime natural numbers m and n, and then sum m + n.
+
+I'll write a Python program that enumerates the probability values for the scenario of 10 red and 10 blue balls (a total of 20 balls), computes the exact probability that matches the formula given, reduces it to lowest terms, and prints the fraction and the sum of numerator and denominator. This enumeration will also allow us to verify the result or conjecture the answer.
+
+```python
+from math import comb
+from fractions import Fraction
+from math import gcd
+
+def main():
+    total = 20
+    red = 10
+    blue = 10
+
+    # Enumerate Terry's possible draws: terry_red_count = 0 to 2 (since choosing 2 balls)
+    # Actually, Terry chooses exactly 2 balls, so terry_red_count + terry_blue_count = 2
+    # terry_red_count = 0,1,2
+
+    # Similarly for Mary, who draws 2 balls from the remainder
+    # We compute the total probability as a sum over these partitions:
+
+    # Precompute denominators to represent the total number of ways to choose 2 balls
+    denom_terry = comb(total, 2)
+    denom_mary = comb(total - 2, 2)
+
+    # We'll compute there terms:
+    # P(Terry draws r red and 2-r blue) * P(Mary draws r' red and 2-r' blue from remainder)
+
+    # According to problem:
+    # prob = sum over i=0..2:
+    # terry_prob = comb(red, i)*comb(blue, 2 - i) / comb(total, 2)
+    # mary_prob = comb(red - i, i)*comb(blue - (2 - i), 2 - i) / comb(total - 2, 2)
+    # prob += terry_prob * mary_prob
+
+    # However, note that Mary draws 2 balls from the remaining balls after Terry's 2 draws.
+    # So Mary's draw options depend on how many balls Terry drew of each color.
+
+    prob = Fraction(0,1)
+
+    for terry_red2 in range(3):
+        terry_blue2 = 2 - terry_red2
+        if terry_red2 > red or terry_blue2 > blue:
+            continue  # invalid
+
+        terry_prob = Fraction(comb(red, terry_red2)*comb(blue, terry_blue2), denom_terry)
+
+        # Mary draws 2 balls from the remaining
+        red_left = red - terry_red2
+        blue_left = blue - terry_blue2
+        denom_mary = comb(red_left + blue_left, 2)
+
+        # Mary's draws with same partition as Terry's for summing
+        # however problem sums:
+        # terry_red2 * mary_red2 + terry_red1_blue1 * mary_red1_blue1 + terry_blue2 * mary_blue2
+        # So we need Mary's probability for same i (red balls drawn)
+        mary_prob = Fraction(comb(red_left, terry_red2)*comb(blue_left, terry_blue2), denom_mary)
+
+        prob += terry_prob * mary_prob
+
+    # print full fraction
+    m, n = prob.numerator, prob.denominator
+
+    # reduce fraction
+    g = gcd(m,n)
+    m //= g
+    n //= g
+
+    print(f"Probability = {m}/{n}")
+    print(f"Sum m + n = {m + n}")
+
+if __name__ == "__main__":
+    main()
+```
+

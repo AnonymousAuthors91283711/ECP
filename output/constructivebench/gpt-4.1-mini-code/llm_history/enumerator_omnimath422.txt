@@ -1,0 +1,58 @@
+[write_program]
+The problem appears to involve characterizing functions \( f: \mathbb{Q} \to \mathbb{Q} \) satisfying a functional equation parameterized by \( a \neq 0 \in \mathbb{Q} \):
+
+\[
+\forall x,y \in \mathbb{Q}, \quad f(f(x) + a y) = a f(y) + x.
+\]
+
+The goal is to enumerate candidate functions \( f \) for small rational values of \( a \), printing each as it is found, to help identify the solution set \(\omnimath422\_answer(a)\). Likely candidates might be affine functions or similar.
+
+We will test rational \( a \) values such as 1, -1, 2, 1/2, etc., and enumerate affine functions \( f(x) = m x + b \) with rational \( m, b \) from small integers/fractions to check if they satisfy the equation for many \( x,y \). We print each satisfying pair \((a, m, b)\) found immediately, streaming results.
+
+```python
+from fractions import Fraction as F
+
+# Test a range of rational numbers constructed from small numerators and denominators
+def rationals(limit=3):
+    for num in range(-limit, limit+1):
+        for den in range(1, limit+1):
+            yield F(num, den)
+
+# Test function f(x) = m*x + b for given a,m,b satisfiability over many samples
+def check_f(a, m, b, samples=5):
+    # Test for sample x,y in range -samples..samples
+    for x in range(-samples, samples+1):
+        for y in range(-samples, samples+1):
+            lhs = m * (m * x + b + a * y) + b  # f(f(x) + a y)
+            rhs = a * (m * y + b) + x          # a f(y) + x
+            if lhs != rhs:
+                return False
+    return True
+
+def print_frac(f):
+    return f"{f.numerator}" if f.denominator==1 else f"{f.numerator}/{f.denominator}"
+
+def main():
+    # Sample small nonzero rational 'a' values
+    a_values = [F(1), F(-1), F(2), F(-2), F(1,2), F(-1,2)]
+    print("# Testing candidates for a,f(x)=m x + b satisfying f(f(x)+a y)=a f(y)+x\n")
+    for a in a_values:
+        # Search m,b in small integer/fraction range
+        candidates = []
+        for m in rationals(3):
+            if m == 0:
+                continue # m=0 trivial or invalid
+            for b in rationals(3):
+                if check_f(a, m, b):
+                    # Print as exact rational coefficients
+                    print(f"a = {print_frac(a)}, f(x) = {print_frac(m)}*x + {print_frac(b)}")
+                    candidates.append((m,b))
+        # Summarize for this 'a'
+        if candidates:
+            print(f"# {len(candidates)} candidate(s) found for a = {print_frac(a)}\n")
+        else:
+            print(f"# No affine candidates found for a = {print_frac(a)}\n")
+
+if __name__=="__main__":
+    main()
+```

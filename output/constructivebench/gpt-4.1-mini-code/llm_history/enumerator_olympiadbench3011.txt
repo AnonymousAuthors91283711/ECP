@@ -1,0 +1,68 @@
+[write_program]
+The problem involves finding the least positive real number \( t \) such that there exists an injective function \( f \) from a 3-element set to the values of \(\arcsin(\sin t)\), \(\arccos(\cos t)\), and \(\arctan(\tan t)\), with equal nonzero spacing \( d \) between the three images.
+
+We will enumerate over some rational multiples of \(\pi\) to sample \(t\) values, then compute the three values, check injectivity, and whether they form an arithmetic progression with nonzero difference. We print all such \(t\) found and their corresponding sequences. Finally, we print the minimum \(t\).
+
+```python
+import math
+
+# We'll test t in (0, pi) with small steps and check the conditions.
+# Because arcsin(sin t), arccos(cos t), arctan(tan t) lie in principal values, 
+# these functions jump periodically. We consider some candidate t values and check.
+
+def arcsin_sin(t):
+    # Principal branch of arcsin is [-pi/2, pi/2]
+    # sin(t) in [-1,1], arcsin(sin t) = t - k*pi where t-k*pi in [-pi/2, pi/2]
+    # So we adjust t to principal value.
+    x = math.sin(t)
+    res = math.asin(x)
+    return res
+
+def arccos_cos(t):
+    # Principal arccos in [0, pi]
+    x = math.cos(t)
+    res = math.acos(x)
+    return res
+
+def arctan_tan(t):
+    # Principal arctan in (-pi/2, pi/2)
+    x = math.tan(t)
+    res = math.atan(x)
+    return res
+
+def is_arith_seq(seq):
+    # check if seq has equal spacing (nonzero)
+    seq = sorted(seq)
+    d1 = seq[1] - seq[0]
+    d2 = seq[2] - seq[1]
+    if abs(d1 - d2) < 1e-10 and abs(d1) > 1e-12:
+        return True, d1
+    return False, None
+
+def injective(seq):
+    # check for distinctness 
+    eps = 1e-10
+    for i in range(len(seq)):
+        for j in range(i+1,len(seq)):
+            if abs(seq[i] - seq[j]) < eps:
+                return False
+    return True
+
+# enumerate t over [0.1,3.5] with step 0.01 for enough precision
+results = []
+print("t | values(arcsin(sin t), arccos(cos t), arctan(tan t)) | spacing d")
+for i in range(10, 351):
+    t = i * 0.01
+    vals = [arcsin_sin(t), arccos_cos(t), arctan_tan(t)]
+    if injective(vals):
+        ok, d = is_arith_seq(vals)
+        if ok:
+            print(f"{t:.4f} | {[round(v,4) for v in vals]} | d={d:.6f}")
+            results.append(t)
+
+if results:
+    min_t = min(results)
+    print(f"\nMinimum t found: {min_t:.6f}")
+else:
+    print("No such t found in the searched range.")
+```

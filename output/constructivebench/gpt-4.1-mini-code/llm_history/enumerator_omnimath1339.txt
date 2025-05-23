@@ -1,0 +1,65 @@
+[write_program]
+The given problem involves finding the supremum of all real numbers \( k \) satisfying the equation
+\[
+k^2 \left(\frac{x^2}{y^2} + \frac{y^2}{x^2}\right) + k \left(\frac{x}{y} + \frac{y}{x}\right) = 3
+\]
+for some positive real \( x, y \).
+
+Define \( a = \frac{x}{y} > 0 \). Then the equation becomes
+\[
+k^2 (a^2 + a^{-2}) + k (a + a^{-1}) = 3.
+\]
+
+We want to find the supremum of such \( k \) for some \( a > 0 \).
+
+The program enumerates rational values of \( a = m/n \) with small positive integers \( m,n \), then solves the quadratic in \( k \):
+\[
+k^2 (a^2 + a^{-2}) + k (a + a^{-1}) - 3 = 0,
+\]
+and prints all real roots \( k \) found. Then we seek the supremum among all discovered values.
+
+```python
+from math import gcd, sqrt
+
+def enum_a_vals(max_den=10):
+    # Enumerate positive rational values a = m/n with 1 <= m,n <= max_den
+    seen = set()
+    for n in range(1, max_den+1):
+        for m in range(1, max_den+1):
+            g = gcd(m,n)
+            a_num, a_den = m//g, n//g
+            if (a_num, a_den) not in seen:
+                seen.add((a_num, a_den))
+                yield a_num / a_den
+
+def solve_k(a):
+    # Solve k^2*(a^2 + a^{-2}) + k*(a + a^{-1}) - 3 = 0
+    A = a**2 + (1/a)**2
+    B = a + 1/a
+    C = -3
+
+    disc = B*B - 4*A*C
+    if disc < 0:
+        return []
+    sqrt_disc = sqrt(disc)
+    k1 = (-B + sqrt_disc) / (2*A)
+    k2 = (-B - sqrt_disc) / (2*A)
+    return [k1, k2]
+
+def main():
+    print("Enumerating possible k values for rational a = m/n with 1<=m,n<=10...")
+    ks = []
+    for a in enum_a_vals(10):
+        roots = solve_k(a)
+        for k in roots:
+            # Only real roots matter
+            print(f"a={a:.3f}, k={k:.6f}")
+            ks.append(k)
+    if ks:
+        sup = max(ks)
+        print(f"Supremum of all found k: {sup:.6f}")
+
+if __name__ == "__main__":
+    main()
+```
+This program enumerates small rational \( a \), solves the quadratic in \( k \), prints all real solutions, and outputs the maximum \( k \) found as an approximation to the supremum. From such output, one can conjecture the exact value and attempt a proof.

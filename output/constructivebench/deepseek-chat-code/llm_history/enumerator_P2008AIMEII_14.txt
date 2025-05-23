@@ -1,0 +1,53 @@
+[write_program]
+This problem is about finding the maximum ratio ρ = b/a given certain geometric constraints. We'll enumerate possible rational ratios b/a that satisfy the given conditions, looking for the maximum such ratio.
+
+The approach:
+1. Parameterize a=1 and vary b from 0 to 1
+2. For each b, solve the system of equations for x and y
+3. Check if the solutions satisfy all constraints
+4. Track the maximum valid b value (which is ρ since a=1)
+
+```python
+import math
+
+def solve():
+    max_rho = 0.0
+    # We'll test denominators up to 100 for simplicity
+    for denom in range(1, 101):
+        for numer in range(1, denom):
+            b = numer / denom
+            a = 1.0  # parameterize a=1
+            # Solve the system of equations:
+            # a² = x² + y² + xy
+            # b² = x² + y²
+            # Substitute b² into first equation
+            # 1 = b² + xy => xy = 1 - b²
+            # Also, x² + y² = b²
+            # We can solve for x and y
+            # Let S = x+y, P = xy = 1-b²
+            # Then S² = x² + y² + 2xy = b² + 2(1-b²) = 2 - b²
+            S_squared = 2 - b*b
+            if S_squared < 0:
+                continue  # no real solutions
+            S = math.sqrt(S_squared)
+            P = 1 - b*b
+            # Solutions are roots of t² - St + P = 0
+            discriminant = S*S - 4*P
+            if discriminant < 0:
+                continue
+            # Check if x and y satisfy all constraints
+            x1 = (S + math.sqrt(discriminant))/2
+            x2 = (S - math.sqrt(discriminant))/2
+            for x in [x1, x2]:
+                if x >= 0 and x < a:
+                    y = P / x if x != 0 else 0
+                    if y >= 0 and y < b:
+                        # Valid solution found
+                        if b > max_rho:
+                            max_rho = b
+                            print(f"Found new maximum ρ: {numer}/{denom} ≈ {b:.6f}")
+    print(f"Final maximum ρ found: {max_rho:.6f}")
+
+if __name__ == "__main__":
+    solve()
+```

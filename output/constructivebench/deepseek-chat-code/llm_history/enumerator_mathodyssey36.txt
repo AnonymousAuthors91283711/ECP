@@ -1,0 +1,47 @@
+[write_program]
+This problem asks for the minimal number of terms n needed to express the quadratic polynomial x² + x + 4 as a sum of squares of linear forms (aᵢx + bᵢ)². We'll write a Python program to find the smallest n where this is possible by checking n=1,2,... until we find a solution.
+
+The approach:
+1. For each n, we'll expand the sum of squares into a quadratic form
+2. Compare coefficients with x² + x + 4
+3. Solve the resulting system of equations for aᵢ and bᵢ
+4. The smallest n with a solution is our answer
+
+```python
+import sympy as sp
+
+def find_min_n():
+    x = sp.symbols('x')
+    target = x**2 + x + 4
+    
+    for n in range(1, 5):  # Try n up to 4 (likely answer is 3)
+        a = sp.symbols(f'a0:{n}')
+        b = sp.symbols(f'b0:{n}')
+        sum_sq = sum((a[i]*x + b[i])**2 for i in range(n))
+        expanded = sp.expand(sum_sq)
+        
+        # Get coefficients for x², x, and constant term
+        coeff_x2 = expanded.coeff(x, 2)
+        coeff_x = expanded.coeff(x, 1)
+        coeff_const = expanded.coeff(x, 0)
+        
+        # Solve system of equations
+        sol = sp.solve([
+            coeff_x2 - 1,  # x² coefficient = 1
+            coeff_x - 1,   # x coefficient = 1
+            coeff_const - 4 # constant term = 4
+        ], a + b)
+        
+        if sol:
+            print(f"Solution found for n = {n}")
+            print("One possible solution:")
+            for i in range(n):
+                print(f"a_{i} = {sol[a[i]]}, b_{i} = {sol[b[i]]}")
+            return n
+    
+    return None
+
+if __name__ == "__main__":
+    min_n = find_min_n()
+    print(f"\nThe minimal n is: {min_n}")
+```

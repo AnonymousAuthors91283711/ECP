@@ -1,0 +1,74 @@
+[write_program]
+Let's analyze the problem:
+
+We need to find the number of integers \( k \) from 1 to 2013 inclusive such that \( k^k \equiv 1 \pmod{10} \). To do this efficiently, we will examine the pattern of last digits of \( k^k \) depending on the last digit of \( k \).
+
+Key observations:
+- The last digit of \( k^k \) depends on \( k \mod 10 \).
+- For each last digit \( d \in \{0,1,2,3,4,5,6,7,8,9\} \), \( d^k \mod 10 \) follows a cycle.
+
+Precomputing:
+- 0: last digit always 0, so \( 0^k \equiv 0 \) mod 10, never 1.
+- 1: always 1, so \( 1^k \equiv 1 \).
+- 2: cycle (2,4,8,6), pattern repeats every 4.
+- 3: cycle (3,9,7,1), pattern repeats every 4.
+- 4: cycle (4,6), repeats every 2.
+- 5: always 5.
+- 6: always 6.
+- 7: cycle (7,9,3,1).
+- 8: cycle (8,4,2,6).
+- 9: cycle (9,1).
+
+Now, only bases ending with 1 or 9 can produce last digit 1 if the exponent has the right property:
+- For 1: always 1.
+- For 9: last digit 9^k mod 10 is 1 iff k is odd, since 9^odd ≡ 9 mod 10, 9^even ≡ 1 mod 10. Correction: 9^k mod 10:
+  - 9^1 = 9, last digit 9
+  - 9^2 = 81, last digit 1
+  So for 9^k to be 1 mod 10, k must be even.
+
+Similarly, for other bases:
+- 3: last digit 1 happens when k ≡ 4 mod 4, i.e., k ≡ 0 mod 4 (since pattern is (3,9,7,1))
+- 7: last digit 1 when k ≡ 4 mod 4
+- 3 and 7 need k mod 4 = 0 for last digit 1.
+- 2: cycle length 4, last digit 1 when k ≡ 0 mod 4.
+- 8: cycle length 4, last digit 1 when k ≡ 4 mod 4.
+- 4: last digit 4 or 6, but never 1.
+- 5: always 5.
+- 6: always 6.
+
+Thus, last digit of \( k^k \equiv 1 \pmod{10} \) if:
+- \( k \) ends with 1: always.
+- \( k \) ends with 9: \( k \) even.
+- \( k \) ends with 3 or 7: \( k \) divisible by 4.
+- \( k \) ends with 2 or 8: \( k \) divisible by 4.
+
+Now, counting how many numbers from 1 to 2013 satisfy each criterion:
+
+Let's implement this:
+
+```python
+# Count numbers from 1 to 2013 with specific last digits and conditions
+limit = 2013
+count = 0
+
+for k in range(1, limit + 1):
+    last_digit = k % 10
+    if last_digit == 1:
+        # always last digit 1
+        count += 1
+        print(k)  # stream answer
+    elif last_digit == 9:
+        # last digit 9, k must be even
+        if k % 2 == 0:
+            count += 1
+            print(k)
+    elif last_digit in {3, 7, 2, 8}:
+        # k divisible by 4
+        if k % 4 == 0:
+            count += 1
+            print(k)
+
+print("Total count:", count)
+# For the problem, we only need the count:
+print("Answer:", count)
+```

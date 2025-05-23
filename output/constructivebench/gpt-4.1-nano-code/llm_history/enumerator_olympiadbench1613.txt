@@ -1,0 +1,46 @@
+[write_program]
+The problem appears to involve finding the greatest natural number \( n \) such that for every monic polynomial \( P \) over \( \mathbb{Z} \) with degree at most \( n \), there exists a sequence of points \( x_0, x_1, \ldots, x_k \) with certain properties related to polynomial evaluation and injectivity. It seems to relate to polynomial interpolation or sums that equal evaluations at certain points, possibly touching on properties akin to the degree of polynomials.
+
+Given the level (high school olympiad), and the structure, one conjecture is that the maximum degree \( n \) such that the described property holds is 1 or 2. To explore this, I will check small degrees to see what is possible.
+
+I will implement a Python script that enumerates small degrees (say, 0 to 3) for monic polynomials with small coefficients, then check whether a certain sequence \( x \) exists satisfying the conditions (via brute-force over small sets). We then identify the maximum \( n \) satisfying the property.
+
+---
+
+```python
+import itertools
+
+# Encourage a quick check for small degrees
+# Monic polynomial: leading coefficient = 1
+# For small degrees, enumerate coefficients within a small range
+# For each polynomial, test if there's an injective sequence satisfying the sum condition
+
+max_degree = 3
+max_coeff = 5  # Max absolute coefficient for small enumeration
+found_degree = -1
+
+for degree in range(max_degree + 1):
+    # Generate monic polynomials degrees 0 to max_degree
+    # Coefficients for lower degree polynomials
+    for coeffs in itertools.product(range(-max_coeff, max_coeff+1), repeat=degree):
+        # Construct polynomial coefficients: leading 1 + other coeffs
+        poly_coeffs = list(coeffs) + [1]  # constant term
+        def P(x):
+            return sum(c * x**i for i, c in enumerate(reversed(poly_coeffs)))
+        # Attempt to find sequence x with length up to degree+1
+        # x values in a small range to keep enumeration manageable
+        for k in range(1, degree + 2):
+            for x_vals in itertools.permutations(range(-2, 3), k):
+                # Check sum condition: sum_{i=0}^{k-1} P(x_i) = P(x_{k-1})
+                sum_P = sum(P(xi) for xi in x_vals[:-1])
+                if sum_P == P(x_vals[-1]):
+                    print(f"Degree: {degree}, Polynomial coefficients (reverse order): {poly_coeffs}")
+                    print(f"Sequence x: {x_vals}, sum condition satisfied.")
+                    if degree > found_degree:
+                        found_degree = degree
+                    break
+            else:
+                continue
+            break
+print(f"Maximum degree satisfying the property: {found_degree}")
+```

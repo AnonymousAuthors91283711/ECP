@@ -1,0 +1,73 @@
+[write_program]
+This problem involves finding the maximum possible magnitude of a sum of 240 complex numbers on the unit circle, with constraints on how many points can lie in certain angular sectors. We'll approach this by:
+
+1. Modeling the problem with discrete points on a unit circle
+2. Trying different symmetric configurations that satisfy the constraints
+3. Calculating the sum magnitude for each configuration
+
+The key constraints are:
+- No more than 200 points in any π-angle sector (180 degrees)
+- No more than 120 points in any π/3-angle sector (60 degrees)
+
+We'll test configurations where points are as concentrated as possible while respecting these constraints.
+
+```python
+import math
+import cmath
+
+def test_configuration(n_groups, points_per_group, angle_between_groups):
+    """
+    Tests a symmetric configuration where points are grouped in clusters.
+    n_groups: number of point clusters
+    points_per_group: points in each cluster
+    angle_between_groups: angular separation between cluster centers
+    """
+    total_points = n_groups * points_per_group
+    if total_points != 240:
+        return None
+    
+    # Check sector constraints
+    # For π sector (180 degrees)
+    max_in_pi = 0
+    # For π/3 sector (60 degrees)
+    max_in_pi3 = 0
+    
+    # Calculate maximum points in any π sector
+    max_in_pi = min(200, points_per_group * (math.pi // angle_between_groups + 1))
+    
+    # Calculate maximum points in any π/3 sector
+    max_in_pi3 = min(120, points_per_group * (math.pi/3 // angle_between_groups + 1))
+    
+    if max_in_pi > 200 or max_in_pi3 > 120:
+        return None
+    
+    # Calculate the vector sum
+    vectors = []
+    for i in range(n_groups):
+        angle = i * angle_between_groups
+        for _ in range(points_per_group):
+            vectors.append(cmath.exp(1j * angle))
+    
+    total = sum(vectors)
+    magnitude = abs(total)
+    return magnitude
+
+# Test various symmetric configurations
+configurations = [
+    (3, 80, 2*math.pi/3),  # 3 groups of 80 points each, 120° apart
+    (4, 60, math.pi/2),     # 4 groups of 60 points each, 90° apart
+    (6, 40, math.pi/3),      # 6 groups of 40 points each, 60° apart
+    (8, 30, math.pi/4),      # 8 groups of 30 points each, 45° apart
+    (12, 20, math.pi/6),     # 12 groups of 20 points each, 30° apart
+]
+
+max_magnitude = 0
+for config in configurations:
+    mag = test_configuration(*config)
+    if mag is not None:
+        print(f"Configuration {config}: magnitude = {mag}")
+        if mag > max_magnitude:
+            max_magnitude = mag
+
+print(f"\nMaximum magnitude found: {max_magnitude}")
+```

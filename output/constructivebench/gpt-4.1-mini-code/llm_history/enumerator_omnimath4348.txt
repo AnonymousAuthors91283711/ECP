@@ -1,0 +1,79 @@
+[write_program]
+The system relates four nonzero real numbers \(x,y,z,w\) cyclically by equations of the form
+\[ x + \frac{1}{x^3} = 2y, \quad y + \frac{1}{y^3} = 2z, \quad z + \frac{1}{z^3} = 2w, \quad w + \frac{1}{w^3} = 2x. \]
+We want to find all quadruples \((x,y,z,w)\) satisfying these. To explore solutions and guide conjectures, I'll enumerate values of \(x,y,z,w\) over a reasonable range (say rational fractions), and check the equations numerically within a tolerance. I'll print exact values when the relations hold exactly (e.g. for integers if any), or close approximate matches. Small integer and simple rational values can reveal candidates. We test in a small grid with conditions \(x,y,z,w \neq 0\).
+
+```python
+import math
+
+# Check the 4 equations within a small tolerance
+def check_quad(x,y,z,w, tol=1e-7):
+    if 0 in (x,y,z,w): return False
+    eqs = [
+        abs(x + 1/x**3 - 2*y),
+        abs(y + 1/y**3 - 2*z),
+        abs(z + 1/z**3 - 2*w),
+        abs(w + 1/w**3 - 2*x)
+    ]
+    return all(e < tol for e in eqs)
+
+# To prioritize exact values, check if each expression matches exactly
+def exact_eq(x,y,z,w):
+    try:
+        if x == 0 or y == 0 or z == 0 or w == 0:
+            return False
+        return (x + 1/x**3 == 2*y and
+                y + 1/y**3 == 2*z and
+                z + 1/z**3 == 2*w and
+                w + 1/w**3 == 2*x)
+    except ZeroDivisionError:
+        return False
+
+# Enumerate over rationals with numerator and denominator in small ranges
+vals = []
+N = 6  # search bound for numerator, denominator
+searched = set()
+
+print("Searching for (x,y,z,w) with x,y,z,w in rational approx values ...")
+
+for xn in range(-N, N+1):
+    for xd in range(1, N+1):
+        if math.gcd(xn,xd) != 1:
+            continue
+        x = xn/xd
+        if x == 0:
+            continue
+        for yn in range(-N, N+1):
+            for yd in range(1, N+1):
+                if math.gcd(yn, yd) !=1:
+                    continue
+                y = yn/yd
+                if y == 0:
+                    continue
+                for zn in range(-N, N+1):
+                    for zd in range(1, N+1):
+                        if math.gcd(zn, zd) !=1:
+                            continue
+                        z = zn/zd
+                        if z == 0:
+                            continue
+                        for wn in range(-N, N+1):
+                            for wd in range(1, N+1):
+                                if math.gcd(wn, wd) !=1:
+                                    continue
+                                w = wn/wd
+                                if w == 0:
+                                    continue
+                                tpl = (x,y,z,w)
+                                if tpl in searched:
+                                    continue
+                                searched.add(tpl)
+                                # Check exact
+                                if exact_eq(x,y,z,w):
+                                    print("Exact solution:", tpl)
+                                # else check approx
+                                elif check_quad(x,y,z,w, tol=1e-5):
+                                    # Print approximate solution
+                                    print(f"Approx solution: ({x:.3f},{y:.3f},{z:.3f},{w:.3f})")
+```
+

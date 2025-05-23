@@ -1,0 +1,65 @@
+[write_program]
+The problem involves integer polynomials \( P \) of degree at most 7, with coefficients in \([-7,7]\), which can be expressed as the sum of a polynomial \( Q \) having root 4, and a polynomial \( R \) with coefficients in \([-1,1]\). We want to enumerate all such polynomials \( P \).
+
+We will:
+
+- Enumerate all \( Q \) with integer coefficients such that \( Q(4) = 0 \) and \(\deg(Q) \le 7\) with coefficients in \([-7,7]\) (or slightly larger bounds to ensure closure after sum).
+- Enumerate all \( R \) with coefficients in \([-1,1]\), degree at most 7.
+- Sum each \( Q+R \) and keep those with coefficients in \([-7,7]\).
+
+We print each \( P \) found immediately (as a tuple of coefficients), ensure no duplicates, and print total count at the end.
+
+We'll choose a manageable coefficient range for \( Q \) to limit computation and demonstrate the method.
+
+```python
+# Enumerate polynomials P over ℤ with deg ≤7, coefficients in [-7,7],
+# such that P = Q + R, Q has root 4, Q coeffs in [-7,7], R coeffs in [-1,1].
+
+from itertools import product
+
+def eval_poly(coeffs, x):
+    return sum(c * (x**i) for i, c in enumerate(coeffs))
+
+def add_poly(a, b):
+    return tuple(ac + bc for ac, bc in zip(a, b))
+
+def coeffs_in_range(coeffs, low, high):
+    return all(low <= c <= high for c in coeffs)
+
+# Degree 7 polynomials represented by 8 coeffs: c0 + c1 X + ... + c7 X^7
+
+deg = 7
+coeff_range_Q = range(-7,8)
+coeff_range_R = range(-1,2)
+coeff_range_P = (-7,7)
+
+# To reduce complexity, note that Q(4)=0 means:
+# sum c_i * 4^i = 0
+# For a given choice of first 7 coeffs of Q, we can solve c7:
+# c7 = (-sum_{i=0..6} c_i * 4^i) / 4^7 = integer?
+# Because 4^7=16384, c7 should be integer with |c7|<=7
+
+powers = [4**i for i in range(deg+1)]
+
+found = set()
+
+print("Enumerating suitable polynomials P:")
+
+for q_coeffs_0_6 in product(coeff_range_Q, repeat=7):
+    s = sum(c * p for c, p in zip(q_coeffs_0_6, powers[:7]))
+    if s % powers[7] != 0:
+        continue
+    c7 = -s // powers[7]
+    if c7 not in coeff_range_Q:
+        continue
+    q_coeffs = q_coeffs_0_6 + (c7,)
+    # Now enumerate R with coeffs in [-1,1]:
+    for r_coeffs in product(coeff_range_R, repeat=8):
+        p_coeffs = add_poly(q_coeffs, r_coeffs)
+        if coeffs_in_range(p_coeffs, coeff_range_P[0], coeff_range_P[1]):
+            if p_coeffs not in found:
+                found.add(p_coeffs)
+                print(p_coeffs)
+
+print(f"Total distinct polynomials P found: {len(found)}")
+```

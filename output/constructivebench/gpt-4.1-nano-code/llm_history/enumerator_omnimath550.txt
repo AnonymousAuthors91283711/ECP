@@ -1,0 +1,50 @@
+[write_program]
+The problem requires finding the least value of `c` (cost) such that there exists a sequence of steps (a list of booleans) where the number of beans (calculated by folding through the steps) exceeds 2008, and the beans modulo 100 is 42, with the total cost being `c`. The sequence is built where each `True` adds `5 * b` beans and costs 1, while each `False` adds 1 bean and costs 5.
+
+We need to enumerate candidate step sequences to find the minimal `c` satisfying these conditions. To do so, we'll fix small sequence lengths and search for sequences meeting the criteria, prioritizing minimal `c` and verifying conditions.
+
+```python
+# Python program to enumerate minimal cost sequences meeting the criteria
+# Conditions:
+#   beans > 2008
+#   beans % 100 == 42
+# Goal:
+#   Find minimal total cost c along such sequences
+
+MAX_STEPS = 20  # limit sequence length for practicality
+TARGET_BEANS = 2008
+ANSWER_FOUND = False
+min_cost = None
+
+for length in range(1, MAX_STEPS + 1):
+    # Generate all sequences of this length (each element is True or False)
+    # To improve efficiency, we generate only those promising based on partial sums
+    for mask in range(2 ** length):
+        steps = []
+        for i in range(length):
+            steps.append(((mask >> i) & 1) == 1)
+        b, c_cost = 0, 0
+        beans_list = []
+        for step in steps:
+            if step:
+                b, c_cost = b + 1, c_cost + 5
+                beans_list.append(b)
+            else:
+                b, c_cost = b + 1, c_cost + 5
+                beans_list.append(b)
+        total_beans = beans_list[-1]
+        if total_beans > 2008 and total_beans % 100 == 42:
+            # Verify total beans after complete sequence:
+            # Need to find total beans at the end, which is beans_list[-1]
+            # but be careful: beans accumulate over steps
+            # Since the accumulations happen cumulatively, the last element is total beans
+            # We confirm total beans matches final cumulative sum
+            # Actually, the variable `b` after loop ends is total beans
+            # and c_cost is total cost
+            total_beans = b
+            if total_beans > 2008 and total_beans % 100 == 42:
+                if (min_cost is None) or (c_cost < min_cost):
+                    min_cost = c_cost
+                    print(f"Sequence length: {length}, steps: {steps}, total beans: {total_beans}, cost: {c_cost}")
+print(f"Minimal cost meeting conditions: {min_cost}")
+```

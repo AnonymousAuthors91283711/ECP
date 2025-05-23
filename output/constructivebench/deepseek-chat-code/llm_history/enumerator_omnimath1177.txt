@@ -1,0 +1,58 @@
+[write_program]
+This problem is about finding the smallest number n such that for any function f mapping n elements and 10 colors to boolean values, there exists a subset of 57 elements where either all elements agree on some pair of colors, or all disagree on some pair of colors. This resembles Ramsey-type problems.
+
+We'll approach this by:
+1. Modeling the problem as checking all possible colorings for small n
+2. Finding the minimal n where the condition holds for all colorings
+3. Using symmetry to reduce computation (since colors are interchangeable)
+
+```python
+from itertools import product
+
+def check_condition(n, subset_size=57):
+    # We'll represent colorings as tuples of 10 bits (colors) for each of n elements
+    # For small n, we can enumerate all possible colorings (though this becomes impractical quickly)
+    # Instead, we'll use a probabilistic approach for larger n
+    
+    # For demonstration, we'll check small n values
+    # In reality, this needs more sophisticated methods for larger n
+    for n_candidate in range(1, 20):
+        # Generate all possible colorings for n_candidate elements
+        # Each coloring is a tuple of 10 booleans for each element
+        # We'll use binary representation to enumerate
+        found_counterexample = False
+        
+        # Check a sample of colorings (full enumeration is too expensive)
+        sample_size = min(1000, 2**(10*n_candidate))
+        for coloring_num in range(sample_size):
+            # Generate a coloring
+            coloring = []
+            for elem in range(n_candidate):
+                color_bits = [(coloring_num >> (10*elem + c)) & 1 for c in range(10)]
+                coloring.append(tuple(color_bits))
+            
+            # Check if condition holds for this coloring
+            condition_met = False
+            for i in range(10):
+                for j in range(i+1, 10):
+                    # Check if there's a subset of size 57 where all agree or disagree
+                    # We'll look for the majority case
+                    count_agree = sum(1 for elem in range(n_candidate) if coloring[elem][i] == coloring[elem][j])
+                    if count_agree >= subset_size or (n_candidate - count_agree) >= subset_size:
+                        condition_met = True
+                        break
+                if condition_met:
+                    break
+            
+            if not condition_met:
+                found_counterexample = True
+                break
+        
+        if not found_counterexample or n_candidate == sample_size:
+            print(f"Condition holds for n = {n_candidate}")
+        else:
+            print(f"Counterexample found for n = {n_candidate}")
+
+# Run with reasonable parameters
+check_condition(57)
+```

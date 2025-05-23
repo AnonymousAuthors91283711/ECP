@@ -1,0 +1,65 @@
+[write_program]
+The problem asks us to compute the sum 
+\[
+S = \sum_{n=1}^{2018} \text{if } d(n) = 20 \text{ and } 20 \mid n \text{ then } n \text{ else } 0,
+\]
+where \(d(n)\) is the number of divisors of \(n\). We want to find \(S/20\).
+
+To help conjecture the answer, we'll:
+- Enumerate \(n \leq 2018\) with exactly 20 divisors and divisible by 20.
+- Print each such \(n\) immediately.
+- Keep a running sum and print the final quotient \(S/20\).
+
+We use divisor counting by prime factorization and exploit the divisor count formula:
+\[
+d(n) = (a_1+1)(a_2+1)\cdots(a_k+1)
+\]
+where \(n = p_1^{a_1} p_2^{a_2} \cdots p_k^{a_k}\).
+
+Since 20 factors as \(20 = 1 \times 20 = 2 \times 10 = 4 \times 5 = 5 \times 4 = 10 \times 2 = 20 \times 1\), we'll consider all divisor count patterns that multiply to 20.
+
+Because we want the program to run quickly and output partials streaming, we'll avoid a full prime factorization for every number, but limit testing to numbers divisible by 20.
+
+```python
+import math
+
+# Precompute primes up to 2018 for factorization
+def sieve(n):
+    sieve = [True]*(n+1)
+    sieve[0]=sieve[1]=False
+    for i in range(2,int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i,n+1,i):
+                sieve[j]=False
+    return [p for p in range(2,n+1) if sieve[p]]
+
+primes = sieve(2018)
+
+def prime_factors(n):
+    factors = {}
+    for p in primes:
+        if p*p > n:
+            break
+        while n%p==0:
+            factors[p] = factors.get(p,0)+1
+            n //= p
+    if n>1:
+        factors[n] = factors.get(n,0)+1
+    return factors
+
+def divisor_count(n):
+    fs = prime_factors(n)
+    c = 1
+    for e in fs.values():
+        c *= (e+1)
+    return c
+
+S = 0
+for n in range(20,2019,20):  # Must be divisible by 20
+    d = divisor_count(n)
+    if d == 20:
+        print(n)  # print each qualifying number immediately
+        S += n
+print("Sum S =", S)
+print("S/20 =", S//20)
+```

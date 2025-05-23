@@ -1,0 +1,73 @@
+[write_program]
+The problem is about finding the value \( P(2008) \) where \( P \) is a degree 2008 polynomial with leading coefficient 1, and for integers \( i \) from 0 to 2007, \( P(i) = 2007 - i \). We want to find \( P(2008) \).
+
+To help conjecture the formula or the actual value, I will write a Python program that:
+- For smaller \( n \), constructs a polynomial \( P \) of degree \( n \) with leading coefficient 1 that passes through points \( (i, n-1 - i) \) for \( i = 0 \ldots n-1 \).
+- Then evaluates \( P(n) \).
+- Prints all such values immediately.
+
+Because the degree and the number of points is large, we cannot solve directly for \( n=2008 \), but trying small \( n \) such as \( 1,2,3,\ldots,10 \), and printing \( P(n) \) will help conjecturing the pattern.
+
+We use Lagrange interpolation but incorporate the leading coefficient = 1 condition by shifting the polynomial accordingly. Alternatively, since the leading coefficient is 1, the polynomial can be expressed as the sum of a monic polynomial of degree \( n \) plus a lower degree polynomial adjusting the interpolation constraints.
+
+I will:
+- Define \( n \) from 1 to 10.
+- For each \( n \), define \( y_i = n-1 - i \) for \( i=0 \ldots n-1 \).
+- Attempt to find the polynomial \( P \) of degree \( n \) with leading coefficient 1 interpolating these points.
+- Print \( n \) and \( P(n) \).
+
+Note: To find the polynomial with leading coefficient 1 and passing through points, one can:
+- Start from the monic polynomial: \( x^n \)
+- Then find polynomial \( Q(x) \) of degree \( < n \) such that for all \( i \), \( P(i) = i^n + Q(i) = y_i \).
+- Since \( Q \) is degree less than \( n \), solve the system \( Q(i) = y_i - i^n \) for \( i=0 \ldots n-1 \).
+- Solve this linear system for coefficients of \( Q \).
+
+Finally, evaluate \( P(n) = n^n + Q(n) \).
+
+This approach is feasible for small \( n \).
+
+```python
+# Enumerate values of P(n) for the given problem for small n
+# P is degree n, monic, and P(i)=n-1 - i for i in [0..n-1]
+# We write P(x) = x^n + Q(x) where deg Q < n
+# Then Q satisfies Q(i) = y_i - i^n for i in [0..n-1]
+
+import numpy as np
+
+def solve_for_Q(n):
+    # Points i
+    xs = list(range(n))
+    # Values y_i
+    ys = [n-1 - i for i in xs]
+    # RHS for Q: y_i - i^n
+    rhs = np.array([ys[i] - (xs[i] ** n) for i in range(n)], dtype=np.float64)
+    # Build Vandermonde matrix for degree < n polynomial Q
+    # Q(x) = c_0 + c_1 x + ... + c_{n-1} x^{n-1}
+    # For i in [0..n-1], Q(i) = sum c_j * i^j
+    A = np.vander(xs, N=n, increasing=True)
+    # Solve A c = rhs
+    c = np.linalg.solve(A, rhs)
+    return c
+
+def eval_poly(coeffs, x):
+    # coeffs in increasing order: c_0 + c_1 x + ...
+    val = 0
+    for i, c in enumerate(coeffs):
+        val += c * (x ** i)
+    return val
+
+def main():
+    print("n, P(n) values for small n")
+    for n in range(1, 11):
+        c = solve_for_Q(n)  # coefficients of Q(x)
+        # Evaluate P(n) = n^n + Q(n)
+        val = (n ** n) + eval_poly(c, n)
+        # If val is very close to int, print int
+        if abs(val - round(val)) < 1e-10:
+            val = int(round(val))
+        print(f"n={n}, P({n}) = {val}")
+
+if __name__ == "__main__":
+    main()
+```
+This program prints candidates \( P(n) \) which can be used to guess \( P(2008) \) or the general formula.

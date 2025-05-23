@@ -1,0 +1,61 @@
+[write_program]
+This problem appears to involve defining transformations (`black_step` and `white_step`) on some labeling of a cube, applying sequences of steps, and then analyzing the range of the resulting labelings to find a maximum value `n`.
+
+To assist, I will generate candidate answers for `n`, focusing on small parameters, sequences, and explicit labelings. Since the code involves summations over specific neighbor sets and the parameters (like sequence length and label counts) are fixed or small, I will enumerate possible configurations and compute corresponding label values. I'll output each candidate answer immediately, streaming the results.
+
+Assuming the labelings and their transformations can produce integer values, I'll simulate small cases that cover potential maximum labels. The code below attempts candidates with small initial labelings, applying sequences, and tracking maximum labels produced.
+
+```python
+# Enumerate small initial labelings and sequences of steps to find possible maximum labels
+# Since the problem involves summing over neighbors with fixed offsets, try simple labelings
+# and small sequences of black/white steps to find large resulting label values.
+
+def generate_initial_labelings():
+    # Small initial labelings: start with all vertices labeled 0 through 3
+    initial_labels = [
+        {v: v for v in range(10)},  # labels 0..9
+        {v: 10 - v for v in range(10)},  # labels 10..1
+        {v: 5 for v in range(10)},  # constant labels
+    ]
+    return initial_labels
+
+def sum_neighbors(f, v, neighbors):
+    return sum(f[vv] for vv in neighbors)
+
+def black_step_labeling(f):
+    new_f = {}
+    for v in f:
+        neighbors = [u for u in range(v - 2, v + 3) if u != v]
+        new_f[v] = sum_neighbors(f, v, neighbors)
+    return new_f
+
+def white_step_labeling(f):
+    new_f = {}
+    for v in f:
+        neighbors = [u for u in range(v - 4, v + 5) if u != v]
+        new_f[v] = sum_neighbors(f, v, neighbors)
+    return new_f
+
+# Apply a sequence of steps
+def apply_sequence(f, seq):
+    for step in seq:
+        if step:
+            f = black_step_labeling(f)
+        else:
+            f = white_step_labeling(f)
+    return f
+
+# Enumerate small sequences and initial labelings to find max label
+max_label = 0
+for init in generate_initial_labelings():
+    # Convert to list for consistent indexing
+    label = list(init.values())
+    for seq in [[], [True], [False], [True, False], [False, True], [True, True], [False, False]]:
+        state = {i: label[i] for i in range(len(label))}
+        final_state = apply_sequence(state, seq)
+        current_max = max(final_state.values())
+        print(current_max)
+        if current_max > max_label:
+            max_label = current_max
+print("Max label found:", max_label)
+```

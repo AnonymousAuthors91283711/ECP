@@ -1,0 +1,56 @@
+[write_program]
+This problem asks to find all 4-element sets of natural numbers {a,b,c,d} where all three combinations (a*b + c*d), (a*c + b*d), and (a*d + b*c) are prime numbers. We'll write a Python program to enumerate such sets.
+
+The approach:
+1. Iterate through all possible 4-element combinations of numbers up to a reasonable threshold
+2. For each combination, check if all three required sums are prime
+3. Print valid sets as they're found
+4. Since the problem states there are exactly 4 elements in the answer set, we'll stop after finding all unique sets up to our threshold
+
+```python
+import itertools
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+max_num = 20  # Reasonable threshold based on problem constraints
+seen = set()
+
+print("Searching for 4-element sets where all combinations are prime...")
+for nums in itertools.combinations(range(1, max_num + 1), 4):
+    a, b, c, d = nums
+    # Check all three required combinations
+    ab_cd = a*b + c*d
+    ac_bd = a*c + b*d
+    ad_bc = a*d + b*c
+    if all(is_prime(x) for x in [ab_cd, ac_bd, ad_bc]):
+        sorted_nums = tuple(sorted(nums))
+        if sorted_nums not in seen:
+            seen.add(sorted_nums)
+            print(f"Found valid set: {sorted_nums}")
+
+print("\nSearch complete.")
+```

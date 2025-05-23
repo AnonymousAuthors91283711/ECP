@@ -1,0 +1,61 @@
+[write_program]
+The problem is to find three distinct primes p < q < r such that their product equals 989 * 1001 * 1007 + 320. We'll enumerate prime triples around the neighborhood of the cube root of the target number and print triples when their product matches the target exactly.
+
+```python
+# Enumerate prime triples p < q < r with p*q*r = 989*1001*1007 + 320
+
+def is_prime(n):
+    if n < 2:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    r = int(n**0.5)
+    for i in range(3, r+1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+def primes_up_to(n):
+    # Generate primes up to n
+    sieve = [True]*(n+1)
+    sieve[0:2] = [False, False]
+    for i in range(2,int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i,n+1,i):
+                sieve[j] = False
+    return [p for p in range(2,n+1) if sieve[p]]
+
+target = 989*1001*1007 + 320
+
+# Approximate cube root to limit prime search range
+cube_root = int(round(target ** (1/3))) + 1
+
+# Let's safely limit primes between cube_root-50 and cube_root+200 to cover close primes
+low = max(2, cube_root - 50)
+high = cube_root + 200
+
+primes = [p for p in primes_up_to(high) if p >= low]
+
+found = []
+for i,p in enumerate(primes):
+    for j,q in enumerate(primes[i+1:], start=i+1):
+        # If product too large even with smallest r, prune
+        min_r = primes[j+1] if j+1 < len(primes) else None
+        if min_r is None:
+            break
+        if p*q*min_r > target:
+            break
+        for r in primes[j+1:]:
+            prod = p*q*r
+            if prod == target:
+                print(f"Found primes: p={p}, q={q}, r={r}")
+                found.append((p,q,r))
+            elif prod > target:
+                break
+
+if found:
+    # Output minimum triple by p,q,r ordering (which is guaranteed by loops)
+    print("Answer triple (p,q,r):", found[0])
+else:
+    print("No triple found in considered range.")
+```

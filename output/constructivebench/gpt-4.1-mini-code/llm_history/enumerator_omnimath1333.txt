@@ -1,0 +1,56 @@
+[write_program]
+The problem concerns finding the sum over complex numbers \( z \) for which there exists \( y \) such that \( z + y = 1 \) and \( z^{20} + y^{20} = 20 \). We want to sum \(\text{Re}(z^2 + (1 - z)^2)\) over all such \( z \).
+
+Since \( y = 1 - z \), the condition is \( z^{20} + (1 - z)^{20} = 20 \). The set is finite because the equation represents a polynomial constraint.
+
+We enumerate complex solutions by considering roots on the complex plane, but since roots are complex and hard to enumerate exactly, we can consider the polynomial \( P(z) = z^{20} + (1 - z)^{20} - 20 \) and find its roots numerically. Then sum the real parts of \( z^2 + (1 - z)^2 \) for roots.
+
+We print partial roots and their partial sums as found to identify patterns.
+
+```python
+import cmath
+
+# We enumerate approximate roots of z^20 + (1 - z)^20 = 20
+# which can be rewritten as f(z) = z^20 + (1 - z)^20 - 20 = 0
+
+# Use numpy polynomial roots with complex coefficients to find roots of high-degree polynomials would be hard here.
+# Instead, note that the polynomial is degree 20 in z, but (1-z)^20 expands as sums of powers of z.
+
+# Let's construct coefficient of the polynomial p(z) = z^20 + (1 - z)^20 - 20
+# We'll represent p(z) as sum_{k=0}^{20} coeff_k z^k
+
+# Use binomial theorem for (1 - z)^20 = sum_{k=0}^20 C(20,k) * 1^{20-k} * (-z)^k = sum_{k=0}^{20} C(20,k)(-1)^k z^k
+
+from math import comb
+
+coeffs = [0]*21
+coeffs[20] = 1  # z^20 term
+
+# Add coefficients for (1-z)^20
+for k in range(21):
+    coeffs[k] += comb(20,k)*((-1)**k)
+
+# Subtract 20 for the constant term
+coeffs[0] -= 20
+
+# coeffs represents polynomial p(z) = 0
+
+# numpy poly1d expects highest degree first
+import numpy as np
+
+poly = np.poly1d(coeffs[::-1])  # reverse because numpy expects descending powers
+
+roots = poly.r
+
+sum_real = 0
+count = 0
+
+for z in roots:
+    val = z**2 + (1 - z)**2
+    real_part = val.real
+    print(f"Root {count+1}: {z}, contributes real part: {real_part:.10f}")
+    sum_real += real_part
+    count += 1
+
+print(f"Sum of real parts over all {count} roots: {sum_real:.10f}")
+```

@@ -1,0 +1,50 @@
+[write_program]
+The Lean snippet defines a function \( T \) on natural numbers with properties about divisibility and sums of intervals, and asks to characterize the set \(\{m \in \mathbb{N} \mid m \geq T(m)\}\).
+
+To assist in exploring this, we will:
+- Enumerate small sample functions \(T\) defined on a small domain, e.g., \( n=1..5 \).
+- For each \( n \), verify that \( n \mid \sum_{i=1}^{T(n)} i \).
+- Check the condition that for all \(k>0\), if \( n \mid \sum_{i=1}^k i \), then \(k \geq T(n)\).
+- Then print the members \(m\) with \( m \geq T(m) \).
+- This experimental approach might reveal patterns to conjecture or prove the answer.
+
+```python
+# Enumerate functions T: {1..5} -> N+ with T(n) > 0
+# Check conditions and print sets {m | m >= T(m)}.
+
+def triangle_sum(k):
+    return k*(k+1)//2
+
+N = 5  # domain size
+
+from itertools import product
+
+def divides(a,b):
+    return b % a == 0
+
+# Generate candidate T as tuples of length N with values 1..N+3 (small range)
+max_T_val = N+3
+
+for T_values in product(range(1,max_T_val+1), repeat=N):
+    T = list(T_values)
+    ok = True
+    for n in range(1,N+1):
+        tn = T[n-1]
+        # Condition 1: n divides sum_{i=1}^{tn} i
+        if not divides(n, triangle_sum(tn)):
+            ok = False
+            break
+        # Condition 2: for all k>0, if n divides sum_{i=1}^k i, then k >= T(n)
+        # We test k in 1..max_T_val+2 to keep finite
+        for k in range(1, max_T_val+3):
+            if divides(n, triangle_sum(k)) and k < tn:
+                ok = False
+                break
+        if not ok:
+            break
+    if ok:
+        # Identify {m | m >= T(m)}
+        S = [m for m in range(1,N+1) if m >= T[m-1]]
+        print(f"T = {T}, satisfies conditions; set {{m | m >= T(m)}} = {S}")
+```
+This program enumerates small candidates for \(T\), checks the divisibility conditions from the problem, and prints the set as requested. This may assist in forming conjectures on the form of \(\{m \mid m \geq T(m)\}\).

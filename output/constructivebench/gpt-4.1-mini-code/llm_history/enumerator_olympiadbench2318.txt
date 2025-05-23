@@ -1,0 +1,39 @@
+[write_program]
+The problem considers functions \( s : \{0,\dots,7\} \to \mathbb{Z} \) with the properties:
+
+- For each integer value \( k \in \{1,2,3,4\} \), the preimage \( s^{-1}(\{k\}) \) has exactly 2 elements.
+- For any \( i < j \) with \( s(i) = s(j) \), the difference \( j - i \) equals that shared value \( s(i) \).
+
+We want to enumerate all such functions \( s \) and print them. We'll check all subsets of size 2 in \(\{0,\ldots,7\}\) for each value 1 to 4, check the spacing condition, and output all valid \( s \) as lists. This is a combinatorial search over partitions of \(\{0,\ldots,7\}\) into 4 pairs with differences equal to the values 1 to 4.
+
+```python
+# Enumerate functions s: {0,...,7} -> {1,2,3,4} with each value taken exactly twice,
+# and for the two indices i<j with s(i)=s(j)=k, j-i = k.
+
+from itertools import combinations
+
+n = 8
+values = [1, 2, 3, 4]
+
+# For each k in values, list all pairs (i,j) with j-i=k
+pairs_for_k = {k: [(i, i+k) for i in range(n - k)] for k in values}
+
+# We want to choose one pair for each k so that the pairs cover {0,...,7} exactly.
+# Each pair corresponds to the two indices where s = k.
+
+def backtrack(k_idx, used_indices, selected_pairs):
+    if k_idx == len(values):
+        # Construct s as list - assign s[i]=k for indices in selected_pairs
+        s = [0]*n
+        for k, (i,j) in zip(values, selected_pairs):
+            s[i] = k
+            s[j] = k
+        print(s)
+        return
+    k = values[k_idx]
+    for i,j in pairs_for_k[k]:
+        if i not in used_indices and j not in used_indices:
+            backtrack(k_idx+1, used_indices | {i,j}, selected_pairs + [(i,j)])
+
+backtrack(0, set(), [])
+```

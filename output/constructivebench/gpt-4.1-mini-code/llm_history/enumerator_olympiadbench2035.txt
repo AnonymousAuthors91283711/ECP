@@ -1,0 +1,45 @@
+[write_program]
+The problem: Given nonnegative real numbers \(a,b,c,d\) summing to 100, we want to investigate the maximum possible value of
+\[
+S = \sqrt[3]{\frac{a}{b+7}} + \sqrt[3]{\frac{b}{c+7}} + \sqrt[3]{\frac{c}{d+7}} + \sqrt[3]{\frac{d}{a+7}}.
+\]
+We will enumerate values by discretizing \(a,b,c\) in steps and deducing \(d=100-(a+b+c)\), ensuring nonnegativity. For each quadruple, calculate \(S\) if denominators are positive (no division by zero issue since denominators have +7). Print each \(S\) and keep track of the maximum.
+
+We'll use integer steps for \(a,b,c\) up to 100 with a small step (like 10 or 20) for performance and output limit. Print triples tested along with \(S\). At the end report the max or approximated max.
+
+```python
+# Enumerate quadruples (a,b,c,d) with a,b,c in [0,100] step 10, d=100-(a+b+c)
+# Compute S = sum of cube roots of (a/(b+7)), etc.
+# Print each found S with parameters, track max and print it last.
+
+from math import pow
+
+def cbrt(x):
+    # cube root preserving sign for nonnegative inputs (all fractions nonnegative)
+    return pow(x, 1/3)
+
+max_S = -1e9
+max_params = None
+
+step = 10
+
+print("Enumerations with step =", step)
+for a in range(0, 101, step):
+    for b in range(0, 101, step):
+        for c in range(0, 101, step):
+            d = 100 - (a + b + c)
+            if d < 0 or d > 100:
+                continue
+            # denominators positive: b+7, c+7, d+7, a+7 all >=7 > 0
+            try:
+                S = cbrt(a/(b+7)) + cbrt(b/(c+7)) + cbrt(c/(d+7)) + cbrt(d/(a+7))
+            except ZeroDivisionError:
+                continue
+            print(f"a={a},b={b},c={c},d={d},S={S:.6f}")
+            if S > max_S:
+                max_S = S
+                max_params = (a,b,c,d)
+
+print("\nMaximum S found:")
+print(f"a={max_params[0]}, b={max_params[1]}, c={max_params[2]}, d={max_params[3]}, S={max_S:.6f}")
+```

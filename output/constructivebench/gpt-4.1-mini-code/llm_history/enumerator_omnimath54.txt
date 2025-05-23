@@ -1,0 +1,54 @@
+[write_program]
+The problem involves finding the least \( m \in \mathbb{N} \) such that for every pair \( a \neq b \) in the interval \([1, 2n-1]\), there exist nonzero integers \(x,y \geq 0\), not both zero, with \(2n \mid a x + b y\) and \(x + y \leq m\). We want to enumerate results for small \(n\), searching for the minimal such \(m\).
+
+The program below follows these steps for each \(n\):
+- Iterate over candidate \(m\) starting from 1 upward.
+- Check all pairs \(a \neq b\) in \([1, 2n-1]\).
+- For each pair, check \(x,y\) with \(1 \leq x+y \leq m\) to find any non-trivial solution.
+- If all pairs are covered by some \((x,y)\) with \(x+y \leq m\), print \(n\), \(m\) as a candidate.
+- Stop searching \(m\) once a valid solution is found (minimal \(m\)).
+
+Since time complexity grows quickly, I limit \(n\) up to 5 and \(m \) up to 20 for efficiency.
+
+```python
+# Enumerate minimal m for each n where ∀ distinct a,b ∈ [1,2n-1], ∃ x,y with 0<x+y≤m, 2n|(a x + b y).
+def divides(k, val):
+    return val % k == 0
+
+def find_min_m(n, max_m=20):
+    limit = 2*n -1
+    for m in range(1, max_m+1):
+        all_pairs_ok = True
+        for a in range(1, limit+1):
+            for b in range(1, limit+1):
+                if a == b:
+                    continue
+                found = False
+                # x,y ≥ 0 and not both zero, x+y ≤ m
+                for s in range(1, m+1):
+                    for x in range(s+1):
+                        y = s - x
+                        if divides(2*n, a*x + b*y):
+                            found = True
+                            break
+                    if found:
+                        break
+                if not found:
+                    all_pairs_ok = False
+                    break
+            if not all_pairs_ok:
+                break
+        if all_pairs_ok:
+            print(f"n={n}, minimal m={m}")
+            return m
+    print(f"n={n}, no m≤{max_m} found")
+    return None
+
+def main():
+    for n in range(2, 6):
+        print(f"Checking n={n}")
+        find_min_m(n)
+
+if __name__ == "__main__":
+    main()
+```

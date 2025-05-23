@@ -1,0 +1,63 @@
+[write_program]
+The problem provides three equations involving real numbers \(a, b, c\):
+
+1. \(a + b + c = 100\)
+2. \(ab + bc + ca = 20\)
+3. \((a + b)(a + c) = 24\)
+
+We want to find all possible values of \(bc\).
+
+The program below enumerates possible triples \((a,b,c)\) by fixing values of \(a\) in a small range and then solving for \(b\) and \(c\) using the given equations. It prints the found values of \(bc\) immediately. To keep the output reasonable, it uses float rounding and searches over a small grid of \(a\) values.
+
+```python
+# Enumerate possible bc values given the system:
+# a+b+c=100
+# ab+bc+ca=20
+# (a+b)(a+c)=24
+# We vary 'a' in a small range, solve quadratic conditions for (b,c), and print bc.
+
+def is_close(x, y, eps=1e-6):
+    return abs(x - y) < eps
+
+def approx_eq(x, y, eps=1e-6):
+    return abs(x - y) < eps
+
+print("Enumerating possible bc values (approximate) for varying a:")
+
+# From (a+b)(a+c)=24
+# => a^2 + a(b+c) + bc = 24
+# From a+b+c=100 => b+c=100 - a
+# So bc = 24 - a^2 - a(100 - a) = 24 - a^2 - 100a + a^2 = 24 - 100a
+# So bc = 24 - 100a exactly.
+
+# Similarly from ab + bc + ca = 20
+# ab + bc + ca = a(b+c) + bc = a(100 - a) + bc = 20
+# -> a(100 - a) + bc = 20
+# Using bc = 24 - 100a -> a(100 - a) + 24 - 100a = 20
+# -> 100a - a^2 + 24 - 100a = 20
+# -> -a^2 + 24 = 20
+# -> -a^2 = -4
+# -> a^2 = 4
+# Thus a = ±2
+
+# Now compute bc and b+c for each a:
+for a in [2, -2]:
+    bc = 24 - 100*a
+    b_plus_c = 100 - a
+    # Solve t^2 - (b+c)t + bc = 0 for roots (b,c)
+    # t^2 - b_plus_c t + bc = 0
+    discriminant = b_plus_c**2 - 4*bc
+    if discriminant < 0:
+        continue  # no real roots for b,c
+
+    sqrt_disc = discriminant**0.5
+    b1 = (b_plus_c + sqrt_disc)/2
+    c1 = b_plus_c - b1
+    b2 = (b_plus_c - sqrt_disc)/2
+    c2 = b_plus_c - b2
+
+    # Print both pairs and bc
+    print(f"a={a}, b={b1:.6g}, c={c1:.6g}, bc={b1*c1:.6g}")
+    print(f"a={a}, b={b2:.6g}, c={c2:.6g}, bc={b2*c2:.6g}")
+```
+

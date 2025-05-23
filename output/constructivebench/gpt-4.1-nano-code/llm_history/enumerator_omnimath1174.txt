@@ -1,0 +1,72 @@
+[write_program]
+This problem models a stateful process with a coin array, direction, position, and counters, and asks for the least number of steps (`n`) such that after applying the transition function `step` `n` times, the `tailsCount` equals 20. The key points:
+- The process flips coins based on their current state.
+- The initial state has all coins unset (`none`), starting position 0, moving right (`dir = 1`).
+- Each step updates position, coin states, and counters depending on coin value.
+- We need to find the minimal `n` so that `tailsCount` reaches 20.
+
+Since this is a complex state machine, we'll simulate it for small `n` until the `tailsCount` hits 20, recording each intermediate `tailsCount`. For efficiency, we store seen states to avoid repeats.
+
+Here's a Python script that approximates this process. It simulates the steps from the initial state, recording steps until `tailsCount` equals 20, then outputs the minimal step count:
+
+```python
+# Simulate the process described to find minimal step count where tailsCount reaches 20.
+
+class State:
+    def __init__(self, pos, dir, coins, steps, tailsCount):
+        self.pos = pos
+        self.dir = dir
+        self.coins = coins  # dict: position -> bool or None
+        self.steps = steps
+        self.tailsCount = tailsCount
+
+    def __hash__(self):
+        # Hash based on position, direction, tailsCount, and coin states for caching
+        return hash((self.pos, self.dir, self.tailsCount, tuple(sorted(self.coins.items()))))
+
+    def __eq__(self, other):
+        return (self.pos == other.pos and self.dir == other.dir and
+                self.tailsCount == other.tailsCount and self.coins == other.coins)
+
+def step(s: State) -> State:
+    current_coin = s.coins.get(s.pos, None)
+    new_coins = dict(s.coins)
+    if current_coin is True:
+        new_coins[s.pos] = False
+        new_tailsCount = s.tailsCount + 1
+        new_dir = -s.dir
+    elif current_coin is False:
+        new_coins[s.pos] = None
+        new_tailsCount = s.tailsCount - 1
+        new_dir = s.dir
+    else:
+        new_coins[s.pos] = True
+        new_tailsCount = s.tailsCount
+        new_dir = s.dir
+    new_pos = s.pos + new_dir
+    return State(new_pos, new_dir, new_coins, s.steps + 1, new_tailsCount)
+
+def find_min_steps_to_tails(target):
+    initial_state = State(0, 1, {}, 0, 0)
+    visited = set()
+    queue = [initial_state]
+    min_steps = None
+    while queue:
+        s = queue.pop(0)
+        if s.tailsCount == target:
+            min_steps = s.steps
+            print(f"Reached tailsCount={target} at step {s.steps}")
+            break
+        state_id = hash(s)
+        if state_id in visited:
+            continue
+        visited.add(state_id)
+        s_next = step(s)
+        queue.append(s_next)
+    return min_steps
+
+result = find_min_steps_to_tails(20)
+print(f"Minimum steps to reach tailsCount=20: {result}")
+```
+
+This code explores states until it finds when `tailsCount` hits 20, then reports the minimal step count. The actual minimal step number will be printed immediately when found.

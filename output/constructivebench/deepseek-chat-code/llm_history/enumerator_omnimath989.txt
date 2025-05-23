@@ -1,0 +1,74 @@
+[write_program]
+This problem asks for the count of numbers `n` between 1 and 2005 where the product of `(4i-2)` for `i` from 1 to `n` is divisible by `n!`. We'll write a Python program to enumerate these values efficiently.
+
+Key observations:
+1. The product can be rewritten as `2^n * (2n-1)!!` where `!!` is double factorial
+2. We need to check when this product is divisible by `n!`
+3. We'll compute this for each `n` from 1 to 2005 and count the matches
+
+```python
+import math
+
+def is_divisible(n):
+    """Check if product(4i-2) for i=1..n is divisible by n!"""
+    # Compute product numerator (4i-2) for i=1..n = 2^n * (2n-1)!!
+    # We need this to be divisible by n!
+    # Compute the prime factorization of both and compare exponents
+    
+    # Precompute primes up to 2*2005 using sieve
+    max_prime = 2 * 2005
+    sieve = [True] * (max_prime + 1)
+    sieve[0] = sieve[1] = False
+    for i in range(2, int(math.sqrt(max_prime)) + 1):
+        if sieve[i]:
+            sieve[i*i::i] = [False] * len(sieve[i*i::i])
+    primes = [i for i, is_p in enumerate(sieve) if is_p]
+    
+    def get_prime_factors(x):
+        factors = {}
+        if x == 0:
+            return factors
+        for p in primes:
+            if p*p > x:
+                break
+            while x % p == 0:
+                factors[p] = factors.get(p, 0) + 1
+                x //= p
+        if x > 1:
+            factors[x] = factors.get(x, 0) + 1
+        return factors
+    
+    # Compute numerator factors: 2^n * product(2i-1 for i=1..n)
+    numerator_factors = {}
+    # Add 2^n contribution
+    numerator_factors[2] = n
+    # Add factors from (2i-1) terms
+    for i in range(1, n+1):
+        term = 2*i - 1
+        if term == 1:
+            continue
+        term_factors = get_prime_factors(term)
+        for p, cnt in term_factors.items():
+            numerator_factors[p] = numerator_factors.get(p, 0) + cnt
+    
+    # Compute denominator factors (n!)
+    denominator_factors = {}
+    for i in range(1, n+1):
+        term_factors = get_prime_factors(i)
+        for p, cnt in term_factors.items():
+            denominator_factors[p] = denominator_factors.get(p, 0) + cnt
+    
+    # Check if numerator has at least as many of each prime factor
+    for p, cnt in denominator_factors.items():
+        if numerator_factors.get(p, 0) < cnt:
+            return False
+    return True
+
+count = 0
+for n in range(1, 2006):
+    if is_divisible(n):
+        print(n)
+        count += 1
+
+print(f"Total count: {count}")
+```

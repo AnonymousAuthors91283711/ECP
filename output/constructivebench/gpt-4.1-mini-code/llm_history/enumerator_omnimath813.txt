@@ -1,0 +1,55 @@
+[write_program]
+The problem asks for the smallest positive integer \( k \) such that the polynomial 
+\[ X^{10} + X^9 + X^6 + X^5 + X^4 + X + 1 \]
+divides 
+\[ X^k - 1 \]
+in \(\mathbb{Z}[X]\).
+
+To tackle this, we want to find \( k > 0 \) such that \( X^k - 1 \) is divisible by the given polynomial. This means the polynomial divides \( X^k - 1 \), or equivalently, all roots of the polynomial are \( k \)-th roots of unity.
+
+So the problem reduces to: find the order of the polynomial's roots (the minimal positive \( k \) such that raising the root to the \( k \)-th power gives 1). The order corresponds to the order of the polynomial dividing \( X^k - 1 \).
+
+Because this polynomial is not a cyclotomic polynomial in standard form, we proceed by factorizing (or checking divisibility) for small values of \( k \) and print candidates \( k \) for divisibility.
+
+I will implement a Python program that:
+
+- Defines the polynomial \( P(X) = X^{10} + X^9 + X^6 + X^5 + X^4 + X + 1 \).
+- For increasing positive integers \( k \), checks whether \( X^k - 1 \) is divisible by \( P(X) \) over integers.
+- Prints each \( k \) that satisfies divisibility.
+- Stops searching beyond a reasonable threshold (say 100).
+
+Since we cannot do polynomial arithmetic over \(\mathbb{Z}[X]\) here directly, we'll use sympy to perform polynomial division modulo \(X^k - 1\) and check if remainder is zero.
+
+We print all \( k \le 100 \) for which division holds and then explicitly output the least such \( k \).
+
+```python
+# enumerator.py
+from sympy import Poly, symbols, div
+from sympy.abc import x
+
+# Define polynomial P(X) = X^10 + X^9 + X^6 + X^5 + X^4 + X + 1
+P = Poly(x**10 + x**9 + x**6 + x**5 + x**4 + x + 1, x, domain='ZZ')
+
+def divides(P, Q):
+    # Check if P divides Q, i.e. remainder of division is zero polynomial
+    q, r = div(Q, P)
+    return r.is_zero
+
+def main():
+    print("Testing divisibility of X^k - 1 by P(X)...")
+    candidates = []
+    max_k = 100
+    for k in range(1, max_k+1):
+        Q = Poly(x**k - 1, x, domain='ZZ')
+        if divides(P, Q):
+            print(f"Divides for k={k}")
+            candidates.append(k)
+    if candidates:
+        min_k = min(candidates)
+        print(f"Smallest k with divisibility: {min_k}")
+    else:
+        print("No divisibility found for k up to", max_k)
+
+if __name__ == "__main__":
+    main()
+```

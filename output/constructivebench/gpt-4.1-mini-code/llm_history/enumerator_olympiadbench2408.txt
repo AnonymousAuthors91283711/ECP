@@ -1,0 +1,90 @@
+[write_program]
+The problem considers positive integers \(a,b,c,d\) with strictly increasing order and two equations:
+
+\[
+a+c+b+d = 296,
+\quad
+a c + a d + b c + b d = 2023.
+\]
+
+Our goal is to find the number of quadruples \((a,b,c,d)\) satisfying these conditions.
+
+Rewrite the second equation as:
+
+\[
+a c + a d + b c + b d = (a + b)(c + d) = 2023.
+\]
+
+Using the sum constraint \(a + b + c + d = 296\), we get:
+
+\[
+(a + b) + (c + d) = 296.
+\]
+
+Set \(x = a + b\) and \(y = c + d\), with \(x + y = 296\) and \(xy = 2023\).
+
+Thus, \(x,y\) are positive integers satisfying:
+
+\[
+x + y = 296, \quad x y = 2023.
+\]
+
+We can enumerate all factor pairs \((x,y)\) of 2023, then check if \(x + y = 296\) to find candidates. Then enumerate \(a,b\) and \(c,d\) pairs with \(a < b\), \(a,b>0\), and \(a + b = x\), and \(c < d\), \(c,d>0\), and \(c + d = y\), with the total ordering \(a<b<c<d\).
+
+We must verify \(a < b < c < d\).
+
+Since \(a < b\) and \(c < d\), the sequence is increasing, so \(b < c\).
+
+We can first fix \(x,y\), then enumerate all \((a,b)\) with \(a < b\), \(a+b=x\), and all \((c,d)\) with \(c < d\), \(c+d=y\), then check if \(b < c\).
+
+We'll proceed with this approach. Since 2023 is likely prime or has small factors (check factors up to \(\sqrt{2023}\approx 45\)), factorize 2023 and proceed accordingly.
+
+```python
+# Enumerate quadruples (a,b,c,d) of positive integers with
+# a<b<c<d, a+b+c+d=296, and (a+b)(c+d)=2023.
+# We use the conditions:
+# Let x = a+b, y = c+d, then x+y=296 and x*y=2023.
+# We'll find all factor pairs (x,y) of 2023 with x+y=296, then
+# for each such pair enumerate (a,b) with a<b and a+b=x,
+# and (c,d) with c<d and c+d=y, checking b<c.
+
+def factor_pairs(n):
+    for i in range(1, int(n**0.5)+1):
+        if n % i == 0:
+            yield i, n//i
+
+def count_quadruples():
+    N = 2023
+    total_sum = 296
+    count = 0
+    # Find all (x,y) with x*y=2023 and x+y=296
+    candidates = []
+    for x,y in factor_pairs(N):
+        if x + y == total_sum:
+            candidates.append((x,y))
+        if y + x == total_sum and x != y:
+            candidates.append((y,x))  # add reversed pair if distinct
+    # To avoid duplicates:
+    candidates = list(set(candidates))
+    for x,y in candidates:
+        # Enumerate a,b with a<b, a+b=x
+        # a in [1, x-1], b = x - a
+        for a in range(1, x//2 + 1):
+            b = x - a
+            if a >= b:
+                continue
+            # Enumerate c,d with c<d, c+d=y
+            # c in [1, y-1], d = y - c
+            for c in range(1, y//2 + 1):
+                d = y - c
+                if c >= d:
+                    continue
+                # Check ordering a < b < c < d
+                if b < c:
+                    print(f"a={a}, b={b}, c={c}, d={d}")
+                    count += 1
+    print(f"Total quadruples count: {count}")
+
+if __name__ == "__main__":
+    count_quadruples()
+```

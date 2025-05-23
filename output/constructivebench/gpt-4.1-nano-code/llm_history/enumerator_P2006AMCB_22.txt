@@ -1,0 +1,49 @@
+[write_program]
+The problem involves finding the least integer n such that there exist positive integers a, b, c with a + b + c = 2006, and the product a! * b! * c! equals m * 10^n for some m not divisible by 10, meaning the multiplicity of 2 and 5 in the prime factorization of the product determines n. To find the minimal such n, we should analyze the exponent of 2 and 5 in the factorials, as the minimum of these will determine the number of trailing zeros, and then confirm where m is not divisible by 10.
+
+Because calculating factorial prime exponents directly for large numbers is complex, we'll pick small sample partitions of 2006 into positive integers a, b, c, and compute the factorial prime exponents (especially for 2 and 5). We'll search for the minimal n where the combined product's factorization leads to a trailing zero count, but the resulting m is not divisible by 10 (i.e., the factorization for 2 and 5 is not equal).
+
+Here's the code implementing this reasoning:
+
+```python
+def count_prime_factors(n, p):
+    """Count the exponent of prime p in n!"""
+    count = 0
+    divisor = p
+    while divisor <= n:
+        count += n // divisor
+        divisor *= p
+    return count
+
+min_n = None
+
+# Generate some partitions of 2006 into positive integers a, b, c
+# Focus on partitions where one is small to possibly minimize trailing zeros
+# and others are larger, to probe various factorial factors.
+
+# For efficiency, only sample 50 partitions
+for a in range(1, 67):  # since 3*67 > 2006
+    for b in range(1, 2007 - a):
+        c = 2006 - a - b
+        if c < 1:
+            continue
+        # Count factors for the product a! * b! * c!
+        e2 = count_prime_factors(a, 2) + count_prime_factors(b, 2) + count_prime_factors(c, 2)
+        e5 = count_prime_factors(a, 5) + count_prime_factors(b, 5) + count_prime_factors(c, 5)
+        n_trailing = min(e2, e5)
+        # For the m to not be divisible by 10, either e2 or e5 must be greater than n_trailing
+        # but since e5 determines trailing zeros, check if e5 == n_trailing
+        if n_trailing is not None:
+            # If e5 == e2, then m is divisible by 10, skip
+            if e5 == n_trailing:
+                continue
+        # Update minimal n
+        if min_n is None or n_trailing < min_n:
+            min_n = n_trailing
+            print(f"Partition: a={a}, b={b}, c={c} => trailing zeros: {n_trailing}")
+
+if min_n is not None:
+    print(f"Minimum n where m is not divisible by 10: {min_n}")
+else:
+    print("No such partition found within sampled range.")
+```

@@ -1,0 +1,76 @@
+[write_program]
+The problem involves finding four natural numbers (a₁, d₁, a₂, d₂) that satisfy three given equations, and then computing a fourth expression. We'll approach this by:
+
+1. Enumerating factor pairs of 1440 (a₁*a₂=1440)
+2. For each pair, solving the system of equations to find possible d₁ and d₂
+3. Checking if the second and third equations hold
+4. For valid configurations, computing the fourth expression (a₁+7d₁)*(a₂+7d₂)
+
+We'll limit our search to reasonable bounds for efficiency.
+
+```python
+import math
+
+def solve_problem():
+    target1 = 1440
+    target2 = 1716
+    target3 = 1848
+    
+    # Generate all factor pairs of 1440
+    factors = []
+    for a1 in range(1, int(math.isqrt(target1)) + 1):
+        if target1 % a1 == 0:
+            a2 = target1 // a1
+            factors.append((a1, a2))
+    
+    solutions = []
+    
+    for a1, a2 in factors:
+        # We have two equations:
+        # (a1 + d1)(a2 + d2) = 1716
+        # (a1 + 2d1)(a2 + 2d2) = 1848
+        
+        # Let's expand these:
+        # a1a2 + a1d2 + a2d1 + d1d2 = 1716
+        # a1a2 + 2a1d2 + 2a2d1 + 4d1d2 = 1848
+        
+        # Subtract first from second:
+        # a1d2 + a2d1 + 3d1d2 = 132
+        
+        # Let's solve for d2 in terms of d1
+        # This is a quadratic in d2: 3d1*d2 + a1*d2 + (a2*d1 - 132) = 0
+        # Or: d2*(3d1 + a1) = 132 - a2*d1
+        
+        # We'll iterate possible d1 values
+        max_d1 = 132 // a2 + 2  # Reasonable upper bound
+        for d1 in range(1, max_d1 + 1):
+            denominator = 3*d1 + a1
+            if denominator == 0:
+                continue
+            numerator = 132 - a2*d1
+            if numerator <= 0:
+                continue
+            if numerator % denominator != 0:
+                continue
+            d2 = numerator // denominator
+            if d2 <= 0:
+                continue
+            
+            # Verify both original equations
+            if (a1 + d1)*(a2 + d2) == target2 and (a1 + 2*d1)*(a2 + 2*d2) == target3:
+                solution = (a1, d1, a2, d2)
+                solutions.append(solution)
+                result = (a1 + 7*d1) * (a2 + 7*d2)
+                print(f"Found solution: a1={a1}, d1={d1}, a2={a2}, d2={d2}, result={result}")
+    
+    if solutions:
+        print("\nAll valid solutions found:")
+        for sol in solutions:
+            a1, d1, a2, d2 = sol
+            result = (a1 + 7*d1) * (a2 + 7*d2)
+            print(f"a1={a1}, d1={d1}, a2={a2}, d2={d2} -> {result}")
+    else:
+        print("No solutions found")
+
+solve_problem()
+```

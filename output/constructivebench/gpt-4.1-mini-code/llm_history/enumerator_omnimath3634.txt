@@ -1,0 +1,73 @@
+[write_program]
+The problem suggests finding all functions f: ℕ → ℕ (nonzero domain) such that for all x ≠ 0, f preserves the number of divisors, and for all x, y ≠ 0 with neither dividing the other, the gcd condition is strict: gcd(f x, f y) > f(gcd(x,y)).
+
+To explore conjectures about such functions, we attempt to enumerate small candidate functions for small inputs, checking the conditions. We must simulate values of f on small natural numbers and verify the two conditions for divisors counts and gcd inequalities.
+
+We will try small functions on values 1 to N (say N=10), enumerating f(x) from 1 to some bound, and check if conditions hold. If they hold for all pairs, print the candidate function (as a list). Then print conjectured special functions or indicate the extremal function among candidates.
+
+Since fully general f is huge, we try functions defined on small domains (1 to 6 or 1 to 8). We prioritize exact checks on divisor counts and gcd tests.
+
+We print each candidate function immediately when found satisfying partial conditions for small samples.
+
+```python
+import math
+
+# Count divisors of n
+def divisors_count(n):
+    cnt = 0
+    i = 1
+    while i*i <= n:
+        if n % i == 0:
+            cnt += 1 if i*i == n else 2
+        i += 1
+    return cnt
+
+# Compute gcd
+def gcd(a,b):
+    while b:
+        a,b = b,a%b
+    return a
+
+# Check conditions for function f on domain 1..N
+def check_f(f, N):
+    # Condition 1: divisors counts equality for x !=0
+    for x in range(1, N+1):
+        if divisors_count(x) != divisors_count(f[x]):
+            return False
+    # Condition 2: for all distinct x,y in domain with neither divides other,
+    # gcd(f(x), f(y)) > f(gcd(x,y))
+    for x in range(1, N+1):
+        for y in range(1, N+1):
+            if x != y:
+                if not (x % y == 0 or y % x == 0):
+                    gx_y = gcd(x,y)
+                    left = gcd(f[x], f[y])
+                    right = f[gx_y]
+                    if left <= right:
+                        return False
+    return True
+
+def main():
+    N = 6  # small domain to keep output and runtime manageable
+    max_val = 20  # max f(x) to try
+
+    # We'll try functions f: [1..N] -> [1..max_val]
+    # Prioritize: f(1) must have same divisor count as 1 (which is 1), so f(1) = 1 (divisors count=1)
+    # Start with fixed f(1)=1 to reduce search space
+    from itertools import product
+
+    # We'll print f as tuple of values (f(1),..., f(N))
+    # Fix f[1]=1, enumerate f[2..N]
+    for values in product(range(1, max_val+1), repeat=N-1):
+        f = [0]*(N+1)
+        f[1] = 1
+        for i in range(2, N+1):
+            f[i] = values[i-2]
+
+        if check_f(f, N):
+            # Print f as list on domain 1..N
+            print("f =", [f[i] for i in range(1, N+1)])
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,69 @@
+[write_program]
+The problem appears to be a formal statement in Lean theorem prover syntax involving polynomials over ℝ and some condition on a polynomial P related to its evaluations at shifted points, with a parameter m ≠ 0. The goal is to find the set of such polynomials P (i.e., to determine `omnimath3865_answer`) satisfying this identity for all real x.
+
+To assist in conjecturing and proving the solution, we will interpret this as finding all P ∈ ℝ[X] satisfying:
+\[
+(x^3 - m x^2 + 1) P(x+1) + (x^3 + m x^2 + 1) P(x-1) = 2 (x^3 - m x + 1) P(x),
+\forall x \in \mathbb{R}
+\]
+
+We'll approach this by testing candidate forms for P, such as low-degree polynomials, since the identity holds for all real x, allowing polynomial coefficient comparisons. We choose a small degree range and specific values of m for experimentation.
+
+We will:
+- Pick small m values, e.g., m=1.
+- Test polynomial degrees from 0 up to 3 (since the identity involves degree 3 polynomial terms).
+- For each degree, derive the coefficients satisfying the equation.
+- Print the candidates instantly when found.
+
+This will help conjecture the general form of P.
+
+```python
+import sympy as sp
+
+# Parameters
+m_values = [1]  # Sample value for m
+degree_limit = 3  # Max degree of P to test
+x = sp.symbols('x')
+
+def test_polynomial_coeffs(coeffs, m):
+    """Test if polynomial with given coeffs satisfies the identity for all x."""
+    P = sum(c * x**i for i, c in enumerate(coeffs))
+    # Define the polynomial expressions
+    P_x = P
+    P_x_plus_1 = P.subs(x, x+1)
+    P_x_minus_1 = P.subs(x, x-1)
+    # Left side
+    lhs = (x**3 - m * x**2 + 1) * P_x_plus_1 + (x**3 + m * x**2 + 1) * P_x_minus_1
+    # Right side
+    rhs = 2 * (x**3 - m * x + 1) * P_x
+    # Check if lhs - rhs == 0 polynomial
+    diff = sp.expand(lhs - rhs)
+    # Polynomial in x
+    diff_poly = sp.Poly(diff, x)
+    # For the polynomial to be identically zero, all coefficients zero
+    return all(sp.simplify(c) == 0 for c in diff_poly.all_coeffs())
+
+for m in m_values:
+    print(f"# Testing for m = {m}")
+    for degree in range(degree_limit + 1):
+        # Generate symbolic coefficients
+        coeffs = sp.symbols(f'c0:{degree+1}')
+        # Equate coefficients to solve
+        # Build polynomial
+        P = sum(coeffs[i] * x**i for i in range(degree+1))
+        P_x = P
+        P_x_plus_1 = P.subs(x, x+1)
+        P_x_minus_1 = P.subs(x, x-1)
+        lhs = (x**3 - m * x**2 + 1) * P_x_plus_1 + (x**3 + m * x**2 + 1) * P_x_minus_1
+        rhs = 2 * (x**3 - m * x + 1) * P_x
+        diff = sp.expand(lhs - rhs)
+        # Polynomial in x
+        diff_poly = sp.Poly(diff, x)
+        coeffs_eqs = [sp.Eq(c, 0) for c in diff_poly.all_coeffs()]
+        # Solve the system
+        sol = sp.solve(coeffs_eqs, coeffs, dict=True)
+        if sol:
+            for solution in sol:
+                P_candidate = sum(solution.get(c, 0) * x**i for i, c in enumerate(coeffs))
+                print(f"Found polynomial degree {degree} for m={m}: P(x) = {sp.pretty(P_candidate)}")
+```

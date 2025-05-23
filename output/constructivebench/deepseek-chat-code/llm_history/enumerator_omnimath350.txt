@@ -1,0 +1,40 @@
+[write_program]
+This problem asks for pairs of monic complex polynomials (P, Q) where P divides Q²+1 and Q divides P²+1. We'll enumerate low-degree cases to identify patterns.
+
+The approach:
+1. Iterate through small degree bounds
+2. Generate all monic polynomials up to that degree
+3. Check divisibility conditions
+4. Output valid pairs
+
+```python
+from itertools import product
+from sympy import symbols, Poly, gcd
+
+x = symbols('x')
+max_degree = 3  # Small degree bound for demonstration
+
+def generate_monic_polys(degree):
+    """Generate all monic polynomials of given degree with coefficients -1,0,1"""
+    if degree == 0:
+        return [Poly(1, x)]
+    coeffs = product([-1, 0, 1], repeat=degree)
+    return [Poly(x**degree + sum(c*x**i for i, c in enumerate(coeff)), x)
+            for coeff in coeffs]
+
+print(f"Searching for polynomial pairs up to degree {max_degree}")
+for d1 in range(max_degree + 1):
+    for d2 in range(max_degree + 1):
+        polys1 = generate_monic_polys(d1)
+        polys2 = generate_monic_polys(d2)
+        for P in polys1:
+            for Q in polys2:
+                # Check P divides Q^2 + 1
+                q_sq_plus_1 = Q**2 + Poly(1, x)
+                rem1 = q_sq_plus_1.rem(P)
+                # Check Q divides P^2 + 1
+                p_sq_plus_1 = P**2 + Poly(1, x)
+                rem2 = p_sq_plus_1.rem(Q)
+                if rem1 == 0 and rem2 == 0:
+                    print(f"Found pair: P={P.as_expr()}, Q={Q.as_expr()}")
+```

@@ -1,0 +1,38 @@
+[write_program]
+The problem asks for the least positive integer \( n \) such that the sum of the reciprocals of all nonzero digits of all numbers from 1 to \( 10^n \) has a denominator equal to 1 when expressed as a fraction. We want to explore sums of reciprocals of digits with \( n \) small, print candidates, and try to detect if the denominator becomes exactly 1 (meaning the sum simplifies to an integer).
+
+```python
+from fractions import Fraction
+
+def digits(n):
+    while n > 0:
+        yield n % 10
+        n //= 10
+
+def nonzero_digits_sums(n):
+    # Aggregate digits from 1 to 10^n, nonzero only
+    # Use a set to collect digits per number to avoid double-counting digits in one number
+    digits_set = set()
+    for k in range(1, 10**n + 1):
+        for d in set(digits(k)):
+            if d != 0:
+                digits_set.add(d)
+    return digits_set
+
+def main():
+    # We suspect n small, enumerate n=1..5
+    for n in range(1, 6):
+        # Get all digits appearing in 1..10^n
+        ds = nonzero_digits_sums(n)
+        # Sum 1/d for d in ds
+        s = sum(Fraction(1, d) for d in ds)
+        print(f"n={n}, digits={sorted(ds)}, sum={s}, denominator={s.denominator}")
+        if s.denominator == 1:
+            print(f"Answer candidate: n={n}, sum={s}")
+            # Once found, break since looking for least n
+            break
+
+if __name__ == "__main__":
+    main()
+```
+This program enumerates nonzero digits appearing in the range from 1 to \( 10^n \), sums their reciprocals exactly, prints the sum and denominator, and stops at the first \( n \) where denominator = 1. This aids conjecture about the minimal \( n \).

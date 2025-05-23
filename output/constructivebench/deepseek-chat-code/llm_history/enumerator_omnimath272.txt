@@ -1,0 +1,76 @@
+[write_program]
+This problem involves analyzing polynomials f ∈ ℤ[x] where the prime factor count of f(n²) grows at most linearly with n. We'll enumerate low-degree polynomials to find patterns.
+
+The program will:
+1. Generate small integer coefficient polynomials
+2. Evaluate them at n² for small n
+3. Compute p(f(n²)) - 2n (the excess prime factor count)
+4. Track the maximum excess for each polynomial
+5. Identify polynomials where this maximum is bounded
+
+```python
+from math import gcd
+from itertools import product
+
+def is_prime(n):
+    if n < 2: return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0: return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n: continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1: continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1: break
+        else: return False
+    return True
+
+def p(m):
+    if m == 0: return float('inf')
+    if abs(m) == 1: return 1
+    n = abs(m)
+    largest = 1
+    if n % 2 == 0: largest = 2
+    while n % 2 == 0: n //= 2
+    i = 3
+    while i*i <= n:
+        if n % i == 0:
+            largest = i
+            while n % i == 0: n //= i
+        i += 2
+    if n > 1: largest = n
+    return largest
+
+def eval_poly(coeffs, x):
+    return sum(c * (x**i) for i, c in enumerate(coeffs))
+
+max_degree = 3
+max_coeff = 2
+max_n = 10
+
+print("Testing polynomials up to degree", max_degree, "with coefficients in [-{},{}]".format(max_coeff, max_coeff))
+print("Evaluating at n² for n in 1..", max_n)
+print("Format: polynomial, max(p(f(n²))-2n)")
+
+for degree in range(max_degree + 1):
+    for coeffs in product(range(-max_coeff, max_coeff + 1), repeat=degree + 1):
+        if coeffs[-1] == 0: continue  # skip lower degree
+        max_excess = -float('inf')
+        for n in range(1, max_n + 1):
+            val = eval_poly(coeffs, n*n)
+            pf = p(val)
+            if pf == float('inf'):  # f(n²)=0 case
+                excess = float('inf')
+            else:
+                excess = pf - 2*n
+            if excess > max_excess:
+                max_excess = excess
+        if max_excess < float('inf'):
+            print("f(x) =", " + ".join(f"{c}x^{i}" for i, c in enumerate(coeffs) if c != 0), max_excess)
+```

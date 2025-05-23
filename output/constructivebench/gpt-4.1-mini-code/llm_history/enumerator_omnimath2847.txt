@@ -1,0 +1,53 @@
+[write_program]
+The problem involves integers \(A < B < C < D\) satisfying two ratio conditions of differences:
+\[
+\frac{B-A}{C-A} = \frac{1}{5}, \quad \frac{C-B}{D-C} = 2.
+\]
+We want to find the ratio \(\frac{B-A}{D-C}\).
+
+To help conjecture the answer, I'll enumerate candidates for the integers with small values. We'll try all increasing integer quadruples \(A < B < C < D\) with differences satisfying the given ratios, compute the ratio \(\frac{B-A}{D-C}\) exactly as a rational number, and print each. This will let us observe the pattern leading to a closed form.
+
+```python
+from fractions import Fraction
+
+# Enumerate integer quadruples A < B < C < D with small differences,
+# checking the given ratio conditions exactly and printing the target ratio.
+
+max_delta = 20  # limit search space for efficiency
+
+print("A B C D (B-A)/(D-C)")
+
+for A in range(0, 5):  # small A
+    for D in range(A + 6, A + max_delta):  # D must be greater than A, big enough for denominators
+        total_diff = D - A
+        # From (B - A)/(C - A) = 1/5:
+        # Let C - A = x, then B - A = x/5
+        # x must be integer multiple of 5
+        for x in range(5, total_diff):
+            if x >= total_diff:
+                break
+            if x * 5 != int(x * 5):  # x integer, so B-A = x/5 must be integer, so x divisible by 5
+                continue
+            if x % 5 != 0:
+                continue
+            B_minus_A = x // 5  # integer
+            if B_minus_A == 0:
+                continue
+            # Then B = A + B_minus_A, C = A + x
+            B = A + B_minus_A
+            C = A + x
+            if not (A < B < C < D):
+                continue
+
+            # Check (C - B)/(D - C) = 2/1 = 2
+            left = C - B
+            right = D - C
+            if right == 0:
+                continue
+            ratio = Fraction(left, right)
+            if ratio == 2:
+                # Now compute (B - A)/(D - C)
+                res = Fraction(B - A, D - C)
+                print(f"{A} {B} {C} {D} {res}")
+```
+This enumerates examples and prints them immediately to observe the exact target ratio values.

@@ -1,0 +1,52 @@
+[write_program]
+The problem involves finding natural numbers \(a,b,c,k\) such that \(a > 0, b > 0, c > 0, k > 0\), \(c\) is not a perfect square, and the number \(a + \sqrt{b + \sqrt{c}}\) is a root of the quartic polynomial
+\[
+X^4 - 20 X^3 + 108 X^2 - k X + 9 = 0,
+\]
+with \(c\) fixed as `omnimath1832_answer`.
+
+To explore this, I will enumerate small positive \(a,b,c,k\), check \(c\) non-square, compute
+\[
+x = a + \sqrt{b + \sqrt{c}},
+\]
+and test if \(x\) is a root by evaluating the quartic (approximately, since irrational roots cannot be checked exactly). When near zero (within a small epsilon), print the tuple \((a,b,c,k)\), and keep track of candidates.
+
+I limit \(a,b,c,k\) up to some small bounds (like 10), and print each time a close root is found. This may help conjecturing the true \(c\) and the tuple.
+
+```python
+import math
+
+def is_square(n):
+    r = int(math.isqrt(n))
+    return r*r == n
+
+def eval_poly(x,k):
+    # Evaluate X^4 -20X^3 +108X^2 - kX +9 at x
+    return x**4 - 20*x**3 + 108*x**2 - k*x + 9
+
+def approx_root_check(a,b,c,k,eps=1e-8):
+    # Compute x = a + sqrt(b + sqrt(c))
+    # Only real if b+sqrt(c) >=0
+    inner = b + math.sqrt(c)
+    if inner < 0:
+        return False
+    x = a + math.sqrt(inner)
+    val = eval_poly(x,k)
+    return abs(val) < eps
+
+def main():
+    MAX = 10
+    print("Enumerating (a,b,c,k) with 0<a,b,c,k<=10, c non-square, checking polynomial root condition:")
+    for c in range(1, MAX+1):
+        if is_square(c):
+            continue
+        for a in range(1, MAX+1):
+            for b in range(1, MAX+1):
+                for k in range(1, MAX+1):
+                    if approx_root_check(a,b,c,k):
+                        x = a + math.sqrt(b + math.sqrt(c))
+                        print(f"a={a}, b={b}, c={c}, k={k}, root approx={x:.10f}")
+
+if __name__ == "__main__":
+    main()
+```

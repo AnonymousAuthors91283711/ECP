@@ -1,0 +1,76 @@
+[write_program]
+The problem involves positive integers \(n, a, d\) satisfying two equations:
+\[
+n (2a + (n-1)d) = 1430
+\]
+\[
+n (2a + (n-1)d) + n^2 = 1672
+\]
+From these, we can find \(n^2 = 1672 - 1430 = 242\), but 242 is not a perfect square, so likely something is wrong in this reading. The problem might want us to find triples \((n,a,d)\) with natural numbers satisfying these, then for each compute:
+\[
+a + (a + (n-1)d) + \left(a + \frac{n-1}{2} d \right)
+\]
+and print all candidates found.
+
+We will enumerate small \(n\), and for each find possible \(a,d\) integer solutions with \(a,d \geq 0\) that satisfy the first. Then check the second and print the value of the sum.
+
+We will try \(n\) up to 50 to keep runtime small. Since \(n\) divides 1430, \(2a + (n-1)d = \frac{1430}{n}\) must be integer.
+
+We print each valid sum found, streaming results.
+
+```python
+# Enumerate integers n,a,d≥0 satisfying the equations:
+# n*(2a + (n-1)d) = 1430
+# n*(2a + (n-1)d) + n^2 = 1672
+# I.e., n^2 = 242 which is impossible if n∈ℕ.
+# So assumption: n,a,d integers, use the equations, print candidates for 
+# S = a + (a+(n-1)d) + (a + ((n-1)//2)*d)
+
+def main():
+    from math import isqrt
+    target1 = 1430
+    target2 = 1672
+    max_n = 50  # arbitrary small bound
+    
+    print("Enumerating solutions (n,a,d) with n ≤ 50:")
+    for n in range(1, max_n+1):
+        if target1 % n != 0:
+            continue
+        S1 = target1 // n  # 2a + (n-1)d = S1
+        # From second eq:
+        # target1 + n^2 = target2 => n^2 = target2 - target1 = 242
+    # So for no n, n^2=242, no integer n^2=242.
+    # Confirm no solution
+    # Let's just search n where n^2 = target2 - target1
+    sq_diff = target2 - target1
+    if sq_diff < 0:
+        print("No solutions, negative square difference")
+        return
+    # check whether sq_diff is a perfect square
+    if isqrt(sq_diff) **2 != sq_diff:
+        print("No integer n with n^2 = target2 - target1 =", sq_diff)
+        return
+    n = isqrt(sq_diff)
+    if target1 % n != 0:
+        print("Given n does not divide target1")
+        return
+    S1 = target1 // n
+    # Now 2a + (n-1)d = S1
+    # Enumerate integer d≥0 max d is when a≥0
+    max_d = S1 // (n-1) if n>1 else S1
+    print(f"Fixing n={n}")
+    for d in range(max_d+1):
+        tmp = S1 - (n-1)*d
+        if tmp % 2 != 0:
+            continue
+        a = tmp//2
+        if a < 0:
+            continue
+        # Compute sum
+        k = (n - 1)//2
+        val = a + (a + (n - 1)*d) + (a + k*d)
+        print(f"n={n}, a={a}, d={d}, sum={val}")
+
+if __name__ == "__main__":
+    main()
+```

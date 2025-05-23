@@ -1,0 +1,61 @@
+[write_program]
+The problem appears to involve finding the value of a polynomial \( P \) with certain properties related to its degree and its evaluations at specific points. Our goal is to determine \( P.eval(n + 1) \) given the degree and evaluation conditions, but without hardcoding the answer.
+
+Since the polynomial \( P \) satisfies:
+\[
+P(k) = \frac{k}{k+1} \quad \text{for } k=0,1,\ldots,n,
+\]
+we can approach this by constructing all polynomials of degree \( n \) matching these points and then evaluating at \( n+1 \).
+
+Key observations:
+- The points define a polynomial of degree at most \( n \).
+- The evaluations are close to 1, but with a specific pattern.
+- Using polynomial interpolation (Lagrange form) on these points, the polynomial is uniquely determined.
+
+Given the sample points \( (k, \frac{k}{k+1}) \), we can directly compute the interpolation polynomial at \( n+1 \).
+
+Because the problem asks for an enumeration approach, we can:
+- Generate small values of \( n \),
+- Use Lagrange interpolation to find \( P \),
+- Evaluate at \( n+1 \),
+- Stream results as we go along.
+
+Here's a program that does this efficiently and streams the output:
+
+```python
+# The program computes the value of P(n+1) for small n using Lagrange interpolation
+from fractions import Fraction
+
+def lagrange_interpolation(x_points, y_points, eval_point):
+    """Compute interpolated value at eval_point given points."""
+    total = Fraction(0, 1)
+    n = len(x_points)
+    for i in range(n):
+        xi, yi = x_points[i], y_points[i]
+        term = yi
+        for j in range(n):
+            if i != j:
+                xj = x_points[j]
+                numerator = Fraction(eval_point - xj)
+                denominator = Fraction(xi - xj)
+                term *= numerator / denominator
+        total += term
+    return total
+
+print("Enumerating results for small n:")
+for n in range(4):  # small sample n
+    # points: (k, k/(k+1))
+    x_points = list(range(n+1))
+    y_points = [Fraction(k, k+1) for k in x_points]
+    eval_point = n + 1
+    value = lagrange_interpolation(x_points, y_points, eval_point)
+    print(f"n={n}, P({n+1}) ≈ {float(value)} (exact: {value})")
+```
+
+This code:
+- Uses fractional arithmetic for exactness.
+- Computes the polynomial value at \( n+1 \) for small degrees.
+- Streams the output immediately upon calculation.
+- Avoids hardcoding, uses small parameters for efficiency, and adheres to the length constraint.
+
+**Note:** This approach provides a conjecture based on small \( n \), which can be refined or proved with further symbolic analysis.

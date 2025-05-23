@@ -1,0 +1,36 @@
+[write_program]
+The problem involves counting functions `f : Fin 6 × Fin 6 → Fin 2` such that for each fixed row `i`, exactly 2 of the `j`-values have `f(i, j) = 0`, and similarly, for each fixed column `j`, exactly 2 of the `i`-values have `f(i, j) = 0`. Essentially, each row and each column must have exactly 2 zeros, with all zeros distributed to satisfy these constraints simultaneously.
+
+To enumerate solutions, consider that the zero placements correspond to selecting two positions in each row and each column. Our goal is to count the number of `f` matrices where zeros are placed to satisfy these conditions, i.e., the incidence matrix of a bipartite graph with degree 2 on both sides.
+
+Approach:
+- Fix sample values for the sets (rows and columns).
+- Generate all possible placements of zeros in each row (2 zeros per row), and check if the column conditions are satisfied simultaneously.
+- Count the total number of such functions.
+
+Since enumeration can become large, and to keep within token limits, we'll limit to small subsets and check feasible configurations.
+
+```python
+# Generate all possible 6-element subsets with exactly 2 zeros for each row
+from itertools import combinations, product
+
+rows = range(6)
+cols = range(6)
+
+total_count = 0
+for row_zero_positions in product(
+    [list(c) for c in combinations(cols, 2)] , repeat=6
+):
+    # Create a 6x6 matrix initialized with ones
+    matrix = [[1]*6 for _ in range(6)]
+    # Place zeros according to current row configuration
+    for i, zeros in enumerate(row_zero_positions):
+        for j in zeros:
+            matrix[i][j] = 0
+    # Check column conditions: each column must have exactly 2 zeros
+    if all(sum(matrix[i][j] == 0 for i in range(6)) == 2 for j in range(6)):
+        total_count += 1
+        print(f"Valid configuration with row zeros: {row_zero_positions}")
+
+print("Total number of solutions:", total_count)
+```

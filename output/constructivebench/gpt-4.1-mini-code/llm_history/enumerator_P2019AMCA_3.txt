@@ -1,0 +1,72 @@
+[write_program]
+The problem involves multisets of six elements (labeled with indices 0 to 5), each with a fixed multiset size \( n \). For each multiset \( s \) of size \( n \), there must exist an index \( i \) in \(\{0,1,2,3,4,5\}\) such that the count of \( i \) in \( s \) is at least 15, and the associated count from the list \([28, 20, 19, 13, 11, 9]\) at that index is at least 15 (i.e., the "capacity" constraint).
+
+We want to find the minimal such \( n \) so that **any** multiset of size \( n \) over the indices 0..5 satisfies the condition.
+
+Approach:
+- We will enumerate \( n \) from some starting value upwards (e.g., from 15 to sum of counts).
+- For each \( n \), enumerate **all** possible multisets \( s \) (i.e., 6-tuples of counts summing to \( n \), where each count <= the respective capacity).
+- For each multiset, check if there is an \( i \) such that \( s.count(i) \geq 15 \) and counts[i] >= 15.
+- If for a certain \( n \) there is **no** such multiset (i.e., a counterexample), then that \( n \) fails.
+- The minimal \( n \) satisfying the condition is the minimal \( n \) where no counterexample exists.
+
+To keep things efficient, we:
+- Limit the search space with the capacity constraints per element.
+- Use early pruning if any count >= 15 and capacity[i] >= 15.
+- Enumerate combinations using integer partitions constrained by capacities.
+
+We will print:
+- For each tested \( n \), the multi-sets \( s \) that fail the condition (if any).
+- The minimal \( n \) without any failing multi-set.
+
+We'll start enumerating from 15 up to sum(counts) = 100. This approach will be efficient enough given constraints.
+
+```python
+# Enumerate to find minimal n so that every multiset s of size n over {0..5},
+# with counts[i] capacity constraints, has some i with s[i] >= 15 and capacity[i] >= 15.
+
+from itertools import product
+
+def partitions_with_capacity(total, caps, idx=0, current=None):
+    # Generate all 6-tuples of counts summing to total, respecting caps
+    if current is None:
+        current = []
+    if idx == len(caps):
+        if total == 0:
+            yield tuple(current)
+        return
+    cap = caps[idx]
+    for v in range(min(cap, total)+1):
+        current.append(v)
+        yield from partitions_with_capacity(total - v, caps, idx+1, current)
+        current.pop()
+
+def satisfies_condition(s, caps, threshold=15):
+    # Check if there exists i with s[i]>=threshold and caps[i]>=threshold
+    for i in range(len(s)):
+        if s[i] >= threshold and caps[i] >= threshold:
+            return True
+    return False
+
+def main():
+    caps = [28, 20, 19, 13, 11, 9]
+    total_capacity = sum(caps)
+    threshold = 15
+
+    for n in range(threshold, total_capacity+1):
+        found_failure = False
+        # Enumerate all multisets s of size n with count constraints
+        for s in partitions_with_capacity(n, caps):
+            if not satisfies_condition(s, caps, threshold):
+                # Found a counterexample for this n
+                print(f"n={n} fails at s={s}")
+                found_failure = True
+                # Print up to 5 failures per n
+                break
+        if not found_failure:
+            print(f"Minimal n satisfying condition is {n}")
+            break
+
+if __name__ == "__main__":
+    main()
+```

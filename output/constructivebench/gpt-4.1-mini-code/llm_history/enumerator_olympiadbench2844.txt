@@ -1,0 +1,50 @@
+[write_program]
+The problem is to find the smallest natural number \( y > 2012 \) such that the number of days from 2012 to \( y - 1 \), counting leap years correctly, is divisible by 7.
+
+We calculate the days as:
+
+\[
+\text{days} = (y - 2012) \times 365 + \text{number_of_leap_years in } [2012, y-1]
+\]
+
+Leap years satisfy:
+- Divisible by 4
+- Not divisible by 100, unless divisible by 400
+
+We enumerate \( y \) from 2013 upwards, calculate days, check modulo 7, and print candidates immediately until the first solution. This will help conjecture the minimum \( y \).
+
+```python
+# Enumerate y > 2012, print y and days when days % 7 == 0,
+# then print the minimal such y.
+
+def is_leap_year(year):
+    return (year % 4 == 0) and (year % 100 != 0 or year % 400 == 0)
+
+def count_leap_years(start, end):
+    # count leap years in [start, end]
+    return sum(is_leap_year(y) for y in range(start, end+1))
+
+def main():
+    start = 2012
+    # Precompute constant
+    base_days_per_year = 365
+
+    found_candidates = []
+    # We'll check up to start + 30 first (one month by years)
+    for y in range(start + 1, start + 31):
+        num_years = y - start
+        leap_count = count_leap_years(start, y - 1)
+        days = num_years * base_days_per_year + leap_count
+        if days % 7 == 0:
+            print(f"y={y}, days={days}, days%7=0")
+            found_candidates.append((y, days))
+
+    if found_candidates:
+        min_y = min(x[0] for x in found_candidates)
+        print(f"Minimum y with days%7=0: {min_y}")
+    else:
+        print("No y found with days%7=0 in the range checked.")
+
+if __name__ == "__main__":
+    main()
+```

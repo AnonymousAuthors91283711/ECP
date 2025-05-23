@@ -1,0 +1,105 @@
+[write_program]
+The problem involves a finite set \(P\) of size 10000, a symmetric "friends" relation with certain coloring properties, and a "merge" operation affecting the chromatic number constraints. We need to investigate configurations of such graphs and their neighborhood sizes to conjecture about the minimal degree given the conditions.
+
+To explore this, we will:
+- Enumerate small example graphs with sizes much smaller than 10000 (e.g., 10 or 20),
+- Define symmetric relations (edges) satisfying the coloring and minimal coloring properties,
+- Check if the minimum neighborhood sizes (degrees) meet the lower bound of 2021,
+- Print candidate values for minimal degrees observed.
+
+This should help identify potential cases, and test the lower bound on neighborhood sizes.
+
+```python
+# Enumerate small graphs to explore minimal degrees under the given constraints.
+# Since 2021 is large, test with smaller parameters, e.g., n=10, k=4 (for coloring with 5 colors)
+# We interpret "friends" as edges, symmetric and nonempty neighborhood for each vertex.
+# We simulate the existence of minimal colorings and a merge property with small examples.
+
+def all_edges(n):
+    for i in range(n):
+        for j in range(i+1, n):
+            yield (i, j)
+
+def neighbors(graph, n):
+    # Return neighbor sets for each vertex
+    nbrs = [set() for _ in range(n)]
+    for (a,b) in graph:
+        nbrs[a].add(b)
+        nbrs[b].add(a)
+    return nbrs
+
+def can_color(graph, n, colors):
+    # Check if graph can be properly colored with given colors (colors: int)
+    # Return True if coloring exists, False otherwise (using backtracking)
+    color = [-1]*n
+    def valid(v, c):
+        for u in neighbors_list[v]:
+            if color[u] == c:
+                return False
+        return True
+    def dfs(v=0):
+        if v == n:
+            return True
+        for c in range(colors):
+            if valid(v,c):
+                color[v] = c
+                if dfs(v+1):
+                    return True
+                color[v] = -1
+        return False
+    neighbors_list = neighbors(graph, n)
+    return dfs()
+
+def min_colors_required(graph, n):
+    # Brute-force try colors from 1 up to n
+    for c in range(1, n+1):
+        if can_color(graph, n, c):
+            return c
+    return n
+
+def satisfies_conditions(graph, n, required_colors):
+    # Check conditions similar to problem:
+    #   - chromatic number = required_colors
+    #   - minimality condition: no proper coloring with required_colors-1 colors
+    cnum = min_colors_required(graph, n)
+    if cnum != required_colors:
+        return False
+    # Check "nonempty neighborhood" condition
+    nbrs = neighbors(graph, n)
+    if any(len(s)==0 for s in nbrs):
+        return False
+    return True
+
+def minimal_degree(graph, n):
+    nbrs = neighbors(graph, n)
+    return min(len(s) for s in nbrs)
+
+def main():
+    # Parameters
+    n = 10
+    required_colors = 5  # As example analogous to 2021 colors, use smaller
+    
+    # Enumerate graphs with edges <= max_edges (to limit output)
+    max_edges = 15
+    
+    from itertools import combinations
+    vertices = list(range(n))
+    all_possible_edges = list(all_edges(n))
+    
+    count = 0
+    for k in range(1, max_edges+1):
+        for edges_subset in combinations(all_possible_edges, k):
+            graph = list(edges_subset)
+            if satisfies_conditions(graph, n, required_colors):
+                deg = minimal_degree(graph, n)
+                print(f"Graph edges ({len(graph)}): {graph}")
+                print(f"Minimal degree: {deg}\n")
+                count += 1
+                if count >= 5:
+                    # print some sample results only
+                    print(f"Sample minimal degree values observed up to now: {deg}")
+                    return
+
+if __name__ == "__main__":
+    main()
+```

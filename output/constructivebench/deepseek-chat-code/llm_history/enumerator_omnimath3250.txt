@@ -1,0 +1,44 @@
+[write_program]
+This problem involves finding the smallest natural number `a` such that there exists an `N` expressible as a sum of consecutive integers starting from `a` with length `k>1`, but cannot be expressed with any other length `k'≠2017`. We'll write a Python program to enumerate possible values of `a` and check the conditions.
+
+The key observation is that `N` can be written as `k*(2a + k - 1)/2`. For each candidate `a`, we'll check if there's a `k>1` making `N` integer, then verify no other `k'≠2017` works.
+
+```python
+def is_possible_a(a):
+    # Check if a satisfies the conditions
+    for k in range(2, 100):  # Reasonable upper bound for k
+        numerator = k * (2*a + k - 1)
+        if numerator % 2 != 0:
+            continue
+        N = numerator // 2
+        # Now check if no other k'≠2017 works
+        valid = True
+        for k_prime in range(2, 2*N + 2):  # k' can't be larger than sqrt(2N)
+            if k_prime == 2017:
+                continue
+            numerator_prime = k_prime * (2*a + k_prime - 1)
+            if numerator_prime % 2 != 0:
+                continue
+            if numerator_prime // 2 == N:
+                valid = False
+                break
+        if valid:
+            return True, N
+    return False, 0
+
+def find_min_a():
+    a = 1
+    while True:
+        possible, N = is_possible_a(a)
+        if possible:
+            print(f"Found candidate: a = {a}, N = {N}")
+            # For minimality, return first found
+            print(f"Minimal a found: {a}")
+            return
+        a += 1
+        if a > 1000:  # Safety limit
+            print("Search limit reached")
+            return
+
+find_min_a()
+```

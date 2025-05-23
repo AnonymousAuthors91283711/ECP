@@ -1,0 +1,64 @@
+[write_program]
+The problem involves finding positive real numbers \(x, y\) such that \(y = \frac{3}{4}x\) and \(x^y = y^x\), with \(x + y = \frac{r}{s}\) where \(r, s\) are positive coprime integers, and we want to determine \(r + s\).
+
+We enumerate rational candidates for \(x + y\), then check the conditions. Given \(y = \frac{3}{4}x\), the equation \(x^y = y^x\) implies \((x, y)\) satisfy a special constraint that has solutions beyond the trivial \(x=y\).
+
+Rewrite:
+- \(y = \frac{3}{4}x\)
+- \(x^y = y^x\) means \(\ln x^y = \ln y^x \implies y \ln x = x \ln y\)
+
+Let's numerically check for \(x > 0\), and calculate \(x^y\) and \(y^x\). Then find \(x + y = x + \frac{3}{4}x = \frac{7}{4}x\). Thus, \(x + y = \frac{7}{4} x\).
+
+We can vary \(x\) such that \(x + y\) runs over rational numbers with small denominators, then check \(x^y = y^x\).
+
+Below is a Python program enumerating \(r, s\) with \(1 \le r,s \le 20\), checking whether there exists \(x>0\) such that:
+- \(x + y = \frac{r}{s}\),
+- \(y = \frac{3}{4} x\),
+- \(x + y = \frac{7}{4} x = \frac{r}{s} \Rightarrow x = \frac{4 r}{7 s}\),
+and verifies \(x^y \approx y^x\) with some tolerance.
+
+We print candidate values where the exponents match very closely, then output the \(r + s\) values found.
+
+```python
+import math
+from fractions import Fraction
+
+# We try fractions r/s with r,s in [1..20], coprime
+def gcd(a,b):
+    while b:
+        a,b = b, a%b
+    return a
+
+tolerance = 1e-12
+
+print("Enumerating candidates for r/s with 1 <= r,s <= 20:")
+
+candidates = []
+
+for s in range(1, 21):
+    for r in range(1, 21):
+        if gcd(r, s) != 1:
+            continue
+        # x + y = r/s, y=3/4 x => x + 3/4 x = 7/4 x = r/s
+        # so x = (4/7)*(r/s)
+        x = Fraction(4*r, 7*s)
+        x_float = float(x)
+        y_float = 0.75 * x_float
+
+        if x_float <= 0 or y_float <= 0:
+            continue
+
+        lhs = x_float ** y_float
+        rhs = y_float ** x_float
+
+        if abs(lhs - rhs) < tolerance:
+            print(f"Found: r={r}, s={s}, r+s={r+s}, x={x}, y=3/4*x={y_float:.8f}")
+            candidates.append(r + s)
+
+if candidates:
+    minimum = min(candidates)
+    print(f"Minimum r+s found: {minimum}")
+else:
+    print("No candidates found with r,s <= 20")
+```
+This program enumerates coprime positive integers \(r,s \le 20\), computes \(x\) accordingly, and tests \(x^y = y^x\) numerically, printing all approximate matches and then the minimal \(r+s\).

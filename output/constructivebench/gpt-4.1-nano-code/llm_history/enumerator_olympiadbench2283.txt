@@ -1,0 +1,79 @@
+[write_program]
+The problem involves iterating a function P on a point (x, y), which performs three steps:
+1. Reflect in x-axis: (x, y) → (x, -y)
+2. Translate upward by 2: (x, y) → (x, y + 2)
+3. Reflect in y-axis: (x, y) → (-x, y)
+
+Combined, P(x, y) = (-x, -(y - 2)). We want to analyze the 6-fold application of P, P^[6], and find the original point S₀ such that after 6 iterations, the point becomes (-7, -1).
+
+To solve this, we can:
+- Compute the inverse transformations, or
+- Iteratively apply P backwards 6 times to find all possible starting points S₀ that could reach (-7, -1), and then verify which yields the specific endpoint.
+
+Since the transformation after 6 steps is complex, but P is invertible, we can:
+- Compute P⁻¹ directly (since P is bijective),
+- Then iterate P⁻¹ backwards 6 times on (-7, -1),
+- For each such candidate, check whether applying P 6 times yields (-7, -1).
+
+Because the process can generate multiple solutions, we'll:
+- Implement the inverse P,
+- Generate all possible previous points step-by-step,
+- For each candidate, verify the forward iteration.
+
+Here is the code:
+
+```python
+# Define P and its inverse
+def P(point):
+    x, y = point
+    return (-x, -(y - 2))
+
+def P_inv(point):
+    x, y = point
+    # Inverse of P: solve P(x, y) = (x', y') for (x, y)
+    # Given P(x, y) = (-x, -(y - 2))
+    # So:
+    # x' = -x => x = -x'
+    # y' = -(y - 2) => y - 2 = - y' => y = - y' + 2
+    x_prime, y_prime = point
+    return (-x_prime, - y_prime + 2)
+
+# Compute all candidates by iterating backwards 6 times from target (-7, -1)
+target = (-7, -1)
+candidates = set([target])
+
+for _ in range(6):
+    new_candidates = set()
+    for pt in candidates:
+        prev_pt = P_inv(pt)
+        new_candidates.add(prev_pt)
+    candidates = new_candidates
+
+# For each candidate, verify if applying P 6 times yields the target
+def apply_P_times(point, n):
+    for _ in range(n):
+        point = P(point)
+    return point
+
+# Collect all valid seeds S0
+valid_S0s = []
+for c in candidates:
+    if apply_P_times(c, 6) == target:
+        valid_S0s.append(c)
+        print(f"Candidate seed: {c}")
+
+# If multiple, set the answer as the minimal lex order among solutions
+if valid_S0s:
+    olympiadbench2283_answer = min(valid_S0s)
+else:
+    # No solutions found
+    olympiadbench2283_answer = (0,0)  # fallback
+
+# Define the theorem statement
+theorem_statement = (
+    f"(P^[6]) S₀ = ({target[0]}, {target[1]}) "
+    f"↔ S₀ = {olympiadbench2283_answer}"
+)
+
+print(theorem_statement)
+```

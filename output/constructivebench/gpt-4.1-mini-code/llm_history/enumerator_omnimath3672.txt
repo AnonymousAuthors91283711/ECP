@@ -1,0 +1,63 @@
+[write_program]
+The problem asks us to characterize all functions \( f:\mathbb{R} \to \mathbb{R} \) satisfying the functional equation
+\[
+f(x f(y) + y) + f(-f(x)) = f(y f(x) - y) + y, \quad \forall x,y \in \mathbb{R}.
+\]
+Since this is a complicated functional equation, we can try enumerating candidates by testing simple families of functions: linear functions \(f(x) = a x + b\), constant functions \(f(x) = c\), and some piecewise or simple polynomial functions, evaluating the residual of the equation at sample points.
+
+Our program will:
+- Iterate over simple candidate functions.
+- For each candidate, check the functional equation at some sample points.
+- Print candidate functions which satisfy the functional equation at all sample points exactly.
+
+This approach could help conjecture solutions and maybe indicates whether linear solutions or constant solutions are possible.
+
+```python
+# enumerator.py
+import math
+
+# We test candidates f defined on R -> R.
+# We'll test three types of simple functions:
+# 1) constant f(x) = c
+# 2) linear f(x) = a x + b
+# For selected a, b, c in a small range of rationals.
+# We'll check the functional equation at a few rational points (x,y).
+
+def approx_equal(a,b,eps=1e-12):
+    return abs(a-b) < eps
+
+def test_candidate(f, samples):
+    # Check equation f(x f(y) + y) + f(-f(x)) == f(y f(x) - y) + y for all samples (x,y)
+    for x,y in samples:
+        left = f(x * f(y) + y) + f(-f(x))
+        right = f(y * f(x) - y) + y
+        if not approx_equal(left, right):
+            return False
+    return True
+
+def make_linear(a,b):
+    return lambda x: a*x + b
+
+def make_constant(c):
+    return lambda x: c
+
+def main():
+    # sample points to check equation
+    samples = [(-1, -1), (-1,0), (-1,1), (0,-1), (0,0), (0,1), (1,-1), (1,0), (1,1)]
+    print("Testing constant functions f(x)=c")
+    for c in [-1,0,1,2]:
+        f = make_constant(c)
+        if test_candidate(f,samples):
+            print(f"Candidate: f(x) = {c}")
+
+    print("Testing linear functions f(x) = a x + b")
+    # small integer ranges for a,b
+    for a in range(-3,4):
+        for b in range(-3,4):
+            f = make_linear(a,b)
+            if test_candidate(f,samples):
+                print(f"Candidate: f(x) = {a}*x + {b}")
+
+if __name__ == "__main__":
+    main()
+```

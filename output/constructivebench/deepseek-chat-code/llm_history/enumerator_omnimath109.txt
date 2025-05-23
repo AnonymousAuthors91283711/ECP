@@ -1,0 +1,55 @@
+[write_program]
+The problem is to find all functions f: ℝ × ℝ → ℝ that satisfy four conditions:
+1. Monotonicity in the second argument when the first is fixed at 0
+2. Symmetry in both arguments
+3. A functional equation involving three variables
+4. Translation invariance
+
+We'll enumerate possible candidates by testing simple forms like linear functions. The translation invariance suggests f(x,y) = g(x-y) + h(x+y), but symmetry reduces this to g(|x-y|) + c.
+
+```python
+import itertools
+
+def test_function(f):
+    # Check symmetry
+    for x, y in itertools.product([-1, 0, 1], repeat=2):
+        if f(x, y) != f(y, x):
+            return False
+    
+    # Check translation invariance
+    for x, y, a in itertools.product([-1, 0, 1], repeat=3):
+        if f(x + a, y + a) != f(x, y) + a:
+            return False
+    
+    # Check the triple condition (simplified test)
+    for x, y, z in itertools.product([-1, 0, 1], repeat=3):
+        a = f(x, y) - f(y, z)
+        b = f(y, z) - f(z, x)
+        c = f(z, x) - f(x, y)
+        if a * b * c != 0:
+            return False
+    
+    # Check monotonicity of f(0, y)
+    y_values = [-2, -1, 0, 1, 2]
+    f0_values = [f(0, y) for y in y_values]
+    if not (f0_values == sorted(f0_values) or f0_values == sorted(f0_values, reverse=True)):
+        return False
+    
+    return True
+
+# Test linear combinations
+def linear(x, y):
+    return (x + y)/2
+
+def max_f(x, y):
+    return max(x, y)
+
+def min_f(x, y):
+    return min(x, y)
+
+# Test candidates
+candidates = [linear, max_f, min_f]
+for f in candidates:
+    if test_function(f):
+        print(f.__name__)
+```

@@ -1,0 +1,56 @@
+[write_program]
+The problem involves a geometric sequence with given partial sums and requires enumerating integer values among the first 20 terms. We deduce the geometric ratio and first term from the equations and then check which terms are integers.
+
+```python
+# Enumerate geometric sequence terms given partial sums and find how many are integers for n<20
+
+# From the problem:
+# geometric(0) + geometric(1) = 40
+# geometric(0) + geometric(1) + geometric(2) = 76
+# geometric(0) + geometric(1) + geometric(2) + geometric(3) = 130
+# geometric(n) = geometric(n-1)*r for n>0
+
+def enumerate_integer_geometric_terms():
+    # Let a = geometric(0), r = ratio.
+    # We have the sums S1 = a + ar = a(1+r) = 40
+    # S2 = a(1 + r + r^2) = 76
+    # S3 = a(1 + r + r^2 + r^3) = 130
+
+    from sympy import Symbol, Eq, solve, Rational
+
+    r = Symbol('r', real=True)
+    a = Symbol('a', real=True)
+
+    eq1 = Eq(a*(1 + r), 40)
+    eq2 = Eq(a*(1 + r + r**2), 76)
+    eq3 = Eq(a*(1 + r + r**2 + r**3), 130)
+
+    # Solve eq1 and eq2 for a and r
+    # From eq1: a = 40/(1 + r)
+    # Substitute in eq2:
+    # 40/(1 + r) * (1 + r + r^2) = 76
+
+    # Rearranged and solve for r:
+    ex = Eq(40 * (1 + r + r**2) / (1 + r), 76)
+    sol_r = solve(ex, r)
+
+    # Filter real r with denominator non-zero and r != -1 (sum denominator)
+    real_r = [s.evalf() for s in sol_r if s.is_real and s != -1]
+
+    printed = set()
+    for rr in real_r:
+        aa = 40 / (1 + rr)
+        # For n in [0..19], geometric(n) = a * r^n
+        # Check which are integers (including negative integers)
+        count = 0
+        print(f'Parameters: a = {aa}, r = {rr}')
+        for n in range(20):
+            val = aa * (rr)**n
+            if val == int(val):
+                print(f'n={n}, geometric={int(val)}')
+                count += 1
+        print(f'Total integer terms for n<20: {count}')
+
+if __name__ == "__main__":
+    enumerate_integer_geometric_terms()
+```

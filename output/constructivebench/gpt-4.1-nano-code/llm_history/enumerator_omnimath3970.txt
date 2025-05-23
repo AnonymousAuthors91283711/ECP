@@ -1,0 +1,59 @@
+[write_program]
+The problem appears to involve polynomials over ℕ and conditions involving prime numbers, evals at primes, and representations as prime powers. To explore potential solutions, the task is to enumerate such polynomials systematically. Since the problem mark in the code is `sorry`, and based on the structure, it seems the goal is to find all polynomials with certain properties.
+
+Given the context and sparse hints, I will implement an enumeration of small polynomials with nonnegative integer coefficients, focusing on degrees up to 2 or 3, and evaluating them at small primes (2, 3, 5). For each polynomial, I will check if the condition holds, i.e., for every prime p and positive n, the eval at p is a prime power.
+
+Here's the approach:
+- Generate small polynomials with nonnegative integer coefficients (say degree ≤ 2, coefficients ≤ 10).
+- For selected small primes p (2,3,5), check the condition for small n (1..3).
+- If the polynomial satisfies the condition, print it as a candidate answer.
+- No hardcoded answer, just enumerate systematically.
+
+```python
+# Enumerate small polynomials over ℕ with degree ≤ 2 and coefficients in range(0,11)
+# For each, test whether eval at small primes yields prime powers
+
+import itertools
+import sympy
+
+# Small primes to test
+primes = [2, 3, 5]
+max_coeff = 10
+max_degree = 2
+
+# Function to evaluate polynomial at p
+def evaluate_poly(coeffs, p):
+    return sum(c * (p ** i) for i, c in enumerate(coeffs))
+
+# Check if number is a prime power (prime^m)
+def is_prime_power(n):
+    if n < 2:
+        return False
+    for q in range(2, n+1):
+        if sympy.isprime(q):
+            m = 0
+            temp = n
+            while temp % q == 0:
+                temp //= q
+                m += 1
+            if temp == 1 and m >= 1:
+                return True
+    return False
+
+# Generate all coefficient combinations
+for coeffs in itertools.product(range(max_coeff+1), repeat=max_degree+1):
+    # Skip zero polynomial
+    if all(c == 0 for c in coeffs):
+        continue
+    valid = True
+    for p in primes:
+        for n in range(1, 4):  # small n
+            val = evaluate_poly(coeffs, p)
+            if not is_prime_power(val):
+                valid = False
+                break
+        if not valid:
+            break
+    if valid:
+        print(f"Polynomial coefficients: {coeffs}")
+```

@@ -1,0 +1,67 @@
+[write_program]
+This problem asks for the smallest positive integer n such that sin(n(n+1)π/2008) is an integer (which must be 0 since sin outputs are in [-1,1]). We need to find the minimal n where n(n+1)π/2008 is an integer multiple of π, meaning n(n+1) must be divisible by 2008.
+
+We'll write a Python program to find the smallest n where 2008 divides n(n+1). Since n and n+1 are coprime, either n or n+1 must be divisible by the required factors of 2008. We'll factorize 2008 and search for the minimal n.
+
+```python
+def factorize(n):
+    factors = {}
+    # Factor out 2s
+    while n % 2 == 0:
+        factors[2] = factors.get(2, 0) + 1
+        n = n // 2
+    # Check odd divisors up to sqrt(n)
+    i = 3
+    max_factor = int(n**0.5) + 1
+    while i <= max_factor:
+        while n % i == 0:
+            factors[i] = factors.get(i, 0) + 1
+            n = n // i
+            max_factor = int(n**0.5) + 1
+        i += 2
+    if n > 1:
+        factors[n] = 1
+    return factors
+
+def minimal_n(target):
+    factors = factorize(target)
+    prime_powers = [p**e for p, e in factors.items()]
+    
+    from itertools import product
+    from math import gcd
+    
+    # Generate all possible divisors that could be in n or n+1
+    divisors = set()
+    for bits in product([0,1], repeat=len(prime_powers)):
+        d = 1
+        for i in range(len(prime_powers)):
+            if bits[i]:
+                d *= prime_powers[i]
+        divisors.add(d)
+    
+    divisors = sorted(divisors)
+    min_n = float('inf')
+    
+    # Check each divisor as either part of n or n+1
+    for d in divisors:
+        m = target // d
+        # Case 1: d divides n, m divides n+1
+        # Solve n ≡ 0 mod d, n ≡ -1 mod m
+        # Using Chinese Remainder Theorem
+        if gcd(d, m) == 1:
+            # Find x ≡ 0 mod d, x ≡ -1 mod m
+            x = (-1) * d * pow(d, -1, m) % (d * m)
+            if x > 0 and x < min_n:
+                min_n = x
+        # Case 2: d divides n+1, m divides n
+        # Solve n ≡ 0 mod m, n ≡ -1 mod d
+        if gcd(m, d) == 1:
+            x = (-1) * m * pow(m, -1, d) % (m * d)
+            if x > 0 and x < min_n:
+                min_n = x
+    
+    return min_n
+
+# Compute for 2008
+print(minimal_n(2008))
+```

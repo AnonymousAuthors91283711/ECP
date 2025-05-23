@@ -1,0 +1,86 @@
+[write_program]
+The problem involves complex numbers \( x, y \) satisfying two rational expressions and asks about the value of a third rational expression. To explore, we test small values and try to deduce the possible values of the expression:
+\[
+\frac{x^6 + y^6}{x^5 + y^5}.
+\]
+By symmetry and the problem structure, we can try expressing in terms of symmetric sums \( s = x + y \) and \( p = xy \). We enumerate plausible pairs \( (s,p) \) (with small integer values), calculate \( x,y \) roots of \( t^2 - s t + p=0 \), validate conditions, and then output the resulting value of the expression when defined. This exploration can help conjecture the values in the answer set.
+
+```python
+import cmath
+
+# Helper: Given s=x+y, p=xy, compute x,y
+def roots(s, p):
+    disc = s*s - 4*p
+    sqrt_disc = cmath.sqrt(disc)
+    return ( (s + sqrt_disc)/2, (s - sqrt_disc)/2 )
+
+# Compute power sums: p_n = x^n + y^n using recurrence: p_n = s*p_{n-1} - p*p_{n-2}
+def power_sum(n, s, p):
+    if n == 0:
+        return 2
+    if n == 1:
+        return s
+    p_nm2, p_nm1 = 2, s
+    for _ in range(2, n+1):
+        p_n = s * p_nm1 - p * p_nm2
+        p_nm2, p_nm1 = p_nm1, p_n
+    return p_nm1
+
+# Enumerate small s, p integers
+# Avoid division by zero in conditions
+candidates = []
+print("Enumerating s, p with s,p in [-5..5] and s!=0:")
+
+for s in range(-5,6):
+    if s == 0:
+        continue
+    for p in range(-5,6):
+        # Get x,y roots
+        x, y = roots(s, p)
+        # Compute left sides
+        denom1 = x + y
+        denom2 = x**3 + y**3
+
+        # Avoid zero denominators
+        if abs(denom1) < 1e-12 or abs(denom2) < 1e-12:
+            continue
+
+        lhs1 = (x**2 + y**2) / denom1
+        lhs2 = (x**4 + y**4) / denom2
+
+        # Check conditions close to target values 4 and 2 within tolerance
+        if abs(lhs1 - 4) < 1e-8 and abs(lhs2 - 2) < 1e-8:
+            # Compute final expression
+            denom3 = x**5 + y**5
+            if abs(denom3) < 1e-12:
+                continue
+            expr = (x**6 + y**6)/denom3
+            # Print exact when possible; otherwise float approx
+            # expr is complex, print in form a+bi or a if b ~0
+            if abs(expr.imag) < 1e-12:
+                out = expr.real
+            else:
+                out = expr
+            print(f"s={s}, p={p} => (x^6+y^6)/(x^5+y^5) = {out}")
+            candidates.append(out)
+
+# Remove close duplicates (considering real parts)
+unique = []
+for c in candidates:
+    if all(abs(c.real - u.real) > 1e-8 or abs(c.imag - u.imag) > 1e-8 for u in unique):
+        unique.append(c)
+
+print("\nPossible distinct values found:")
+for val in unique:
+    if isinstance(val, complex) and abs(val.imag) > 1e-12:
+        print(f"{val}")
+    else:
+        print(f"{val.real}")
+
+if unique:
+    # Output extremal values if numeric and real
+    reals = [v.real for v in unique if abs(v.imag) < 1e-12]
+    if reals:
+        print(f"\nMinimum real value: {min(reals)}")
+        print(f"Maximum real value: {max(reals)}")
+```

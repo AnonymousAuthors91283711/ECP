@@ -1,0 +1,64 @@
+[write_program]
+Let's analyze the problem: it involves finding the minimal natural number k such that there exist m > 1 and n ≥ 1 (as natural numbers) with m + n = k, and a certain set involving the logarithm base m of n*x being contained in an interval of length 1. The set's length condition is exactly 1/2013, which suggests the problem relates to interval lengths and logarithmic functions.
+
+Since the problem asks to find the least such k, a brute-force enumeration over small m, n values is appropriate to find candidates, and then check for the minimal sum m + n.
+
+Here's the plan:
+- For small m (starting from 2 upwards), and small n:
+  - Compute the interval length for the possible values of x.
+  - Check if the length of the interval for log_b m (n*x) can be exactly 1/2013.
+  - If yes, record m + n.
+- Output all candidates up to a certain threshold (say k ≤ 1000) for safety.
+- Since the problem explicitly mentions the answer's last three digits are 371, we will look for such a candidate and print it.
+
+Let's implement that efficiently.
+
+```python
+# Enumerates small m, n, checks if the interval length of log_b m (n*x) can be exactly 1/2013.
+# The interval length of log_b m (n*x) over x in [L, R] is |log_b m (n*R) - log_b m (n*L)|, which simplifies to
+# |log_b m (n*R) / n / log_b m|, but perhaps easiest to check directly by the difference in the log values at interval endpoints.
+# Since the length of the interval in terms of x is related to the logarithms, and the set is defined where the log is between -1 and 1,
+# and the length is 1/2013, we attempt to find (m, n) with m > 1, such that the difference in the logs matches 1/2013.
+
+# We consider that the length of the set in the x-variable is related to the difference in log_b m (n*x) over the interval [-1,1], giving us
+# the length in x as (based on the change in logs): length_x = (1 / log_b m) * log_b m (n * (x_max))
+# But for simplicity, we'll assume the change in log_b m (n*x) over an interval of size 1 in x is |log_b m (n) - log_b m (0)|.
+# Since the log_b m (0) isn't defined, instead, note that the interval transformation is linear in the logs, so the length of set in x is proportional to 1 / |log_b m|.
+
+# To match the exact length, log_b m must satisfy: length in x = 1 / |log_b m| = 1/2013 => |log_b m| = 2013
+# But log_b m = log m / log b. Fix b = m for simplicity.
+
+# Alternatively, since the problem's key is the length of the set where -1 ≤ log_b m(n*x) ≤ 1,
+# the length of the x-interval is (b^1 - b^{-1}) / n when considering the change in log_b m for the interval bounds.
+
+# Implementation:
+import math
+
+def enumerate_candidates(max_m=50, max_n=50, max_k=1000):
+    candidates = []
+    for m in range(2, max_m + 1):
+        for n in range(1, max_n + 1):
+            total = m + n
+            if total > max_k:
+                continue
+            # The length of the set for x is determined by the points where log_b m (n*x) = -1 and 1
+            # i.e., n*x = m^{-1} and n*x = m^1 => x = m^{-1}/n and x = m / n
+            # The length is |m/n - m^{-1}/n| = (m - m^{-1})/n
+            interval_length = (m - 1/m) / n
+            # We want interval_length == 1/2013
+            if math.isclose(interval_length, 1/2013, rel_tol=1e-9):
+                print(f"Candidate: m={m}, n={n}, sum={total}")
+                candidates.append(total)
+    # Return the minimal candidate if any
+    if candidates:
+        min_k = min(candidates)
+        print(f"Minimal k with desired interval length: {min_k}")
+        return min_k
+    else:
+        print("No candidates found within given bounds.")
+        return None
+
+# Run the enumeration
+if __name__ == "__main__":
+    enumerate_candidates()
+```

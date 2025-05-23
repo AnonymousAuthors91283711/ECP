@@ -1,0 +1,59 @@
+[write_program]
+The given problem defines a property P on functions f: ℝ → ℝ involving a functional equation. We are asked to characterize all such functions satisfying the given equation:
+
+f(x²) + f(2y²) = (f(x + y) + f(y)) * (f(x - y) + f(y)) for all real x,y.
+
+To assist in finding or conjecturing the answer, I'll write a program that tests some candidate functions on many values of (x,y) and prints those which satisfy the equation within a small numerical tolerance. Since the problem likely demands exact solutions, candidates will be functions built from simple polynomials and constants. I'll enumerate:
+
+- Constant functions f(t) = c for c in {-2,-1,0,1,2}.
+- Linear functions f(t) = a t + b for small integers a,b in -2..2.
+- Quadratic: f(t) = a t² + b t + c for small integer a,b,c.
+
+For each candidate, I'll check the functional equation for a few (x,y) values in {-2,-1,0,1,2}, except for zero denominators or invalid calculations. If all tested pairs satisfy the equation with high precision, print the function as a candidate.
+
+This helps identify potential exact solutions to the functional equation.
+
+```python
+import math
+
+def approx_equal(a, b, tol=1e-9):
+    return abs(a - b) < tol
+
+def test_function(f, xs, ys):
+    # Test equation on all pairs (x,y) in xs, ys
+    for x in xs:
+        for y in ys:
+            lhs = f(x**2) + f(2 * y**2)
+            rhs = (f(x + y) + f(y)) * (f(x - y) + f(y))
+            if not approx_equal(lhs, rhs):
+                return False
+    return True
+
+def main():
+    xs = [-2, -1, 0, 1, 2]
+    ys = [-2, -1, 0, 1, 2]
+
+    # Enumerate constant functions f(t) = c
+    for c in [-2, -1, 0, 1, 2]:
+        f = lambda t, c=c: c
+        if test_function(f, xs, ys):
+            print(f"Constant function: f(t) = {c}")
+
+    # Enumerate linear functions f(t) = a*t + b
+    for a in range(-2, 3):
+        for b in range(-2, 3):
+            f = lambda t, a=a, b=b: a*t + b
+            if test_function(f, xs, ys):
+                print(f"Linear function: f(t) = {a}*t + {b}")
+
+    # Enumerate quadratic functions f(t) = a*t^2 + b*t + c
+    for a in range(-1, 2):
+        for b in range(-2, 3):
+            for c in range(-2, 3):
+                f = lambda t, a=a, b=b, c=c: a*(t**2) + b*t + c
+                if test_function(f, xs, ys):
+                    print(f"Quadratic function: f(t) = {a}*t^2 + {b}*t + {c}")
+
+if __name__ == "__main__":
+    main()
+```

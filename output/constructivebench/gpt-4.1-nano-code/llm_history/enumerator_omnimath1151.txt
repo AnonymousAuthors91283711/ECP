@@ -1,0 +1,50 @@
+[write_program]
+The problem involves finite permutations of a set with 5 elements, and the goal is to examine all triples (f,g,h) of permutations that satisfy certain relations involving compositions, then count how many such triples there are. To do this efficiently, rather than analyze the full mathematical logic, I will generate all possible permutations of 5 elements (there are 120 such permutations), then iterate over all triples, check the conditions, and count the valid ones. This brute-force approach suits small set sizes and ensures correctness.
+
+Because the total number of triples is (120)^3 = 1,728,000, we will use a direct check but implement short-circuiting for efficiency. We will print each valid tuple immediately upon verification, and finally produce the total count.
+
+```python
+import itertools
+
+# Generate all permutations of 5 elements
+elements = [0, 1, 2, 3, 4]
+permutations = list(itertools.permutations(elements))
+perm_index = {p: i for i, p in enumerate(permutations)}
+
+def compose(p, q):
+    # Composition p after q: p(q(x))
+    return tuple(p[q[x]] for x in range(5))
+
+# Check the relations in the problem
+def check_relations(f, g, h):
+    for x in range(5):
+        # f(g(h(x))) = g(x)
+        if compose(f, compose(g, h))[x] != g[x]:
+            return False
+        # h(g(f(x))) = g(x)
+        if compose(h, compose(g, f))[x] != g[x]:
+            return False
+        # g(h(f(x))) = h(x)
+        if compose(g, compose(h, f))[x] != h[x]:
+            return False
+        # f(h(gx)) = h(x)
+        if compose(f, compose(h, g))[x] != h[x]:
+            return False
+        # h(f(gx)) = f(x)
+        if compose(h, compose(f, g))[x] != f[x]:
+            return False
+        # g(f(hx)) = f(x)
+        if compose(g, compose(f, h))[x] != f[x]:
+            return False
+    return True
+
+count = 0
+for f in permutations:
+    for g in permutations:
+        for h in permutations:
+            if check_relations(f, g, h):
+                print(f"f={f}, g={g}, h={h}")
+                count += 1
+
+print("Total valid triples:", count)
+```

@@ -1,0 +1,42 @@
+[write_program]
+The problem seems related to IMO 2014 Shortlist N1, involving sums of terms 2^n - 2^k over subsets s of {0, ..., n-1}. The goal is to find the greatest m not representable as such a sum. I will write a Python program that for small values of n (e.g., 2 to 6) enumerates all sums formed by subsets of {0,...,n-1} of the form sum_{k in s} (2^n - 2^k), prints all unreachable m from 0 up to a small max, then gives the greatest unreachable found. This helps conjecture the pattern for the answer.
+
+```python
+# Enumerate unreachable sums m from subsets s of {0,...,n-1} with:
+# m = sum_{k in s} (2^n - 2^k)
+# For small n, find all such sums, then find greatest m <= threshold not representable.
+
+def powerset(iterable):
+    # Returns all subsets of the iterable as lists
+    lst = list(iterable)
+    n = len(lst)
+    for i in range(1 << n):
+        yield [lst[j] for j in range(n) if (i & (1 << j))]
+
+def main():
+    # We test for n = 2..6
+    for n in range(2, 7):
+        vals = [2**n - 2**k for k in range(n)]
+        sums = set()
+        # Add sums of all subsets s (including empty set)
+        for s in powerset(range(n)):
+            total = sum(vals[k] for k in s)
+            sums.add(total)
+        max_val = max(vals)*n  # crude upper bound, could be bigger
+        print(f"n = {n}")
+        # Find unreachable m in 0..max_val
+        unreachable = []
+        for m in range(max_val+1):
+            if m not in sums:
+                print(f"Unreachable m = {m}")
+                unreachable.append(m)
+        if unreachable:
+            greatest = max(unreachable)
+            print(f"Greatest unreachable m for n={n} is {greatest}")
+        else:
+            print(f"No unreachable m found up to {max_val}")
+        print("-"*20)
+
+if __name__ == "__main__":
+    main()
+```

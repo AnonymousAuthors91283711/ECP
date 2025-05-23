@@ -1,0 +1,56 @@
+[write_program]
+The problem is to find the smallest sum of a finite set of prime numbers such that:
+- Each prime's decimal digits are distinct from every other prime in the set.
+- The union of all digits in the set covers all digits from 1 to 9 exactly once (digits 0 and repeats are not allowed).
+This is a combinatorial search problem. We'll test small sets of primes, checking the digit conditions, and print candidates along the way, finally printing the minimal sum found.
+
+We limit the search to primes under 1000 for efficiency and avoid zero digits. We generate subsets, check digit disjointness and coverage, then print sums.
+
+```python
+from sympy import primerange, isprime
+from itertools import combinations
+
+# Precompute primes with digits 1..9 only, no zeros, no repeated digits inside the prime
+def valid_prime_digits(p):
+    s = str(p)
+    if '0' in s:
+        return False
+    return len(set(s)) == len(s)
+
+primes = [p for p in primerange(2, 1000) if valid_prime_digits(p)]
+
+digits_needed = set('123456789')
+
+def digits_set(p):
+    return set(str(p))
+
+# Enumerate sets of primes up to size 5 (heuristic, problem likely needs small sets)
+min_sum = None
+min_sets = []
+
+# We'll print candidates immediately when found as per requirements
+for r in range(1, 6):
+    for ps in combinations(primes, r):
+        # Check digits disjointness and coverage
+        union_digits = set()
+        disjoint = True
+        for p in ps:
+            dset = digits_set(p)
+            if union_digits.intersection(dset):
+                disjoint = False
+                break
+            union_digits.update(dset)
+        if disjoint and union_digits == digits_needed:
+            s = sum(ps)
+            print(f"Set: {ps} Sum: {s}")
+            if min_sum is None or s < min_sum:
+                min_sum = s
+                min_sets = [ps]
+            elif s == min_sum:
+                min_sets.append(ps)
+
+if min_sum is not None:
+    print(f"Minimal sum found: {min_sum}")
+else:
+    print("No valid sets found")
+```

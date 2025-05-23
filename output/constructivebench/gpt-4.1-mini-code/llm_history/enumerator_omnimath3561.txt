@@ -1,0 +1,58 @@
+[write_program]
+The problem involves finding the minimal integer \( k \geq 2 \) such that for any subset \( P \) of \(\{2, \ldots, k\}\), if \( P \cup \{2,\ldots,k\} = \{2,\ldots,k\} \) and \( P \neq \{2,\ldots,k\} \), then \( P \) contains a triple \( (a,b,c) \) with \( a,b,c \in P \) and \( a \times b = c \).
+
+In other words, every proper subset \( P \subsetneq \{2,\ldots,k\} \) whose union with \(\{2,\ldots,k\}\) is the whole set (trivially true) must contain a multiplicative triple. The condition boils down to: any proper subset \( P \subsetneq \{2, \ldots, k\} \) contains \( a,b,c \in P \) with \( a \times b = c \).
+
+Thus, if a proper subset \( P \) avoids such a triple, it contradicts the property, so the minimal such \( k \) where no proper subset can avoid multiplicative triples is the answer.
+
+We will enumerate \( k \) starting from 2 upwards, generate all proper subsets \( P \) of \(\{2,\ldots,k\}\) and check if any \( P \) has no multiplicative triple. If any exists, \( k \) is not the minimal. We look for the smallest \( k \) with no such \( P \).
+
+To manage complexity, limit \( k \leq 10 \).
+
+The program enumerates candidate \( k \), subsets \( P \), checks multiplicative triples, and prints candidate \( k \) and subsets failing or passing the condition to conjecture the minimal such \( k \).
+
+```python
+# Enumerate minimal k≥2 such that any proper subset P of {2,...,k} contains a,b,c in P with a*b=c
+# We check all 2^{k-1}-2 proper subsets (excluding empty and full set) for multiplicative triples
+
+from itertools import combinations
+
+def has_mult_triple(P):
+    s = set(P)
+    l = list(P)
+    n = len(l)
+    for i in range(n):
+        a = l[i]
+        for j in range(n):
+            b = l[j]
+            c = a*b
+            if c in s:
+                return True
+    return False
+
+def main():
+    # Search k from 2 upwards, max 10 due to combinatorial explosion
+    for k in range(2, 11):
+        E = list(range(2, k+1))
+        # Check all proper nonempty subsets P of E
+        # Proper subsets = all subsets except empty and full
+        no_mult_triple_found = False
+        # For performance, consider subsets of size at least 2 (singletons cannot have triple)
+        for size in range(1, len(E)):
+            for P in combinations(E, size):
+                if P == tuple(E):
+                    continue
+                if not has_mult_triple(P):
+                    print(f'k={k}, subset without triple: {P}')
+                    no_mult_triple_found = True
+                    break
+            if no_mult_triple_found:
+                break
+        if not no_mult_triple_found:
+            # No proper subset without multiplicative triple found, print answer and stop
+            print(f'Minimal k with required property: {k}')
+            break
+
+if __name__ == '__main__':
+    main()
+```

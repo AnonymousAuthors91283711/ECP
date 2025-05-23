@@ -1,0 +1,78 @@
+[write_program]
+The problem involves real functions \( f: \mathbb{R} \to \mathbb{R} \) that are strictly monotone and for which there exists an involutive function \( g \) (i.e., \( g(g(x)) = x \)) satisfying \( f + g = 2 \cdot \text{id} \). We want to understand the possible forms of such functions \( f \).
+
+To aid conjecture, we will:
+- Enumerate pairs of simple candidate functions \( f \) and candidate involutions \( g \).
+- Check strict monotonicity for \( f \).
+- Check the involutive property for \( g \).
+- Check if \( f(x) + g(x) = 2x \) holds approximately for sample points.
+- Print functions that satisfy these criteria.
+
+We will pick simple linear and affine candidates as the complexity grows fast. The key insight: since \( f + g = 2x \), \( g = 2x - f \). If \( g \) is involutive, then \( g(g(x)) = x \). So, \( g(g(x)) = 2 g(x) - f(g(x)) \) must equal \( x \). We try linear forms \( f(x) = a x + b \), and check involution of \( g(x) = 2 x - f(x) = 2 x - a x - b = (2 - a) x - b \).
+
+For a linear \( g \) to be involutive: 
+\( g(g(x)) = (2 - a)^2 x - b(1 + (2 - a)) = x \).
+
+From this, we solve for \( a, b \).
+
+The program enumerates a few values to discover these constraints via numerics.
+
+```python
+import numpy as np
+
+def is_close(a, b, tol=1e-8):
+    return abs(a - b) < tol
+
+# Enumerate candidate linear f(x) = a x + b
+# Then g(x) = 2 x - f(x) = (2 - a) x - b
+# Check if g(g(x)) = x for all x (we check on sample points)
+# Also check if f strictly monotone (a != 0)
+
+print("Enumerating candidate linear functions f(x) = a x + b:")
+
+a_values = np.linspace(-3, 3, 31)  # from -3 to 3 step 0.2
+b_values = np.linspace(-2, 2, 21)  # from -2 to 2 step 0.2
+
+sample_x = np.linspace(-5, 5, 11)
+
+found = []
+
+for a in a_values:
+    if abs(a) < 1e-6:  # skip non-strict monotone
+        continue
+    for b in b_values:
+        def f(x): return a * x + b
+        def g(x): return (2 - a)*x - b
+
+        # Check involution: g(g(x)) = x ? on sample points
+        g_g_x = g(g(sample_x))
+        if all(np.abs(g_g_x - sample_x) < 1e-6):
+            # f must be strictly monotone
+            if a > 0:
+                monotone = "strictly increasing"
+            else:
+                monotone = "strictly decreasing"
+
+            # Check f(x) + g(x) == 2x (should hold by definition)
+            val_check = [np.isclose(f(x) + g(x), 2*x, atol=1e-8) for x in sample_x]
+            if all(val_check):
+                repr_f = f"f(x) = {a:.2f} * x + {b:.2f}"
+                repr_g = f"g(x) = {2 - a:.2f} * x - {b:.2f}"
+                print(f"Found candidate: {repr_f}, {repr_g}, {monotone}")
+                found.append((a, b))
+
+if found:
+    # From the involution condition on g(g(x)) = x:
+    # (2 - a)^2 = 1 and b * (1 + (2 - a)) = 0
+    print("\nFrom enumerations, candidates satisfy:")
+    print(" (2 - a)^2 = 1 => 2 - a = ±1 => a = 1 or 3")
+    print(" b * (1 + (2 - a)) = 0 => b * (3 - a) = 0")
+    print(" Cases:")
+    print(" a=1: then b * 2 =0 => b=0")
+    print(" a=3: then b *0=0 => b arbitrary")
+    print("\nExtremal solutions:")
+    print("1) f(x) = x, g(x) = x (identity involution)")
+    print("2) f(x) = 3x + b, g(x) = -x - b, b arbitrary")
+else:
+    print("No candidates found in sampled range.")
+```

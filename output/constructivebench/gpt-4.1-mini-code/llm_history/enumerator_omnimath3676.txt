@@ -1,0 +1,70 @@
+[write_program]
+The problem involves finding all functions \( f: \mathbb{N} \to \mathbb{N} \) such that for every function \( x: \text{Fin } k \to \mathbb{N} \), the sum of factorials of \( f(x(i)) \) divides the sum of factorials of \( x(i) \). We want to find possible candidates for \( f \) when \( k \geq 2 \).
+
+We will consider small values of \( k \) (like 2 or 3), enumerate all \( x \) mappings where the factorial values are small (to control computations), and check the divisibility condition for various candidate \( f \) functions. We explore simple candidate functions such as identity and constant functions and verify the condition over all \( x \).
+
+```python
+import math
+from itertools import product
+
+def factorial(n):
+    # Memoized factorial to speed up repeated calls.
+    return math.factorial(n)
+
+def check_condition(k, f, max_val=5):
+    # Check the condition for all x: Fin k -> {0,...,max_val}
+    # That sum_i (f(x_i))! divides sum_i (x_i)!
+    # Return False immediately if fails.
+    for x in product(range(max_val+1), repeat=k):
+        sum_fx = sum(f(xi) for xi in x)
+        sum_x = sum(xi for xi in x)
+        # However, the condition is about sum of factorials, not sum of values
+        sum_fx_fact = sum(factorial(f(xi)) for xi in x)
+        sum_x_fact = sum(factorial(xi) for xi in x)
+        if sum_fx_fact == 0:
+            # To avoid division by zero or empty sums, ignore this case
+            continue
+        if sum_x_fact % sum_fx_fact != 0:
+            return False
+    return True
+
+def enumerate_functions(k, domain, codomain):
+    # Enumerate functions f: domain -> codomain
+    # domain is ints 0,...,max_val
+    # codomain similar
+    from itertools import product
+    for vals in product(codomain, repeat=len(domain)):
+        f = dict(zip(domain, vals))
+        yield lambda x, f=f: f[x]
+
+def main():
+    k_values = [2,3]  # sample values of k >= 2
+    max_val = 4       # max value of x(i)
+    domain = range(max_val+1)
+    codomain = range(max_val+1)
+
+    for k in k_values:
+        print(f"Checking for k={k}")
+        # We'll try constant functions and identity first due to factorial growth.
+        
+        # Identity function
+        f_id = lambda x: x
+        if check_condition(k, f_id, max_val):
+            print(f"Identity function f(x)=x works for k={k}")
+
+        # Constant functions
+        for c in codomain:
+            f_const = lambda x, c=c: c
+            if check_condition(k, f_const, max_val):
+                print(f"Constant function f(x)={c} works for k={k}")
+
+        # Try functions f(x) = 0 or 1 except one value mapped differently
+        for c in codomain:
+            if c == 0 or c == 1:  # simple candidates
+                continue
+        print()
+
+if __name__ == "__main__":
+    main()
+```
+

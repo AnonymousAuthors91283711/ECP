@@ -1,0 +1,65 @@
+[write_program]
+The problem involves expressing a composed function involving \( f(c) = \frac{3}{2c-3} \) and its "inverse" \( f_{\text{inv}}(c) = \frac{3 + 3c}{2c} \) in the form \(\frac{k c + l}{m c + n}\) with integer coefficients \(k, l, m, n\), and finding a particular relation involving these integers.
+
+To gain insight, we enumerate integer quadruples \((k, l, m, n)\) that satisfy 
+\[
+f_{\text{inv}}(c) \cdot c \cdot f(c) = \frac{k c + l}{m c + n}
+\]
+for several sample values of \(c\) (avoiding \(c = \frac{3}{2}\)) by symbolic or numeric comparison, and then compute the ratio \(\frac{k n^2}{l m}\).
+
+The program:
+- Defines \(f(c)\), \(f_{\text{inv}}(c)\),
+- Symbolically computes \(LHS = f_{\text{inv}}(c)\cdot c \cdot f(c) = \frac{3+3c}{2c} \cdot c \cdot \frac{3}{2c-3} = \frac{3(3+3c)}{2(2c-3)}\),
+- Searches integer \((k,l,m,n)\) with small bounds that satisfy \( (k c + l)(m c + n)^{-1} = LHS \) for selected values of \(c\),
+- Prints each found quadruple with the computed ratio \(\frac{k n^2}{l m}\).
+
+This enumeration aids conjecture on the answer \(P2004AMCB\_13\_answer\).
+
+```python
+# Enumerate integer quadruples (k,l,m,n) expressing (f_inv(c)*c*f(c)) as (k c + l)/(m c + n)
+# and compute ratio k n^2/(l m) to assist understanding the problem structure.
+
+from fractions import Fraction
+
+def f(c): return Fraction(3, 2*c - 3)
+def finv(c): return Fraction(3 + 3*c, 2*c)
+def lhs(c): return finv(c) * c * f(c)  # exactly 3(3+3c)/(2(2c - 3))
+
+def rational_eq(k, l, m, n, c):
+    # Checks if (k c + l)/(m c + n) == lhs(c)
+    denom = m*c + n
+    if denom == 0:
+        return False
+    val = Fraction(k * c + l, denom)
+    return val == lhs(c)
+
+def main():
+    # Select sample c values away from 3/2 to test equality
+    samples = [1, 2, 3, 4]
+    bound = 10  # for k,l,m,n search space
+
+    found = set()
+    for k in range(-bound, bound+1):
+        for l in range(-bound, bound+1):
+            if l == 0:
+                continue
+            for m in range(-bound, bound+1):
+                for n in range(-bound, bound+1):
+                    if m == 0 or n == 0:
+                        continue
+                    # Check equality at all sample points
+                    if all(rational_eq(k, l, m, n, c) for c in samples):
+                        key = (k,l,m,n)
+                        if key in found:
+                            continue
+                        found.add(key)
+                        # Compute ratio k n^2/(l m)
+                        try:
+                            ratio = Fraction(k * n**2, l * m)
+                        except ZeroDivisionError:
+                            continue
+                        print(f"k={k}, l={l}, m={m}, n={n}, ratio={ratio}")
+
+if __name__ == "__main__":
+    main()
+```

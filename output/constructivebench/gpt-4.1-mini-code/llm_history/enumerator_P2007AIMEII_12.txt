@@ -1,0 +1,93 @@
+[write_program]
+The problem relates to a strictly increasing sequence \(x(n)\), each term a power of 3, with 8 terms \(x(0), \ldots, x(7)\), and conditions on sums of logarithms and sums of terms. We want to explore possible exponent patterns for these 8 terms and then later deduce the exponent of \(x(14)\). Since the problem is from the 2007 AIME II #12, the key is to guess possible exponents satisfying the sum of logs condition, then estimate sums to check the bounds, and finally try to see what might happen at \(x(14)\).
+
+Our approach:
+- The condition \(\sum_{n=0}^7 \log_3(x_n) = 308\) means the exponents sum up to 308.
+- Each \(x_n = 3^{k_n}\) with \(k_n \in \mathbb{N}\), and strictly increasing, so \(k_0 < k_1 < \cdots < k_7\).
+- We want to find 8 strictly increasing integers adding to 308.
+- Then check the sum \(\sum_{n=0}^7 x_n = \sum 3^{k_n}\) to see if its \(\log_3\) lies between 56 and 57.
+- We'll enumerate possible 8-tuples with increasing integers and summed 308, then sum the terms and check \(\log_3\) bounds.
+- After that, we consider possible values for \(x_{14}\).
+
+Let's encode and print results of candidate sequences as they are found.
+
+```python
+# Python program to enumerate 8 strictly increasing integer exponents k_0<...<k_7 with sum 308
+# and check if log3 of sum of 3^{k_i} lies between 56 and 57.
+
+from math import log
+
+def log3(x):
+    return log(x) / log(3)
+
+def search_sequence(n=8, total=308, start=0, seq=[]):
+    # n numbers to choose, sum total, next number at least start, current seq
+    if n == 1:
+        k = total
+        if k >= start and (not seq or k > seq[-1]):
+            yield seq + [k]
+        return
+    for k in range(start, total - (n-1)*start +1):  # upper bound loose for efficiency
+        # k must be less than next k's, so at least start
+        if seq and k <= seq[-1]:
+            continue
+        # min sum for remaining (n-1) numbers is (k+1)+(k+2)+... minimal
+        min_sum_rest = (k+1)*(n-1) + (n-1)*(n-2)//2
+        if k + min_sum_rest > total:
+            return
+        max_sum_rest = sum(range(10**4))  # big placeholder, no limit here in code but we prune above
+        if k > total:
+            return
+        for s in search_sequence(n-1, total - k, k+1, seq + [k]):
+            yield s
+
+def main():
+    # Since sum of 8 strictly increasing integers is 308,
+    # minimal sum if k0, k1,... k7 are consecutive integers starting at m is 8m+28=308
+    # so m = (308 -28)/8= 35
+    # So try sequences close to 35..42
+
+    # We'll do an efficient generation:
+    # For speed, fix first term from around 30 to 40
+    first_start = 30
+    first_end = 40
+    count = 0
+    for k0 in range(first_start, first_end+1):
+        # sum of next 7 integers strictly increasing > k0
+        # minimum sum of k1..k7 is k0+1 + k0+2 + ... k0+7 = 7*k0 + 28
+        rem = 308 - k0
+        min_sum_rest = 7*(k0+1) + 21  # sum k0+1 to k0+7
+        max_sum_rest = rem  # total less first element
+        if min_sum_rest > rem:
+            continue  # no solution
+        # Now generate rest 7 numbers from k0+1 upwards that sum to rem
+        def helper(n, total, start, prefix):
+            if n == 1:
+                k = total
+                if k >= start and (not prefix or k > prefix[-1]):
+                    yield prefix + [k]
+                return
+            for k in range(start, total + 1):
+                if prefix and k <= prefix[-1]:
+                    continue
+                # min sum rest
+                min_rest = (k+1)*(n-1) + (n-1)*(n-2)//2
+                if k + min_rest > total:
+                    break
+                for s in helper(n-1, total - k, k+1, prefix + [k]):
+                    yield s
+
+        for seq_rest in helper(7, rem, k0+1, []):
+            seq = [k0] + seq_rest
+            # sum 3^{k_i}
+            terms = [3**k for k in seq]
+            sum_terms = sum(terms)
+            log_sum = log3(sum_terms)
+            # check bound 56 <= log_sum <= 57
+            if 56 <= log_sum <= 57:
+                count += 1
+                print(f"Sequence {count}: exponents = {seq}, sum_logs=308, log3(sum_terms)={log_sum:.6f}")
+
+if __name__ == '__main__':
+    main()
+```

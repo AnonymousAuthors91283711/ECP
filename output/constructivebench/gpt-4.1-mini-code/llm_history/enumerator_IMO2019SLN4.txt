@@ -1,0 +1,54 @@
+[write_program]
+The problem involves classifying functions \(f:\mathbb{N} \to \mathbb{N}\) satisfying a divisibility condition depending on a parameter \(C\). To explore solutions, we enumerate candidates for small \(C\), checking the condition for small \(a,b\), and print functions passing these checks.
+
+```python
+def divides(x, y):
+    return y % x == 0
+
+def check_condition(C, f, max_ab=20):
+    # Check (a + f(b)) | (a^2 + b*f(a)) for all a,b with a+b > C and ≤ max_ab
+    for a in range(1, max_ab+1):
+        for b in range(1, max_ab+1):
+            if a + b > C:
+                denom = a + f[b]
+                numer = a*a + b * f[a]
+                if denom == 0 or numer % denom != 0:
+                    return False
+    return True
+
+def main():
+    # We'll try some simple candidate functions f from small finite families
+    # For performance, f will be represented as a list for n up to max_ab
+    max_ab = 10
+    # Test for small values of C
+    for C in range(0, 6):
+        print(f'C = {C}')
+        # Try functions with f(n) = c (constant), f(n) = n, f(n) = k*n, f(n) = n+c for small c,k
+        candidates = []
+        # f(n) = n
+        f_id = [i for i in range(max_ab+1)]
+        if check_condition(C, f_id, max_ab):
+            print(f'  f(n) = n passes for C={C}')
+        # f(n) = 0
+        f_zero = [0]*(max_ab+1)
+        if check_condition(C, f_zero, max_ab):
+            print(f'  f(n) = 0 passes for C={C}')
+        # f(n) = constant c in [0..3]
+        for c in range(4):
+            f_const = [c]*(max_ab+1)
+            if check_condition(C, f_const, max_ab):
+                print(f'  f(n) = {c} passes for C={C}')
+        # f(n) = n + c for c in [-2..2] adjusting nonneg by max(0, ...)
+        for c in range(-2,3):
+            f_shift = [max(0,i+c) for i in range(max_ab+1)]
+            if check_condition(C, f_shift, max_ab):
+                print(f'  f(n) = n + {c} (nonnegative) passes for C={C}')
+        # f(n) = k*n for k in [0..3]
+        for k in range(4):
+            f_lin = [k*i for i in range(max_ab+1)]
+            if check_condition(C, f_lin, max_ab):
+                print(f'  f(n) = {k}*n passes for C={C}')
+
+if __name__ == '__main__':
+    main()
+```

@@ -1,0 +1,65 @@
+[write_program]
+This problem asks for the smallest positive integer \( n \) such that \(\gcd(n^3, n!) \geq 100\). Since \( \gcd(n^3, n!) = n^3 \) if \(n^3 | n!\), we want to find the smallest \(n\) such that \(n^3 | n!\) and \(n^3 \geq 100\).
+
+We will enumerate \(n\) from 1 upwards, compute the prime factorization of \(n\), check if \(n^3 \mid n!\) by verifying the prime-power counts, and print candidates with \(\gcd(n^3, n!) \geq 100\). Finally, we will output the minimum such \(n\).
+
+Since the factorial grows fast, we'll use small \(n\) (up to around 20) to keep computations manageable.
+
+```python
+import math
+from collections import Counter
+
+def prime_factors(n):
+    """Return the prime factorization of n as a Counter {prime: exponent}."""
+    factors = Counter()
+    x = n
+    for p in range(2, int(math.sqrt(n))+1):
+        while x % p == 0:
+            factors[p] += 1
+            x //= p
+    if x > 1:
+        factors[x] += 1
+    return factors
+
+def count_p_in_factorial(n, p):
+    """Count exponent of prime p in n! via Legendre's formula."""
+    count = 0
+    power = p
+    while power <= n:
+        count += n // power
+        power *= p
+    return count
+
+def can_divide_factorial(n):
+    """
+    Check if n^3 divides n!.
+    That is, for each prime factor p of n,
+    3 * exponent_in_n <= exponent_in_n_factorial
+    """
+    factors = prime_factors(n)
+    for p, exp in factors.items():
+        if 3*exp > count_p_in_factorial(n, p):
+            return False
+    return True
+
+threshold = 100
+candidates = []
+
+print("Enumerating n with gcd(n^3, n!) >= 100:")
+
+for n in range(1, 21):
+    gcd_val = math.gcd(n**3, math.factorial(n))
+    # gcd(n^3, n!) = n^3 if n^3 divides n!, else gcd < n^3
+    # To be safe, compute gcd directly
+    if gcd_val >= threshold:
+        candidates.append((n, gcd_val))
+        print(f"n={n}, gcd={gcd_val}, divides factorial: {can_divide_factorial(n)}")
+
+# Find minimum n with divisibility condition and gcd>=100
+valid = [cn for cn in candidates if can_divide_factorial(cn[0])]
+if valid:
+    answer = min(valid, key=lambda x: x[0])
+    print(f"\nMinimum n meeting gcd(n^3, n!) >= 100 and n^3|n! is {answer[0]} with gcd = {answer[1]}")
+else:
+    print("\nNo n found up to 20 meeting the conditions.")
+```

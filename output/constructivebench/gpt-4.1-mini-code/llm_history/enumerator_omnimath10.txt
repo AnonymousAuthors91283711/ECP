@@ -1,0 +1,79 @@
+[write_program]
+The problem concerns a graph with 30 vertices where each vertex has degree at most 5. The condition states that any set of 5 vertices contains at least one non-edge, i.e., the graph contains no 5-cliques. We want to find the largest independent set guaranteed by these conditions.
+
+We will interpret:
+- V: vertices (30 total)
+- E: edges, symmetric relation, each vertex has degree ≤ 5
+- No 5-cliques, so the clique number ω(G) < 5
+- Goal: find a maximum independent set size (largest subset with no edges inside)
+
+We enumerate possible independent sets by brute force on subsets of vertices (up to a threshold size), and print candidate independent sets. We prioritize exact answers and print the maximum size found.
+
+Since enumerating all subsets of 30 vertices is huge, we will:
+- Use sample small degree graphs with 30 vertices and max degree 5,
+- Check independent sets of sizes from 10 to 15 (reasonable range),
+- Print independent sets found,
+- Print the maximum independent set size found at the end.
+
+```python
+import itertools
+
+# Number of vertices
+N = 30
+
+# Generate a sample graph G with degree ≤5:
+# For simplicity, connect each vertex i with i+1,...,i+5 modulo N to ensure degree ≤5
+# This will produce a 5-regular graph (or close) on 30 vertices with edges { (i, (i+j)%N) for j=1..5 }
+edges = set()
+for i in range(N):
+    for j in range(1, 6):
+        w = (i + j) % N
+        if i < w:
+            edges.add((i, w))
+        else:
+            edges.add((w, i))
+
+neighbors = [[] for _ in range(N)]
+for (u, v) in edges:
+    neighbors[u].append(v)
+    neighbors[v].append(u)
+
+# Function to check if subset is independent (no edges inside)
+def is_independent(subset):
+    # Sort subset for efficient check
+    subs = sorted(subset)
+    for i in range(len(subs)):
+        u = subs[i]
+        # Check neighbors only in higher indices in subset to avoid double checking
+        for j in range(i+1, len(subs)):
+            v = subs[j]
+            if (u, v) in edges or (v, u) in edges:
+                return False
+    return True
+
+max_indep = 0
+max_indep_sets = []
+
+print(f"Graph with {N} vertices, max degree ≤5.")
+
+# We test independent sets of size from 10 to 15 (range chosen for runtime)
+for k in range(10, 16):
+    # To limit time we sample at most 1000 subsets per size k
+    count = 0
+    for subset in itertools.combinations(range(N), k):
+        if is_independent(subset):
+            print(f"Independent set of size {k} found: {subset}")
+            if k > max_indep:
+                max_indep = k
+                max_indep_sets = [subset]
+            elif k == max_indep:
+                max_indep_sets.append(subset)
+        count += 1
+        if count >= 1000:
+            break
+
+print(f"Maximum independent set size found: {max_indep}")
+for s in max_indep_sets:
+    print(f"Max independent set: {s}")
+```
+This code constructs a sample 5-regular graph on 30 vertices and enumerates independent sets of sizes 10 to 15. It prints each independent set found immediately and at last the maximum size with examples. This helps conjecture the maximum guaranteed independent set size under the problem conditions.

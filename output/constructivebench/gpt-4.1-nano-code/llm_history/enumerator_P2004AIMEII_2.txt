@@ -1,0 +1,57 @@
+[write_program]
+This problem involves calculating probabilities based on binomial coefficients representing selections of red and blue items, then combining them in a weighted sum. The goal appears to be to find a simplified fraction for the combined probability and determine a coprime numerator and denominator, with the sum of numerator and denominator matching a specific answer.
+
+Since the question asks to enumerate possible answers to help find the exact reduced fraction, I'll generate all feasible candidate fractions by enumerating small denominators systematically, then check if they match the numeric probability computed from the parameters. The parameters are small, so the enumeration is efficient. The approach will:
+
+- Use small denominators (up to a certain limit).
+- For each candidate fraction, check if it equals the computed probability.
+- When a match is found, print the fraction and keep track of the numerator and denominator.
+- As the probabilities are rational, the matching should be exact if the candidate is correct.
+- Store the matching fraction when found, and output their sum.
+
+Here's the implementation:
+
+```python
+import math
+from math import comb
+
+def compute_probability():
+    total = 20
+    red = 10
+    blue = 10
+    # Probabilities
+    terry_red2 = (comb(red, 2) * comb(blue, 0)) / comb(total, 2)
+    terry_red1_blue1 = (comb(red, 1) * comb(blue, 1)) / comb(total, 2)
+    terry_blue2 = (comb(red, 0) * comb(blue, 2)) / comb(total, 2)
+
+    mary_red2 = (comb(red - 2, 2) * comb(blue, 0)) / comb(total - 2, 2)
+    mary_red1_blue1 = (comb(red - 1, 1) * comb(blue - 1, 1)) / comb(total - 2, 2)
+    mary_blue2 = (comb(red, 0) * comb(blue - 2, 2)) / comb(total - 2, 2)
+
+    prob = (terry_red2 * mary_red2 +
+            terry_red1_blue1 * mary_red1_blue1 +
+            terry_blue2 * mary_blue2)
+    return prob
+
+def main():
+    prob = compute_probability()
+    # Convert probability to a floating approximation for comparison
+    tol = 1e-12
+    max_den = 1000  # Limit denominator size for enumeration
+    for denom in range(1, max_den + 1):
+        for num in range(1, denom + 1):
+            candidate = num / denom
+            if abs(candidate - prob) < tol:
+                # Found a match, check if numerator and denominator are coprime
+                if math.gcd(num, denom) == 1:
+                    answer_sum = num + denom
+                    print(f"{num}/{denom} (sum = {answer_sum})")
+                    # Store the final answer if needed
+                    # In the problem, P2004AIMEII_2_answer is set to this answer
+                    # but here, just printing the fraction suffices.
+                    return
+
+main()
+```
+
+This code computes the probability based on the given selections and binomial coefficients, then searches over small fractions to match that probability within a tiny tolerance. When a match is found, it prints the fraction and the sum of numerator and denominator, aiding in conjecturing the answer.

@@ -1,0 +1,97 @@
+[write_program]
+The problem involves functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying a complicated functional equation for all nonzero \( x, y, z \) with \( xyz = 1 \):
+
+\[
+f(x)^2 - f(y) f(z) = x (x + y + z) (f(x) + f(y) + f(z))
+\]
+
+We want to explore possible functions \( f \) that satisfy this. Since this is quite complex, we can try a Python program that tests various candidate functions and numerically checks the identity for sample triples \( (x,y,z) \) with \( xyz=1 \).
+
+We will enumerate peculiar functions such as constants, linear functions, and some nonlinear ones (e.g. \( f(x) = c/x \), etc.) and check the relation at various \( (x,y,z) \) triples.
+
+The script prints candidate functions and parameters when the relation holds approximately for all sampled triples.
+
+```python
+# enumerator.py
+import math
+
+# Sample triples (x,y,z) with xyz=1, all nonzero
+triples = [
+    (1, 1, 1),
+    (2, 0.5, 1),
+    (-1, -1, 1),
+    (3, 1/3, 1),
+    (0.5, 2, 1),
+    (-2, -0.5, 1),
+    (1.5, 2, 1/3),
+]
+
+# Functions to test; each is a (name, function) pair
+def linear(a,b):
+    return lambda x: a * x + b
+
+def reciprocal(a,b):
+    # a/x + b
+    return lambda x: a/x + b if x != 0 else float('inf')
+
+def quadratic(a,b,c):
+    return lambda x: a*x**2 + b*x + c
+
+def constant(c):
+    return lambda x: c
+
+candidates = []
+
+# We test linear functions f(x)=a x + b for small integer a,b in -2..2
+for a in range(-2,3):
+    for b in range(-2,3):
+        candidates.append( ("linear", (a,b), linear(a,b)) )
+
+# We test reciprocal form f(x) = a/x + b with small a,b in -2..2 (excluding x=0)
+for a in range(-2,3):
+    for b in range(-2,3):
+        candidates.append( ("reciprocal", (a,b), reciprocal(a,b)) )
+
+# Constant functions c in -3..3
+for c in range(-3,4):
+    candidates.append( ("constant", (c,), constant(c)) )
+
+# Quadratic functions a x^2 + b x + c with a,b,c in -1..1
+for a in range(-1,2):
+    for b in range(-1,2):
+        for c in range(-1,2):
+            candidates.append( ("quadratic", (a,b,c), quadratic(a,b,c)) )
+
+def check_relation(f):
+    # Check for all test triples (x,y,z) the relation holds approximately
+    # left = f(x)^2 - f(y)*f(z)
+    # right = x*(x+y+z)*(f(x)+f(y)+f(z))
+    # We accept error up to 1e-7
+    for (x,y,z) in triples:
+        if abs(x) < 1e-12 or abs(y) < 1e-12 or abs(z) < 1e-12:
+            continue
+        if abs(x*y*z - 1) > 1e-9:
+            continue
+        try:
+            fx = f(x)
+            fy = f(y)
+            fz = f(z)
+        except Exception:
+            return False
+        if any(map(lambda v: not isinstance(v, (int,float)), [fx,fy,fz])):
+            return False
+        left = fx**2 - fy*fz
+        right = x*(x + y + z)*(fx + fy + fz)
+        if abs(left - right) > 1e-7:
+            return False
+    return True
+
+found_count = 0
+
+for name, params, f in candidates:
+    if check_relation(f):
+        print(f"Function type: {name}, params = {params}")
+        found_count += 1
+    if found_count >= 10:
+        break
+```

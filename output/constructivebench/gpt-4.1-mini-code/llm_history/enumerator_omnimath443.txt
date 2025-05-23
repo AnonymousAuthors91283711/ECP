@@ -1,0 +1,63 @@
+[write_program]
+The theorem seems related to finding the minimal number \( k \) such that for every relation \( f \) on an \( n \times m \) grid with a given condition (at most one "marked" element per row), if the total marks are at most 3000, then there exist \( k \) rows and \( k \) columns covering all the marked points. The problem resembles a combinatorial covering or a vertex cover problem on bipartite graphs like the König's theorem context.
+
+Let's write a Python program to explore values of \( n, m, k \) near the given 2011 for small sizes and check the condition manually on small grids to conjecture the minimal \( k \). We fix \( n = m \) for simplicity and enumerate all subsets \( f \) with "one mark per row at most" and total marks \(\le 3000\) (small due to complexity). We then check minimal \( k \) covering rows and columns. We print candidates \( k \) whenever found.
+
+```python
+# Enumerate minimal k covering sets of rows and columns for sets f with the property:
+# - f subset of (rows x cols) with at most one mark per row
+# - total marks <= limit (use smaller limit for runtime)
+# Goal: For each n=m, find minimal k that covers all marks in f by k rows and k columns.
+
+from itertools import combinations, product
+
+def minimal_cover(n, limit):
+    # Enumerate all f with at most one mark per row and total marks <= limit
+    # For small n to keep runtime manageable
+    # Output each candidate (n, total_marks, minimal k)
+    rows = range(n)
+    cols = range(n)
+    
+    # Generate all possible functions f: from rows to columns or no mark (None)
+    # i.e. partial functions with domain size <= limit
+    # Implementation: for each size s <= limit, choose s rows,
+    # for each of these rows choose a column.
+    
+    for s in range(1, min(limit, n)+1):
+        for row_subset in combinations(rows, s):
+            # Assign a column to each selected row - product of size s columns each from n choices
+            for col_choices in product(cols, repeat=s):
+                f = dict(zip(row_subset, col_choices))  # partial function
+                
+                # Check minimal k
+                # We try k from 1 up to s (max needed)
+                # For this f, find minimal k s.t exists k rows and k cols covering all marks
+                marks = [(r, c) for r,c in f.items()]
+                
+                for k in range(1, s+1):
+                    # Try all k-subsets of rows and k-subsets of columns to cover all marks
+                    row_subsets = combinations(rows, k)
+                    col_subsets = list(combinations(cols, k))
+                    found = False
+                    for rset in row_subsets:
+                        rset = set(rset)
+                        for cset in col_subsets:
+                            cset = set(cset)
+                            if all((r in rset) or (c in cset) for r,c in marks):
+                                found = True
+                                break
+                        if found:
+                            break
+                    if found:
+                        print(f"n={n}, marks={s}, minimal_k={k}, f={f}")
+                        break
+
+def main():
+    # Try small n
+    for n in [5,6,7]:
+        print(f"Testing n=m={n} with limit=5 marks")
+        minimal_cover(n, limit=5)
+
+if __name__ == "__main__":
+    main()
+```

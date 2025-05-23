@@ -1,0 +1,56 @@
+[write_program]
+The problem describes a sequence of pairs \((a_n, b_n)\) defined by the recurrence:
+\[
+\begin{cases}
+a_{n+1} = \sqrt{3} a_n - b_n \\
+b_{n+1} = \sqrt{3} b_n + a_n
+\end{cases}
+\]
+with the condition \((a_{100}, b_{100}) = (2,4)\). We want to find \(a_1 + b_1\).
+
+This looks like a linear recurrence involving rotation-like transformations. To solve it numerically, we can try to invert the recurrence starting from \(n=100\) down to \(n=1\).
+
+We will write a Python program that:
+- Defines the forward step.
+- Inverts the step starting from \((a_{100}, b_{100})=(2,4)\) back to \((a_1, b_1)\).
+- Prints the intermediate results for some values going backward.
+- Finally prints \(a_1 + b_1\).
+
+```python
+import math
+
+# Given a single step of the transformation:
+# (a_{n+1}, b_{n+1}) = (sqrt(3)*a_n - b_n, sqrt(3)*b_n + a_n)
+# We want to invert this step to get (a_n, b_n) from (a_{n+1}, b_{n+1}).
+
+def invert_step(a_next, b_next):
+    # From the system:
+    # a_next = sqrt(3)*a - b
+    # b_next = sqrt(3)*b + a
+    # Solve for a,b:
+    # Multiply first eq by sqrt(3): sqrt(3)*a_next = 3a - sqrt(3)*b
+    # Add to second eq: b_next + sqrt(3)*a_next = 3a - sqrt(3)*b + sqrt(3)*b + a = 4a
+    # So a = (b_next + sqrt(3)*a_next)/4
+    # Similarly, multiply second eq by sqrt(3): sqrt(3)*b_next = 3b + sqrt(3)*a
+    # Subtract from first eq: a_next - sqrt(3)*b_next = sqrt(3)*a - b - 3b - sqrt(3)*a = -4b
+    # So b = -(a_next - sqrt(3)*b_next)/4 = (sqrt(3)*b_next - a_next)/4
+    sqrt3 = math.sqrt(3)
+    a = (b_next + sqrt3 * a_next) / 4
+    b = (sqrt3 * b_next - a_next) / 4
+    return a, b
+
+a_next, b_next = 2.0, 4.0
+print(f"Starting from n=100: a_100={a_next}, b_100={b_next}")
+
+# Go backwards from n=100 to n=1
+for n in range(100, 1, -1):
+    a_prev, b_prev = invert_step(a_next, b_next)
+    if n % 20 == 0 or n == 2:  # print some intermediate steps for insight
+        print(f"n={n-1}: a_{n-1}={a_prev}, b_{n-1}={b_prev}")
+    a_next, b_next = a_prev, b_prev
+
+# Now a_next, b_next correspond to a_1, b_1
+print(f"a_1 + b_1 = {a_next + b_next}")
+```
+
+This program effectively reconstructs the sequence backwards and prints the sum at \(n=1\). The intermediate printouts help to verify the trend. This approach avoids approximating complicated symbolic formulas.

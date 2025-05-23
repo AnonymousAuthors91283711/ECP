@@ -1,0 +1,181 @@
+[write_program]
+The problem describes a set of functions \( f: \mathbb{N} \to \mathbb{N} \) satisfying three conditions:
+
+1. \( f(1) = 1 \).
+2. \( f \) is nondecreasing on positive integers, i.e., \( a \le b \implies f(a) \le f(b) \) for \( a, b > 0 \).
+3. For all \( a > 0 \), \( f(2a) = f(a) + 1 \).
+
+We want to count how many functions \( t : \{1, \ldots, 2014\} \to \mathbb{N} \) arise as restrictions of such \( f \).
+
+---
+
+**Key observations:**
+
+- Condition 3 relates values at indices differing by a factor of 2, increasing by 1 each time we double argument.
+- Condition 2 implies monotonicity.
+- Starting from \( f(1)=1 \), repeatedly doubling increases the function additively.
+- For any \( n \), the value \( f(n) \) depends on \( f(\)odd part of \( n \)) plus how many times 2 divides \( n \).
+
+We can try to generate consistent sequences for indices up to 2014. The odd part of each \( n \) determines a base value, then the power of two adds shifts.
+
+The odd numbers less than or equal to 2014 are roughly half, about 1007.
+
+We suspect the values on odd numbers fully determine \( f \):
+
+- For each odd number \( o \), define \( g(o) := f(o) \).
+- For any \( n = 2^k \cdot o \), \( f(n) = g(o) + k \).
+
+Since \( f \) is monotone on all positive integers, and doubles relate values, the sequence \( g \) on odd numbers must be increasing in a certain controlled way when combined with the doubling increments.
+
+---
+
+**Approach to enumerate:**
+
+- The function is completely determined by the values on odd numbers.
+- Sort all odd numbers from 1 to 2014: \( o_1 = 1 < o_2 < \cdots < o_m \) with \( m \approx 1007 \).
+- We have \( g(o_1) = f(1) = 1 \).
+- For each pair \( o_i < o_j \), the monotonicity implies:
+  
+  \[
+  f(o_i) \le f(o_j)
+  \quad \Rightarrow \quad
+  g(o_i) \le g(o_j)
+  \]
+  
+  but due to doubling, the interplay is more complex.
+
+- The doubling condition for \( n = 2^k \cdot o \) says:
+  
+  \[
+  f(2^k o) = g(o) + k
+  \]
+  
+- Finally, monotonicity \( a \le b \implies f(a) \le f(b) \).
+
+---
+
+We can check monotonicity on all pairs \( (a,b) \), but it's large.
+
+Better to just generate plausible \( g \) sequences for odds, then check full monotonicity.
+
+We will try small examples to gain insight.
+
+---
+
+**Enumerate functions \( f \) with domain \( \{1,\ldots,n\} \) where \( n \) is small (e.g., n=8):**
+
+- List odd numbers: 1,3,5,7
+- \( g(1) = 1 \)
+- \( g(3), g(5), g(7) \) are nondecreasing, i.e. \( 1 = g(1) \leq g(3) \leq g(5) \leq g(7) \).
+- For each odd \( o \), \( f(2^k o) = g(o) + k \), if \( 2^k o \le 8 \).
+- Check monotonicity on all \( a \le b \).
+
+---
+
+We will write a python program that:
+
+- For n = 8 (extendable to larger n),
+- enumerates all sequences \( g \) on odd numbers in [1,n] with \( g(1) = 1 \) and \( g \) nondecreasing,
+- derives \( f \) up to n,
+- checks monotonicity over all pairs \( a \le b \),
+- prints each valid \( f \),
+- counts total number.
+
+This will provide insight into the problem.
+
+Due to output length limit, we run for n=8.
+
+---
+
+```python
+# Enumerate functions f: {1..n} -> N satisfying
+#  f(1)=1,
+#  f nondecreasing for positive integers,
+#  f(2a) = f(a) + 1 for all a with 2a <= n.
+#
+# f is determined by values g on odd numbers in [1..n]:
+# for n=8, odd numbers = [1,3,5,7]
+# g(1)=1 fixed, enumerate g(3), g(5), g(7) nondecreasing with g(i) >=1.
+# For each g, define f(i) = g(odd_part(i)) + v2(i),
+# then check monotonicity of f on [1..n].
+
+def v2(x):
+    # count powers of 2 dividing x
+    c = 0
+    while x % 2 == 0:
+        x //= 2
+        c += 1
+    return c
+
+def odd_part(x):
+    while x % 2 == 0:
+        x //= 2
+    return x
+
+n = 8
+odds = [x for x in range(1, n+1, 2)]
+# g(1) = 1 fixed
+# g(i) >= 1, nondecreasing on odds
+# We guess values up to a small max for enumeration, say max_g_val = 5
+
+max_g_val = 5
+from itertools import product
+
+# produce all nondecreasing sequences g for odds,
+# with g[0] = 1 fixed
+
+def nondecreasing_sequences(length, start=1, max_val=5):
+    # generate all nondecreasing integer lists of length 'length' starting with 'start'
+    # first element = start fixed
+    if length == 1:
+        yield [start]
+        return
+    # For next elements >= previous
+    for g_rest in nondecreasing_sequences(length-1, start, max_val):
+        # yield will be handled in outer calls
+        pass
+
+# more efficient: recursive helper with partial seq
+def gen_nondec(prefix, length, max_val):
+    if len(prefix) == length:
+        yield prefix
+        return
+    last = prefix[-1]
+    for val in range(last, max_val+1):
+        yield from gen_nondec(prefix+[val], length, max_val)
+
+valid_fs = []
+count = 0
+
+for g in gen_nondec([1], len(odds), max_g_val):
+    # build f
+    f = {}
+    possible = True
+    for i in range(1, n+1):
+        op = odd_part(i)
+        vt = v2(i)
+        gi = g[odds.index(op)]
+        f[i] = gi + vt
+        # f(i) must be >=1 as g elements >=1 and vt >=0
+
+    # check monotonicity: for all a <= b, f(a) <= f(b)
+    # since n small, brute force check all pairs
+    for a in range(1, n+1):
+        for b in range(a+1, n+1):
+            if f[a] > f[b]:
+                possible = False
+                break
+        if not possible:
+            break
+    if possible:
+        count += 1
+        print(f"Valid f with g = {g}, f-values: {[f[i] for i in range(1,n+1)]}")
+
+print(f"Total valid functions f for n={n} with max_g_val={max_g_val}: {count}")
+```
+
+This code enumerates all candidate functions from the restricted parameterization and prints each valid function \( f \) immediately along with the sequence \( g \) on odd numbers. It then prints the total count of valid functions found.
+
+By increasing \( n \) and \( \text{max_g_val} \) (within reason), one can experimentally approach the count for \( n=2014 \).
+
+This helps conjecture the size of the set in the problem.

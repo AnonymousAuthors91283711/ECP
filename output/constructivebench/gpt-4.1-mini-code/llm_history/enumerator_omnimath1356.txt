@@ -1,0 +1,78 @@
+[write_program]
+This problem involves evaluating the sum of powers of 2 divided by 25, then taking the result modulo 100. The sum is from i=0 to 2015 of (2^i/25), and we want to find the integer remainder modulo 100 of this sum.
+
+Key observations:
+- (2^i / 25) is a rational number, but we want the result mod 100.
+- The problem suggests summing the integer division: floor of 2^i / 25 or the fraction 2^i/25 directly?
+- The notation seems ambiguous but likely they want to consider the sum of integer parts or fractions modulo 100.
+
+We'll interpret as summing floor(2^i / 25), then modulo 100. We can write:
+
+sum_i floor(2^i / 25) mod 100.
+
+To enumerate candidates, we'll print partial sums modulo 100 for increasing i.
+
+Let's write a program that:
+- for i in 0..2015
+- compute floor(2^i / 25) mod 100
+- sum all these mod 100
+- print intermediate sums every 100 steps for insight
+- print the final answer
+
+Since powers of 2 grow huge, we use modular arithmetic for 2^i mod (25*100)=2500 to retrieve floor division parts.
+
+But floor(2^i /25): since 2^i mod 25 cycles periodically, use that to compute floor without big integers.
+
+Idea:
+2^i = q*25 + r with r = 2^i mod 25
+floor(2^i / 25) = q = (2^i - r) /25
+We want floor(2^i / 25) mod 100.
+
+So if we know 2^i mod 2500, then q = (2^i - r)/25, q mod 100 = ((2^i mod 2500) - r)/25 mod 100.
+
+But division modulo is tricky; instead precompute 2^i mod 2500 and 2^i mod 25, subtract and divide by 25 and mod 100.
+
+We can do this because 2^i mod 2500 yields full residue mod 25*100.
+
+2^i mod 25 repeats every 20 (since 25=5^2 and 2 coprime to 5).
+
+We'll do the following:
+For i in 0..2015
+- pow_mod_2500 = 2^i mod 2500
+- pow_mod_25 = 2^i mod 25
+- q = (pow_mod_2500 - pow_mod_25) // 25 mod 100
+Sum all q mod 100.
+
+Print intermediate sums every 200 steps and the final sum mod 100.
+
+Here's the program:
+
+```python
+# Calculate sum of floor(2^i / 25) mod 100 for i in [0..2015]
+def mod_exp(base, exp, mod):
+    result = 1
+    cur = base % mod
+    e = exp
+    while e > 0:
+        if e & 1:
+            result = (result * cur) % mod
+        cur = (cur * cur) % mod
+        e >>= 1
+    return result
+
+def main():
+    total = 0
+    for i in range(2016):
+        pow_2500 = mod_exp(2, i, 2500)
+        pow_25 = pow_2500 % 25  # but 2^i mod 25 cycles
+        q = (pow_2500 - pow_25) // 25  # integer division
+        q_mod = q % 100
+        total = (total + q_mod) % 100
+        if i % 200 == 0:
+            print(f"Partial sum mod 100 at i={i}: {total}")
+    print(f"Final sum modulo 100: {total}")
+
+if __name__ == "__main__":
+    main()
+```
+This outputs partial sums for insight and the final modulo 100 sum as required.

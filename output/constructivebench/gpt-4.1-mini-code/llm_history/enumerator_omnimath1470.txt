@@ -1,0 +1,78 @@
+[write_program]
+This problem involves the number \( n \) which is the product of the first 10 primes, and a sum over divisors involving Euler's tot function \( \varphi \). To explore this, we enumerate divisors of \( n \) and compute:
+
+\[
+S = \sum_{x|n} \sum_{y|(n/x)} \varphi(x) \cdot y
+\]
+
+Our goal is to find \( S/n \).
+
+Since direct symbolic manipulation is complex, we will compute numerically using Python with exact integer arithmetic, exploiting the fact that \( n \) is the product of the first 10 primes. We won't explicitly generate all divisors (since \( n \) has \(2^{10} = 1024\) divisors), we will generate divisors by subset products of the prime list.
+
+We'll:
+- Generate all divisors of \( n \),
+- For each divisor \( x \), compute \(\varphi(x)\),
+- For the divisors \( y \) of \( n/x \), sum \( y \),
+- Accumulate all \(\varphi(x) \times \sum y\),
+- Finally print \( S \) and \( S/n \).
+
+This will print intermediate divisors and partial sums (streaming), as requested.
+
+```python
+from math import gcd
+from functools import reduce
+
+primes = [2,3,5,7,11,13,17,19,23,29]
+
+def prod(lst):
+    p = 1
+    for x in lst:
+        p *= x
+    return p
+
+# Compute n
+n = prod(primes)
+
+# Generate divisors by taking all subsets of primes
+def divisors(primes):
+    divs = [1]
+    for p in primes:
+        newdivs = [d*p for d in divs]
+        divs += newdivs
+    return sorted(set(divs))
+
+# Euler tot function for divisor composed of distinct primes from the set
+def phi(d):
+    result = d
+    for p in primes:
+        if d % p == 0:
+            result = result // p * (p - 1)
+    return result
+
+# Sum of divisors: since divisors are subset products, sum them similarly
+def sum_divisors(m):
+    # Divisors come from subset of primes in m
+    # find which primes divide m
+    relevant_primes = [p for p in primes if m % p == 0]
+    # sum of divisors is product over primes of (1 + p)
+    s = 1
+    for p in relevant_primes:
+        s *= (1 + p)
+    return s
+
+# Generate divisors of n
+divs = divisors(primes)
+
+S = 0
+print(f"n = {n}")
+for x in divs:
+    nx = n // x
+    phix = phi(x)
+    sdiv = sum_divisors(nx)
+    val = phix * sdiv
+    print(f"x={x}, phi(x)={phix}, sum_divisors(n/x)={sdiv}, contrib={val}")
+    S += val
+
+print("Sum S =", S)
+print("S / n =", S // n)
+```

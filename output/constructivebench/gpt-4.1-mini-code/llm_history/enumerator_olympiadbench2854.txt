@@ -1,0 +1,56 @@
+[write_program]
+The given equation is:
+
+6 * arctan(x) + 4 * arctan(3x) = π.
+
+We want to find x such that this holds and then report x^2.
+
+To assist, we can numerically enumerate values of x around a range and check when the left side approximates π, then print x^2 for those approximate solutions. Since arctan is involved, try rational values near likely solutions (like simple fractions) or values near 0.
+
+Since the problem strongly involves arctan sums, candidates for x are likely small real numbers; we print exact squares when x is rational (fraction), otherwise float approximations.
+
+We sample x over a small range and print results with values of left side near π (within some small epsilon).
+
+```python
+import math
+from fractions import Fraction
+
+def arctan(x):
+    return math.atan(x)
+
+def lhs(x):
+    return 6*arctan(x) + 4*arctan(3*x)
+
+epsilon = 1e-8
+found = []
+
+# Check for rational x with small denominators in range -1 to 1
+print("Enumerating rational x in [-1,1] with denominators up to 10:")
+for denom in range(1, 11):
+    for numer in range(-denom, denom+1):
+        x = Fraction(numer, denom)
+        val = lhs(float(x))
+        diff = abs(val - math.pi)
+        if diff < 1e-6:
+            x2 = x*x  # fraction squared
+            print(f"x = {x}, lhs = {val:.8f}, difference = {diff:.2e}")
+            print(f"x^2 = {x2} (exact)")
+            found.append((float(x2), x2))
+
+print("\nEnumerating floats x in [-1.5,1.5] with step 0.01:")
+x = -1.5
+while x <= 1.5:
+    val = lhs(x)
+    diff = abs(val - math.pi)
+    if diff < 1e-5:
+        print(f"x = {x:.3f}, lhs = {val:.8f}, difference = {diff:.2e}")
+        print(f"x^2 = {x*x:.8f} (approx)")
+        found.append((x*x, None))
+    x += 0.01
+
+if found:
+    min_x2 = min(found, key=lambda t: t[0])
+    print(f"\nMinimal x^2 found approximately: {min_x2[0]:.8f}")
+else:
+    print("No solutions found near pi.")
+```

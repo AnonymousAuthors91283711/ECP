@@ -1,0 +1,53 @@
+[write_program]
+The problem involves finding distinct positive integers \(x, y\) such that the arithmetic mean \(am = \frac{x+y}{2}\) is a two-digit number in \([10,100)\), and the geometric mean \(gm = \sqrt{x y}\) equals the "reverse" of \(am\) (switching the digits). We want to enumerate all such triples \((x,y,d)\) with \(d=|x-y|\) and conjecture the unique \(d\) satisfying the conditions.
+
+We will:
+- Iterate over possible two-digit values of \(am\) from 10 to 99.
+- For each \(am\), reverse its digits to get \(gm\).
+- Check if \(gm^2 = x y\) and \(x, y\) are integers with \(x+y = 2 am\) and \(x \neq y\).
+- Compute \(d = |x - y|\).
+- Print all such solutions and highlight the set of \(d\).
+
+```python
+# Enumerate solutions (x,y,d) with AM in [10,99] and GM equal to digit-reversal of AM
+
+def reverse_two_digit(n):
+    # reverse digits of a two-digit number n
+    return (n % 10) * 10 + (n // 10)
+
+print("am   gm   x    y    d=|x-y|")
+ds = set()
+for am in range(10, 100):  # am must be integer (x,y positive integers)
+    gm = reverse_two_digit(am)
+    # gm must be integer, so check if gm^2 yields valid x and y
+    gmsq = gm * gm
+    # x + y = 2*am, x y = gmsq
+    # Solve quadratic: t^2 - (2*am) t + gmsq = 0
+    # discriminant:
+    D = (2*am)**2 - 4*gmsq
+    if D < 0:
+        continue
+    # D must be a perfect square
+    sqrtD = int(D**0.5)
+    if sqrtD * sqrtD != D:
+        continue
+    # Compute roots
+    t1 = ((2*am) + sqrtD) // 2
+    t2 = ((2*am) - sqrtD) // 2
+    # Both x,y must be positive integers distinct and product = gmsq
+    pairs = [(t1, t2), (t2, t1)]
+    for x,y in pairs:
+        if x > 0 and y > 0 and x != y and x + y == 2*am and x * y == gmsq:
+            d = abs(x - y)
+            ds.add(d)
+            print(f"{am:2d}  {gm:2d}  {x:3d}  {y:3d}  {d:3d}")
+
+print("\nDistinct differences d found:")
+for d in sorted(ds):
+    print(d)
+print("\nConjectured unique d (if one):")
+if len(ds) == 1:
+    print(next(iter(ds)))
+else:
+    print("Multiple candidates found.")
+```

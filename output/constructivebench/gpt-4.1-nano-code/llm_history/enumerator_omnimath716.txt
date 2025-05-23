@@ -1,0 +1,73 @@
+[write_program]
+This problem involves complex number theory and polynomial evaluation conditions, but the main task is to list primes p that satisfy certain divisor and range conditions based on roots of a cubic polynomial. To assist, I will write a Python script that:
+
+- Considers specific small parameter values for a, b, c,
+- Constructs the polynomial P,
+- Evaluates P at these points,
+- Checks the divisibility conditions,
+- Finds primes p satisfying the conditions, and
+- Enumerates such primes (streaming as they are found).
+
+Since the full parameter space is huge, I will choose sample values for a, b, c within the given bounds to generate candidates, and for each candidate, check suitable primes p.
+
+```python
+import math
+
+# Function to check if a number is prime
+def is_prime(n):
+    if n < 2:
+        return False
+    if n in (2, 3):
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    for i in range(5, int(math.sqrt(n)) + 1, 6):
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+    return True
+
+# Evaluate polynomial P at point x: P(x) = x^3 + c10*x^2 + c_rs1*x + c_rs2
+def evaluate_polynomial(x, c10, c_rs1, c_rs2):
+    return x**3 + c10 * x**2 + c_rs1 * x + c_rs2
+
+# Define sample parameters for c10 and c_rs
+c10_samples = [10]
+# For c_rs1 and c_rs2, choose small integers satisfying constraints: 0 <= a < b < c, c/3
+a_b_c_samples = [
+    (0, 1, 2),
+    (1, 2, 4),
+    (2, 3, 7),
+]
+
+# For each tuple, compute roots, evaluate, and find primes p
+for (a, b, c) in a_b_c_samples:
+    # c/3 must be > b and > a, etc.
+    root_candidates = [a, b, c]
+    for c10 in c10_samples:
+        for c_rs1 in range(-5, 6):
+            for c_rs2 in range(-5, 6):
+                # Evaluate polynomial at a, b, c
+                evals = [
+                    (Polynomial_eval := evaluate_polynomial(x, c10, c_rs1, c_rs2))
+                    for x in (a, b, c)
+                ]
+                # Determine candidate primes p
+                min_eval = min(evals)
+                max_eval = max(evals)
+                # Search for primes p within a range, e.g., from 2 up to max_eval + 20
+                for p in range(2, max_eval + 21):
+                    if not is_prime(p):
+                        continue
+                    # Check divisibility conditions
+                    divides_all = True
+                    for val in evals:
+                        if abs(val) == 0:
+                            # Zero division, skip
+                            divides_all = False
+                            break
+                        if (abs(val) % p) != 0:
+                            divides_all = False
+                            break
+                    if divides_all:
+                        print(f'Prime p: {p}, at params a={a}, b={b}, c={c}, c10={c10}, c_rs1={c_rs1}, c_rs2={c_rs2}')
+```

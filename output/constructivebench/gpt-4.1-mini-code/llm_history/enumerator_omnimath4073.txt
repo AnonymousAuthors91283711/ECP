@@ -1,0 +1,72 @@
+[write_program]
+The problem involves a cubic polynomial \( Q = x^3 - 21x + 35 \) with roots \( r, s, t \) and a quadratic polynomial \( P = x^2 + ax + b \) with real coefficients \( a, b \). The conditions are that \( r, s, t \) are distinct roots of \( Q \), and \( P \) permutes them cyclically: \( P(r) = s \), \( P(s) = t \), \( P(t) = r \).
+
+We want to find possible values of \( (a, b) \) for which such an arrangement exists.
+
+The task is to enumerate candidates for \( a \) and \( b \), then check if the system conditions can be met with the roots of \( Q \).
+
+I'll write a Python program to:
+- Compute the roots of \( Q \).
+- For a grid of values for \( (a,b) \), check if the induced map \( P \) permutes roots cyclically.
+- Print triples \( (a,b) \) which work or nearly work (considering floating-point accuracy).
+
+Because the roots of \( Q \) are real and can be computed exactly (with Cardano's method) or numerically, I’ll compute numerically.
+
+```python
+# enumerator.py
+import numpy as np
+
+# Define Q(x) = x^3 - 21x + 35
+def Q(x):
+    return x**3 - 21*x + 35
+
+def poly_P(x, a, b):
+    return x**2 + a*x + b
+
+def cyclic_perm_check(roots, a, b, tol=1e-5):
+    # roots: array of 3 distinct real roots of Q
+    # Check if P permutes roots cyclically: 
+    # P(r) ~ s, P(s) ~ t, P(t) ~ r in some order
+    # Since it's a 3-cycle, check all permutations of roots 
+    from itertools import permutations
+    for perm in permutations(roots):
+        r,s,t = perm
+        if (abs(poly_P(r,a,b) - s) < tol and
+            abs(poly_P(s,a,b) - t) < tol and
+            abs(poly_P(t,a,b) - r) < tol):
+            return True
+    return False
+
+def main():
+    # Find roots of Q numerically
+    # Coefficients: x^3 -21x + 35 = x^3 + 0 x^2 -21x +35
+    coefs = [1,0,-21,35]
+    roots = np.roots(coefs)
+    # Filter to keep only real roots, since we want r,s,t in R
+    real_roots = roots[np.isreal(roots)].real
+    if len(real_roots) < 3:
+        print("Less than 3 real roots found, cannot proceed.")
+        return
+    # Check distinctness
+    if len(set(np.round(real_roots,8))) < 3:
+        print("Roots are not distinct enough.")
+        return
+
+    print(f"Roots of Q: {real_roots}")
+
+    # Enumerate (a,b) over a grid to find approx matches
+    # Based on rough scale of roots (-5 to 5), try a,b in [-10,10]
+    grid_points = 51  # to keep output short
+    a_values = np.linspace(-10,10,grid_points)
+    b_values = np.linspace(-10,10,grid_points)
+
+    for a in a_values:
+        for b in b_values:
+            if cyclic_perm_check(real_roots, a, b):
+                print(f"Candidate (a,b): ({a:.3f}, {b:.3f})")
+
+if __name__ == "__main__":
+    main()
+```
+
+This enumerator will print the three real roots and candidate quadratic coefficients \( (a,b) \) for which \( P \) cyclically permutes the roots of \( Q \) within a tolerance. This helps conjecture the exact values and verify them.

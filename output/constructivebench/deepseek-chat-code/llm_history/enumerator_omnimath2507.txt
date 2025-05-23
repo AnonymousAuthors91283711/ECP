@@ -1,0 +1,62 @@
+[write_program]
+This problem asks for the smallest positive integer n that can be partitioned into three disjoint sets of divisors (s₁, s₂, s₃) where:
+1. Every divisor of n appears in exactly one of the sets
+2. The sum of divisors in each set is equal
+
+We'll write a Python program to search for such numbers by:
+1. Generating numbers and their divisors
+2. Checking all possible 3-partitions of divisors
+3. Verifying the sum equality condition
+4. Finding the smallest such number
+
+```python
+import math
+
+def get_divisors(n):
+    divisors = set()
+    for i in range(1, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            divisors.add(i)
+            divisors.add(n // i)
+    return sorted(divisors)
+
+def has_valid_partition(divisors):
+    total_sum = sum(divisors)
+    if total_sum % 3 != 0:
+        return False
+    target = total_sum // 3
+    n = len(divisors)
+    
+    # We'll try all possible 2^20 partitions (practical for n<=20)
+    if n > 20:
+        return False
+    
+    for mask in range(1, 1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += divisors[i]
+        if s == target:
+            remaining = [divisors[i] for i in range(n) if not (mask & (1 << i))]
+            m = len(remaining)
+            for mask2 in range(1, 1 << m):
+                s2 = 0
+                for i in range(m):
+                    if mask2 & (1 << i):
+                        s2 += remaining[i]
+                if s2 == target:
+                    return True
+    return False
+
+def find_min_n():
+    n = 1
+    while True:
+        divisors = get_divisors(n)
+        if len(divisors) >= 3 and has_valid_partition(divisors):
+            print(f"Found candidate: {n}")
+            return n
+        n += 1
+
+if __name__ == "__main__":
+    find_min_n()
+```

@@ -1,0 +1,60 @@
+[conjecture_answer] Formal Problem Statement: import Mathlib
+
+open Function Nat
+
+abbrev omnimath4227_answer : ℕ → ℕ := sorry
+def Adjacent {n : ℕ} (c d : Fin n × Fin n) : Prop :=
+  (c.1 = d.1 ∧ (d.2 = Fin.succ c.2 ∨ c.2 = Fin.succ d.2)) ∨
+  (c.2 = d.2 ∧ (d.1 = Fin.succ c.1 ∨ c.1 = Fin.succ d.1))
+
+def IsNordicSquare {n : ℕ} (f : Fin n → Fin n → Fin (n^2)) : Prop :=
+  let vals : Set (Fin (n^2)) := {x | ∃ i j, f i j = x}
+  vals = Set.univ ∧ ∀ i j i' j', f i j = f i' j' → i = i' ∧ j = j'
+
+def IsValley {n : ℕ} (f : Fin n → Fin n → Fin (n^2)) (i j : Fin n) : Prop :=
+  ∀ i' j', Adjacent (i, j) (i', j') → f i' j' > f i j
+
+def IsUphillPath {n : ℕ} (f : Fin n → Fin n → Fin (n^2)) (p : List (Fin n × Fin n)) : Prop :=
+  match p with
+  | [] => False
+  | [(i,j)] => IsValley f i j
+  | (i,j)::(i',j')::rest => IsValley f i j ∧ Adjacent (i,j) (i',j') ∧ f i j < f i' j' ∧ IsUphillPath f ((i',j')::rest)
+
+instance {n : ℕ} (f : Fin n → Fin n → Fin (n^2)) : Fintype {p : List (Fin n × Fin n) | IsUphillPath f p} := by sorry
+theorem omnimath4227 (n : ℕ) (hn : n > 0) :
+  IsLeast {k : ℕ | ∃ f : Fin n → Fin n → Fin (n^2), 
+    IsNordicSquare f ∧ Fintype.card {p : List (Fin n × Fin n) | IsUphillPath f p} = k} 
+  (omnimath4227_answer n) := by sorry. Enumerated answers: 
+Computing for n=1
+New minimum found for n=1: 1
+Grid: [[0]]
+Minimal uphill paths for n=1: 1
+
+Computing for n=2
+New minimum found for n=2: 5
+Grid: [[0, 1], [2, 3]]
+Minimal uphill paths for n=2: 5
+
+Computing for n=3
+New minimum found for n=3: 19
+Grid: [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+New minimum found for n=3: 16
+Grid: [[0, 1, 2], [3, 4, 6], [7, 8, 5]]
+New minimum found for n=3: 15
+Grid: [[0, 1, 2], [3, 5, 4], [6, 8, 7]]
+New minimum found for n=3: 14
+Grid: [[0, 1, 2], [3, 6, 4], [7, 5, 8]]
+New minimum found for n=3: 13
+Grid: [[0, 1, 2], [3, 7, 4], [5, 6, 8]]
+Minimal uphill paths for n=3: 13. Expected Answer Type: ℕ → ℕ
+Looking at the enumerated answers:
+n=1 → 1
+n=2 → 5
+n=3 → 13
+
+The pattern appears to be n² + (n-1)²:
+1² + 0² = 1
+2² + 1² = 5
+3² + 2² = 13
+
+<<<fun n : ℕ => n^2 + (n - 1)^2>>>

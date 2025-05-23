@@ -1,0 +1,66 @@
+[write_program]
+This problem asks whether there exists a sequence of integer-coefficient polynomials (Pₙ) with degree ≤2, satisfying a Fibonacci-like recurrence relation, where P₀ has a rational root that's not a root of P₁, and each Pₙ has an integer root. We'll write a program to search for such sequences with small coefficients.
+
+```python
+from itertools import product
+from sympy import symbols, Poly, gcd, lcm
+
+def solve_problem(max_coeff=3):
+    x = symbols('x')
+    # Enumerate possible P0 and P1 with coefficients in [-max_coeff, max_coeff]
+    for c0, b0, a0 in product(range(-max_coeff, max_coeff+1), repeat=3):
+        if a0 == 0 and b0 == 0 and c0 == 0: continue  # skip zero polynomial
+        P0 = Poly(a0*x**2 + b0*x + c0, x, domain='ZZ')
+        
+        # Find rational roots of P0
+        roots_P0 = []
+        if a0 == 0:
+            if b0 != 0:
+                roots_P0 = [-c0/b0]
+        else:
+            disc = b0**2 - 4*a0*c0
+            if disc >= 0 and (disc**0.5).is_integer():
+                sqrt_disc = int(disc**0.5)
+                for sign in [-1, 1]:
+                    root = (-b0 + sign*sqrt_disc)/(2*a0)
+                    if root.denominator == 1:  # integer root
+                        roots_P0.append(root)
+        
+        for root in roots_P0:
+            for c1, b1, a1 in product(range(-max_coeff, max_coeff+1), repeat=3):
+                if a1 == 0 and b1 == 0 and c1 == 0: continue
+                P1 = Poly(a1*x**2 + b1*x + c1, x, domain='ZZ')
+                
+                # Check P1(root) != 0
+                if P1.eval(root) != 0:
+                    # Generate next few polynomials and check integer roots
+                    valid = True
+                    prev2, prev1 = P0, P1
+                    for n in range(2, 6):  # check up to P5
+                        current = prev1 + prev2
+                        # Check if current has integer root
+                        has_int_root = False
+                        if current.degree() == 0:
+                            if current.coeff_monomial(1) == 0:
+                                has_int_root = True
+                        else:
+                            for candidate in range(-10, 11):  # check small integers
+                                if current.eval(candidate) == 0:
+                                    has_int_root = True
+                                    break
+                        if not has_int_root:
+                            valid = False
+                            break
+                        prev2, prev1 = prev1, current
+                    
+                    if valid:
+                        print(f"Found valid sequence:")
+                        print(f"P0 = {P0}")
+                        print(f"P1 = {P1}")
+                        print(f"Rational root of P0: {root}")
+                        return  # stop at first valid sequence found
+    
+    print("No valid sequence found with coefficients up to", max_coeff)
+
+solve_problem()
+```

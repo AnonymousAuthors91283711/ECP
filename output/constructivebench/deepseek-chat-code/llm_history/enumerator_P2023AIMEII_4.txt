@@ -1,0 +1,59 @@
+[write_program]
+This problem involves finding the sum of squares of all real numbers x that satisfy a system of equations with y and z. We'll enumerate possible x values by solving the system numerically within a reasonable range.
+
+The approach is:
+1. Use the given equations to derive constraints on x
+2. Sample x values in a range that likely contains all solutions
+3. For each x, solve for y and z using the first two equations
+4. Check if the third equation is satisfied within numerical tolerance
+5. Collect all valid x values and compute their squared sum
+
+```python
+import numpy as np
+from itertools import product
+
+def solve_system():
+    # We'll search for x in [-2, 4] since larger values seem unlikely
+    x_samples = np.linspace(-2, 4, 10000)
+    solutions = []
+    tol = 1e-6
+    
+    for x in x_samples:
+        # From x + y + z = 1 and x^2 + y^2 + z^2 = 2
+        # We can derive y + z = 1 - x and yz = (x^2 - x - 1)/2
+        y_plus_z = 1 - x
+        yz = (x**2 - x - 1)/2
+        
+        # Check if real solutions exist (discriminant >= 0)
+        discriminant = y_plus_z**2 - 4*yz
+        if discriminant < -tol:
+            continue
+            
+        # Find possible y and z pairs
+        if discriminant < tol:
+            discriminant = 0
+        sqrt_disc = np.sqrt(discriminant)
+        y1 = (y_plus_z + sqrt_disc)/2
+        y2 = (y_plus_z - sqrt_disc)/2
+        
+        # Check both possible (y,z) pairs
+        for y in [y1, y2]:
+            z = y_plus_z - y
+            # Verify x^3 + y^3 + z^3 ≈ 3
+            lhs = x**3 + y**3 + z**3
+            if abs(lhs - 3) < tol:
+                solutions.append(x)
+                break
+    
+    # Remove duplicates (within tolerance) and compute sum of squares
+    unique_solutions = []
+    for x in solutions:
+        if not any(abs(x - u) < tol for u in unique_solutions):
+            unique_solutions.append(x)
+    
+    sum_squares = sum(x**2 for x in unique_solutions)
+    print(f"Found solutions: {unique_solutions}")
+    print(f"Sum of squares: {sum_squares}")
+
+solve_system()
+```

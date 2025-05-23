@@ -1,0 +1,48 @@
+[write_program]
+The problem asks to find the smallest positive integer \( n \) such such that the sum
+\[
+\sum_{i=1}^n \frac{1}{\cot\left(\frac{i \pi}{n+1}\right) - \cot\left(\frac{i \pi}{n}\right)} = 1.
+\]
+We will enumerate candidate values \( n \) starting from 1 and compute this sum, printing each exact or numerical sum, looking for \( n \) where the sum equals 1. Since the expression involves cotangents, which may not simplify nicely, we'll print a floating-point approximation with high precision and also the value to see if it matches 1 exactly or closely. This will help conjecture the minimal such \( n \).
+
+We'll limit \( n \leq 30 \) to keep output manageable.
+
+```python
+import math
+
+def cot(x):
+    return 1 / math.tan(x)
+
+def sum_expr(n):
+    s = 0.0
+    for i in range(1, n + 1):
+        denom = cot(i * math.pi / (n + 1)) - cot(i * math.pi / n)
+        if abs(denom) < 1e-15:
+            # Avoid division by zero or extremely small denominators
+            return None
+        s += 1 / denom
+    return s
+
+def main():
+    print("n  sum")
+    found_candidates = []
+    for n in range(1, 31):
+        val = sum_expr(n)
+        if val is None:
+            continue
+        print(f"{n:2} {val:.15f}")
+        # Check if val is very close to 1
+        if abs(val - 1) < 1e-12:
+            found_candidates.append(n)
+
+    if found_candidates:
+        print("\nCandidates where sum approx equals 1:")
+        for c in found_candidates:
+            print(f"n = {c}")
+        print(f"\nMinimal such n = {min(found_candidates)}")
+    else:
+        print("\nNo n found up to 30 with sum approx = 1")
+
+if __name__ == "__main__":
+    main()
+```

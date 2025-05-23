@@ -1,0 +1,69 @@
+[write_program]
+This problem asks for the number of triples (a, b, c) of natural numbers that satisfy the equation (a*b+1)*(b*c+1)*(c*a+1) = 84. We'll write a Python program to enumerate all possible triples (a, b, c) where a ≤ b ≤ c (to avoid duplicate permutations) and the product equals 84.
+
+The approach is:
+1. Factorize 84 into all possible triplets of factors (d, e, f) where d*e*f = 84
+2. For each factorization, solve the system a*b+1=d, b*c+1=e, c*a+1=f
+3. Check if the solutions are positive integers and count valid triples
+
+```python
+from math import isqrt
+
+def factor_triplets(n):
+    triplets = set()
+    # Generate all ordered factor triplets of n
+    for d in range(1, n+1):
+        if n % d != 0:
+            continue
+        remaining = n // d
+        for e in range(1, remaining+1):
+            if remaining % e != 0:
+                continue
+            f = remaining // e
+            # Store sorted triplet to avoid duplicates
+            triplet = tuple(sorted((d, e, f)))
+            triplets.add(triplet)
+    return sorted(triplets)
+
+def solve_system(d, e, f):
+    # Solve the system:
+    # a*b = d-1
+    # b*c = e-1
+    # c*a = f-1
+    ab = d - 1
+    bc = e - 1
+    ca = f - 1
+    if ab <= 0 or bc <= 0 or ca <= 0:
+        return None
+    
+    # Calculate a^2 = (ab*ca)/bc
+    a_squared = (ab * ca) // bc
+    a = isqrt(a_squared)
+    if a * a != a_squared:
+        return None
+    
+    b = ab // a if a != 0 and ab % a == 0 else None
+    c = ca // a if a != 0 and ca % a == 0 else None
+    
+    if b is None or c is None:
+        return None
+    
+    # Verify all equations
+    if (a*b == ab) and (b*c == bc) and (c*a == ca):
+        return (a, b, c)
+    return None
+
+def count_solutions():
+    solutions = set()
+    triplets = factor_triplets(84)
+    for d, e, f in triplets:
+        # Try all permutations of the triplet
+        for perm in [(d, e, f), (d, f, e), (e, d, f), (e, f, d), (f, d, e), (f, e, d)]:
+            sol = solve_system(*perm)
+            if sol is not None:
+                # Store sorted solution to avoid duplicates
+                solutions.add(tuple(sorted(sol)))
+    return len(solutions)
+
+print("Number of solutions:", count_solutions())
+```

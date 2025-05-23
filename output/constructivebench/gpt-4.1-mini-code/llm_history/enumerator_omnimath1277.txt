@@ -1,0 +1,79 @@
+[write_program]
+The problem is to find the greatest length \( n \) of a list \( l \) of pairs from \( \text{Fin } 7 \times \text{Fin } 7 \) (that is pairs of integers modulo 7) satisfying these conditions:
+
+- The list has no duplicates.
+- The first element is (0,0).
+- Consecutive elements differ by at most 1 in each coordinate (in absolute value).
+- Consecutive elements have different second coordinates.
+- \( n \) equals the list length.
+
+We want to enumerate all such lists and find the maximal length.
+
+I will write a Python program to search for lists starting at (0,0), moving to neighbors in \([0,6]^2\) with coordinate difference no more than 1, no duplicate pairs, and no two consecutive pairs having the same second coordinate. We'll try to find the longest such path. Because the problem space is small (49 points), and moves are limited, we can attempt backtracking with pruning to find long sequences.
+
+To limit output length, I'll print all long sequences found when their length is at least the current max length found. Also print the params (grid size 7x7), starting point, and partial info.
+
+This search is complex, so I'll limit max length printing to 30 entries, and after completion print the maximal length found.
+
+```python
+# Enumerate longest lists l of pairs (x,y) from 0..6×0..6 with:
+# - l[0] = (0,0)
+# - consecutive pairs differ by at most 1 in each coordinate
+# - consecutive pairs have different second coordinate
+# - no duplicates in l
+# Find maximum length n = len(l)
+
+from collections import deque
+
+SIZE = 7
+START = (0,0)
+
+# Precompute neighbors for each point (x,y)
+neighbors = {}
+for x in range(SIZE):
+    for y in range(SIZE):
+        nbs = []
+        for dx in (-1,0,1):
+            for dy in (-1,0,1):
+                if dx==0 and dy==0: continue
+                nx, ny = x+dx, y+dy
+                if 0 <= nx < SIZE and 0 <= ny < SIZE:
+                    nbs.append((nx,ny))
+        neighbors[(x,y)] = nbs
+
+max_length = 1
+max_paths_found = 0
+MAX_PRINT = 30
+
+def backtrack(path, used):
+    global max_length, max_paths_found
+    last = path[-1]
+    for nxt in neighbors[last]:
+        # No duplicates
+        if nxt in used:
+            continue
+        # consecutive pairs have different second coordinate
+        # compare second coord: last[1] != nxt[1]
+        if last[1] == nxt[1]:
+            continue
+        path.append(nxt)
+        used.add(nxt)
+        l = len(path)
+        if l > max_length:
+            max_length = l
+            print(f"New max length {max_length} found: {path}")
+            max_paths_found = 1
+        elif l == max_length and max_paths_found < MAX_PRINT:
+            print(f"Another max length {max_length} path: {path}")
+            max_paths_found += 1
+        # Recursively continue search
+        backtrack(path, used)
+        used.remove(nxt)
+        path.pop()
+
+print(f"Grid size: {SIZE}x{SIZE}, start: {START}")
+# Start backtracking
+backtrack([START], set([START]))
+print(f"Maximum length found: {max_length}")
+```
+

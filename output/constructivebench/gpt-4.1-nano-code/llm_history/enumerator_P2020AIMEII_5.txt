@@ -1,0 +1,46 @@
+[write_program]
+This problem is about analyzing certain digit sums using Lean code. To enumerate possible answers efficiently in Python, we'd generate candidates based on small values, check the digit sums, and look for the least `n` satisfying the condition that `n > 0` and the digit sum of `g(n)` has a digit ≥ 10 (which indicates an unusual digit sum in base 16). Since digit sums are naturally small, the approximate goal is to find the smallest `n` with such a property, limiting to small `n` for efficiency.
+
+Here's a Python program that exhaustively searches small `n` values, computes the involved digit sums, and prints candidates where the digit sum in base 16 includes a digit ≥ 10, then finds the least such `n`.
+
+```python
+def digits_base(n, base):
+    """Return list of digits of n in given base."""
+    if n == 0:
+        return [0]
+    digits = []
+    while n > 0:
+        digits.append(n % base)
+        n //= base
+    return digits[::-1]
+
+def digit_sum(n, base):
+    """Sum of digits of n in specified base."""
+    return sum(digits_base(n, base))
+
+# Since the problem involves multiple layers, define functions f and g
+def f(n):
+    """Sum of the base-4 digits of n."""
+    return digit_sum(n, 4)
+
+def g(n):
+    """Sum of the base-8 digits of f(n)."""
+    return digit_sum(f(n), 8)
+
+# Search for minimal n > 0 with a digit in g(n) (base 16) >= 10
+found_candidates = []
+max_n = 1000  # small limit for efficiency
+
+for n in range(1, max_n + 1):
+    gn = g(n)
+    gn_digits = digits_base(gn, 16)
+    if any(d >= 10 for d in gn_digits):
+        print(f"n={n}, f(n)={f(n)}, g(n)={gn}, g(n) in base16 digits: {gn_digits}")
+        found_candidates.append(n)
+
+if found_candidates:
+    answer = min(found_candidates)
+    print(f"Least n satisfying condition: {answer}")
+else:
+    print("No candidate found within range.")
+```

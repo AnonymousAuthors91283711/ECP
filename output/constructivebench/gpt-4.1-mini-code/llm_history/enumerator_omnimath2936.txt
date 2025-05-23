@@ -1,0 +1,73 @@
+[write_program]
+The problem describes a 3x3 matrix M with rational entries and several constraints:
+- Three fixed entries: M00=8, M01=1, M11=5, M22=4
+- Equal sums of first and second rows: sum of row0 = sum of row1
+- Equal sums of first and second columns: sum of col0 = sum of col1
+- Equal sums of two diagonals:
+  M00+M11+M22 = M02+M11+M20
+
+We want to find M02. To assist with conjecturing M02, write a program enumerating possible integers rational values for the other unknown entries M02, M10, M12, M20, M21 that satisfy these constraints. We'll try integer values in a small range and print any possible solution's M02 immediately.
+
+Note: Since three entries are fixed, and constraints tie together sums, the solution for M02 should be unique. Enumerating will find candidates.
+
+```python
+# enumerator.py
+from fractions import Fraction
+
+# Fixed entries
+M00 = Fraction(8)
+M01 = Fraction(1)
+M11 = Fraction(5)
+M22 = Fraction(4)
+
+# We'll vary unknowns: M02, M10, M12, M20, M21
+# Define a small search space for enumeration
+search_range = range(-5, 6)  # from -5 to 5
+
+print("Enumerating possible matrices with given constraints...\n")
+
+found_solutions = []
+
+for M02 in search_range:
+    for M10 in search_range:
+        for M12 in search_range:
+            for M20 in search_range:
+                for M21 in search_range:
+                    # Check row sum equality: row0 sum == row1 sum
+                    row0_sum = M00 + M01 + M02
+                    row1_sum = M10 + M11 + M12
+                    if row0_sum != row1_sum:
+                        continue
+
+                    # Check column sum equality: col0 sum == col1 sum
+                    col0_sum = M00 + M10 + M20
+                    col1_sum = M01 + M11 + M21
+                    if col0_sum != col1_sum:
+                        continue
+
+                    # Check diagonal sum equality:
+                    # M00 + M11 + M22 == M02 + M11 + M20
+                    diag1_sum = M00 + M11 + M22
+                    diag2_sum = M02 + M11 + M20
+                    if diag1_sum != diag2_sum:
+                        continue
+
+                    # If all hold print this M02 value immediately with details
+                    print(f"Possible M02: {M02}")
+                    print(f"Other unknowns: M10={M10}, M12={M12}, M20={M20}, M21={M21}")
+                    print(f"Check: row0_sum={row0_sum}, row1_sum={row1_sum}")
+                    print(f"       col0_sum={col0_sum}, col1_sum={col1_sum}")
+                    print(f"       diag1_sum={diag1_sum}, diag2_sum={diag2_sum}")
+                    print("-"*40)
+                    found_solutions.append(M02)
+
+# If we found multiple, print the unique values:
+unique_M02 = sorted(set(found_solutions))
+print("All possible M02 found:", unique_M02)
+
+# If unique, print the answer candidate:
+if len(unique_M02) == 1:
+    print("Conjectured omnimath2936_answer =", unique_M02[0])
+else:
+    print("Multiple candidates for M02 found, further analysis needed.")
+```

@@ -1,0 +1,95 @@
+[write_program]
+The problem involves positive integers A, B, C and totals totalA, totalB, totalC with given means. The task is to find the greatest possible mean m over B and C combined, under the constraints also involving weighted means with A.
+
+To explore this, I'll:
+
+- Pick small values for A, B, C > 0.
+- Use the given mean equations to deduce totalA, totalB, totalC.
+- Then vary totalB' and totalC' with constraints totalB'/B = 50 and the combined means fixed, find possible m = (totalB'+totalC')/(B+C).
+- Enumerate over small integer values of B and C for possible m, print these, and output the maximum found.
+
+```python
+# Enumerate possible means m for the problem P2013AMCA_16 as described
+def approx_eq(a, b, tol=1e-9):
+    return abs(a - b) < tol
+
+def main():
+    # Try small positive integers for A, B, C
+    for A in range(1, 6):
+        for B in range(1, 6):
+            for C in range(1, 6):
+                # Given means
+                meanA = 40
+                meanB = 50
+                meanAB = 43
+                meanAC = 44
+                # total sums
+                totalA = meanA * A
+                totalB = meanB * B
+                totalC = None  # Unknown
+
+                # From (totalA + totalB)/(A + B) = 43
+                # Check consistency
+                if not approx_eq((totalA + totalB) / (A + B), meanAB):
+                    # This contradicts problem assumption, skip
+                    continue
+
+                # From (totalA + totalC)/(A + C) = 44
+                # Solve totalC:
+                totalC = meanAC * (A + C) - totalA
+
+                # Now, totalC can be anything, positive or negative,
+                # but let's confirm it's positive (since given totalC > 0)
+                if totalC <= 0:
+                    continue
+
+                # Now we try to find m = (totalB' + totalC')/(B + C)
+                # with constraints:
+                # totalB'/B = 50 -> totalB' = 50*B (fixed)
+                # (totalA + totalB')/(A + B) = 43 (fixed)
+                # (totalA + totalC')/(A + C) = 44 (fixed)
+                # -> totalC' = 44*(A+C) - totalA (fixed)
+
+                totalB_prime = 50 * B
+                totalC_prime = 44 * (A + C) - totalA
+
+                # Check if totalC_prime positive, otherwise discard
+                if totalC_prime <= 0:
+                    continue
+
+                m = (totalB_prime + totalC_prime) / (B + C)
+                print(f"A={A} B={B} C={C} -> m = {m}")
+
+    # Based on the enumerated values, find the max m encountered
+    # To keep output short, let's enumerate again and track max
+def max_m():
+    max_val = float('-inf')
+    max_params = ()
+    for A in range(1, 6):
+        for B in range(1, 6):
+            for C in range(1, 6):
+                meanA = 40
+                meanB = 50
+                meanAB = 43
+                meanAC = 44
+                totalA = meanA * A
+                totalB = meanB * B
+                if abs((totalA + totalB)/(A + B) - meanAB) > 1e-9:
+                    continue
+                totalC = meanAC * (A + C) - totalA
+                if totalC <= 0:
+                    continue
+                totalB_prime = 50 * B
+                totalC_prime = 44 * (A + C) - totalA
+                if totalC_prime <= 0:
+                    continue
+                m = (totalB_prime + totalC_prime) / (B + C)
+                if m > max_val:
+                    max_val = m
+                    max_params = (A, B, C)
+    print(f"Maximum m found: {max_val} with A,B,C={max_params}")
+
+if __name__ == "__main__":
+    main()
+    max_m()
+```

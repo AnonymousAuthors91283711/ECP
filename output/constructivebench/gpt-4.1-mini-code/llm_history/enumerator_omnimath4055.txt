@@ -1,0 +1,58 @@
+[write_program]
+The problem considers subsets \( s \subseteq \mathbb{N} \) with two properties:
+
+1. Closed under addition within \( s \): for all \( x,y \in s \), \( x+y \in s \).
+2. The complement of \( s \) is also "additively closed" in the sense that for all \( x,y \not\in s \), \( x+y \in s \).
+
+We want to explore examples of such sets \( s \), focusing on small finite subsets for experimentation, and print those that satisfy the conditions. Our program enumerates subsets of \( \{0, \dots, N-1\} \) for small \( N \), checks the conditions, and prints witness sets.
+
+```python
+# Enumerate subsets s of {0,...,N-1} that satisfy:
+# (∀ x,y in s, x+y in s) and (∀ x,y not in s, x+y in s).
+# We test small N to find patterns.
+
+N = 6
+from itertools import combinations
+
+def elements_from_bits(bits):
+    return {i for i in range(N) if (bits & (1 << i))}
+
+print(f"Checking sets within {{0,...,{N-1}}}:")
+full_univ = set(range(N))
+
+def closed_under_addition(subset):
+    # Check if sum of any two elements in subset is again in subset
+    for x in subset:
+        for y in subset:
+            s = x + y
+            if s not in subset:
+                return False
+    return True
+
+count = 0
+for mask in range(1 << N):
+    s = elements_from_bits(mask)
+    s_comp = full_univ - s
+
+    # Check (x,y in s => x+y in s)
+    if not closed_under_addition(s):
+        continue
+    # Check (x,y not in s => x+y in s)
+    # Actually the condition requires sum of two outside s to be inside s
+    valid = True
+    for x in s_comp:
+        for y in s_comp:
+            if x + y not in s:
+                valid = False
+                break
+        if not valid:
+            break
+    if not valid:
+        continue
+
+    count += 1
+    print(f"Candidate #{count}: {sorted(s)}")
+
+print(f"Found {count} candidate sets for N={N}.")
+```
+This program streams each candidate set \( s \subseteq \{0,\ldots,5\} \) satisfying the two additive closure conditions. It prints them to help conjecture the characterization of such sets.

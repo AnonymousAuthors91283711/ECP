@@ -1,0 +1,48 @@
+[write_program]
+The problem is to find all integer functions \( f: \mathbb{Z} \to \mathbb{Z} \) satisfying 
+\[ n^2 + 4 f(n) = (f(f(n)))^2 \quad \text{for all } n \in \mathbb{Z}.\]
+
+Since this is a functional equation involving composition and squares, a direct symbolic approach is complicated. We will enumerate candidates for functions over a small domain, then verify the equation and see if we can recognize patterns or closed-form candidates.
+
+We will:
+- Enumerate functions \(f:\{-M, \ldots, M\} \to \{-L, \ldots, L\}\) for small M,L (like M=2,L=5).
+- Print each function immediately when it satisfies the equation on this domain.
+- Print the domain and codomain parameters used.
+
+This may help conjecture possible forms.
+
+```python
+# Enumerate functions f: {-M,...,M} -> {-L,...,L} checking
+# n^2 + 4*f(n) == (f(f(n)))^2 for n in {-M,...,M}
+
+M = 2  # domain radius
+L = 5  # codomain radius
+
+from itertools import product
+
+domain = range(-M, M+1)
+codomain = range(-L, L+1)
+
+print(f"Testing functions f: {list(domain)} -> {list(codomain)}")
+
+# We represent f as a tuple of values at domain points ordered from -M to M
+for values in product(codomain, repeat=len(domain)):
+    # Create a dictionary for fast lookup: f_map[n] = f(n)
+    f_map = dict(zip(domain, values))
+
+    # Check the equation for all n in domain
+    ok = True
+    for n in domain:
+        fn = f_map[n]
+        # f(f(n)) might be outside domain, skip if so
+        if fn not in f_map:
+            ok = False
+            break
+        ffn = f_map[fn]
+        if n*n + 4*fn != ffn*ffn:
+            ok = False
+            break
+
+    if ok:
+        print(f"Function passes on domain: {f_map}")
+```

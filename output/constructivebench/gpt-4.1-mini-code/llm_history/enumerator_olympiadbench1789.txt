@@ -1,0 +1,63 @@
+[write_program]
+The problem involves finding the greatest number \(N\) such that there exists a family of bijections \(T_r : \mathrm{Fin}(N) \to \mathrm{Fin}(100) \to \mathrm{Fin}(100)\) with a certain property involving indices and pairwise relations. Since the exact mathlib proof is missing, we approach this by enumerating candidate values of \(N\) and trying simple constructions or checking smaller examples to guide toward the maximum \(N\).
+
+We'll test small \(N\) values (like from 2 to 10), generate permutations of \(\{0,\ldots,99\}\) for each \(T_r\), and check the pairwise condition that for all \(r \neq s\), there exists a \(c\) with a strict gap in their images under these permutations. To reduce complexity, we'll just check if any position \(c\) produces the required inequality rather than enumerating all possible functions, focusing on an approach of random permutations sampled per \(r\) to identify potential existence and print candidates.
+
+The program prints all \(N\) that succeed a quick check, then outputs the maximum found. Since the sets and permutations are huge, the program is mostly heuristic, but should provide some useful enumeration results.
+
+```python
+import itertools
+import random
+
+# To keep output reasonable, test N from 2 to 10 (adjustable)
+MAX_N = 10
+DOMAIN_SIZE = 100
+
+def check_property(N, samples=20):
+    # We try to build T : {0,...,N-1} → permutations of {0,...,99}
+    # Each T_r is a permutation of range 0 to 99
+    # We check the property:
+    # For every r != s in [0..N-1],
+    # exists c in [0..99],
+    # (T_r(c) + 1 < T_s(c)) or (T_s(c) + 1 < T_r(c))
+    # We'll do a number of random attempts for T to find one satisfying this.
+
+    # Since generating all permutations is huge,
+    # we try random permutations samples times.
+
+    # Generate N random permutations:
+    for _ in range(samples):
+        T = [random.sample(range(DOMAIN_SIZE), DOMAIN_SIZE) for __ in range(N)]
+        
+        # Check the pairwise condition for all pairs r != s
+        violated = False
+        for r in range(N):
+            for s in range(r+1, N):
+                # Check if there is a c meeting the gap condition
+                found_c = False
+                for c in range(DOMAIN_SIZE):
+                    if T[r][c] + 1 < T[s][c] or T[s][c] + 1 < T[r][c]:
+                        found_c = True
+                        break
+                if not found_c:
+                    violated = True
+                    break
+            if violated:
+                break
+        if not violated:
+            return True
+    return False
+
+def main():
+    max_found = 1
+    print("Testing N from 2 to", MAX_N)
+    for N in range(2, MAX_N+1):
+        if check_property(N):
+            print(f"Possible N: {N}")
+            if N > max_found:
+                max_found = N
+    print("Maximum N found (approximate):", max_found)
+
+if __name__ == "__main__":
+    main()
+```

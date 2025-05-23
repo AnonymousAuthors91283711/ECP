@@ -1,0 +1,69 @@
+[write_program]
+This problem involves finding the least real part of a complex number \( x \) such that there exist complex numbers \( x, y \) satisfying the system
+
+\[
+\begin{cases}
+    x + 2y^2 = x^4 \\
+    y + 2x^2 = y^4 \\
+    z = \Re(x)
+\end{cases}
+\]
+
+We want to enumerate pairs \((x,y)\) (with \(x,y \in \mathbb{C}\)) that satisfy these equations and print the real parts of such \( x \) values.
+
+Since the problem is very difficult to solve symbolically, we can try a numerical approach by enumerating \( x \) and \( y \) on a grid with small integer or rational values near the real axis, checking approximate solutions (up to some tolerance), and outputting the real parts of \( x \).
+
+The code will:
+
+- Iterate over a range of real and imaginary parts for \( x \) and \( y \).
+- For each pair, check the system equations.
+- If the residuals are small, print the real part of \( x \).
+
+Because the output must be within 400 tokens, we limit the search range and granularity.
+
+```python
+# Enumerate candidate (x,y) ∈ ℂ² with small integer parts
+# Check the system:
+# x + 2*y^2 ≈ x^4
+# y + 2*x^2 ≈ y^4
+# Print Re(x) for approximate solutions found
+
+def complex_eq_approx(a, b, tol=1e-3):
+    return abs(a.real - b.real) < tol and abs(a.imag - b.imag) < tol
+
+def power(c, n):
+    r = 1 + 0j
+    for _ in range(n):
+        r *= c
+    return r
+
+def main():
+    # Search range on real and imag parts for x and y
+    vals = [i * 0.5 for i in range(-6,7)]  # from -3 to 3 in steps 0.5
+    tol = 1e-2
+    found = set()
+    for xr in vals:
+        for xi in vals:
+            x = complex(xr, xi)
+            x2 = x*x
+            x4 = x2*x2
+            for yr in vals:
+                for yi in vals:
+                    y = complex(yr, yi)
+                    y2 = y*y
+                    y4 = y2*y2
+                    left1 = x + 2*y2
+                    if abs(left1 - x4) > tol:
+                        continue
+                    left2 = y + 2*x2
+                    if abs(left2 - y4) > tol:
+                        continue
+                    # Approximate solution found
+                    xr_rounded = round(xr,3)
+                    if xr_rounded not in found:
+                        found.add(xr_rounded)
+                        print(f"Possible Re(x) = {xr_rounded}")
+
+if __name__ == "__main__":
+    main()
+```

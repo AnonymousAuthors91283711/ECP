@@ -1,0 +1,44 @@
+[write_program]
+This problem asks for the number of natural number triples (a, b, c) where 2^a + 2^b = c!. We'll write a Python program to enumerate all such triples up to reasonable limits, counting the number of solutions found.
+
+The approach:
+1. Iterate through possible c values (factorial base)
+2. For each c, compute c! and find all pairs (a,b) where 2^a + 2^b = c!
+3. Since the equation is symmetric in a and b, we can assume a ≤ b without loss of generality
+4. We'll limit c to a reasonable value where c! doesn't exceed 2^64
+
+```python
+import math
+
+def find_solutions():
+    solutions = []
+    max_c = 20  # 20! is 2.4e18, which fits in 64 bits
+    for c in range(1, max_c + 1):
+        target = math.factorial(c)
+        # Since 2^a + 2^b = target and a <= b, 2^a (1 + 2^(b-a)) = target
+        max_a = target.bit_length() - 1
+        for a in range(0, max_a + 1):
+            pow_a = 1 << a
+            remaining = target - pow_a
+            if remaining <= 0:
+                continue
+            if remaining & (remaining - 1) != 0:  # check if remaining is power of 2
+                continue
+            b = remaining.bit_length() - 1
+            if (1 << b) == remaining:
+                solutions.append((a, b, c))
+                solutions.append((b, a, c))  # count both orderings
+    # Remove duplicates when a == b
+    unique_solutions = []
+    seen = set()
+    for sol in solutions:
+        if sol not in seen:
+            seen.add(sol)
+            unique_solutions.append(sol)
+    # Print all solutions found
+    for sol in sorted(unique_solutions):
+        print(sol)
+    print(f"Total number of solutions: {len(unique_solutions)}")
+
+find_solutions()
+```

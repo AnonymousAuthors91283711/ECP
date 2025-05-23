@@ -1,0 +1,91 @@
+[write_program]
+Let's analyze the problem carefully.
+
+We define `S` as the set of all "up-right" paths from (-400, -400) to (400, 400), where "up-right" means each step moves either one unit right or one unit up. The paths are discrete, only moving from one grid point to another with increasing x or y coordinate.
+
+Set `T` filters `S` to those paths that never pass through points within the 20x20 square centered at (0,0), i.e., the points where |x| ≤ 10 and |y| ≤ 10.
+
+The question asks for the ratio of the number of such "avoiding" paths (`T`) to the total number of paths (`S`).
+
+**Key observations:**
+
+- Total paths from (-400, -400) to (400, 400):
+
+Number of steps right = 800, number of steps up = 800, total steps = 1600.
+
+Number of paths = C(1600, 800).
+
+- Paths avoiding the central 21×21 grid (from x,y in [-10,10]):
+
+This is analogous to the principle of reflection or the inclusion-exclusion method.
+
+- To count `|T|`, use the reflection principle to subtract paths passing through the forbidden zone.
+
+- Since the grid and steps are large, we seek a ratio, which simplifies to counting the fraction of paths that do not pass through the forbidden zone.
+
+- For small parameters, we can simulate or approximate:
+
+(Considering the boundaries are large, the number of paths passing through the central zone is small compared to total paths, and the ratio approaches 1.) 
+
+But to get an explicit ratio, the more straightforward is to consider the probability that a random "up-right" path from start to end avoids the "central" rectangle, which is roughly:
+
+\[ \text{ratio} = 1 - \frac{\text{number of paths crossing the zone}}{\text{total number of paths}} \]
+
+Using the reflection principle, the number of paths crossing the zone is roughly proportional to the number of paths passing through (0,0) or the boundary point of the zone.
+
+However, since the grid is large, directly computing the probability is complicated. To estimate, we choose small sample parameters and simulate.
+
+**Implementation idea:**
+
+- For smaller starting and ending points, compute total paths and the number passing through the forbidden zone via combinatorics.
+
+- Then, compute ratio; this can serve as an approximation for the large case.
+
+Here's the code to enumerate small parameters and output their ratios.
+
+```python
+import math
+from functools import lru_cache
+
+# Function to compute binomial coefficient efficiently
+def binom(n, k):
+    return math.comb(n, k)
+
+# Count total paths from (x1,y1) to (x2,y2)
+def total_paths(x1, y1, x2, y2):
+    dx = x2 - x1
+    dy = y2 - y1
+    if dx < 0 or dy < 0:
+        return 0
+    return binom(dx + dy, dx)
+
+# Count paths crossing the forbidden zone
+def crossing_paths(x1, y1, x2, y2, fx, fy, wx, wy):
+    # Paths passing through (fx, fy)
+    to_forbidden = total_paths(x1, y1, fx, fy)
+    from_forbidden = total_paths(fx, fy, x2, y2)
+    return to_forbidden * from_forbidden
+
+# Main enumeration for small parameters
+# Start at (-10, -10), end at (10, 10), forbidden zone in [-2,2], avoiding points with |x|≤1 and |y|≤1
+start_x, start_y = -10, -10
+end_x, end_y = 10, 10
+
+total = total_paths(start_x, start_y, end_x, end_y)
+
+# Count paths passing through the forbidden zone
+# Integrate over all forbidden points within [-1,1] for avoiding central 3x3
+forbidden_points = [(fx, fy) for fx in range(-1,2) for fy in range(-1,2)]
+crossings = 0
+for (fx, fy) in forbidden_points:
+    crossings += crossing_paths(start_x, start_y, end_x, end_y, fx, fy, end_x, end_y)
+
+avoiding = total - crossings
+ratio = avoiding / total if total != 0 else 0
+
+print(f"Sample parameters: start=(-10,-10), end=(10,10)")
+print(f"Total paths: {total}")
+print(f"Paths passing through forbidden zone: {crossings}")
+print(f"Paths avoiding forbidden zone: {avoiding}")
+print(f"Approximate ratio: {ratio:.4f}")
+```

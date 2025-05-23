@@ -1,0 +1,89 @@
+[write_program]
+The given functional equation is:  
+f(x * f(x + y)) = f(y * f(x)) + x^2 for all real x, y.  
+
+We want to characterize all functions f: ℝ → ℝ satisfying this property.  
+To explore possible classes of functions, let's test for simple candidates like constant functions, linear functions, zero function, and quadratic functions, for small integer and zero values of x, y. We'll enumerate potential values and print findings for combinations of parameters.
+
+```python
+# Enumerating candidates f for ℝ→ℝ with f(x*f(x+y))=f(y*f(x))+x^2
+# We test simple forms:
+# 1) Constant functions f(x)=c
+# 2) Linear functions f(x)=mx+b
+# 3) Zero function f(x)=0
+# For these forms, check if equation holds for sample integer x,y values.
+
+def check_const(c):
+    # f(x)=c => LHS = f(x*c) = c
+    # RHS = f(y*c) + x^2 = c + x^2
+    # So c = c + x^2 => x^2=0 for all x → only if x=0
+    # So no constant functions except trivial x=0 case
+    for x in range(-2,3):
+        for y in range(-2,3):
+            lhs = c
+            rhs = c + x*x
+            if lhs != rhs:
+                return False
+    print(f"Constant function f(x)={c} fails")
+    return True
+
+def check_zero():
+    # f=0 => LHS=0, RHS=0+x^2=x^2 ≠ 0 if x≠0
+    for x in range(-2,3):
+        for y in range(-2,3):
+            if 0 != 0 + x*x:
+                if x!=0:
+                    return False
+    print("Zero function fails")
+    return True
+
+def check_linear(m, b):
+    # f(x) = m x + b
+    # Compute f(x * f(x+y)) = f(x*(m*(x+y)+b)) = m * x * (m(x+y)+b) + b
+    # RHS = f(y * f(x)) + x^2 = m*y*(m x + b) + b + x^2
+    for x in range(-2,3):
+        for y in range(-2,3):
+            lhs = m * x * (m*(x+y)+b) + b
+            rhs = m * y * (m*x + b) + b + x*x
+            if abs(lhs - rhs) > 1e-9:
+                return False
+    print(f"Linear function f(x)={m}x+{b} works")
+    return True
+
+def check_quadratic(a,b,c):
+    # f(x) = a x^2 + b x + c
+    def f(z):
+        return a*z*z + b*z + c
+    for x in range(-2,3):
+        for y in range(-2,3):
+            lhs = f(x * f(x + y))
+            rhs = f(y * f(x)) + x*x
+            if abs(lhs - rhs) > 1e-6:
+                return False
+    print(f"Quadratic function f(x)={a}x^2+{b}x+{c} works")
+    return True
+
+print("Checking constant candidates:")
+for c in range(-2, 3):
+    if check_const(c):
+        print(f"Candidate: f(x) = {c}")
+
+print("Checking zero function:")
+if check_zero():
+    print("Candidate: f(x) = 0")
+
+print("Checking linear candidates:")
+for m in range(-2,3):
+    for b in range(-2,3):
+        if check_linear(m,b):
+            print(f"Candidate: f(x) = {m}x + {b}")
+
+print("Checking quadratic candidates:")
+# Sample quadratic coefficients near zero
+for a in [0,1]:
+    for b in range(-1,2):
+        for c in range(-1,2):
+            if check_quadratic(a,b,c):
+                print(f"Candidate: f(x) = {a}x^2 + {b}x + {c}")
+```
+

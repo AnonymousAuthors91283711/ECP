@@ -1,0 +1,57 @@
+[write_program]
+This problem appears to be about polynomial inequalities involving a polynomial \( P \in \mathbb{R}[X] \) and a parameter \(\alpha\), with a specific inequality relating the evaluations of \( P \) at certain points. The goal is to understand the nature of \( P \) that satisfies this inequality for all real \( x \). The problem suggests that the polynomial \( P \) must equal some particular polynomial \( \text{omnimath4015\_answer} \), which is not yet known.
+
+To assist in conjecturing or approximating the solution, I will:
+
+- Consider the polynomial \( P \) of a simple form, such as linear or quadratic.
+- Evaluate the inequality at specific points to find conditions on the coefficients of \( P \).
+- Try small degrees and parameter values for \(\alpha\).
+- Use enumeration to compare many candidate polynomials \( P \) with small degrees and coefficients within small bounds.
+- Output candidate polynomials that satisfy the inequality at tested points.
+
+This approach won't find the exact polynomial outright but will help in formulating conjectures, especially about the polynomial's degree or coefficients.
+
+Because the core of this problem involves testing inequalities at sampled points and systematically enumerating polynomials, the program will:
+
+- Select small degrees (say, degree ≤ 2).
+- Generate candidate polynomials with coefficients in a small range (like -3 to 3).
+- For each candidate \( P \), check whether the inequality holds at a set of sample points for a small set of \(\alpha\), e.g., \(\alpha = 0, 1, -1\).
+- Print candidate \( P \) polynomials that satisfy the inequality completely during sampling, as partial results to assist in conjecture.
+
+Below is the code implementing this strategy.
+
+```python
+import itertools
+import math
+
+# Check the inequality for a given polynomial P and a specific α and x values
+def check_inequality(P_coeffs, α, x_vals):
+    # P_coeffs: list of coefficients [a0, a1, a2, ...]
+    def eval_P(x):
+        return sum(c * x**i for i, c in enumerate(P_coeffs))
+    for x in x_vals:
+        lhs = eval_P(2 * x + α)
+        rhs = (x**20 + x**19) * eval_P(x)
+        if lhs > rhs + 1e-8:
+            return False
+    return True
+
+# Generate candidate polynomials up to degree 2 with coefficients in [-3,3]
+coeff_range = range(-3, 4)
+sample_alphas = [0, 1, -1]
+sample_xs = [-1, 0, 1, 2]  # sample points to test
+
+print("Enumerating degree ≤ 2 polynomials with small coefficients...")
+for degree in range(0, 3):
+    for coeffs in itertools.product(coeff_range, repeat=degree + 1):
+        # coeffs in order [a0, a1, a2, ...]
+        # Check at all sample alphas and x
+        satisfies_all = True
+        for α in sample_alphas:
+            if not check_inequality(coeffs, α, sample_xs):
+                satisfies_all = False
+                break
+        if satisfies_all:
+            poly_str = " + ".join(f"{c}*x^{i}" if i > 0 else f"{c}" for i, c in enumerate(coeffs))
+            print(f"Candidate polynomial P(x) = {poly_str} satisfies the inequality at sampled points.")
+```

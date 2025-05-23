@@ -1,0 +1,61 @@
+[write_program]
+This problem involves finding the maximum size \( n \) of an injective function \( f: Fin\,n \to Fin\,8 \times Fin\,8 \) such that for each \( k \in Fin\,n \), the count of previous points in the same row or column adheres to an odd number criterion. Essentially, it's related to placing points (like rooks on a chessboard) without conflicts and with a parity condition on the attack counts.
+
+Given the constraints, the task reduces to understanding how to maximize the number of points placed under the parity condition of attack counts in rows and columns. Since the condition depends on the counts of points in the same row and column, and whether their sum is odd, we seek the largest configuration satisfying this.
+
+We will implement an enumeration strategy:
+- Try small sizes from 1 to 64 (the total number of cells).
+- For each size, generate all injective placements of points within the 8x8 grid.
+- Check the parity condition for each placement.
+- Track the maximum size placed satisfying the condition.
+
+To efficiently do this:
+- We limit to small \( n \) and generate placements directly.
+- Since the problem is tightly constrained, we can test configurations systematically or heuristically.
+
+The code will:
+- Generate placements incrementally (backtracking).
+- Check the parity condition for each placement efficiently.
+- Record the maximum \( n \).
+
+The output will be the maximum \( n \) found among all tested configurations.
+
+```python
+import itertools
+
+# Board size
+SIZE = 8
+
+def is_valid(placements):
+    """
+    Check the parity condition for each placed point.
+    placements: list of (row, col)
+    """
+    for k, (x, y) in enumerate(placements):
+        row_attackers = sum(1 for i, (rx, ry) in enumerate(placements[:k]) if rx == x)
+        col_attackers = sum(1 for i, (rx, ry) in enumerate(placements[:k]) if ry == y)
+        if (row_attackers + col_attackers) % 2 == 0:
+            return False
+    return True
+
+max_n = 0
+result_config = []
+
+# Generate configurations incrementally
+for n in range(1, SIZE*SIZE + 1):
+    found = False
+    for placement in itertools.combinations(itertools.product(range(SIZE), repeat=2), n):
+        if len(set(placement)) == n:
+            # Check the parity condition
+            if is_valid(placement):
+                print(f"Found configuration of size {n}")
+                max_n = n
+                result_config = placement
+                found = True
+                break  # Stop at first valid configuration of size n
+    if not found:
+        # No configuration of size n, continue
+        pass
+
+print(f"Maximum size satisfying the condition: {max_n}")
+```

@@ -1,0 +1,78 @@
+[write_program]
+This problem involves calculating the probability that two intervals (A and B) of length 0.75, starting at random points within their respective ranges, will overlap. We'll compute this by enumerating the possible cases where the intervals collide.
+
+The approach:
+1. Define the valid start ranges for A (0 to 5.5) and B (0.5 to 3.5)
+2. Calculate the total area of possible start positions (5.5 * 3.0 = 16.5)
+3. For each possible configuration, determine if the intervals overlap
+4. Compute the area where overlap occurs and divide by total area
+
+```python
+def calculate_overlap_probability():
+    # Define parameters
+    A_min, A_max = 0.0, 5.5
+    B_min, B_max = 0.5, 3.5
+    interval_length = 0.75
+    
+    # Total possible area
+    total_area = (A_max - A_min) * (B_max - B_min)
+    
+    # Function to check if two intervals overlap
+    def is_overlap(a, b):
+        return max(a, b) < min(a + interval_length, b + interval_length)
+    
+    # We'll compute the integral by considering different cases
+    # Case 1: a <= b - interval_length → no overlap
+    # Case 2: b - interval_length < a < b + interval_length → overlap
+    # Case 3: a >= b + interval_length → no overlap
+    
+    # The overlapping region is bounded by:
+    # a > b - interval_length and a < b + interval_length
+    
+    # Compute the integral limits
+    lower_limit1 = max(A_min, B_min - interval_length)
+    upper_limit1 = min(A_max, B_max - interval_length)
+    area1 = max(0, upper_limit1 - lower_limit1) * (B_max - B_min)
+    
+    lower_limit2 = max(A_min, B_max - interval_length)
+    upper_limit2 = min(A_max, B_min + interval_length)
+    area2 = 0.5 * (upper_limit2 - lower_limit2) * (2 * interval_length)
+    
+    lower_limit3 = max(A_min, B_min + interval_length)
+    upper_limit3 = min(A_max, B_max + interval_length)
+    area3 = max(0, upper_limit3 - lower_limit3) * (B_max - B_min)
+    
+    # The actual overlapping area is the total area minus non-overlapping areas
+    # But it's easier to compute the overlapping area directly
+    # The overlapping region is between the lines a = b - interval_length and a = b + interval_length
+    
+    # Compute the integral for the overlapping region
+    # We need to split into subregions where the bounds change
+    points = sorted({A_min, A_max, B_min - interval_length, B_min + interval_length, 
+                    B_max - interval_length, B_max + interval_length})
+    relevant_points = [p for p in points if A_min <= p <= A_max]
+    
+    total_overlap = 0.0
+    for i in range(len(relevant_points)-1):
+        x1, x2 = relevant_points[i], relevant_points[i+1]
+        # For each subinterval, determine the bounds
+        lower_b = max(B_min, x1 - interval_length)
+        upper_b = min(B_max, x2 + interval_length)
+        if lower_b >= upper_b:
+            continue
+        # The height is (upper_b - lower_b) at each x in [x1,x2]
+        # But we need to compute the exact area
+        # The width is (x2 - x1)
+        # The average height is (upper_b - lower_b) if constant, otherwise need integral
+        # For simplicity, we'll take midpoint approximation
+        mid_x = (x1 + x2) / 2
+        b_low = max(B_min, mid_x - interval_length)
+        b_high = min(B_max, mid_x + interval_length)
+        height = b_high - b_low
+        total_overlap += height * (x2 - x1)
+    
+    probability = total_overlap / total_area
+    print(f"Computed probability: {probability}")
+
+calculate_overlap_probability()
+```

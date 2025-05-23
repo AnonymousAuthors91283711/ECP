@@ -1,0 +1,52 @@
+[write_program]
+This problem is about determining for which positive real numbers c there exists a coloring of the integer grid ℤ×ℤ with finitely many colors where any two points of the same color are at least distance c^i apart, where i is their color index.
+
+We'll write a program to:
+1. Test small rational values of c
+2. For each c, try to find a valid coloring pattern
+3. Output successful c values
+
+The key insight is that for c ≤ √2, we can use a checkerboard pattern, while for larger c we need more complex patterns. We'll test c values systematically.
+
+```python
+import math
+
+def is_valid_coloring(c, max_k=5):
+    # Try simple periodic colorings with period up to max_k
+    for k in range(1, max_k + 1):
+        valid = True
+        for i in range(k):
+            min_dist_sq = float('inf')
+            # Check all pairs of points colored i within a large enough window
+            for x1 in range(-2*k, 2*k + 1):
+                for y1 in range(-2*k, 2*k + 1):
+                    if (x1 + y1) % k != i:
+                        continue
+                    for x2 in range(-2*k, 2*k + 1):
+                        for y2 in range(-2*k, 2*k + 1):
+                            if (x2 + y2) % k != i:
+                                continue
+                            if x1 == x2 and y1 == y2:
+                                continue
+                            dx = x1 - x2
+                            dy = y1 - y2
+                            dist_sq = dx*dx + dy*dy
+                            if dist_sq < min_dist_sq:
+                                min_dist_sq = dist_sq
+            if min_dist_sq < (c**i)**2:
+                valid = False
+                break
+        if valid:
+            return True
+    return False
+
+def main():
+    # Test rational c values between 1 and 2
+    for numerator in range(10, 20):
+        c = numerator / 10
+        if is_valid_coloring(c):
+            print(f"Valid c found: {c}")
+
+if __name__ == "__main__":
+    main()
+```

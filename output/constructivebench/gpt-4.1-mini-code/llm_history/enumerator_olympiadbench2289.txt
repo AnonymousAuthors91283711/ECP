@@ -1,0 +1,77 @@
+[write_program]
+The problem asks to find all real numbers \(\theta \in [0, 2\pi]\) such that
+
+\[
+2 \cdot \log_{1/2}(\sin \theta)^2 - 3 \cdot \log_{1/2}(\sin \theta) + 1 = 0.
+\]
+
+Since \(\log_{1/2} x\) is defined only for \(x > 0\), the domain restriction forces \(\sin \theta > 0\). The equation reduces to solving a quadratic in \(a = \log_{1/2}(\sin \theta)\):
+
+\[
+2a^2 - 3a + 1 = 0.
+\]
+
+Our task is to find all \(\theta \in [0, 2\pi]\) such that \(\sin \theta > 0\) and \(a\) satisfies the quadratic.
+
+We'll enumerate solutions by:
+- Computing the roots \(a_1, a_2\) of the quadratic exactly.
+- For each root \(a_i\), compute \(\sin \theta = (1/2)^{a_i}\).
+- Since \(\sin \theta > 0\), find all \(\theta \in [0, 2\pi]\) with \(\sin \theta = \sin_0\).
+- Enumerate these \(\theta\) values.
+- Print the exact roots, \(\sin \theta\) values, and corresponding \(\theta\).
+
+Below is the Python program implementing this enumeration, using sympy for exact algebra and math for numeric angle calculation:
+
+```python
+# Enumerate values of θ ∈ [0, 2π] satisfying
+# 2 * a^2 - 3 * a + 1 = 0 for a = log_{1/2}(sin θ), sin θ > 0.
+# Then θ where sin θ = (1/2)^a.
+
+import math
+from sympy import symbols, solve, Eq, sqrt, Rational, nsimplify
+
+# Solve quadratic 2a^2 - 3a +1 = 0 exactly
+a = symbols('a')
+eq = Eq(2*a**2 - 3*a + 1, 0)
+roots = solve(eq, a)
+
+print("Quadratic roots a for 2a^2 - 3a + 1 = 0:")
+for r in roots:
+    r_simp = nsimplify(r)
+    print(f"  a = {r_simp}")
+
+print()
+
+# For each root, compute sin θ = (1/2)^a
+# Since base=1/2, log_{1/2}(x)=a means x = (1/2)^a
+# compute sin_theta = (1/2)**a
+
+print("Corresponding sin(θ) = (1/2)^a:")
+sin_values = []
+for r in roots:
+    # Numerical sin_theta
+    sin_theta = 0.5**float(r)
+    sin_values.append(sin_theta)
+    print(f"  sin(θ) = (1/2)^{r} ≈ {sin_theta:.10f}")
+print()
+
+# sin θ must be in (0,1], check positivity to confirm
+# For positive sin θ, θ ∈ (0, π) or θ ∈ (2π, 3π) etc, but domain is [0, 2π], so
+# θ has two solutions in [0,2π]: θ = arcsin(sin_theta) and θ = π - arcsin(sin_theta)
+
+print("θ ∈ [0,2π] with sin(θ) = sin_theta > 0:")
+for sv in sin_values:
+    if not (0 < sv <= 1):
+        # sin θ not in (0,1], no solution
+        continue
+    arcsin_val = math.asin(sv)  # in [0, π/2]
+    theta1 = arcsin_val
+    theta2 = math.pi - arcsin_val
+    # Print values in radians, rounded for brevity
+    print(f"  sin(θ) ≈ {sv:.10f}: θ1 = {theta1:.10f} rad, θ2 = {theta2:.10f} rad")
+
+print()
+
+# Summary: The answer set consists exactly of these θ values.
+```
+This program will print all candidate θ values immediately as they are found, with exact roots first, and then approximate numerical θ solutions. It respects the domain and function constraints fully.

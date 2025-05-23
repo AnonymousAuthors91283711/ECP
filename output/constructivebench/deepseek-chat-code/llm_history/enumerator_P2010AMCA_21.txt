@@ -1,0 +1,55 @@
+[write_program]
+This problem involves finding the maximum of three distinct real roots x₁, x₂, x₃ where a polynomial equals a linear function, and is greater than the linear function elsewhere. We'll approach this by:
+
+1. Modeling the condition as f(x) = p(x) - (bx + c) having three distinct roots where it touches zero
+2. The polynomial p(x) = x⁶ - 10x⁵ + 29x⁴ - 4x³ + ax²
+3. For f(x) to have triple roots, its derivative must share these roots
+4. We'll find parameters a, b, c that make this happen and identify the largest root
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+
+def find_max_root():
+    # The original polynomial p(x) = x^6 - 10x^5 + 29x^4 - 4x^3 + a x^2
+    # We need f(x) = p(x) - (b x + c) to have three double roots (since f > 0 elsewhere)
+    # So f(x) = (x - r1)^2 (x - r2)^2 (x - r3)^2 Q(x) where Q(x) > 0
+    # For simplicity, assume Q(x) = 1 (minimal case)
+    
+    # Try to find three distinct real roots
+    for r1 in np.arange(0, 5, 0.5):
+        for r2 in np.arange(r1 + 0.5, 5, 0.5):
+            for r3 in np.arange(r2 + 0.5, 5, 0.5):
+                # Construct f(x) = (x-r1)^2 (x-r2)^2 (x-r3)^2
+                f = Polynomial.fromroots([r1, r1, r2, r2, r3, r3])
+                # Expand to get coefficients
+                coeffs = f.convert().coef
+                # Compare with p(x) - (b x + c)
+                # p(x) has coeffs [0, 0, a, -4, 29, -10, 1]
+                # So we need:
+                # x^6 term: 1 = 1 (matches)
+                # x^5 term: -10 = coeffs[5]
+                # x^4 term: 29 = coeffs[4]
+                # x^3 term: -4 = coeffs[3]
+                # x^2 term: a = coeffs[2]
+                # x term: b = -coeffs[1]
+                # constant: c = -coeffs[0]
+                
+                # Check if the first 4 coefficients match (excluding a, b, c)
+                if (abs(coeffs[5] - (-10)) < 1e-6 and 
+                    abs(coeffs[4] - 29) < 1e-6 and 
+                    abs(coeffs[3] - (-4)) < 1e-6):
+                    a = coeffs[2]
+                    b = -coeffs[1]
+                    c = -coeffs[0]
+                    max_root = max(r1, r2, r3)
+                    print(f"Found roots: {r1:.2f}, {r2:.2f}, {r3:.2f}")
+                    print(f"Parameters: a={a:.2f}, b={b:.2f}, c={c:.2f}")
+                    print(f"Max root: {max_root:.2f}\n")
+                    return max_root  # Return first valid solution
+    
+    print("No valid roots found in range")
+    return None
+
+find_max_root()
+```

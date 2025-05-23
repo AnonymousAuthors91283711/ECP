@@ -1,0 +1,83 @@
+[write_program]
+The problem is about a polynomial \(P \in \mathbb{Z}[X]\) satisfying given values at \(-1, -3, -5\), and the set of natural numbers \(n\) such that there exists a multiset \(s\) of integers with cardinality \(n\) where for each \(x\in s\), \((P \circ P)(x) = x^2\). The goal is to find the greatest such \(n\).
+
+We can enumerate candidate polynomials \(P\) of low degree satisfying the given values and then find integer solutions \(x\) to \((P \circ P)(x) = x^2\). Since the problem is complex symbolically, we will:
+
+- Enumerate integer coefficient quadratic or cubic polynomials \(P\) with fixed values at -1, -3, -5.
+- For each \(P\), evaluate \(P(P(x))\) for integer \(x\in[-10,10]\) and check if \(P(P(x)) = x^2\).
+- Collect all \(x\) satisfying the condition and count distinct values.
+- Print polynomial \(P\) and the set size, streaming results.
+- Output the maximum cardinality found.
+
+We limit degree to 2 (quadratic) since 3 coefficients and 3 constraints fit quadratic polynomials exactly. We solve for \(a,b,c\in\mathbb{Z}\) in \(P(x)=a x^2 + b x + c\) under the constraints \(P(-1)=-4\), \(P(-3)=-40\), \(P(-5)=-156\).
+
+Enumerate small integer tuples \((a,b,c)\) satisfying constraints approximately, then test the condition.
+
+```python
+# Enumerate integer quadratic polynomials P(x)=a x^2 + b x + c satisfying:
+# P(-1) = -4, P(-3) = -40, P(-5) = -156
+# Then, for each such P, compute x in [-10..10] with (P(P(x)) = x^2) and count.
+# Print polynomial and count of such x immediately.
+# Finally print maximum count found.
+
+def eval_poly(a,b,c,x):
+    return a*x*x + b*x + c
+
+def main():
+    # Constraints:
+    # P(-1)=a*1 - b + c = -4
+    # P(-3)=9a -3b + c = -40
+    # P(-5)=25a -5b + c = -156
+    # Use these to solve for b,c in terms of a to reduce enumeration
+
+    max_count = 0
+    max_poly = None
+
+    for a in range(-5,6):
+        # From P(-1) = a - b + c = -4 => c = -4 - a + b
+        # P(-3) = 9a -3b + c = -40
+        # Replace c:
+        # 9a -3b + (-4 - a + b) = -40
+        # 9a -3b -4 - a + b = -40
+        # (9a - a) + (-3b + b) -4 = -40 => 8a -2b -4 = -40 => 8a -2b = -36
+        # => -2b = -36 -8a => b = (36 +8a)/2 = 18 +4a
+
+        # From above b must be integer, check
+        b = 18 + 4*a
+        if not isinstance(b,int):
+            continue
+
+        # c = -4 - a + b = -4 - a + (18 +4a) = 14 + 3a
+
+        c = 14 + 3*a
+
+        # Check third constraint for confirmation:
+        # P(-5) = 25a -5b + c = -156
+        val = 25*a -5*b + c
+        if val != -156:
+            continue
+
+        # Valid polynomial found
+        # Enumerate x in [-10..10], check (P(P(x)) == x^2)
+        def P(x): return a*x*x + b*x + c
+        valid_x = []
+        for x in range(-10,11):
+            inner = P(x)
+            outer = P(inner)
+            if outer == x*x:
+                valid_x.append(x)
+        n = len(valid_x)
+        print(f"P(x)={a}x^2 + {b}x + {c}, solutions x in [-10..10]: {valid_x}, count={n}")
+        if n > max_count:
+            max_count = n
+            max_poly = (a,b,c)
+
+    if max_poly is not None:
+        a,b,c = max_poly
+        print(f"Maximum count found: {max_count} with polynomial P(x)={a}x^2 + {b}x + {c}")
+    else:
+        print("No polynomial satisfying constraints found.")
+
+if __name__ == "__main__":
+    main()
+```

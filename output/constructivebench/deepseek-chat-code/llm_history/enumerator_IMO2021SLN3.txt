@@ -1,0 +1,54 @@
+[write_program]
+This problem asks to find all positive integers n where the divisors of n can be permuted such that every prefix sum of the permutation is a perfect square. We'll write a Python program to enumerate such numbers up to a reasonable threshold.
+
+The approach:
+1. For each n, generate its divisors
+2. Try all permutations of divisors (for small n)
+3. Check if all prefix sums are perfect squares
+4. Output n when found
+
+```python
+import math
+from itertools import permutations
+
+def is_perfect_square(x):
+    s = int(math.isqrt(x))
+    return s * s == x
+
+def get_divisors(n):
+    divisors = set()
+    for i in range(1, int(math.isqrt(n)) + 1):
+        if n % i == 0:
+            divisors.add(i)
+            divisors.add(n // i)
+    return sorted(divisors)
+
+max_n = 100  # Reasonable threshold for demonstration
+found = []
+
+for n in range(1, max_n + 1):
+    divisors = get_divisors(n)
+    # Skip if sum of divisors isn't square (necessary condition)
+    total = sum(divisors)
+    if not is_perfect_square(total):
+        continue
+    
+    # Try all permutations for small n (n <= 12)
+    if len(divisors) > 7:  # Skip large cases due to permutation explosion
+        continue
+        
+    for perm in permutations(divisors):
+        valid = True
+        prefix_sum = 0
+        for num in perm:
+            prefix_sum += num
+            if not is_perfect_square(prefix_sum):
+                valid = False
+                break
+        if valid:
+            found.append(n)
+            print(f"Found: {n} with permutation {perm}")
+            break
+
+print("\nAll found numbers up to threshold:", sorted(set(found)))
+```

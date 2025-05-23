@@ -1,0 +1,48 @@
+[check_equivalence] Problem: import Mathlib
+
+open Set List
+
+inductive Metal | A | C
+  deriving DecidableEq
+
+abbrev IMO2022SLC2_answer : ℕ → ℕ → Prop := sorry
+def move_k_operation (k : ℕ) (coins : List Metal) : List Metal :=
+  if h : k - 1 < coins.length then
+    let kth := coins.get ⟨k - 1, h⟩
+    let (left, right) := coins.splitAt (k - 1)
+    let leftSubseq := left.takeWhile (· = kth) |>.reverse
+    let rightSubseq := right.dropWhile (· ≠ kth)
+    let max_subseq := leftSubseq ++ [kth] ++ rightSubseq
+    max_subseq ++ coins.filter (· ∉ max_subseq)
+  else coins
+
+def at_most_one_adjacent_AC (coins : List Metal) : Prop :=
+  match coins with
+  | [] => True
+  | [_] => True
+  | _ => 
+    let pairs := coins.zip coins.tail
+    (pairs.filter (fun (a,b) => a ≠ b)).length ≤ 1
+
+theorem IMO2022SLC2 (n k : ℕ) (hk : 1 ≤ k ∧ k ≤ 2 * n) :
+  (∀ (coins : List Metal), 
+    coins.length = 2 * n → 
+    (∃ (steps : ℕ), 
+      at_most_one_adjacent_AC (Nat.iterate (move_k_operation k) steps coins))) ↔ 
+  IMO2022SLC2_answer n k := by sorry
+Ground Truth Answer: fun n k => n ≤ k ∧ k ≤ (3 * n + 1) / 2
+Proposed Answer: fun n k => (1 ≤ k ∧ k ≤ n) ∨ (n + 1 ≤ k ∧ k ≤ 2 * n)
+Let me analyze the problem and answers:
+
+1. The problem is about determining for which values of k (between 1 and 2n) we can transform any initial sequence of 2n coins (of types A and C) into a sequence with at most one adjacent AC pair using the move_k_operation.
+
+2. The ground truth answer states that k must satisfy n ≤ k ≤ (3n + 1)/2.
+
+3. The proposed answer suggests two separate ranges: either 1 ≤ k ≤ n OR n+1 ≤ k ≤ 2n.
+
+Comparing these:
+- The proposed answer's second case (n+1 ≤ k ≤ 2n) is too broad compared to the ground truth, as (3n+1)/2 is less than 2n for n > 1.
+- The proposed answer's first case (1 ≤ k ≤ n) is completely incorrect as it includes values below n, which the ground truth excludes.
+- The only overlap is when k = n (which satisfies both answers), but otherwise they disagree.
+
+<<<False>>>

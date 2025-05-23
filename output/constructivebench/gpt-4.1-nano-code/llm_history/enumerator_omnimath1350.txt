@@ -1,0 +1,46 @@
+[write_program]
+The problem appears to involve finding particular complex numbers \( \alpha_i \) (for \(i=0,1,2,3\)) satisfying two conditions:
+- All \( \alpha_i \) are distinct.
+- For any complex \( z \) with \( z^4 + 2z^3 + 2 = 0 \), there exists a unique \( i \) with \( \alpha_i = z \).
+
+The key polynomial is \( z^4 + 2z^3 + 2 = 0 \), and solutions are roots that we can identify approximately. The problem asks to evaluate a set involving products of these roots, then to reason about the possible values.
+
+I will:
+- Find the roots of \( z^4 + 2z^3 + 2=0 \).
+- Assign these roots to \( \alpha_i \) as four distinct roots.
+- Compute the products \( \alpha_0 \alpha_1 + \alpha_2 \alpha_3 \), \( \alpha_0 \alpha_2 + \alpha_1 \alpha_3 \), and \( \alpha_0 \alpha_3 + \alpha_1 \alpha_2 \).
+
+To do this efficiently and avoid hardcoded roots, I will use the scipy library to approximate roots, then generate the products.
+
+```python
+import numpy as np
+
+# Define the polynomial coefficients for z^4 + 2z^3 + 0z^2 + 0z + 2
+coeffs = [1, 2, 0, 0, 2]  # [z^4, 2z^3, ...]
+# Find roots numerically
+roots = np.roots(coeffs)
+
+# Filter roots to avoid duplicates due to numerical errors
+roots = list(set(roots.round(decimals=8)))
+
+# Generate all permutations to assign roots to α_i
+from itertools import permutations
+
+results = set()
+for perm in permutations(roots, 4):
+    α0, α1, α2, α3 = perm
+    # Compute the three expressions
+    s1 = α0 * α1 + α2 * α3
+    s2 = α0 * α2 + α1 * α3
+    s3 = α0 * α3 + α1 * α2
+    result_set = {s1, s2, s3}
+    # Convert complex numbers to string if they have small imaginary parts
+    def format_complex(c):
+        if abs(c.imag) < 1e-8:
+            return round(c.real, 8)
+        else:
+            return (round(c.real,8), round(c.imag,8))
+    formatted = frozenset(format_complex(c) for c in result_set)
+    print(formatted)
+    results.add(formatted)
+```

@@ -1,0 +1,71 @@
+[write_program]
+The problem appears to consider strictly increasing sequences \( s \) of length 6 with natural number entries, where each successive term divides the next, and the sum of the sequence is 79. We need to find the greatest such sequence with respect to some ordering on sequences (likely pointwise or lex order). I will enumerate all such sequences with these constraints to find candidates and then print the greatest one found.
+
+```python
+from math import gcd
+
+# We want sequences s of length 6, strictly increasing: s0 < s1 < s2 < s3 < s4 < s5
+# with s_(i+1) divisible by s_i, and sum = 79.
+# We enumerate possible s0, then s1 as multiples of s0, etc., checking constraints and sum.
+
+def enumerate_sequences():
+    target_sum = 79
+    length = 6
+
+    # Since s is strictly increasing and divisible:
+    # s0 < s1, s1 % s0 = 0 => s1 = s0 * m1, m1 > 1
+    # similarly s2 = s1 * m2 = s0 * m1 * m2, etc.
+    # So sequence is s0, s0*m1, s0*m1*m2, ..., all m_i > 1 integers
+    
+    # To limit search, s0 at least 1, upper bound given sum and growth:
+    max_s0 = target_sum  # can't be larger than sum
+
+    # The sequence elements: s0, s0*m1, s0*m1*m2, ...
+    # Sum = s0 * (1 + m1 + m1*m2 + m1*m2*m3 + ...), use recursion to build
+
+    results = []
+
+    def backtrack(idx, seq, prod, current_sum):
+        # idx = current index, seq = sequence so far, prod = product of multipliers so far, current_sum = sum so far
+        if idx == length:
+            if current_sum == target_sum:
+                print("Sequence:", seq)
+                results.append(seq)
+            return
+        start_m = 2 if idx > 0 else 1  # multiplier >=2 except for s0
+        # For idx=0, sequence element = s0 = prod (m empty product), must be >=1, loop over s0 outside
+
+        # If idx==0, skip multipliers, set s0 first outside
+        if idx == 0:
+            return
+
+        # try multipliers m from 2 upward such that next element > previous and sum not exceeded
+        prev = seq[-1]
+        s0 = seq[0]
+        # next_element = prev * m
+        # next_element > prev => m>1 always true
+        for m in range(2, 80):
+            next_element = prev * m
+            new_sum = current_sum + next_element
+            if new_sum > target_sum:
+                break
+            # ensure strict monotonicity prev < next_element
+            if next_element <= prev:
+                continue
+            backtrack(idx+1, seq + [next_element], prod * m, new_sum)
+
+    # Outer loop for s0, start from 1 to 13 approx, since sum=79 and 6 numbers strictly increasing multiples
+    for s0 in range(1, 14):
+        # start seq with s0, sum = s0
+        backtrack(1, [s0], 1, s0)
+    
+    if results:
+        # find lex greatest sequence
+        max_seq = max(results)
+        print("Greatest sequence:", max_seq)
+    else:
+        print("No sequences found.")
+
+if __name__ == "__main__":
+    enumerate_sequences()
+```

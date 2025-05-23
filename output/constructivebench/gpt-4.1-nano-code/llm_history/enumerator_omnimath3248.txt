@@ -1,0 +1,73 @@
+[write_program]
+Given: the statement involves a set of functions from Fin n to ℤ with a neighbor relation defined by difference of 1 at exactly one coordinate, and conditions resembling maximum independent set plus neighborhood properties. The problem resembles structures like the hypercube graph or layered graphs. To assist in conjecturing and proving, I'll enumerate small values of n, generating potential sets S that satisfy the properties, for small n (say n=1..4). This approach allows us to understand the structure without exhaustive enumeration beyond small size.
+
+The key points:
+
+- For each small n, generate candidate sets S.
+- For each candidate S, verify the properties:
+  - S is independent: neighbors of any p in S are outside S.
+  - For each p outside S, there exists a *unique* neighbor q in S.
+- Encode and print such sets as they are found.
+
+Efficiency considerations:
+
+- Generate all subsets of functions for small n.
+- For small n, the total number of functions is manageable.
+- Use straightforward checks.
+
+Below is the code implementing this enumeration.
+
+```python
+# Enumerate functions from Fin n to ℤ with small n
+# Check the properties for sets S satisfying the conditions
+
+from itertools import combinations, product
+
+# Define total points to evaluate
+max_n = 4
+
+# For small n, generate all functions p: Fin n -> ℤ with small integer values
+# Limit the range of function values for feasibility
+value_range = range(-2, 3)
+
+def neighbors(p, q, n):
+    # Two functions are neighbors if differ by 1 in exactly one coordinate
+    diff_count = sum(1 for i in range(n) if p[i] != q[i])
+    return diff_count == 1 and any(abs(p[i] - q[i]) == 1 and all(p[j] == q[j] for j in range(n) if j != i) for i in range(n))
+
+for n in range(1, max_n + 1):
+    all_points = list(product(value_range, repeat=n))
+    # Map functions to IDs for easier handling
+    func_list = all_points
+    func_ids = range(len(func_list))
+    # Precompute neighbors
+    neighbor_map = {i: [] for i in func_ids}
+    for i in func_ids:
+        p = func_list[i]
+        for j in func_ids:
+            q = func_list[j]
+            if i != j and neighbors(p, q, n):
+                neighbor_map[i].append(j)
+    # Generate candidate sets S (power set)
+    for size in range(1, 2**len(func_list)):
+        # To limit computation, iterate over small subsets
+        # But for simplicity, test all for small n
+        # Generate all subsets
+        subset_indices = combinations(func_ids, size)
+        for subset in subset_indices:
+            S = set(subset)
+            # Check independence: neighbors of p in S are outside S
+            if any(neighbor in S for p in S for neighbor in neighbor_map[p]):
+                continue
+            # For each p not in S, there should be exactly one neighbor in S
+            outside_points = set(func_ids) - S
+            def unique_neighbor_in_S(p):
+                neighbors_p = neighbor_map[p]
+                neighbors_in_S = [q for q in neighbors_p if q in S]
+                return len(neighbors_in_S) == 1
+            if all(unique_neighbor_in_S(p) for p in outside_points):
+                # Found a valid set
+                print(f"n = {n}, size S = {len(S)}, S functions:")
+                for idx in S:
+                    print(f"  {func_list[idx]}")
+```

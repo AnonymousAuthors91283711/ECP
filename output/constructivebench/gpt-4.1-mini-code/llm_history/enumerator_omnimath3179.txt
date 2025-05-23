@@ -1,0 +1,60 @@
+[write_program]
+The problem asks for the number of odd integers \( k \) between 1 and 99 for which there exist exactly 2 pairs \((m,n)\), with \( m,n \in \{1,\ldots,99\} \), satisfying 
+\[
+2^{4m^2} + 2^{m^2 - n^2 + 4} = 2^{k+4} + 2^{3m^2 + n^2 + k}.
+\]
+
+We will enumerate \( k \) and for each \( k \), count the number of such \((m,n)\) pairs. Then we output the \( k \) values with exactly 2 solutions and eventually print the count of such \( k \).
+
+Because the exponents are integers, comparing powers of two can be translated into equations on the exponents, but here we directly check the equality by computing the sum of powers (in integer form, not floats).
+
+To save time, we can limit the ranges and prune the search space. Let's try \( m,n \in [1,20] \) and \( k \in [1,50] \) odd to keep enumeration reasonable.
+
+```python
+# Enumerate k odd in [1,50], and (m,n) in [1,20]
+# For each k, count number of (m,n) satisfying
+# 2^{4m^2} + 2^{m^2 - n^2 + 4} == 2^{k+4} + 2^{3m^2 + n^2 + k}
+
+def is_power_of_two(x):
+    return x != 0 and (x & (x-1)) == 0
+
+def powers_of_two_sum(x, y):
+    # Returns integer value of 2^x + 2^y without floats
+    return (1 << x) + (1 << y)
+
+def main():
+    max_mn = 20
+    max_k = 50
+    # Store k with exactly 2 pairs (m,n)
+    answers = []
+    for k in range(1, max_k+1, 2):
+        count = 0
+        for m in range(1, max_mn+1):
+            m2 = m*m
+            for n in range(1, max_mn+1):
+                n2 = n*n
+                left_exp1 = 4*m2
+                left_exp2 = m2 - n2 + 4
+                right_exp1 = k + 4
+                right_exp2 = 3*m2 + n2 + k
+                # Since exponents can be negative, skip if any are < 0
+                if left_exp2 < 0 or right_exp1 < 0 or right_exp2 < 0:
+                    continue
+                left_sum = powers_of_two_sum(left_exp1, left_exp2)
+                right_sum = powers_of_two_sum(right_exp1, right_exp2)
+                if left_sum == right_sum:
+                    count += 1
+                    print(f"Found k={k}, m={m}, n={n}")
+                    if count > 2:
+                        break
+            if count > 2:
+                break
+        if count == 2:
+            print(f"k={k} has exactly 2 solutions")
+            answers.append(k)
+    print("All such k:", answers)
+    print("Count:", len(answers))
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,39 @@
+[write_program]
+The problem involves finding the greatest natural number \( n \) such that there exists a list \( l \) of pairs (positions in a 7x7 grid) with specific constraints: starting at (0,0), the list contains no duplicates, consecutive pairs differ by at most 1 in each coordinate, and no consecutive pairs share the same second coordinate. Essentially, this resembles constructing a maximum-length path in a grid with constraints on step size and movement.
+
+Since exact proof and exhaustive checking are complex algebraically, a practical approach is to generate all sequences starting from (0,0) up to a reasonable length, respecting the rules, and determine the maximum length found.
+
+The code below enumerates sequences by depth-first search (DFS), starting from (0,0), exploring all valid next steps, and keeps track of the longest sequence found.
+
+```python
+# Enumerates maximum path length in a 7x7 grid with constraints:
+# - start at (0,0)
+# - steps differ by at most 1 in each coordinate
+# - consecutive pairs have different second coordinate
+# - no duplicate positions
+
+max_length = 0
+visited_global = set()
+
+def dfs(path, visited):
+    global max_length
+    max_length = max(max_length, len(path))
+    last = path[-1]
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            if dx == 0 and dy == 0:
+                continue
+            next_point = (last[0] + dx, last[1] + dy)
+            if 0 <= next_point[0] <= 6 and 0 <= next_point[1] <= 6:
+                if next_point not in visited:
+                    # Enforce different second coordinate from previous
+                    if next_point[1] != last[1]:
+                        visited.add(next_point)
+                        dfs(path + [next_point], visited)
+                        visited.remove(next_point)
+
+# Start from (0,0)
+start = (0,0)
+dfs([start], {start})
+print("Maximum sequence length found:", max_length)
+```

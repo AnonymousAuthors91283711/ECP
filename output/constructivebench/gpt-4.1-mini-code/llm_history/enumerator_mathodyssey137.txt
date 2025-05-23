@@ -1,0 +1,79 @@
+[write_program]
+This problem involves finding the least natural number \( n \) such that for every function \( f: \{0, \dots, n-1\} \to \{0, \dots, 16\} \) (denoted by `Fin n → Fin 17`) with positive domain values, there exist indices \( x > y \) such that \( f(x) = f(y) = p \) for some \( p \), satisfying the inequality \( 118x \leq 119y \).
+
+We will interpret `Fin n` as the set \(\{0, \dots, n-1\}\) (0-based indexing). The conditions require \(x > y\), so \(x,y \in \{0,\ldots,n-1\}\), \(x > y\), and both mapped to the same value in \(\{0,\ldots,16\}\), with \(118x \leq 119y\).
+
+We want to find the smallest \(n\) that guarantees that such \(x,y\) exist for *any* \(f\). We can verify candidates \(n\) by attempting to construct a counterexample \(f\) where no such pair exists; if none exist, \(n\) is the answer.
+
+---
+
+The plan for the Python program:
+
+- For small \(n\), enumerate all functions \(f: \{0,...,n-1\} \to \{0,...,16\}\).
+- For each \(f\), check if there exists a pair \((x,y)\) with \(x > y\), \(f(x) = f(y)\), and \(118x \leq 119y\).
+- If for some \(f\) no such pair exists, \(n\) is not enough.
+- Print all \(n\) and note if a counterexample is found; if none found after all \(f\), print \(n\) as valid.
+- To limit the search space, the code tries for small \(n\) and samples functions when enumeration is too large.
+
+---
+
+**Note:** The number of functions grows as \(17^n\), which is large. To manage, we will test all \(f\) for small \(n\leq6\) and sample for larger \(n\).
+
+---
+
+Output: print \(n\), print if a counterexample found or none, and at the end print the smallest \(n\) with no counterexample found.
+
+```python
+import itertools
+
+# Check if a function f: [0..n-1] -> [0..16] has
+# a pair x>y with f(x)=f(y) and 118*x <= 119*y
+def has_pair(n, f):
+    vals_pos = [i for i in range(n)]  # domain values (0-based)
+    # Only pairs with x>y
+    for x in range(1, n):
+        for y in range(x):
+            if f[x] == f[y] and 118*x <= 119*y:
+                return True
+    return False
+
+def enumerate_functions(n):
+    # For small n, enumerate all functions
+    # For bigger n, we sample random functions
+    max_enumerate = 10**6  # limit enumeration size
+    total = 17**n
+    if total <= max_enumerate:
+        for f in itertools.product(range(17), repeat=n):
+            yield f
+    else:
+        # Sample random functions to find counterexamples (not exhaustive)
+        import random
+        tries = 10000
+        for _ in range(tries):
+            f = [random.randint(0,16) for _ in range(n)]
+            yield tuple(f)
+
+def main():
+    print("Checking values of n:")
+    for n in range(1, 12):  # Try from n=1 up to 11
+        counterexample_found = False
+        checked = 0
+        for f in enumerate_functions(n):
+            checked += 1
+            if not has_pair(n, f):
+                print(f"n={n}, counterexample found: f={f}")
+                counterexample_found = True
+                break
+            if checked >= 10**6:  # safety break to limit time
+                break
+        if not counterexample_found:
+            print(f"n={n} has NO counterexample. This n satisfies the condition.")
+            print(f"Minimal n <= {n}")
+            # Since we seek minimal, stop here after first success.
+            break
+        else:
+            print(f"n={n} counterexample exists.")
+
+if __name__=="__main__":
+    main()
+```

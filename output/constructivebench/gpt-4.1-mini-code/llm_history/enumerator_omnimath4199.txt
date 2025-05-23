@@ -1,0 +1,70 @@
+[write_program]
+The problem involves finding an integer \( n \) that can be written as a sum of 2017 squares (with repetition allowed) and such that the number of distinct multisets of 2017 squares summing to \( n \) is at least 2017.
+
+To explore this:
+
+- I will test sums of 2017 squares where each square is small (e.g., 0², 1², 2², 3², 4²).
+- Enumerate multisets of these squares of length 2017.
+- Count how many distinct multisets sum to the same \( n \).
+- Print \( n \) and the corresponding count when count ≥ 2017.
+
+Due to combinatorial explosion, we'll pick square numbers up to some small k², and then randomly vary the counts to generate sums.
+
+I'll focus on sums formed by powers of 0²=0,1²=1,2²=4,3²=9,4²=16 only.
+
+```python
+from math import comb
+
+def enum_multisets_sum_squares(length, squares):
+    # Try multisets composed of squares with multiplicities summing to length
+    # Each multiset is represented by counts of each square
+    # We try to find sums with many distinct multisets.
+
+    # Because length=2017 is large, enumerate all is impossible.
+    # Instead, fix number of distinct squares used (from 1 to len(squares))
+    # and enumerate possible count partitions (compositions) for length=2017.
+    # For efficiency, limit max count per square.
+
+    from collections import defaultdict
+
+    max_count_per_square = min(30, length)  # limit max multiplicity to avoid explosion
+    freq_sums = defaultdict(int)  # map sum n -> count of multisets
+
+    def backtrack(idx, remaining, counts):
+        if idx == len(squares):
+            if remaining == 0:
+                s = sum(c * sq for c, sq in zip(counts, squares))
+                freq_sums[s] += 1
+            return
+        for c in range(min(max_count_per_square, remaining) + 1):
+            counts[idx] = c
+            backtrack(idx + 1, remaining - c, counts)
+
+    # Backtrack over multiplicities to sum to length=2017
+    # To limit search, consider only first 5 squares and max count per square small.
+    backtrack(0, length, [0]*len(squares))
+    return freq_sums
+
+if __name__ == "__main__":
+    length = 2017
+    # Try squares up to 4^2
+    squares = [0,1,4,9,16]
+    print(f"Testing length={length} and squares={squares}")
+    freq_sums = enum_multisets_sum_squares(length, squares)
+
+    threshold = 2017
+    candidates = []
+    for s, count in freq_sums.items():
+        if count >= threshold:
+            print(f"Sum {s} can be written as sum of {length} squares in {count} distinct ways")
+            candidates.append((s,count))
+
+    if candidates:
+        min_sum = min(c[0] for c in candidates)
+        max_sum = max(c[0] for c in candidates)
+        print(f"Minimum sum with ≥ {threshold} representations: {min_sum}")
+        print(f"Maximum sum with ≥ {threshold} representations: {max_sum}")
+    else:
+        print(f"No sums found with ≥ {threshold} representations under given constraints.")
+```
+

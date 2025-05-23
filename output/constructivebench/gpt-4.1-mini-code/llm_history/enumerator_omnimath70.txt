@@ -1,0 +1,61 @@
+[write_program]
+The problem involves starting from any integer \( n \times n \) matrix \( M \), performing a sequence of operations incrementing both the \( i \)-th row and \( j \)-th column by 1 for some pairs \((i,j)\), and examining the maximum number \( N \) of even entries we can guarantee in the resulting matrix \( M' \).
+
+We want to enumerate, for small matrix sizes \( n \), the possible values \( N \) that can be guaranteed for *all* matrices \( M \), i.e., the minimal number of even entries after applying some sequence of such operations. We try small \( n \), generate sample \( M \), and find minimal guaranteed \( N \).
+
+The approach:
+
+- For each \( n = 1,2,3 \):
+  - Enumerate all \( M \) with entries mod 2 (only parity matters).
+  - For a given \( M \), try all sequences of operations (pairs \((i,j)\)).
+  - The increments add 1 to row \( i \) and column \( j \) entries modulo 2.
+  - We want to maximize the number of zeros (even numbers mod 2) in \( M' \).
+- Finally, for each \( n \), output the minimal number of zeros guaranteed over all \( M \).
+
+Since increments mod 2, we can consider the problem mod 2. Operations add 1 to row \( i \) and column \( j \) modulo 2 for all entries in that row or column in each operation. The total effect of multiple operations can be summarized using vectors indicating how many times each row and column are incremented mod 2.
+
+We'll enumerate row_flip and col_flip vectors in \( \{0,1\}^n \), based on which operations are applied an odd number of times, since the operation increments row and column by 1 mod 2.
+
+For each pair of row_flips and col_flips, for a fixed \( M \), compute parity of \( M' \) and count zeros.
+
+Output the minimal count over all \( M \).
+
+```python
+# Enumerate minimal guaranteed number of even entries after operations for small n matrix mod 2
+# Operations toggle parity of row i and column j entries by adding 1 mod 2
+# For any M in {0,1}^{n x n}, find max zeros achievable by choosing parity flips on rows and cols
+
+from itertools import product
+
+def count_even_entries(M, row_flip, col_flip):
+    n = len(M)
+    count = 0
+    for i in range(n):
+        for j in range(n):
+            val = (M[i][j] + row_flip[i] + col_flip[j]) % 2
+            if val == 0:
+                count += 1
+    return count
+
+def main():
+    for n in range(1,4):  # small samples n=1,2,3
+        print(f"n={n}")
+        positions = [(i,j) for i in range(n) for j in range(n)]
+        all_M = list(product([0,1], repeat=n*n))  # all parity matrices
+        min_guaranteed = n*n  # start max
+        for M_flat in all_M:
+            M = [list(M_flat[i*n:(i+1)*n]) for i in range(n)]
+            max_even_for_M = 0
+            for row_flip in product([0,1], repeat=n):
+                for col_flip in product([0,1], repeat=n):
+                    c = count_even_entries(M, row_flip, col_flip)
+                    if c > max_even_for_M:
+                        max_even_for_M = c
+            if max_even_for_M < min_guaranteed:
+                min_guaranteed = max_even_for_M
+                print(f"New minimal guaranteed even entries: {min_guaranteed} found for matrix {M}")
+        print(f"Minimal guaranteed even entries for n={n}: {min_guaranteed}\n")
+
+if __name__ == "__main__":
+    main()
+```

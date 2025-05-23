@@ -1,0 +1,67 @@
+[write_program]
+The problem concerns characterizing real polynomials \( P \) satisfying a given functional equation on triples \((x,y,z)\) of nonzero real numbers such that \( 2xyz = x + y + z \). The equation relates values of \( P \) at \( x,y,z \) and at \( x-y,y-z,z-x \) in a symmetric manner involving rational expressions.
+
+I will write a Python enumerator which tests low-degree polynomials with integer coefficients for satisfaction of this functional equation on randomly sampled triples \((x,y,z)\) that satisfy the constraint \(2xyz = x+y+z\). By enumerating polynomial candidates and sampling triples, the program will print polynomial candidates that meet the condition (approximately, since testing equality for all \((x,y,z)\) is impossible computationally). This will help conjecture the form of \( P \).
+
+Since the problem involves the functional equation holding for all real triples on a specific surface, we can only check finitely many samples. I will check degrees 0 to 3 with coefficients in \{-2,-1,0,1,2\}. For each such polynomial, test 5 sample triples and print candidates that "approximately" satisfy the equation within small numerical tolerance.
+
+```python
+# Enumerate low-degree polynomials P with integer coefficients in [-2..2]
+# Test the functional equation on random triples (x,y,z) with 2xyz = x+y+z, x,y,z != 0
+# Print candidates that satisfy equation approximately on samples
+
+import itertools
+import math
+import random
+
+def P_eval(coeffs,x):
+    # coeffs[i] is coefficient of x^i
+    return sum(c * (x**i) for i,c in enumerate(coeffs))
+
+def satisfies(coeffs, samples, tol=1e-6):
+    for x,y,z in samples:
+        # Skip if any denominator zero
+        if y*z == 0 or z*x == 0 or x*y == 0:
+            return False
+        # Evaluate functional equation components
+        lhs = (P_eval(coeffs,x)/(y*z) + P_eval(coeffs,y)/(z*x) + P_eval(coeffs,z)/(x*y))
+        rhs = (P_eval(coeffs,x - y) + P_eval(coeffs,y - z) + P_eval(coeffs,z - x))
+        if abs(lhs - rhs) > tol:
+            return False
+    return True
+
+def generate_samples(n):
+    samples = []
+    count = 0
+    while len(samples) < n and count < 100:
+        count +=1
+        # Random x,y in [-3..3], excluding 0
+        x = random.choice([i/2 for i in range(-6,7) if i != 0])
+        y = random.choice([i/2 for i in range(-6,7) if i != 0])
+        # Compute z from 2xyz = x + y + z => z(2xy - 1) = x + y => if denominator 0 skip
+        denom = 2*x*y - 1
+        if denom == 0:
+            continue
+        z = (x + y)/denom
+        if abs(z) < 1e-6:  # exclude zero z
+            continue
+        samples.append((x,y,z))
+    return samples
+
+def main():
+    random.seed(0)
+    samples = generate_samples(5)
+    print("Samples (x,y,z) used with 2xyz = x+y+z:", samples)
+    degree_range = range(0,4)
+    coeff_range = range(-2,3)
+    for deg in degree_range:
+        for coeffs in itertools.product(coeff_range, repeat=deg+1):
+            # Avoid zero polynomial
+            if all(c == 0 for c in coeffs):
+                continue
+            if satisfies(coeffs,samples):
+                print(f"Candidate polynomial coefficients (degree {deg}): {coeffs}")
+
+if __name__ == "__main__":
+    main()
+```

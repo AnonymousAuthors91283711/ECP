@@ -1,0 +1,83 @@
+[write_program]
+The problem involves finding the coefficient of \(X^{2012}\) in the expansion of \((1 + X + X^2 + \ldots + X^7)^8\). This coefficient counts the number of ways to write 2012 as a sum of 8 integers each between 0 and 7 inclusive. We want to check if this coefficient is a power of 2, and if so, find the exponent \(k\) such that this coefficient = \(2^k\).
+
+To assist with conjecturing, I'll write a Python program to:
+1. Enumerate the coefficient of \(X^n\) for \(n\) around 2012 by using the polynomial expansion.
+2. Print the exact coefficient for \(X^{2012}\).
+3. Print powers of 2 near this coefficient to help determine the exponent.
+4. Also print the coefficient and its factorization for some sample jobs (around n=2012 for 8 terms with max power 7).
+
+The program will efficiently compute coefficients by dynamic programming (counting integer compositions).
+
+```python
+# Count number of ways to write n as sum of k integers each in [0,m]
+def coeff(n, k=8, m=7):
+    # dp[i][j] = ways to sum to j using i terms in [0,m]
+    dp = [0]*(n+1)
+    dp[0] = 1
+    for _ in range(k):
+        new_dp = [0]*(n+1)
+        for s in range(n+1):
+            if dp[s]:
+                # Add all next terms from 0 to m if within bounds
+                max_add = min(m, n - s)
+                for add in range(max_add+1):
+                    new_dp[s+add] += dp[s]
+        dp = new_dp
+    return dp[n]
+
+def is_power_of_two(x):
+    return x>0 and (x & (x-1)) == 0
+
+def power_of_two_exponent(x):
+    # assumes x is power of two
+    e = 0
+    while x > 1:
+        x >>= 1
+        e += 1
+    return e
+
+n = 2012
+k = 8
+m = 7
+
+c = coeff(n, k, m)
+print(f"Coefficient of X^{n} in (1+X+...+X^{m})^{k} is {c}")
+
+# Check if c is power of two
+if is_power_of_two(c):
+    e = power_of_two_exponent(c)
+    print(f"This coefficient is 2^{e}")
+else:
+    print("Coefficient is not a power of two.")
+
+# Let's show coefficients for n near 2012 to detect any pattern
+print("\nNearby coefficients:")
+for delta in range(-5,6):
+    nn = n + delta
+    if nn < 0:
+        continue
+    val = coeff(nn, k, m)
+    print(f"coeff for X^{nn}: {val}")
+
+# Show factorizations of a few values around 2012 (using simple trial division)
+import math
+def factors(x):
+    fs = []
+    for d in range(2, int(math.isqrt(x))+1):
+        while x%d == 0:
+            fs.append(d)
+            x //= d
+    if x > 1:
+        fs.append(x)
+    return fs
+
+print("\nFactorizations:")
+for delta in range(-2,3):
+    nn = n + delta
+    if nn < 0:
+        continue
+    val = coeff(nn, k, m)
+    print(f"{val} = factors {factors(val)}")
+```
+

@@ -1,0 +1,53 @@
+[write_program]
+The problem involves irrational numbers \( x > 0 \) and conditions on fractional parts \(\{kx\}\) for \(k=1,\ldots,n\). It states a negation of the existence of such an \( x \) with a bound \( N \) that ensures all fractional parts for all \( n > N \) are at least \( \frac{1}{n+1} \).
+
+We will explore the behavior of fractional parts \(\{kx\}\) for various irrational \( x \), and for increasing \( n \), check if the minimum fractional part among \( k=1,\ldots,n \) is ever at least \(\frac{1}{n+1}\). If so, we print that instance, else we keep searching.
+
+Since the problem requires no hardcoding of the truth and streaming output, the program tries sample irrational \( x \) values (like \(\sqrt{2}, \sqrt{3}, \pi - 3\)) and enumerates over \( n \), prints tuples \((x,n,\min_{k}\{kx\}, \frac{1}{n+1})\) when the bound holds, to help conjecture the problem's truth.
+
+```python
+import math
+
+# Helper to get fractional part exactly
+def frac(x):
+    return x - math.floor(x)
+
+irrationals = [
+    ("sqrt(2)", math.sqrt(2)),
+    ("sqrt(3)", math.sqrt(3)),
+    ("pi-3", math.pi - 3),
+    ("e-2", math.e - 2),
+]
+
+# We test for n from small to moderate to see if min fractional part >= 1/(n+1)
+max_n = 50
+
+for name, x in irrationals:
+    print(f"Testing x = {name} ≈ {x:.12f}")
+    N_candidates = []
+    # Search for a threshold N after which the min fractional part condition holds for all n > N
+    # We'll test each n and check min frac part over k=1..n
+    for n in range(1, max_n+1):
+        min_frac = min(frac(k*x) for k in range(1, n+1))
+        bound = 1/(n+1)
+        if min_frac >= bound:
+            print(f"  n={n}: min_frac={min_frac:.6f} >= 1/(n+1)={bound:.6f}")
+            N_candidates.append(n)
+        else:
+            print(f"  n={n}: min_frac={min_frac:.6f} < 1/(n+1)={bound:.6f}")
+    if N_candidates:
+        minN = min(N_candidates)
+        # We check if minN indeed can be a threshold N for all bigger n
+        # Quick check for a few n > minN
+        fail_after = False
+        for n2 in range(minN+1, minN+6):
+            min_frac2 = min(frac(k*x) for k in range(1, n2+1))
+            bound2 = 1/(n2+1)
+            if min_frac2 < bound2:
+                fail_after = True
+                print(f"  After candidate N={minN}, fails at n={n2}: min_frac={min_frac2:.6f} < {bound2:.6f}")
+                break
+        if not fail_after:
+            print(f"  Candidate N={minN} appears to hold for all larger n in tested range.")
+    print()  # Blank line for separation
+```

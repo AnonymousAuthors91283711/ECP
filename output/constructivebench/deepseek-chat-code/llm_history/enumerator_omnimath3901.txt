@@ -1,0 +1,43 @@
+[write_program]
+This problem involves finding positive real numbers x, y, z that satisfy two equations given positive a, b, c. We'll write a program to enumerate possible solutions for small integer values of a, b, c to help conjecture the pattern.
+
+The approach:
+1. Fix small positive integer values for a, b, c (we'll use 1,2,3)
+2. For each permutation, try to solve the system numerically
+3. Print valid solutions that satisfy both equations within a tolerance
+
+```python
+import itertools
+import numpy as np
+from scipy.optimize import fsolve
+
+# Small sample values for a, b, c
+params = [(1, 2, 3), (2, 3, 4), (1, 1, 2)]  # Example parameter sets
+tolerance = 1e-6
+
+def equations(vars, a, b, c):
+    x, y, z = vars
+    eq1 = x + y + z - (a + b + c)
+    eq2 = 4*x*y*z - (a**2 * x + b**2 * y + c**2 * z + a*b*c)
+    return [eq1, eq2]
+
+for a, b, c in params:
+    print(f"\nTesting a={a}, b={b}, c={c}:")
+    # Try all permutations since solution might be order-dependent
+    for perm in itertools.permutations([a, b, c]):
+        x0, y0, z0 = perm  # Initial guess using the parameters themselves
+        solution = fsolve(equations, [x0, y0, z0], args=(a, b, c))
+        x, y, z = solution
+        
+        # Verify the solution satisfies both equations within tolerance
+        sum_ok = abs(x + y + z - (a + b + c)) < tolerance
+        product_ok = abs(4*x*y*z - (a**2*x + b**2*y + c**2*z + a*b*c)) < tolerance
+        
+        if sum_ok and product_ok and all(v > 0 for v in solution):
+            print(f"Found solution: x={x:.6f}, y={y:.6f}, z={z:.6f}")
+            # Check if solution matches any parameter permutation
+            for p in itertools.permutations([a, b, c]):
+                if all(abs(s - p[i]) < tolerance for i, s in enumerate([x, y, z])):
+                    print("Matches permutation:", p)
+                    break
+```

@@ -1,0 +1,82 @@
+[write_program]
+The problem involves finding the largest size k of a white set on an 8x8 grid, given 6 black points with distinct rows and columns, such that every white point shares a row or column with every black point, and both sets have no row/column conflicts internally.
+
+We'll enumerate possible black sets with 6 points, then find white points satisfying conditions, and print candidate k values. We'll sample a few black sets to keep output reasonable.
+
+```python
+from itertools import combinations, product
+
+def row_col_distinct(pts):
+    rows = set()
+    cols = set()
+    for r,c in pts:
+        if r in rows or c in cols:
+            return False
+        rows.add(r)
+        cols.add(c)
+    return True
+
+def whites_compatible(black_set):
+    # white points must share row or col with every black point
+    compatible = set()
+    for r in range(8):
+        for c in range(8):
+            if (r,c) in black_set:
+                continue
+            # check ∀ b in black: b.row == r or b.col == c
+            if all(b[0] == r or b[1] == c for b in black_set):
+                compatible.add((r,c))
+    return compatible
+
+def white_sets(whites):
+    # white points distinct rows and cols
+    # maximum size sets of whites such that no two share row or col
+    # This is a maximum matching problem in bipartite graph of rows and columns in whites
+    # Maximum set is max matching size.
+    # We find max sets by recursive search (small scale)
+    max_set = []
+    def backtrack(chosen, rows_used, cols_used, whites_list):
+        nonlocal max_set
+        if len(chosen) > len(max_set):
+            max_set = chosen[:]
+        for i,(r,c) in enumerate(whites_list):
+            if r not in rows_used and c not in cols_used:
+                backtrack(chosen+[(r,c)], rows_used|{r}, cols_used|{c}, whites_list[i+1:])
+    white_list = list(whites)
+    backtrack([], set(), set(), white_list)
+    return max_set
+
+def print_result(black, white):
+    print(f"Black points: {sorted(black)}")
+    print(f"White points ({len(white)}): {sorted(white)}\n")
+
+def main():
+    # We sample a few black sets with 6 points all row,col distinct for efficiency
+    # Total choices: choose 6 rows from 8 and assign 6 cols from 8 (permutation)
+    # We'll try 3 choices for rows and permutations of cols for them
+    from itertools import permutations
+    rows_samples = [
+        (0,1,2,3,4,5),
+        (1,2,3,4,5,6),
+        (2,3,4,5,6,7)
+    ]
+    count = 0
+    for rows in rows_samples:
+        for cols in permutations(range(8),6):
+            black = set(zip(rows, cols))
+            if not row_col_distinct(black):
+                continue
+            whites = whites_compatible(black)
+            white_max = white_sets(whites)
+            print_result(black, white_max)
+            count += 1
+            if count >= 5:  # limit output
+                break
+        if count >= 5:
+            break
+    max_k = max(len(white_max) for _ in range(count))
+    print(f"Candidates found (white set sizes): at least up to {max_k}")
+
+if __name__ == "__main__":
+    main()
+```

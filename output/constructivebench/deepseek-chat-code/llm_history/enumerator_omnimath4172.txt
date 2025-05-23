@@ -1,0 +1,58 @@
+[write_program]
+This problem is about finding 6 numbers where:
+1. Any two distinct numbers have a GCD that's a prime ≤26
+2. For every prime ≤26, there exists some pair of these numbers with that GCD
+
+We'll write a Python program to enumerate possible 6-number tuples and check these conditions. Since the search space is large, we'll:
+1. Use small primes (≤26) as building blocks
+2. Generate combinations systematically
+3. Check the conditions incrementally
+
+```python
+import itertools
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23]:
+        if n % p == 0:
+            return n == p
+    return True  # assume n ≤26
+
+primes = [p for p in range(2, 27) if is_prime(p)]
+required_primes = set(primes)
+
+def generate_candidates():
+    # Generate possible numbers as products of distinct primes
+    max_factors = 3  # limit to keep numbers reasonable
+    numbers = []
+    for r in range(1, max_factors + 1):
+        for combo in itertools.combinations(primes, r):
+            numbers.append(math.prod(combo))
+    return sorted(set(numbers))
+
+numbers = generate_candidates()
+
+def check_conditions(tuple6):
+    seen_gcds = set()
+    for i in range(6):
+        for j in range(i + 1, 6):
+            a, b = tuple6[i], tuple6[j]
+            gcd = math.gcd(a, b)
+            if not is_prime(gcd) or gcd > 26:
+                return False
+            seen_gcds.add(gcd)
+    return seen_gcds == required_primes
+
+# Search for valid 6-tuples
+found = False
+for candidate in itertools.combinations(numbers, 6):
+    if check_conditions(candidate):
+        print("Valid tuple found:", candidate)
+        found = True
+        break
+
+if not found:
+    print("No valid tuple found with current parameters")
+```

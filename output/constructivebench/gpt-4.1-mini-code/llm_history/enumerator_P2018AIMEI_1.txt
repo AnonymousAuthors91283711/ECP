@@ -1,0 +1,57 @@
+[write_program]
+The problem involves counting the number of pairs \((a,b)\) with \(1 \le a \le 100\), \(b \ge 0\) such that the quadratic polynomial \(x^2 + a x + b\) factors over the integers.
+
+This means:
+\[
+x^2 + a x + b = (x + c)(x + d) = x^2 + (c + d)x + cd,
+\]
+for some integers \(c, d\).
+
+From equality of coefficients, \(c + d = a\), and \(cd = b\).
+
+We want to count pairs \((a,b)\) with stated constraints such that there exist integers \(c,d\) with \(c+d=a\) and \(cd=b\).
+
+Enumerating all \((a,b)\) with a reasonable bound on \(b\) to find possible factor pairs is feasible.
+
+Looking closer:
+
+- For fixed \(a\), \(c,d\) are integers with \(c+d=a\), and \(b=cd \ge 0\).
+- Since \(b\ge0\), factors \(c,d\) can both be non-negative or both non-positive.
+- Iterate over all \(a\) in \([1,100]\), and possible pairs \(c,d\) with \(c+d=a\) and \(b = c d \ge0\).
+- For each such \(b\), keep track that \((a,b)\) is in the set \(S\). Avoid double counting.
+
+We can limit \(c\) to a range: since \(c+d=a\), if \(c\) goes from \(\max(0,a-100)\) to \(\min(a,100)\), or better simply from \(-100\) to \(a+100\) for safety.
+
+But more simply: for each \(a\), iterate \(c\) from \(\max(\lceil a/2\rceil)\) to a range, compute \(d = a - c\), compute \(b = c d\), check \(b \ge 0\).
+
+We keep track of distinct \((a,b)\) satisfying these.
+
+We'll enumerate and print each such \((a,b)\) when found, and finally print the count modulo 1000.
+
+```python
+# Enumerate pairs (a,b) with 1 <= a <= 100, b >=0 where x^2 + a x + b factors over integers as (x+c)(x+d)
+# i.e., c+d=a, c d = b with c,d integers.
+
+def main():
+    found = set()
+    for a in range(1, 101):
+        # To have b = c d >=0, c and d same sign or one/both zero.
+        # c,d integers with c+d = a, so c = from -100 to a+100 for safety.
+        # But c and d integers, so iterate c from max(-100, a-100) to min(a+100, 1000)
+        # Actually, to keep it safe, iterate c from max(-100, a-100) to min(a+100, 1000)
+        # But better let's just try c in range(-200, 201) for simplicity.
+        for c in range(-200, 201):
+            d = a - c
+            b = c * d
+            if b >= 0:
+                # (a,b) satisfies condition
+                if (a,b) not in found:
+                    found.add((a,b))
+                    print(f"Found pair: a={a}, b={b}")
+    count_mod = len(found) % 1000
+    print(f"Total pairs found: {len(found)}")
+    print(f"Answer (number of pairs mod 1000): {count_mod}")
+
+if __name__ == "__main__":
+    main()
+```

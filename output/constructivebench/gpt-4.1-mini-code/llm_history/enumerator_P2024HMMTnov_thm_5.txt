@@ -1,0 +1,68 @@
+[write_program]
+The problem is to find the greatest sum \( s \) of a subset of numbers \( k \in \{0,1,\ldots,100\} \) selected by a function \( f \) with values in \(\{True, False\}\), subject to:
+
+- If \( f(k) = True \), then \( k \leq 100 \).
+- For each \( k \) with \( f(k) = True \), every \( i \in [k+1, 2k) \) satisfies \( f(i) = False \).
+
+We want to find the maximal sum of such a subset.
+
+Observing the constraint, for each chosen number \( k \), the interval from \( k+1 \) up to (but not including) \( 2k \) must not contain any chosen number.
+
+This is a kind of "exclusion" or "gap" condition between chosen numbers.
+
+The problem reduces to finding a subset of \(\{0,...,100\}\) satisfying the above and maximizing the sum.
+
+I will write a Python program that enumerates subsets in a smart way (e.g., backtracking with pruning), printing partial sums as candidates are found.
+
+Because the problem space is large, we limit to choosing numbers up to 100, and prune quickly.
+
+We define a recursive solver that tries to pick or skip each number in increasing order, checking the exclusion condition.
+
+We print each candidate sum found, and finally print the largest sum found.
+
+```python
+# Enumerate sums of subsets S of {0,...,100} satisfying:
+# For each k in S:
+#   all i in [k+1, 2k) not in S.
+# Find maximum sum of such subsets.
+
+def main():
+    max_k = 100
+    max_sum = -1
+    # To avoid repeats, we select numbers in increasing order.
+    # For each candidate, we keep track of forbidden indices due to previously chosen elements
+    
+    forbidden = [False]*(max_k+1)
+    
+    # We use backtracking with current index and current sum and forbidden list.
+    # Because 0 leads to an empty range, we should handle it.
+    
+    # To prune, we can also keep track of the maximal remaining sum - but here we just do a simple approach.
+    
+    best_sums = []
+    
+    def backtrack(i, curr_sum, forbidden):
+        nonlocal max_sum
+        if i > max_k:
+            if curr_sum > max_sum:
+                max_sum = curr_sum
+                print(f"New max sum found: {max_sum}")
+            return
+        # Try skipping i
+        backtrack(i+1, curr_sum, forbidden)
+        # Try choosing i if allowed
+        if not forbidden[i]:
+            # Choosing i forbids [i+1, 2i)
+            new_forbidden = forbidden[:]
+            start = i+1
+            end = min(2*i, max_k+1)
+            for x in range(start, end):
+                new_forbidden[x] = True
+            backtrack(i+1, curr_sum + i, new_forbidden)
+    
+    backtrack(0,0,forbidden)
+    print(f"Maximum sum: {max_sum}")
+
+if __name__ == "__main__":
+    main()
+```

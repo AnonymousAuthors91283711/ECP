@@ -1,0 +1,50 @@
+[write_program]
+The problem relates to counting certain sets S of integers within [1..n] closed under the operation "if (a+b) is even, (a+b)/2 ∈ S". We want to understand the sequence A(n) = number of such sets for each n and verify when the discrete second difference A(n+2)-2*A(n+1)+A(n) = 1. We'll enumerate A(n) for small n, then check the condition.
+
+```python
+# Enumerate sets S within [1..n] closed under midpoint operation
+# For each n, compute A(n) = count of such sets.
+# Then output values of n where A(n+2)-2*A(n+1)+A(n) == 1.
+
+from itertools import combinations
+
+def is_mediocre(S, n):
+    S_set = set(S)
+    # Check closure: for all a,b in S, if (a+b) even => (a+b)//2 in S
+    for a in S_set:
+        for b in S_set:
+            if (a + b) % 2 == 0:
+                m = (a + b) // 2
+                if m < 1 or m > n or m not in S_set:
+                    return False
+    return True
+
+def generate_mediocre_sets(n):
+    # Candidates are subsets of [1..n] (including empty)
+    # Only consider subsets closed under midpoint
+    # To speed up: start from empty set, add elements and check closure incrementally
+    # But here, direct check for small n.
+    A_n = 0
+    for r in range(n+1):
+        for S in combinations(range(1,n+1), r):
+            if is_mediocre(S,n):
+                A_n += 1
+    return A_n
+
+max_n = 10
+A = dict()
+print("n, A(n)")
+for n in range(1,max_n+1):
+    A[n] = generate_mediocre_sets(n)
+    print(n, A[n])
+
+print("\nn and second difference results for n=1..max_n-2")
+for n in range(1, max_n - 1):
+    # ensure A[n], A[n+1], A[n+2] exist
+    if n+2 in A:
+        val = A[n+2] - 2*A[n+1] + A[n]
+        print(f"n={n}: A(n+2)-2*A(n+1)+A(n) = {val}")
+        if val == 1:
+            print(f"--> Condition holds at n = {n}")
+```
+This enumerates sets to support conjecture about n in omnimath3155_answer.

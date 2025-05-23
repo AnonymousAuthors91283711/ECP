@@ -1,0 +1,53 @@
+[write_program]
+The problem asks us to find the greatest and least values of \( r = \frac{y}{x} \) such that the point \((x,y)\) with \(x>0, y>0\) lies on the curve \(2x^2 + xy + 3y^2 - 11x - 20y + 40 = 0\). We want to enumerate candidates for the extremal values of \(r\), checking positive \(x,y\) on the curve and printing the ratio \(y/x\).
+
+We can rewrite \( y = r x \) and substitute into the equation to get a quadratic in \(x\). For given \(r\), to have real positive \(x\), the quadratic must have positive roots and the point \((x,y)\) must satisfy positivity constraints. We can sweep through rational values \(r\) in a reasonable range, solve for \(x\), and print all suitable \(r\).
+
+Finally, we print the minimal and maximal such \(r\) found and their sum to help formulate the conjecture.
+
+```python
+# Enumerate values of r = y/x > 0 for points (x,y) on curve 2x^2 + xy + 3y^2 - 11x - 20y + 40 = 0 with x,y>0.
+# For each r, solve quadratic in x: 2 x^2 + x(r x) + 3 (r x)^2 -11 x - 20 (r x) + 40 = 0
+# i.e. (2 + r + 3 r^2) x^2 - (11 + 20 r) x + 40 = 0
+# Check positive roots x>0, then y = r x > 0.
+
+from math import sqrt
+
+def quadratic_roots(a,b,c):
+    disc = b*b - 4*a*c
+    if disc < 0:
+        return []
+    r1 = (-b - sqrt(disc)) / (2*a)
+    r2 = (-b + sqrt(disc)) / (2*a)
+    return [r for r in (r1,r2) if r > 0]
+
+# Enumerate r from 0.1 to 3.0 step 0.01 (fine enough)
+step = 0.01
+r_values = [round(i*step,4) for i in range(1,int(3/step)+1)]
+
+found_rs = []
+
+print("Checking r = y/x ...")
+
+for r in r_values:
+    a = 2 + r + 3*r*r
+    b = -(11 + 20*r)
+    c = 40
+    xs = quadratic_roots(a,b,c)
+    for x in xs:
+        y = r * x
+        # Confirm x,y > 0 and curve eq approx satisfied (numerical)
+        lhs = 2*x*x + x*y + 3*y*y - 11*x - 20*y + 40
+        if abs(lhs) < 1e-9 and x > 0 and y > 0:
+            print(f"r = {r:.4f}, x = {x:.4f}, y = {y:.4f}")
+            found_rs.append(r)
+
+if found_rs:
+    min_r = min(found_rs)
+    max_r = max(found_rs)
+    print(f"\nMinimal r found: {min_r:.4f}")
+    print(f"Maximal r found: {max_r:.4f}")
+    print(f"Sum of extremal r: {min_r + max_r:.4f}")
+else:
+    print("No suitable r found.")
+```

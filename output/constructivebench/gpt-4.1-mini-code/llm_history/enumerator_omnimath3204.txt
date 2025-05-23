@@ -1,0 +1,40 @@
+[write_program]
+The problem involves maximizing the sum of cos(3x_i) for i=1 to 10 subject to the constraint that the sum of cos(x_i) is zero. We will enumerate vectors (x_0,...,x_9) with x_i chosen from discrete values that make cos(x_i) take simple rational or well-known values to identify candidates maximizing the sum. We focus on x_i in multiples of π/6 over [-π,π] for tractability, and print out sums satisfying the constraint approximately.
+
+```python
+import math
+from itertools import product
+
+# Discretize possible x_i choices to multiples of pi/6 in [-pi, pi]
+values = [k * math.pi / 6 for k in range(-6,7)]  # -pi to pi in pi/6 steps
+
+n = 10
+threshold = 1e-6
+
+# For speed, precompute cos and cos(3x) values for these discrete points
+cos_vals = {x: math.cos(x) for x in values}
+cos3_vals = {x: math.cos(3*x) for x in values}
+
+print("Enumerating vectors of length 10 with x_i in multiples of pi/6 in [-pi, pi]")
+print("Constraint: sum cos(x_i) ≈ 0")
+max_sum = -float('inf')
+candidates = []
+
+# To reduce computations, consider vectors with 5 values and repeat once (2*5=10)
+# Enumerate 5-length tuples and duplicate them
+for half in product(values, repeat=5):
+    cos_sum = sum(cos_vals[x] for x in half)*2  # duplicated to length 10
+    if abs(cos_sum) < threshold:
+        cos3_sum = sum(cos3_vals[x] for x in half)*2
+        print(f"Sum cos(x_i) ~ 0 for vector {half*2}: sum cos(3x_i) = {cos3_sum:.6f}")
+        if cos3_sum > max_sum:
+            max_sum = cos3_sum
+            candidates = [half*2]
+        elif abs(cos3_sum - max_sum) < threshold:
+            candidates.append(half*2)
+
+print(f"Maximum sum cos(3x_i) found: {max_sum:.6f}")
+print("Candidate vectors (x_i):")
+for c in candidates:
+    print(c)
+```

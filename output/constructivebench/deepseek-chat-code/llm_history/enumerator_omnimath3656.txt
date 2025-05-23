@@ -1,0 +1,58 @@
+[write_program]
+This problem asks to find all quadruples (a, b, p, n) where a and b are positive integers, p is prime, n is a positive integer, and a^2013 + b^2013 = p^n. The solution requires finding all such combinations where the sum of two 2013th powers equals a prime power.
+
+We'll approach this by:
+1. Considering small values of a and b since large exponents make the sum grow rapidly
+2. Checking when the sum is a prime power
+3. Special cases when a=1 or b=1 since these are most likely to yield prime powers
+4. Considering p=2 since it's the smallest prime and most likely to appear
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+max_check = 20  # We'll check a and b up to this value
+max_power = 10  # Maximum exponent n to check
+
+found = False
+for a in range(1, max_check + 1):
+    for b in range(1, a + 1):  # Symmetric, so b <= a to avoid duplicates
+        s = a**2013 + b**2013
+        if s == 1:
+            continue
+        # Check if s is a prime power
+        max_possible_n = int(math.log(s, 2)) + 2
+        for n in range(1, min(max_power, max_possible_n) + 1):
+            # Find p such that p^n = s
+            p = round(s ** (1/n))
+            if p**n == s and is_prime(p):
+                print(f"Found solution: a={a}, b={b}, p={p}, n={n}")
+                found = True
+
+if not found:
+    print("No solutions found in the checked range")
+```

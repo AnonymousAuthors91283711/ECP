@@ -1,0 +1,56 @@
+[write_program]
+This problem involves finding pairs of polynomials (A, B) that satisfy certain conditions, then summing A(10) for all valid A. We'll approach this by:
+1. Considering small degree polynomials for A and B
+2. Checking the functional equation condition
+3. Collecting valid A polynomials and computing their evaluation at x=10
+
+Since the problem is complex, we'll focus on finding monic polynomials A of degree ≤2 and corresponding B polynomials that satisfy the conditions.
+
+```python
+from sympy import symbols, Poly, solve, Eq, simplify
+
+x = symbols('x')
+
+def find_pairs(max_degree=2):
+    results = []
+    # Try monic A polynomials of degree 0 to max_degree
+    for deg_a in range(max_degree + 1):
+        # Coefficients for A (monic)
+        coeffs_a = symbols([f'a{i}' for i in range(deg_a)])
+        a_poly = Poly(x**deg_a + sum(c*x**i for i, c in enumerate(coeffs_a)), x)
+        
+        # Try B polynomials of degree up to deg_a + 1
+        for deg_b in range(1, deg_a + 2):
+            coeffs_b = symbols([f'b{i}' for i in range(deg_b + 1)])
+            b_poly = Poly(sum(c*x**i for i, c in enumerate(coeffs_b)), x)
+            
+            # Functional equation (simplified)
+            expr = (1/a_poly + 1/b_poly + 1/(x+10) - 1/x).together()
+            numerator = expr.as_numer_denom()[0]
+            
+            # The equation should hold for all x ≠ -10, 0 and where A,B ≠ 0
+            # So numerator should be identically zero
+            coeff_eqs = [Eq(c, 0) for c in Poly(numerator, x).coeffs()]
+            
+            try:
+                sol = solve(coeff_eqs, coeffs_a + coeffs_b)
+                if sol:
+                    # Found valid pair, store A and its evaluation at 10
+                    a_sol = a_poly.subs(sol)
+                    results.append(a_sol)
+                    print(f"Found A: {a_sol}")
+                    print(f"A(10) = {a_sol.subs(x, 10)}")
+            except:
+                continue
+    
+    if results:
+        print("\nPossible A polynomials found:")
+        for a in results:
+            print(f"{a} with A(10) = {a.subs(x, 10)}")
+        total = sum(a.subs(x, 10) for a in results)
+        print(f"\nSum of A(10): {total}")
+    else:
+        print("No valid pairs found for given degree constraints")
+
+find_pairs()
+```

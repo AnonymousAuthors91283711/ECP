@@ -1,0 +1,71 @@
+[write_program]
+The problem asks for the largest integer \( k \) for which there exists a partition of the natural numbers into \( k \) pairwise disjoint subsets \( A_i \), whose union is all natural numbers, such that for every \( n \geq 15 \) and every index \( i \), there exist distinct \( x, y \in A_i \) with \( x + y = n \).
+
+We will write a Python enumerator to explore small values of \( k \) and try to construct such partitions or find obstructions. Since the problem is difficult, we will only probe small values of \( k \) and print constructions or observations, focusing on \( k = 1, 2, 3, 4 \).
+
+We will:
+- Enumerate partitions of small initial segments [0..N] (e.g. N=20) into k parts.
+- For each part check if for every n in [15..20], n can be represented as the sum of two distinct elements within the part.
+- Print partitions that satisfy the conditions for the small range, as candidate examples.
+- This will help conjecture the maximal \( k \).
+
+```python
+# enumerator.py
+from itertools import combinations, product
+
+N = 20  # we work on initial segment [0..N]
+VALUES_TO_CHECK = list(range(15, N+1))
+
+def can_represent_all_sums(part):
+    vals = sorted(part)
+    vals_set = set(vals)
+    # For each n in 15..N, check if n = x + y, x,y distinct in part
+    for n in VALUES_TO_CHECK:
+        found = False
+        for x in vals:
+            y = n - x
+            if y != x and y in vals_set:
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+def check_partition(parts):
+    # Check all parts satisfy can_represent_all_sums
+    for i, part in enumerate(parts):
+        if not can_represent_all_sums(part):
+            return False
+    # Also check parts are disjoint and cover [0..N]
+    union = set().union(*parts)
+    if union != set(range(N+1)):
+        return False
+    if any(set(parts[i]) & set(parts[j]) for i in range(len(parts)) for j in range(i+1,len(parts))):
+        return False
+    return True
+
+def partitions_into_k(k):
+    # Generate all assignments of numbers 0..N to k parts
+    # Represent by a tuple p where p[i] in [0..k-1] is part of element i
+    # This is k^(N+1) possibilities, very large, so we random sample
+    from random import randint
+    for _ in range(10000):  # random tries
+        assign = [randint(0,k-1) for _ in range(N+1)]
+        parts = [[] for _ in range(k)]
+        for idx, pid in enumerate(assign):
+            parts[pid].append(idx)
+        if check_partition(parts):
+            print(f"k={k} candidate partition on [0..{N}]:")
+            for i, part in enumerate(parts):
+                print(f"A_{i}:", part)
+            print()
+
+def main():
+    print("Testing small k values for candidate partitions covering sums >=15 on [0..20]")
+    for k in range(1,5):
+        print(f"Trying k={k}")
+        partitions_into_k(k)
+
+if __name__ == "__main__":
+    main()
+```

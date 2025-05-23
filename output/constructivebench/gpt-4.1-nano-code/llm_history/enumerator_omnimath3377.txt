@@ -1,0 +1,53 @@
+[write_program]
+The problem involves a polynomial \( P \), which is given explicitly, and a polynomial \( Q \), constructed from the roots of \( P \). The goal is to analyze the quotient \(\frac{Q.eval(x^2)}{P.eval(x)}\) for \( x \) where \( P(x) \neq 0 \).
+
+Given the explicit polynomial \( P = X^4 + 2X^3 - 13X^2 -14X + 24 \), we want to:
+
+- Find the roots \( r \) of \( P \),
+- Construct \( Q = \prod_{r} (X - r^2) \),
+- For a test \( x \), compute \( \frac{Q(x^2)}{P(x)} \).
+
+Our approach:
+- First, factor \( P \) to find roots.
+- For each root \( r \), compute \( r^2 \), then construct \( Q \) as the product over these roots.
+- Evaluate the quotient \( Q(x^2) / P(x) \) for some sample points \( x \) where \( P(x) \neq 0 \).
+- Because the exact answer is a polynomial over the integers, it suggests the quotient might be a polynomial in \( x \).
+
+In Python, using SymPy (a symbolic mathematics library), we can:
+
+- Define \( P \),
+- Find roots numerically (approximate roots),
+- Build \( Q \),
+- Evaluate the ratio at sample points.
+
+This script provides enumerations of potential answers and outputs values step-by-step.
+
+```python
+import sympy as sp
+
+# Define variable
+x = sp.symbols('x')
+
+# Define polynomial P
+P = x**4 + 2*x**3 - 13*x**2 - 14*x + 24
+
+# Find roots numerically
+roots = list(sp.solve(P, x))
+# For accuracy in root squaring, use numeric approximations
+roots_numeric = [r.evalf() for r in roots]
+
+# Construct Q = product of (X - r^2) over roots
+Q = 1
+for r in roots_numeric:
+    Q *= (x - r**2)
+
+# Generate some sample values x where P(x) != 0
+test_x_values = [-3, -1, 0, 1, 2, 3]
+for val in test_x_values:
+    # Check if P(val) != 0 to avoid division by zero
+    if P.subs(x, val) != 0:
+        numerator = Q.subs(x, val**2)
+        denominator = P.subs(x, val)
+        ratio = sp.Rational(numerator, denominator).simplify()
+        print(f"x = {val}: Q({val**2}) / P({val}) = {ratio}")
+```

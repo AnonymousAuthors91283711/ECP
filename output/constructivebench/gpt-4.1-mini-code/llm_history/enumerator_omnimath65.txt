@@ -1,0 +1,50 @@
+[write_program]
+This is a difficult inequality problem with three positive variables \(x, y, z\) bound by \(x + y + z = xyz\), and the goal is to find the minimum value of the expression 
+\[
+x^7(yz - 1) + y^7(zx - 1) + z^7(xy - 1).
+\]
+We will enumerate triples \((x, y, z)\) with \(x,y,z>0\) and test the constraint \(x+y+z = xyz\). Since exact solutions are urged, we select rational values and check the equality with some tolerance.
+
+By symmetry, start from triples with \(x \leq y \leq z\) and sample over a small grid of rationals between 1 and 5 (to keep \(xyz\) sizable). Print each value found and keep track of minimum found.
+
+```python
+# Enumerate triples (x,y,z) with x,y,z >0, x+y+z=xyz and evaluate expr.
+# Use small rationals with denominator 10 for better exactness.
+# Print tuples and their expression values immediately upon finding constraint nearly satisfied.
+
+from fractions import Fraction
+import math
+
+def expr(x,y,z):
+    return x**7*(y*z -1) + y**7*(z*x -1) + z**7*(x*y -1)
+
+def approx_equal(a,b,eps=1e-9):
+    return abs(a - b) < eps
+
+def main():
+    vals = [Fraction(n,10) for n in range(10,51)]  # from 1.0 to 5.0 in steps of 0.1
+    min_val = None
+    min_tuple = None
+    # To reduce search space, assume ordering x <= y <= z
+    for xi in vals:
+        for yi in vals:
+            if yi < xi:
+                continue
+            for zi in vals:
+                if zi < yi:
+                    continue
+                lhs = float(xi + yi + zi)
+                rhs = float(xi * yi * zi)
+                if math.isclose(lhs, rhs, rel_tol=1e-9):
+                    # compute expression exactly using floats since powers can be large
+                    val = float(expr(float(xi), float(yi), float(zi)))
+                    print(f"x={xi}, y={yi}, z={zi}, val={val:.9f}")
+                    if (min_val is None) or (val < min_val):
+                        min_val = val
+                        min_tuple = (xi, yi, zi)
+    if min_val is not None:
+        print(f"\nMinimum value found: {min_val:.9f} at x,y,z = {min_tuple}")
+
+if __name__ == "__main__":
+    main()
+```

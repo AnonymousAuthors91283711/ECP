@@ -1,0 +1,91 @@
+[write_program]
+The problem involves examining when the circle \(x^2 + y^2 = k^2\) and the hyperbola \(xy = k\) are disjoint sets of points for integer \(k\). The goal is to identify for which integer values of \(k\) these two curves do not intersect, and this relates to a function \(P2010AMCA_13\_answer(k)\) coming out to 2 exactly in those cases.
+
+To assist with conjecture, I'll write a Python program that:
+- Takes integer \(k\) in a small range (e.g., from -10 to 10),
+- Enumerates possible \((x, y)\) that satisfy both equations simultaneously,
+- Checks whether there are real solutions,
+- Prints results on whether the sets intersect or are disjoint for each \(k\).
+
+We probe values of \(k\), print any intersection points found exactly or state disjointness, and check if a certain count equals 2 (as the problem mentions). This can help reveal a pattern or confirm the theorem's claim.
+
+```python
+import math
+
+def check_intersection(k):
+    # We want to check if the system
+    # x^2 + y^2 = k^2
+    # xy = k
+    # has real solutions (x,y).
+    # Algebraically:
+    # From xy=k, y = k/x (x!=0)
+    # Substitute into circle:
+    # x^2 + (k/x)^2 = k^2
+    # x^2 + k^2/x^2 = k^2
+    # Multiply both sides by x^2:
+    # x^4 - k^2 x^2 + k^2 = 0
+    # Let z = x^2, solve z^2 - k^2 z + k^2 = 0
+
+    # Solve quadratic in z:
+    a = 1
+    b = -k**2
+    c = k**2
+
+    discriminant = b*b - 4*a*c
+
+    # If discriminant <0, no real z, thus no real x => no real solutions.
+    if discriminant < 0:
+        print(f"k={k}: Discriminant {discriminant} < 0 -> No real intersection")
+        return "disjoint"
+
+    sqrt_disc = math.sqrt(discriminant)
+
+    zs = []
+    for sign in [+1, -1]:
+        z = ( -b + sign * sqrt_disc ) / (2 * a)
+        # z=x^2; must be >=0 and real
+        if z >= 0:
+            zs.append(z)
+
+    if not zs:
+        print(f"k={k}: No nonnegative z solutions -> No real intersection")
+        return "disjoint"
+
+    count_points = 0
+    # For each z = x^2, x = +- sqrt(z)
+    for z in zs:
+        x_vals = [math.sqrt(z), -math.sqrt(z)] if z>0 else [0.0]
+        for x in x_vals:
+            if x != 0:
+                y = k / x
+                # Check x^2 + y^2 == k^2 (within small epsilon)
+                LHS = x*x + y*y
+                if abs(LHS - k*k) < 1e-12:
+                    count_points += 1
+                    print(f"k={k}: Intersection point (x,y)=({x},{y}) exact check passed.")
+            else:
+                # x=0 => xy=k => y*0=k contradict if k!=0
+                # skip
+                pass
+
+    if count_points == 0:
+        print(f"k={k}: No intersection points found -> disjoint")
+        return "disjoint"
+    else:
+        print(f"k={k}: Total distinct intersection points found: {count_points}")
+        return count_points
+
+def main():
+    # Try small integer k from -10 to 10 excluding zero to avoid division by zero
+    for k in range(-10, 11):
+        if k == 0:
+            # xy=0, circle x^2+y^2=0 has only (0,0)
+            # Check if sets intersect:
+            # (0,0) is on both? xy=0 and circle=0, yes intersection.
+            print(f"k={k}: (0,0) lies on both curves (circle and xy=0)")
+            continue
+        result = check_intersection(k)
+
+if __name__=="__main__":
+    main()
+```

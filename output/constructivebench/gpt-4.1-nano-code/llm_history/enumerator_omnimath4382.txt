@@ -1,0 +1,47 @@
+[write_program]
+This problem suggests exploring conditions on a set of natural numbers indexed by `Fin n` where certain average and product conditions hold. To assist in conjecturing a solution, I'll write a Python enumeration considering small values of `n` and all possible value configurations of `cards`. The goal is to find possible `cards` values that satisfy the conditions and exhibit patterns that lead to equalities, possibly constraining `cards i = cards j`.
+
+Since the theorem seems to relate the averages to geometric means, typical solutions involve equal elements, so we will test small uniform value configurations and some non-uniform ones up to a threshold.
+
+```python
+# Enumerate possible configurations of the "cards" function for small n and small positive values
+# Check for patterns where the average equals the geometric mean as per the condition
+# We test small n (like 2, 3) and small card values (like 1, 2, 3),
+# printing configurations that satisfy the condition, to conjecture when all cards are equal.
+
+import itertools
+
+max_n = 3  # small n for enumeration
+max_card_value = 3  # small positive integer values
+
+def check_condition(cards, n):
+    # For all pairs i,j, check if there exists a S satisfying the condition
+    for i in range(n):
+        for j in range(n):
+            found = False
+            for size in range(1, n+1):
+                for S_indices in itertools.combinations(range(n), size):
+                    S = list(S_indices)
+                    # Conditions
+                    nonempty = len(S) > 0
+                    # Compute average
+                    avg = (cards[i] + cards[j]) / 2
+                    # Compute geometric mean
+                    product = 1
+                    for k in S:
+                        product *= cards[k]
+                    geo_mean = product ** (len(S) ** -1)
+                    if nonempty and abs(avg - geo_mean) < 1e-6:
+                        found = True
+                        break
+                if found:
+                    break
+            if not found:
+                return False
+    return True
+
+for n in range(2, max_n+1):
+    for cards_values in itertools.product(range(1, max_card_value+1), repeat=n):
+        if check_condition(cards_values, n):
+            print(f"n={n}, cards={cards_values}")
+```

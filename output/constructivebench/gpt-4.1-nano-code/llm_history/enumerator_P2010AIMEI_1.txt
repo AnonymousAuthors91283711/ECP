@@ -1,0 +1,68 @@
+[write_program]
+This problem involves analyzing the divisors of \(n = 2010^2\), counting pairs of divisors with specific properties, and then relating these counts via a ratio involving coprime integers \(m\) and \(n\). The key parts are:
+- Counting total pairs of divisors
+- Counting pairs where one divisor is a perfect square
+- Finding a ratio of favorable pairs to total pairs that simplifies to coprime \(m/n\)
+- Ensuring \(m + n = 97\)
+
+Given the high-level logical steps, we'll:
+
+1. Factor 2010 to find the divisors and identify which are perfect squares.
+2. Explicitly enumerate the divisors and classify them.
+3. Calculate the relevant counts and ratios.
+4. Find the pair \((m, n)\) that satisfies the coprimality and sum condition.
+
+Let's implement this approach efficiently in Python, keeping it within token limits and streaming outputs.
+
+```python
+# Enumerate divisors of 2010^2, identify squares, count pairs, and find the ratio.
+# 2010 factors: 2 * 3 * 5 * 67; exponents doubled in 2010^2.
+from math import gcd
+from itertools import combinations
+
+# Factor 2010
+factors = [2, 3, 5, 67]
+exponents = [2, 2, 2, 2]  # For 2010^2
+
+# Generate all divisors
+def generate_divisors(primes, exps):
+    divs = [1]
+    for p, e in zip(primes, exps):
+        new_divs = []
+        for d in divs:
+            for power in range(e + 1):
+                new_divs.append(d * (p ** power))
+        divs = new_divs
+    return sorted(set(divs))
+
+divisors = generate_divisors(factors, exponents)
+total_pairs = len(divisors) * (len(divisors) - 1) // 2
+
+# Identify perfect squares
+square_divisors = [d for d in divisors if int(d**0.5) ** 2 == d]
+non_square_divisors = [d for d in divisors if d not in square_divisors]
+
+# Count pairs where one divisor is a perfect square and the other isn't
+# For each square divisor d_s, count non-square divisors d_n
+favorable_pairs_count = 0
+for d_s in square_divisors:
+    for d_n in non_square_divisors:
+        favorable_pairs_count += 1
+
+# Compute ratio
+ratio_num = favorable_pairs_count
+ratio_den = total_pairs
+
+# Find m, n such that ratio = m/n (simplified), m, n coprime, m + n = 97
+common_div = gcd(ratio_num, ratio_den)
+m_candidate = ratio_num // common_div
+n_candidate = ratio_den // common_div
+
+# Ensure coprimality
+if gcd(m_candidate, n_candidate) == 1 and m_candidate + n_candidate == 97:
+    print(m_candidate, n_candidate)
+else:
+    print("No suitable (m,n) found with sum 97.")
+
+# Assuming a solution exists, the printed pair is the answer.
+```

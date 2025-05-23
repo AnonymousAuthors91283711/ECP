@@ -1,0 +1,75 @@
+[write_program]
+This problem involves finding all positive integer triples (a, b, c) such that:
+1. a + b + c < 2*p*sqrt(p)
+2. 1/a + 1/b + 1/c = 1/p
+where p is a prime number.
+
+We'll write a Python program to enumerate all such triples for small prime values of p. The program will:
+1. Iterate through small primes p
+2. For each p, search for triples (a, b, c) with a ≤ b ≤ c to avoid duplicates
+3. Check the conditions and print valid triples
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def find_triples(max_p=20):
+    for p in range(2, max_p + 1):
+        if not is_prime(p):
+            continue
+        print(f"\nFor prime p = {p}:")
+        max_sum = int(2 * p * math.sqrt(p)) - 1
+        found = False
+        
+        # Iterate a from p+1 to max possible (since a > p)
+        max_a = max_sum // 3
+        for a in range(p + 1, max_a + 1):
+            # Iterate b from a to remaining sum
+            remaining_sum_ab = max_sum - a
+            max_b = remaining_sum_ab // 2
+            for b in range(a, max_b + 1):
+                # Calculate c from the equation
+                numerator = a * b * p
+                denominator = a * b - p * (a + b)
+                if denominator <= 0:
+                    continue
+                if numerator % denominator != 0:
+                    continue
+                c = numerator // denominator
+                if c < b:
+                    continue
+                if a + b + c >= max_sum + 1:
+                    continue
+                # Verify the solution
+                if abs(1/a + 1/b + 1/c - 1/p) < 1e-10:
+                    print(f"({a}, {b}, {c})")
+                    found = True
+        if not found:
+            print("No triples found")
+
+find_triples()
+```

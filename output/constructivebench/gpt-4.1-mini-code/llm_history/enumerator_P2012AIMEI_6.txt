@@ -1,0 +1,54 @@
+[write_program]
+The problem is about finding integers \(m, n\) with \(\gcd(m,n)=1\), \(m<n\), and complex numbers \(z, w\) such that \(z^{13} = w\), \(w^{11} = z\), and the imaginary part of \(z\) equals \(\sin \left(\frac{m \pi}{n}\right)\), where \(n\) is the answer we want to determine.
+
+From the equations \(z^{13} = w\) and \(w^{11} = z\), it follows that \(z^{143} = z\), so \(z\) is a 143rd root of unity. Then \(|z|=1\) and \(z = e^{2\pi i k/143}\) for some integer \(k\).
+
+The imaginary part is \(\sin(2\pi k /143)\). We want this to be \(\sin(m\pi / n)\), so the fraction \(m/n\) should equal \(2k/143\) or \(1 - 2k/143\) (since \(\sin(x) = \sin(\pi - x)\)).
+
+We can enumerate coprime pairs \(m, n\) with small \(n\), try to match \(m/n\) with \(2k/143\) or \(1 - 2k/143\) for \(k=1,\ldots,142\), and find possible \(n\). According to the problem, \(n\) is the minimal denominator with the property.
+
+---
+
+```python
+from math import gcd, sin, pi, isclose
+
+# We want to find coprime pairs (m, n), m < n, such that
+# sin(m*pi/n) = sin(2*pi*k/143) or sin(m*pi/n) = sin(pi - 2*pi*k/143) = sin(2*pi*(143/2 - k)/143)
+# for some integer k (1 <= k < 143).
+#
+# Since sin is periodic, we consider fractions m/n close to 2k/143 or to 1 - 2k/143.
+#
+# The problem likely asks for n, so we enumerate small n, find matching ratios.
+
+def approx_equal(a, b, tol=1e-9):
+    return abs(a - b) < tol
+
+max_n = 30  # small max denominator for search
+found_ns = set()
+
+print("Enumerating coprime pairs (m,n) with n <= 30 and checking matching fractions:")
+for n in range(2, max_n + 1):
+    for m in range(1, n):
+        if gcd(m, n) != 1:
+            continue
+        frac = m / n
+        # check against fractions 2k/143 and 1 - 2k/143
+        for k in range(1, 143):
+            val1 = 2 * k / 143
+            val2 = 1 - val1
+            if isclose(frac, val1, abs_tol=1e-3) or isclose(frac, val2, abs_tol=1e-3):
+                # also check sin values match closely
+                left = sin(pi * m / n)
+                right = sin(2 * pi * k / 143)
+                if isclose(left, right, abs_tol=1e-8):
+                    print(f"Possible solution: m={m}, n={n}, k={k}, sin(m*pi/n)={left:.9f}")
+                    found_ns.add(n)
+                break
+
+if found_ns:
+    minimal_n = min(found_ns)
+    print(f"\nCandidate n values found (≤ {max_n}): {sorted(found_ns)}")
+    print(f"Minimal candidate n: {minimal_n}")
+else:
+    print("No candidate n found with n ≤", max_n)
+```

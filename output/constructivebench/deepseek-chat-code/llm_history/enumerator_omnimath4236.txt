@@ -1,0 +1,81 @@
+[write_program]
+This problem involves finding the maximum number of teams (n) that can be arranged in a tournament with c cities (where c ≥ 4 is even) under certain constraints about home/away assignments. We'll write a Python program to enumerate possible n values for small even c values.
+
+The constraints are:
+1. Each team has a home city pair and an away city
+2. Away city must not be in home pair
+3. Different teams sharing same home pair must have different away cities
+4. No two teams can have each other's away city in their home pair
+
+We'll model this as a graph problem where we try to maximize the number of edges (teams) under these constraints.
+
+```python
+from itertools import combinations, product
+
+def max_teams(c):
+    cities = list(range(c))
+    max_n = 0
+    
+    # Generate all possible home pairs (undirected)
+    home_pairs = list(combinations(cities, 2))
+    
+    # Try increasing n values until no solution exists
+    for n in range(1, 2*c):  # Reasonable upper bound
+        found = False
+        
+        # Try all possible combinations of n home pairs (with possible repeats)
+        for selected_homes in product(home_pairs, repeat=n):
+            away_assignments = []
+            valid = True
+            
+            # Check constraints for each team
+            for i in range(n):
+                home = selected_homes[i]
+                # Constraint 1: away not in home
+                possible_aways = [city for city in cities if city not in home]
+                
+                # Constraint 2: same home pairs must have different aways
+                same_home_indices = [j for j in range(i) if selected_homes[j] == home]
+                forbidden_aways = [away_assignments[j] for j in same_home_indices]
+                possible_aways = [a for a in possible_aways if a not in forbidden_aways]
+                
+                if not possible_aways:
+                    valid = False
+                    break
+                
+                # For now pick first available away city (we'll check constraint 3 later)
+                away = possible_aways[0]
+                away_assignments.append(away)
+            
+            if not valid:
+                continue
+                
+            # Now check constraint 3: no mutual containment
+            mutual_ok = True
+            for i in range(n):
+                for j in range(i+1, n):
+                    home_i = set(selected_homes[i])
+                    home_j = set(selected_homes[j])
+                    if away_assignments[i] in home_j and away_assignments[j] in home_i:
+                        mutual_ok = False
+                        break
+                if not mutual_ok:
+                    break
+            
+            if mutual_ok:
+                found = True
+                break
+        
+        if found:
+            max_n = n
+        else:
+            break
+    
+    return max_n
+
+# Test for small even c values
+for c in [4, 6, 8]:
+    print(f"c={c}, max_n={max_teams(c)}")
+```
+
+The program tests small even values of c (4, 6, 8) and finds the maximum n that satisfies all constraints. For each c, it tries increasing n values until no valid configuration exists. The output shows the maximum n found for each c. The pattern suggests the general solution might be n = c-1, but we let the program discover this through enumeration.

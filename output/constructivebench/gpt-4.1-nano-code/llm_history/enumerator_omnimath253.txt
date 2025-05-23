@@ -1,0 +1,54 @@
+[write_program]
+This problem appears to be about finding pairs of polynomial degrees with properties that prevent certain compositions. Since the question is high-level and domain-specific, a suitable approach is to generate possible degree pairs, especially small degrees, and test some conditions related to polynomial evaluations.
+
+We'll:
+- Enumerate pairs of degrees (n,m) for small polynomials (e.g., degrees up to 5).
+- Assume monic polynomials with small coefficients to keep computations manageable.
+- For each pair, generate random monic polynomials of degrees n and m.
+- Check if the composition conditions hold (or fail), printing those that satisfy the non-equality condition in the theorem's conclusion.
+- Since the problem involves a "for all t" condition, approximate over sampled t's and look for counterexamples.
+
+This approach helps in conjecturing what pairs likely satisfy or violate the condition, guiding the proof.
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+import itertools
+
+# Define small degree bounds
+max_degree = 3
+num_samples = 10  # number of t samples for evaluation
+
+# Helper function to generate a monic polynomial of a given degree with small coefficients
+def generate_monic_poly(degree):
+    coeffs = np.random.randint(-5, 6, size=degree)
+    # for monic, leading coefficient 1
+    return Polynomial(np.append(coeffs, 1))
+
+# Sample t values to test the evaluation condition
+t_values = np.linspace(-10, 10, num_samples)
+
+# Store pairs of degrees where the property possibly holds
+found_pairs = []
+
+for n, m in itertools.product(range(1, max_degree + 1), repeat=2):
+    P = generate_monic_poly(n)
+    Q = generate_monic_poly(m)
+    # Check the condition ∀ t: P.eval(Q.eval(t)) ≠ Q.eval(P.eval(t))
+    # We test over sampled t's to find a counterexample
+    violates = False
+    for t in t_values:
+        p_val = P(t)
+        q_val = Q(t)
+        comp1 = P(q_val)
+        comp2 = Q(p_val)
+        # if at any t they are equal, we note potential violation
+        if abs(comp1 - comp2) < 1e-6:
+            violates = True
+            print(f"Degree pair ({n},{m}) violates at t={t:.2f}")
+            break
+    if not violates:
+        # If no violation over samples, conjecture they satisfy the property
+        print(f"Possible pair: degrees ({n},{m})")
+        found_pairs.append((n,m))
+```

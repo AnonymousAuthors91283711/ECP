@@ -1,0 +1,54 @@
+[write_program]
+This problem asks for the smallest natural number n that can be expressed as n = c + v where c and v are natural numbers satisfying 2*c*v*(c² + v²) = 4800. We'll write a Python program to enumerate possible (c,v) pairs and find the minimal n.
+
+The approach:
+1. Iterate through possible c values (since c and v are symmetric, we can assume c <= v)
+2. For each c, compute possible v values that satisfy the equation
+3. Check if v is an integer and positive
+4. Track the minimal n = c + v found
+
+```python
+def find_min_n():
+    min_n = float('inf')
+    target = 4800
+    
+    # Iterate c from 1 upwards (since c <= v, we can stop when c exceeds possible values)
+    for c in range(1, 100):
+        # Calculate the remaining product needed from v
+        denominator = 2 * c * (c**2)
+        if denominator > target:
+            continue
+        
+        # The equation is 2*c*v*(c² + v²) = 4800
+        # Let's solve for v numerically
+        # We can rearrange to: v*(c² + v²) = 2400/c
+        rhs = 2400 / c
+        
+        # Binary search for v between c and a reasonable upper bound
+        low = c
+        high = 100
+        for _ in range(100):  # precision iterations
+            mid = (low + high) / 2
+            val = mid * (c**2 + mid**2)
+            if val < rhs:
+                low = mid
+            else:
+                high = mid
+        
+        # Check if we found an integer solution near our approximation
+        for v in [int(low), int(low)+1, int(high), int(high)+1]:
+            if v <= 0:
+                continue
+            if 2 * c * v * (c**2 + v**2) == target:
+                n = c + v
+                print(f"Found solution: c={c}, v={v}, n={n}")
+                if n < min_n:
+                    min_n = n
+    
+    if min_n != float('inf'):
+        print(f"Minimal n found: {min_n}")
+    else:
+        print("No solution found in search range")
+
+find_min_n()
+```

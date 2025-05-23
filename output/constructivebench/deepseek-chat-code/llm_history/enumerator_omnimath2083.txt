@@ -1,0 +1,45 @@
+[write_program]
+This problem involves finding the greatest integer `k` such that there exists a positive integer `n < 100` and an integer `a` where:
+1. For `n + a`, the only number ≤n coprime to it is 1
+2. For all smaller `b < a`, there are at least two distinct numbers >1 ≤n coprime to `n + b`
+3. `k = n - a`
+
+We'll write a Python program to enumerate possible `(n, a)` pairs and compute `k = n - a`, then find the maximum `k`.
+
+```python
+import math
+
+def compute_max_k():
+    max_k = None
+    for n in range(1, 100):
+        # Find minimal a where n+a has only 1 as coprime <=n
+        a = 0
+        while True:
+            # Check condition 1: only 1 is coprime to n+a among numbers <=n
+            valid = True
+            for m in range(2, n+1):
+                if math.gcd(n + a, m) == 1:
+                    valid = False
+                    break
+            if valid:
+                # Check condition 2: for all b < a, there are >=2 coprimes >1
+                condition2_holds = True
+                for b in range(a-1, -1, -1):
+                    coprimes = [m for m in range(2, n+1) if math.gcd(n + b, m) == 1]
+                    if len(coprimes) < 2:
+                        condition2_holds = False
+                        break
+                if condition2_holds:
+                    k = n - a
+                    print(f"Found valid (n,a,k): ({n}, {a}, {k})")
+                    if max_k is None or k > max_k:
+                        max_k = k
+                    break
+            a += 1
+            # Prevent infinite loop if no solution exists for this n
+            if a > 1000:
+                break
+    print(f"Maximum k found: {max_k}")
+
+compute_max_k()
+```

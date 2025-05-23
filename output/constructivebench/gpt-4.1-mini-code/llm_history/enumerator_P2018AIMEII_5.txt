@@ -1,0 +1,100 @@
+[write_program]
+The problem relates three complex numbers \(x, y, z\) with given products and asks to determine a specific real-valued expression involving them (here named \(P2018AIMEII_5\)) which is claimed to be 74.
+
+To explore this, we can:
+- Set \(x, y, z\) as complex numbers with unknown real and imaginary parts.
+- Use the product constraints \(x y = -80 - 320i\), \(y z = 60\), \(z x = -96 + 24i\).
+- Parametrize some variables and solve for the others numerically or symbolically.
+- Compute candidate values for the desired expression (likely involving \(x,y,z\)).
+- Print found candidates to conjecture the exact result.
+
+We'll try to find \(x,y,z\) satisfying those equations numerically, then compute a likely expression: \(|x|^2 + |y|^2 + |z|^2\). This fits the typical style of AIME problems where such sums are sought.
+
+```python
+import cmath
+
+# Given:
+# x*y = A = -80 - 320i
+# y*z = B = 60 + 0i
+# z*x = C = -96 + 24i
+# Aim: Find |x|^2+|y|^2+|z|^2
+
+A = complex(-80, -320)
+B = complex(60, 0)
+C = complex(-96, 24)
+
+# Assume x = r*e^{i t}, y = s*e^{i u}, z = w*e^{i v}
+# We want to find real r,s,w>0 and angles t,u,v so:
+# x*y = r s e^{i(t+u)} = A
+# y*z = s w e^{i(u+v)} = B
+# z*x = w r e^{i(v+t)} = C
+
+# From magnitudes:
+# r s = |A|, s w = |B|, w r = |C|
+
+absA = abs(A)
+absB = abs(B)
+absC = abs(C)
+
+# From these:
+# r s = absA
+# s w = absB
+# w r = absC
+
+# We can solve for r,s,w:
+
+# From first: s = absA / r
+# Substitute into second: (absA / r)*w = absB -> w = absB * r / absA
+# Substitute w into third: w * r = absC -> (absB * r / absA) * r = absC
+# -> (absB / absA) r^2 = absC
+# -> r^2 = absC * absA / absB
+
+r = (absC * absA / absB) ** 0.5
+s = absA / r
+w = absB * r / absA
+
+# Check approximate numbers:
+#print("r,s,w:", r,s,w)
+
+# Arguments:
+argA = cmath.phase(A)
+argB = cmath.phase(B)
+argC = cmath.phase(C)
+
+# Angles satisfy:
+# t+u = argA (mod 2pi)
+# u+v = argB
+# v+t = argC
+
+# From these three:
+# Add first two: t + 2u + v = argA + argB
+# Subtract third: t + 2u + v - (v + t) = argA + argB - argC
+# => 2u = argA + argB - argC
+# u = (argA + argB - argC)/2
+
+u = (argA + argB - argC)/2
+t = argA - u
+v = argB - u
+
+# Construct complex numbers x,y,z:
+
+x = complex(r * cmath.cos(t), r * cmath.sin(t))
+y = complex(s * cmath.cos(u), s * cmath.sin(u))
+z = complex(w * cmath.cos(v), w * cmath.sin(v))
+
+# Check products
+prod_xy = x*y
+prod_yz = y*z
+prod_zx = z*x
+
+print(f"x*y = {prod_xy} expected {A}")
+print(f"y*z = {prod_yz} expected {B}")
+print(f"z*x = {prod_zx} expected {C}")
+
+# Compute |x|^2 + |y|^2 + |z|^2:
+val = abs(x)**2 + abs(y)**2 + abs(z)**2
+print(f"|x|^2 + |y|^2 + |z|^2 = {val:.6f}")
+
+# Print rounded to nearest integer for conjecture:
+print("Rounded =", round(val))
+```

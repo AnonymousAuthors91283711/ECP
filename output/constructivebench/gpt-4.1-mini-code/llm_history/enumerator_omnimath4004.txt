@@ -1,0 +1,60 @@
+[write_program]
+The problem is to verify or explore the inequality for nonnegative real numbers a, b, c, d with sum 4:
+
+    a/(a^3 + 8) + b/(b^3 + 8) + c/(c^3 + 8) + d/(d^3 + 8) ≤ 4/9.
+
+We want to test various quadruples (a,b,c,d) ≥ 0 with a+b+c+d=4 and compute the sum to see if it is ≤ 4/9 = 0.4444...
+
+Likely candidates for extremal values are when the variables are equal or when one is 4 and others zero, and values in between. We'll enumerate rational quadruples with denominator at most 4 summing to 4, output each sum and test if sum ≤ 4/9, printing values immediately.
+
+We prioritize exact fractions but will print floats for clarity due to fraction complexities.
+
+We also print extremal value found to conjecture if 4/9 really is the maximum.
+
+```python
+from fractions import Fraction
+
+def f(x):
+    # f(x) = x / (x^3 + 8), handle x=0
+    if x == 0:
+        return Fraction(0)
+    return Fraction(x, x**3 + 8)
+
+# We'll try rational values with denominator 4 since sum=4 means numerator in [0..16]
+# We'll enumerate a,b,c and compute d=4 - (a+b+c) to avoid quadruple loops over d.
+# Only consider nonnegative a,b,c,d ≤ 4.
+
+max_val = Fraction(0)
+max_tuple = None
+
+den = 4
+total_num = 4 * den  # 16
+
+print("Enumerating quadruples (a,b,c,d) with sum=4, a,b,c,d multiples of 1/4")
+
+for a_num in range(total_num + 1):
+    a = Fraction(a_num, den)
+    if a > 4:
+        continue
+    for b_num in range(total_num - a_num + 1):
+        b = Fraction(b_num, den)
+        if b > 4:
+            continue
+        for c_num in range(total_num - a_num - b_num + 1):
+            c = Fraction(c_num, den)
+            d_num = total_num - a_num - b_num - c_num
+            d = Fraction(d_num, den)
+            if d < 0 or d > 4:
+                continue
+            # compute sum
+            val = f(a) + f(b) + f(c) + f(d)
+            # print current candidate and value as fraction and float
+            print(f"a={a} b={b} c={c} d={d} sum={val} ≈ {float(val):.5f}")
+            if val > max_val:
+                max_val = val
+                max_tuple = (a,b,c,d)
+
+print("\nMaximum sum found:")
+print(f"a={max_tuple[0]}, b={max_tuple[1]}, c={max_tuple[2]}, d={max_tuple[3]}, sum={max_val} ≈ {float(max_val):.5f}")
+print("Comparison to 4/9 ≈ 0.44444:", float(max_val) <= 4/9 + 1e-9)
+```

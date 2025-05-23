@@ -1,0 +1,57 @@
+[write_program]
+The problem asks for the smallest number \( n \) such that the polynomial \( x^2 + x + 4 \) can be represented as a sum of \( n \) squared linear polynomials with rational coefficients, and cannot be represented with fewer than \( n \) such terms.
+
+To gain insight, I'll enumerate small \( n \) and try to find rational \( (a_i, b_i) \) such that
+\[
+x^2 + x + 4 = \sum_{i=0}^{n-1} (a_i x + b_i)^2.
+\]
+The program will attempt to find such coefficients for \( n = 1, 2, 3 \) using rational candidates with small numerators and denominators - since exhaustive symbolic solving is complex, the enumerator will check over small rational tuples to find exact equalities by comparing coefficients.
+
+This enumeration can help conjecture the minimal required \( n \).
+
+```python
+from fractions import Fraction
+from itertools import product
+
+# Represent a squared linear polynomial: (a x + b)^2 = a^2 x^2 + 2ab x + b^2
+# Sum n such polynomials: sum_i (a_i^2) = 1 (coefficient of x^2)
+# sum_i 2 a_i b_i = 1 (coefficient of x)
+# sum_i b_i^2 = 4 (constant term)
+
+# We'll try small rationals a_i, b_i from -3/3 to 3/3, denominators 1 or 3 for manageability
+rational_candidates = [Fraction(n, d) for n in range(-3, 4) for d in [1, 3]]
+
+def check_sum_of_squares(n):
+    # Enumerate all n-tuples of (a,b)
+    # For efficiency, generate all pairs (a,b) first, then select n of them with repetition
+    pairs = list(product(rational_candidates, repeat=2))
+    # We'll try combinations with repetition of pairs length n
+    # To reduce complexity, sample some tuples by product with repetition n times with replacement
+    # We'll just enumerate product rather than combinations to get early solutions
+    # Output all solutions found immediately
+    found = False
+    total_checked = 0
+    for combo in product(pairs, repeat=n):
+        total_checked += 1
+        sum_a2 = sum((p[0]**2 for p in combo))
+        sum_2ab = sum((2*p[0]*p[1] for p in combo))
+        sum_b2 = sum((p[1]**2 for p in combo))
+        if sum_a2 == 1 and sum_2ab == 1 and sum_b2 == 4:
+            print(f"n={n}: Found solution coefficients (a_i,b_i): {combo}")
+            found = True
+            # print multiple solutions if exist
+            # stop searching after some limit to avoid flooding output
+            if total_checked > 100000:
+                break
+    if not found:
+        print(f"n={n}: No solution found with small rationals")
+
+def main():
+    print("Trying to represent x² + x + 4 as sum of n squares of linear polynomials (a_i x + b_i), a_i,b_i ∈ Q")
+    # Test small n from 1 to 3
+    for n in range(1,4):
+        check_sum_of_squares(n)
+
+if __name__ == "__main__":
+    main()
+```

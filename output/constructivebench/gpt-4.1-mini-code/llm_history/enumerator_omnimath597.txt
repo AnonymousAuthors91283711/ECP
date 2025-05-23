@@ -1,0 +1,55 @@
+[write_program]
+The problem involves enumerating paths on the 4-dimensional hypercube (vertices are 0-1 vectors of length 4) indexed by Fin 5 with certain properties:
+- s 0 = 0 vector (all zeros)
+- s 4 = 1 vector (all ones)
+- consecutive vertices differ by an edge (differ in exactly one coordinate)
+- consecutive vertices are not equal
+
+We want to enumerate all such sequences s: Fin 5 → vertices that start at 0000, end at 1111, with each adjacent pair differing in exactly one bit, and which are strictly different.
+
+This is essentially enumerating 5-step paths from 0000 to 1111 on the 4D hypercube graph, which differ by edges in each step.
+
+We can write a program to:
+- represent vertices as 4-bit integers (0..15)
+- edges: differ in exactly one bit (Hamming distance = 1)
+- find all 5-long sequences (5 vertices with indices 0..4), s.t.
+  s0 = 0 (0b0000)
+  s4 = 15 (0b1111)
+  adjacent entries differ by exactly one bit
+- enumerate and print all such sequences
+
+We will print each sequence found directly in bitstring form, then print the total number at the end.
+
+```python
+# Enumerate 5-long paths on 4D hypercube from 0000 to 1111 with consecutive vertices differing by one bit
+
+def neighbors(v):
+    # vertices differing from v in exactly one bit (flip each bit)
+    nbrs = []
+    for i in range(4):
+        nbr = v ^ (1 << i)
+        nbrs.append(nbr)
+    return nbrs
+
+start = 0  # 0000 binary
+end = 15   # 1111 binary
+
+paths = []
+
+def dfs(path):
+    if len(path) == 5:
+        if path[-1] == end:
+            # Print path as bitstrings
+            print(' -> '.join(f'{v:04b}' for v in path))
+            paths.append(path[:])
+        return
+    last = path[-1]
+    for nxt in neighbors(last):
+        if nxt != path[-1]:  # consecutive different (always true here)
+            # No explicit restriction on repeats beyond consecutive 
+            dfs(path + [nxt])
+
+dfs([start])
+print(f'Total paths found: {len(paths)}')
+```
+

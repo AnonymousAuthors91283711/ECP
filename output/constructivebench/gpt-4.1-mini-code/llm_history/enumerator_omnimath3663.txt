@@ -1,0 +1,91 @@
+[write_program]
+This problem asks us to investigate the existence of a function \( f: \mathbb{R} \to \mathbb{R} \) satisfying two conditions: surjectivity and a specific functional equation \( f(f(x)) = (x - 1) f(x) + 2 \).
+
+I'll write a Python program to attempt to find explicit examples or counterexamples for certain function types or parameter values. Since dealing with continuous functions directly is difficult, the program will check polynomial candidates of low degree and see if conditions can be met approximately or exactly for integer inputs, which might help conjecture properties about \( f \).
+
+```python
+from sympy import symbols, Eq, solve, Function, simplify
+
+# Symbolic variable
+x = symbols('x')
+
+# We'll test polynomial form f(x) = a*x + b (linear) first
+a, b = symbols('a b')
+f = a*x + b
+
+# Define the functional equation: f(f(x)) = (x - 1)*f(x) + 2
+# Left side: f(f(x)) = a*(a*x + b) + b = a**2*x + a*b + b
+lhs = a**2 * x + a*b + b
+
+# Right side: (x - 1)*f(x) + 2 = (x -1)*(a*x + b) + 2 = a*x**2 + b*x - a*x - b + 2
+rhs = a*x**2 + b*x - a*x - b + 2
+
+# Equation is lhs == rhs for all x, so coefficients for x^2, x, and constant must match
+# Equate coefficients of x^2: lhs has 0, rhs has a
+eq1 = Eq(0, a)
+
+# Coefficients of x: lhs has a^2, rhs has b - a
+eq2 = Eq(a**2, b - a)
+
+# Constants: lhs has a*b + b, rhs has -b + 2
+eq3 = Eq(a*b + b, -b + 2)
+
+# Solve the system
+sols = solve([eq1, eq2, eq3], (a, b), dict=True)
+
+print("Testing linear polynomial candidates f(x) = a*x + b:")
+for sol in sols:
+    print(f"Solution: a = {sol[a]}, b = {sol[b]}")
+
+    # Check surjectivity: f(x) = b when a=0, not surjective unless b = any? prints constant function
+    if sol[a] == 0:
+        print("Function is constant, check if surjective onto R: No unless constant range is R which is not possible.")
+    else:
+        print("Linear function with a != 0 is surjective.")
+
+print("\nTesting quadratic polynomial candidates f(x) = a*x**2 + b*x + c:")
+
+from sympy import symbols
+
+a, b, c = symbols('a b c')
+f = a*x**2 + b*x + c
+
+# f(f(x)) = a*(f(x))**2 + b*f(x) + c
+fx = f
+ffx = a*fx**2 + b*fx + c
+
+# (x -1)*f(x) + 2 = (x -1)*(a*x**2 + b*x + c) + 2
+rhs = (x - 1)*f + 2
+
+# Equate coefficients of polynomials f(f(x)) and rhs:
+from sympy import Poly
+
+ffx_poly = Poly(simplify(ffx), x)
+rhs_poly = Poly(simplify(rhs), x)
+
+# The polynomials should be equal, so coefficients must match.
+ffx_coeffs = ffx_poly.all_coeffs()
+rhs_coeffs = rhs_poly.all_coeffs()
+
+# Since ffx is degree 4 (due to squared term) and rhs degree 3, coefficient comparison isn't consistent.
+# Thus quadratic f does not satisfy the equation exactly.
+
+print("No quadratic polynomial f satisfies the functional equation exactly because LHS is degree 4 and RHS degree 3.")
+
+print("\nExample checks for f(x) = x (identity):")
+print("f(f(x)) = f(x) = x")
+print("(x -1)*f(x) + 2 = (x -1)*x + 2 = x**2 - x + 2")
+print("Not equal, so identity function is not a solution.")
+
+print("\nTesting constant functions f(x) = c:")
+print("f(f(x)) = c")
+print("(x - 1)*c + 2")
+print("For equality: c = (x -1)*c + 2 for all x, impossible unless c and x constant.")
+print("No constant function solutions.")
+
+print("\nPartial conclusion:")
+print("No linear or constant polynomial solutions. Quadratic polynomials fail degree check.")
+
+print("Further investigation might require non-polynomial or piecewise functions.")
+
+```

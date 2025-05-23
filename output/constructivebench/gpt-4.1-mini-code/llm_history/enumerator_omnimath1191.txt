@@ -1,0 +1,79 @@
+[write_program]
+The problem involves solving the linear system for variables \(x, y, z, w \in \mathbb{R}\):
+
+\[
+\begin{cases}
+2x + y + z + w = 1 \\
+x + 3y + z + w = 2 \\
+x + y + 4z + w = 3 \\
+x + y + z + 5w = 25
+\end{cases}
+\]
+
+We want to find the exact value of \(w\).
+
+We'll enumerate all given equations, solve the linear system with Python's exact rational arithmetic to avoid floating-point errors, and print the value of \(w\).
+
+```python
+from fractions import Fraction
+
+# Set up the system as Ax = b with exact fractions
+# Variables are in order: x, y, z, w
+
+A = [
+    [2, 1, 1, 1],
+    [1, 3, 1, 1],
+    [1, 1, 4, 1],
+    [1, 1, 1, 5],
+]
+
+b = [1, 2, 3, 25]
+
+def gaussian_elimination(A, b):
+    n = len(A)
+    # Convert all to Fraction
+    A = [[Fraction(val) for val in row] for row in A]
+    b = [Fraction(val) for val in b]
+
+    # Forward elimination
+    for i in range(n):
+        # Pivoting (simple partial pivot)
+        pivot = i
+        for r in range(i+1, n):
+            if abs(A[r][i]) > abs(A[pivot][i]):
+                pivot = r
+        if pivot != i:
+            A[i], A[pivot] = A[pivot], A[i]
+            b[i], b[pivot] = b[pivot], b[i]
+        # Normalize pivot row
+        pivot_val = A[i][i]
+        if pivot_val == 0:
+            continue  # singular or no unique solution
+        for c in range(i, n):
+            A[i][c] /= pivot_val
+        b[i] /= pivot_val
+
+        # Eliminate below
+        for r in range(i+1, n):
+            factor = A[r][i]
+            for c in range(i, n):
+                A[r][c] -= factor * A[i][c]
+            b[r] -= factor * b[i]
+
+    # Back substitution
+    x = [Fraction(0)] * n
+    for i in reversed(range(n)):
+        val = b[i]
+        for c in range(i+1, n):
+            val -= A[i][c] * x[c]
+        x[i] = val  # since A[i][i] == 1 now
+    return x
+
+solution = gaussian_elimination(A, b)
+x, y, z, w = solution
+print(f"Solution with exact fractions:")
+print(f"x = {x}")
+print(f"y = {y}")
+print(f"z = {z}")
+print(f"w = {w}")
+```

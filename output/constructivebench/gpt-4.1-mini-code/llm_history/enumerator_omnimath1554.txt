@@ -1,0 +1,71 @@
+[write_program]
+The problem relates to characterizing integer polynomials \(P\) such that for any bijection \(a: \mathbb{N} \to \mathbb{Z}\), there exist indices \(i < j\) and an integer \(k\) with the sum \(\sum_{n=i}^j a(n)\) equal to \(P(k)\). To explore this, I will enumerate some polynomials \(P\) over small degrees and integer inputs \(k\), and test if such sums can match \(P(k)\) under carefully constructed bijections \(a\). The bijection and sums can be simulated with finite integer ranges. The code prints candidate polynomials and instances to help conjecture which polynomials belong to the set.
+
+```python
+# Enumerate small integer polynomials and check if for all bijections
+# there exist interval sums matching P(k). Since testing all bijections
+# is infeasible, we experiment with special bijections to see if P(k)
+# values can be "hit" by sums of disjoint consecutive integers.
+
+import itertools
+
+# Generate polynomials P(x)=a0 + a1 x + a2 x^2 for coefficients in [-2,2].
+# We'll try degrees 0,1,2 with small coefficients.
+coeff_ranges = range(-2,3)
+max_k = 5  # range of integer inputs
+max_i_j = 6  # maximum interval length for sums
+
+def eval_poly(coeffs, x):
+    return sum(c * (x**i) for i,c in enumerate(coeffs))
+
+def intervals_sums(seq):
+    # Compute all sums of intervals [i,j], i<=j in seq indices
+    sums = set()
+    n = len(seq)
+    prefix = [0]
+    for v in seq:
+        prefix.append(prefix[-1]+v)
+    for i in range(n):
+        for j in range(i,n):
+            sums.add(prefix[j+1]-prefix[i])
+    return sums
+
+print("Testing polynomials P(x)=a0+a1 x+a2 x^2 with coefficients in [-2..2]")
+
+# Construct test bijections a: [0..max_i_j-1] -> integers from some set
+# We'll try natural order and an order with alternating signs as sample bijections
+test_bijections = [
+    list(range(max_i_j)),  # identity 0,1,2,...
+    [(-1)**i * i for i in range(max_i_j)],  # alternating 0,-1,2,-3,...
+    list(range(max_i_j-1,-1,-1))  # reversed order
+]
+
+for deg in range(3):
+    # coeffs: tuple of length deg+1
+    for coeffs in itertools.product(coeff_ranges, repeat=deg+1):
+        # skip zero polynomial for now
+        if all(c==0 for c in coeffs):
+            continue
+        poly_vals = set(eval_poly(coeffs,k) for k in range(-max_k,max_k+1))
+        # For each test bijection check if some interval sum hits some P(k)
+        success_all_bij = True
+        for a in test_bijections:
+            sums = intervals_sums(a)
+            # Check if sums intersect poly_vals
+            if len(poly_vals.intersection(sums))==0:
+                success_all_bij = False
+                break
+        if success_all_bij:
+            # Print polynomial coefficients and one k with match
+            for k in range(-max_k,max_k+1):
+                val = eval_poly(coeffs,k)
+                # Check if val hit by some sum in all bijections (approximate)
+                hits_all = True
+                for a in test_bijections:
+                    if val not in intervals_sums(a):
+                        hits_all = False
+                        break
+                if hits_all:
+                    print(f"Poly coeffs={coeffs} val=P({k})={val} hits sums in all sample bijections")
+                    break
+```

@@ -1,0 +1,51 @@
+[write_program]
+The problem is to find the minimum value of the expression \((a-b)(b-c)(c-d)(d-a)\) given \(a^2+b^2+c^2+d^2=1\).
+
+We will numerically enumerate quadruples \((a,b,c,d)\) on the 4D unit sphere with some discretization, compute the product, and track the minimum values found.
+
+```python
+import math
+
+# Discretization step and range for variables
+step = 0.2
+vals = [x * step for x in range(-5, 6)]  # values in [-1,1]
+
+min_prod = None
+min_quad = None
+
+# Enumerate quadruples (a,b,c,d) with a^2+b^2+c^2+d^2 approx 1 (tolerance due to discretization)
+tolerance = 0.05
+
+print("Enumerating quadruples (a,b,c,d) with a²+b²+c²+d²≈1 and computing (a−b)(b−c)(c−d)(d−a):")
+
+for a in vals:
+    a2 = a*a
+    if a2 > 1 + tolerance:
+        continue
+    for b in vals:
+        b2 = b*b
+        if a2 + b2 > 1 + tolerance:
+            continue
+        for c in vals:
+            c2 = c*c
+            sum_abc = a2 + b2 + c2
+            if sum_abc > 1 + tolerance:
+                continue
+            # Solve for d^2 ~ 1 - (a^2+b^2+c^2)
+            d_squared = 1 - sum_abc
+            if d_squared < -tolerance:
+                continue
+            # Since d must be real, consider d = ±sqrt(d_squared) if non-negative within tolerance
+            if d_squared < 0:
+                continue
+            d_candidates = [math.sqrt(d_squared), -math.sqrt(d_squared)]
+            for d in d_candidates:
+                prod = (a - b)*(b - c)*(c - d)*(d - a)
+                print(f"a={a:.2f}, b={b:.2f}, c={c:.2f}, d={d:.2f}, product={prod:.5f}")
+                if (min_prod is None) or (prod < min_prod):
+                    min_prod = prod
+                    min_quad = (a,b,c,d)
+
+print("\nMinimal product found:")
+print(f"(a,b,c,d) = ({min_quad[0]:.2f}, {min_quad[1]:.2f}, {min_quad[2]:.2f}, {min_quad[3]:.2f}) with product = {min_prod:.5f}")
+```

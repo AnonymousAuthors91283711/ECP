@@ -1,0 +1,61 @@
+[write_program]
+The problem appears to involve a polynomial \( P : \mathbb{N} \to \mathbb{N} \) associated with a polynomial \( q \) of degree 3, with specific values of \( P \) at certain points. Given the conditions on \( P \) (related to three types of inputs modulo 3), and that \( P(3n+1) = 730 \), we want to determine \( n \). 
+
+Our goal: to find all possible \( n \) satisfying the conditions, especially the condition \( P(3n+1) = 730 \).
+
+Given the pattern:
+- For \( 0 \leq k \leq n \), \( P(3k) = 2 \)
+- For \( 0 \leq k \leq n-1 \), \( P(3k+1) = 1 \)
+- For \( 0 \leq k \leq n-1 \), \( P(3k+2) = 0 \)
+
+and \( P(3n+1) = 730 \), the polynomial \( P \) follows a predictable pattern over these points.
+
+We can interpret \( P \) as a polynomial interpolation through these points, with values depending on \( n \). To approximate this, we'll construct possible values of \( P \) at relevant points for small \( n \), check what \( P(3n+1) \) would be, and see for which \( n \) it can be 730.
+
+Since \( q \) has degree 3, and its evaluations are interpolated at points \( 0,1,2,..., 3n+1 \), we try small \( n \) values and analyze.
+
+```python
+# The following script approximates the polynomial's behavior at key points
+# for small n, to identify when P(3n+1) == 730.
+
+# We'll simulate the polynomial interpolated through points:
+# (3k, 2), (3k+1, 1), (3k+2, 0), and check P(3n+1) for n from 0 up to a threshold.
+
+from sympy import symbols, interpolate, degree
+
+x = symbols('x')
+
+# Helper function to generate points for given n
+def generate_points(n):
+    points = []
+    for k in range(n + 1):
+        points.append((3 * k, 2))
+        if k < n:
+            points.append((3 * k + 1, 1))
+            points.append((3 * k + 2, 0))
+    return points
+
+# For each n, interpolate polynomial of degree <=3 from these points (up to 3k+1)
+# and check P(3n+1). Since the degree is limited to 3, we only consider 4 points
+# or the minimal set necessary for interpolation.
+
+# Search over small n to find when P(3n+1) == 730
+max_n = 15  # arbitrary small limit for illustration
+for n in range(max_n + 1):
+    pts = generate_points(n)
+    # Keep only 4 points for degree 3 interpolation or fewer if available
+    if len(pts) >= 4:
+        subset_pts = pts[:4]
+    else:
+        subset_pts = pts
+    try:
+        p = interpolate(*subset_pts, x)
+        val = p.subs(x, 3 * n + 1)
+        # Since polynomial evaluations can be symbolic, evaluate numerically
+        val_eval = val.evalf()
+        print(f"n={n}, P({3 * n + 1}) ≈ {val_eval}")
+        if abs(val_eval - 730) < 1e-6:
+            print(f"Found n={n} where P(3n+1)=730.")
+    except Exception:
+        continue
+```

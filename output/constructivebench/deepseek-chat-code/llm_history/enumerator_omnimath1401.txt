@@ -1,0 +1,52 @@
+[write_program]
+This problem is about counting the number of maximum independent sets in a grid graph of size 10×2 (10 rows, 2 columns). An independent set is a set of vertices where no two vertices are adjacent. The maximum size of such a set is 9, and we need to count how many such sets exist.
+
+We'll approach this by:
+1. Modeling the grid graph structure
+2. Enumerating all possible independent sets of size 9
+3. Counting the valid configurations
+
+The key observation is that in each column, we can choose at most 5 vertices (every other one), but to reach size 9, we need to take 5 from one column and 4 from the other, with specific constraints on their positions.
+
+```python
+def count_max_independent_sets():
+    count = 0
+    # We'll represent the grid as two columns (0 and 1), each with 10 rows (0-9)
+    # An independent set can have at most 5 in one column (every other vertex)
+    # and 4 in the other column, with specific constraints
+    
+    # Case 1: 5 in column 0 and 4 in column 1
+    for mask0 in range(1 << 10):
+        # Check if column 0 has 5 non-adjacent vertices (no two consecutive)
+        bits0 = bin(mask0).count('1')
+        if bits0 != 5:
+            continue
+        # Check no two consecutive bits are set
+        valid = True
+        for i in range(9):
+            if (mask0 & (1 << i)) and (mask0 & (1 << (i+1))):
+                valid = False
+                break
+        if not valid:
+            continue
+        
+        # For each valid column 0, count compatible column 1 configurations
+        # Column 1 must have 4 vertices, none adjacent to column 0's vertices
+        forbidden = mask0 | (mask0 << 1) | (mask0 >> 1)
+        forbidden &= 0x3FF  # Keep only 10 bits
+        
+        # Now count subsets of size 4 in column 1 that don't use forbidden rows
+        available = (~forbidden) & 0x3FF
+        bits_available = bin(available).count('1')
+        if bits_available >= 4:
+            count += comb(bits_available, 4)
+    
+    # Case 2: 5 in column 1 and 4 in column 0 (symmetric to above)
+    # The count will be the same due to symmetry
+    count *= 2
+    
+    print(count)
+
+from math import comb
+count_max_independent_sets()
+```

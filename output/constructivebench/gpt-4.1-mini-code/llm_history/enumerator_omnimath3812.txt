@@ -1,0 +1,68 @@
+[write_program]
+The problem asks to characterize all functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying 
+\[ f(x^2 + f(y)) = y + (f(x))^2 \quad \forall x,y \in \mathbb{R}. \]
+
+We will enumerate candidate functions by testing some plausible functions on a grid of values to see if they satisfy the equation approximately. We focus on simple polynomials and sample points. The program prints candidate functions of a certain form and their values on sample inputs, checking if the relation holds numerically (with a small tolerance) over sample values.
+
+This enumeration won't prove uniqueness but helps conjecture the forms of \( f \).
+
+```python
+import math
+
+# We test candidate functions f with explicit definitions,
+# check if they satisfy f(x^2 + f(y)) = y + (f(x))^2 approximately
+# for sample x,y values.
+
+def check_candidate(f, name, samples=[-2,-1,0,1,2], tol=1e-9):
+    # Test f on samples
+    all_ok = True
+    for x in samples:
+        fx = f(x)
+        for y in samples:
+            fy = f(y)
+            lhs = f(x**2 + fy)
+            rhs = y + (fx)**2
+            if abs(lhs - rhs) > tol:
+                all_ok = False
+                # Print counterexample to show partial failure
+                print(f"Candidate {name} failed at x={x}, y={y}: lhs={lhs}, rhs={rhs}")
+                break
+        if not all_ok:
+            break
+    if all_ok:
+        print(f"Candidate {name} PASSES on samples")
+
+# Candidate 1: f(x) = x
+def f1(x): return x
+check_candidate(f1, "f(x)=x")
+
+# Candidate 2: f(x) = -x
+def f2(x): return -x
+check_candidate(f2, "f(x)=-x")
+
+# Candidate 3: f(x) = x^2
+def f3(x): return x**2
+check_candidate(f3, "f(x)=x^2")
+
+# Candidate 4: f(x) = sqrt(x) for x>=0 else 0 (not smooth, just trial)
+def f4(x): return math.sqrt(x) if x>=0 else 0
+check_candidate(f4, "f(x)=sqrt(x)")
+
+# Candidate 5: f(x) = 0
+def f5(x): return 0
+check_candidate(f5, "f(x)=0")
+
+# Candidate 6: f(x) = c (constant), test c = 1
+def f6(x): return 1
+check_candidate(f6, "f(x)=1")
+
+# Candidate 7: f(x) = -y + constant (affine form)
+# Try f(x)=a x + b, check if feasible
+# here try a=1, b=0 is f(x)=x handled,
+# try a=-1, b=0 is f(x)=-x handled.
+
+# Additional candidate: f(x) = x + c, try c=1
+def f7(x): return x + 1
+check_candidate(f7, "f(x)=x+1")
+```
+This prints which candidate functions satisfy the functional equation on the chosen sample values.

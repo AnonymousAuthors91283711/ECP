@@ -1,0 +1,61 @@
+[write_program]
+The problem describes a functional equation: find all functions \( f : \mathbb{R} \to \mathbb{R} \) satisfying
+\[
+f(x) + f\big(y f(x) + f(y)\big) = f\big(x + 2 f(y)\big) + x y
+\]
+for all real \( x, y \).
+
+To assist in conjecturing the solution, we can try simple candidate functions like linear functions \( f(x) = ax + b \), constants, or others, and verify the equation numerically for a grid of values. This helps identify potential forms of \( f \) such as linear or quadratic.
+
+The code below:
+- Tests linear \( f(x) = a x + b \) with integer \( a, b \in \{-3, \dots, 3\} \).
+- For each candidate \( f \), checks the equation for sample \( (x, y) \) values from \(-3\) to \(3\).
+- Prints all candidate functions that satisfy the equation exactly for these test points.
+- Attempts a few simple nonlinear functions as well.
+
+This enumeration helps to conjecture that solutions are possibly linear or simple polynomials and guides proving the theorem.
+
+```python
+# Enumerate candidate functions f: R->R satisfying
+# f(x) + f(y*f(x) + f(y)) = f(x + 2*f(y)) + x*y
+# for many sample points (x,y).
+# We test linear f(x)=a*x+b with small integer (a,b).
+
+def test_function(f):
+    # Test equation on grid for integer x,y in [-3,3]
+    for x in range(-3, 4):
+        for y in range(-3, 4):
+            lhs = f(x) + f(y * f(x) + f(y))
+            rhs = f(x + 2 * f(y)) + x * y
+            if abs(lhs - rhs) > 1e-12:
+                return False
+    return True
+
+def main():
+    print("Testing linear functions f(x)=a*x + b")
+    candidates = []
+    for a in range(-3,4):
+        for b in range(-3,4):
+            f = lambda x, a=a, b=b: a*x + b
+            if test_function(f):
+                print(f"Candidate linear solution: f(x) = {a}*x + {b}")
+                candidates.append((a,b))
+
+    # Try constant functions separately (already included in above)
+
+    # Try some simple nonlinear functions to explore:
+    # For performance, pick few sample nonlinear f.
+    print("Testing simple nonlinear candidates")
+    def f1(x): return x*x
+    def f2(x): return 0*x  # zero function
+    def f3(x): return 2*x
+    def f4(x): return x + 1
+    f_nonlins = [f1, f2, f3, f4]
+    names = ["x^2", "0", "2x", "x+1"]
+    for f,name in zip(f_nonlins,names):
+        if test_function(f):
+            print(f"Candidate nonlinear solution: f(x) = {name}")
+
+if __name__ == "__main__":
+    main()
+```

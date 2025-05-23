@@ -1,0 +1,65 @@
+[write_program]
+This problem involves a recurrence relation with a(n+2) = 6*a(n) - a(n+1) and initial condition a(0)=1. We need to investigate the possible values of a(2007) under the constraint that all terms remain positive.
+
+We'll write a Python program to:
+1. Compute the sequence up to n=2007 for different initial a(1) values
+2. Find the range of a(1) values that keep all terms positive
+3. Observe the behavior of a(2007) as a(1) varies
+
+```python
+def compute_sequence(a1, n_max=2007):
+    """Compute the sequence up to n_max with a(0)=1 and given a(1)"""
+    seq = [1.0, float(a1)]
+    for n in range(2, n_max + 1):
+        next_val = 6 * seq[n-2] - seq[n-1]
+        seq.append(next_val)
+        if next_val <= 0:
+            return None  # Sequence violates positivity
+    return seq
+
+def find_positive_range():
+    """Find the range of a1 values that keep all terms positive"""
+    # Binary search to find boundaries
+    low, high = 0.0, 6.0  # Initial bounds
+    tol = 1e-10
+    
+    # Find lower bound (where terms stay positive)
+    left = 0.0
+    right = 6.0
+    for _ in range(100):
+        mid = (left + right) / 2
+        if compute_sequence(mid) is not None:
+            right = mid
+        else:
+            left = mid
+    lower_bound = right
+    
+    # Find upper bound
+    left = 0.0
+    right = 6.0
+    for _ in range(100):
+        mid = (left + right) / 2
+        if compute_sequence(mid) is not None:
+            left = mid
+        else:
+            right = mid
+    upper_bound = left
+    
+    return lower_bound, upper_bound
+
+def main():
+    # Find the range where all terms are positive
+    lower, upper = find_positive_range()
+    print(f"Range of a(1) keeping all terms positive: [{lower:.10f}, {upper:.10f}]")
+    
+    # Sample some values within the range
+    for a1 in [lower, (lower+upper)/2, upper]:
+        seq = compute_sequence(a1)
+        if seq:
+            print(f"For a(1) = {a1:.10f}, a(2007) ≈ {seq[2007]:.5e}")
+
+if __name__ == "__main__":
+    main()
+```
+
+The program first determines the range of valid a(1) values that keep all terms positive, then computes a(2007) for sample values within this range. The output shows the behavior of the sequence at the boundaries and midpoint of the valid range. The exact value would require solving the recurrence relation analytically, but this numerical approach helps understand the behavior.

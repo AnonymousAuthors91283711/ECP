@@ -1,0 +1,64 @@
+[write_program]
+This problem asks to find all real triples (a, b, c) that satisfy two equations:
+1. a + b + c = 1/a + 1/b + 1/c
+2. a² + b² + c² = 1/a² + 1/b² + 1/c²
+
+We'll write a Python program to search for solutions by:
+1. Considering symmetry (permutations of variables)
+2. Checking obvious cases (like a=b=c)
+3. Scanning a reasonable range of values with small steps
+
+The program will output candidate solutions it finds.
+
+```python
+import itertools
+
+def is_close(x, y, tol=1e-6):
+    return abs(x - y) < tol
+
+def check_conditions(a, b, c):
+    sum_abc = a + b + c
+    sum_recip = 1/a + 1/b + 1/c
+    sum_sq = a**2 + b**2 + c**2
+    sum_recip_sq = 1/a**2 + 1/b**2 + 1/c**2
+    return (is_close(sum_abc, sum_recip) and 
+            is_close(sum_sq, sum_recip_sq))
+
+def find_solutions():
+    # Check symmetric case a=b=c
+    for a in [-2, -1, 1, 2]:
+        if check_conditions(a, a, a):
+            print(f"({a}, {a}, {a})")
+
+    # Check cases where two variables are equal
+    step = 0.1
+    for a in [x * step for x in range(-20, 21) if x != 0]:
+        for b in [x * step for x in range(-20, 21) if x != 0]:
+            if a == b:
+                continue
+            # Try to find c that satisfies both equations
+            # First equation gives a quadratic in c
+            # (a + b + c)(abc) = bc + ac + ab
+            # abc^2 + (ab(a+b)-ab)c - (ab(a+b)) = 0
+            A = a*b
+            B = a*b*(a+b) - a*b
+            C = -a*b*(a+b)
+            discriminant = B**2 - 4*A*C
+            if discriminant >= 0:
+                for c in [(-B + discriminant**0.5)/(2*A), 
+                         (-B - discriminant**0.5)/(2*A)]:
+                    if c != 0 and check_conditions(a, b, c):
+                        # Check all permutations to avoid duplicates
+                        found = False
+                        for perm in itertools.permutations((a, b, c)):
+                            if perm in seen:
+                                found = True
+                                break
+                        if not found:
+                            seen.add((a, b, c))
+                            print(f"({a:.3f}, {b:.3f}, {c:.3f})")
+
+if __name__ == "__main__":
+    seen = set()
+    find_solutions()
+```

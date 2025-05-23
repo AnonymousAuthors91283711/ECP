@@ -1,0 +1,63 @@
+[write_program]
+This problem involves finding real numbers u and v that satisfy two polynomial equations. We'll write a Python program to numerically approximate solutions to these equations within a reasonable range. The program will use Newton's method for root finding.
+
+```python
+import numpy as np
+
+def equation_u(u):
+    """Evaluates the u equation: sum(u^(k+1) for k=0..7) + 10u^9 - 8"""
+    return sum(u**(k+1) for k in range(8)) + 10*u**9 - 8
+
+def equation_v(v):
+    """Evaluates the v equation: sum(v^(k+1) for k=0..9) + 10v^11 - 8"""
+    return sum(v**(k+1) for k in range(10)) + 10*v**11 - 8
+
+def derivative(f, x, h=1e-6):
+    """Numerical derivative for Newton's method"""
+    return (f(x + h) - f(x - h)) / (2 * h)
+
+def newton_method(f, x0, tol=1e-10, max_iter=100):
+    """Newton's method for root finding"""
+    x = x0
+    for _ in range(max_iter):
+        fx = f(x)
+        if abs(fx) < tol:
+            return x
+        dfx = derivative(f, x)
+        if dfx == 0:
+            return None
+        x -= fx / dfx
+    return None
+
+def find_roots(f, start, end, step=0.1):
+    """Find roots in [start, end] by sampling initial guesses"""
+    roots = set()
+    x = start
+    while x <= end:
+        root = newton_method(f, x)
+        if root is not None and start <= root <= end:
+            roots.add(round(root, 8))  # Round to avoid floating point duplicates
+        x += step
+    return sorted(roots)
+
+# Find and print roots for u
+print("Possible u values:")
+u_roots = find_roots(equation_u, -2, 2)
+for u in u_roots:
+    print(f"u = {u}")
+
+# Find and print roots for v
+print("\nPossible v values:")
+v_roots = find_roots(equation_v, -2, 2)
+for v in v_roots:
+    print(f"v = {v}")
+
+# Print the pair (u, v) that appears in both roots (if any)
+common = set(u_roots) & set(v_roots)
+if common:
+    print("\nCommon root(s):")
+    for x in common:
+        print(f"u = v = {x}")
+else:
+    print("\nNo common roots found in the searched range")
+```

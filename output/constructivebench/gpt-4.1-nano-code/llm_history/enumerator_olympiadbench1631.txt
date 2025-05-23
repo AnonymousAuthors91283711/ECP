@@ -1,0 +1,57 @@
+[write_program]
+The problem involves finding the greatest k such that there exists some a > 0 with all numbers of the form 2^{x a n} - 1 (for n from 1 to k) being prime. The sequence x a n is defined recursively, with initial values x a 0=0, x a 1= a, and x a (n+1) = 2 * x a n + 1.
+
+Since primes of the form 2^{x a n} - 1 are known as Mersenne primes, and they typically occur for small exponents, we focus on small a and small n to find feasible primes.
+
+We will:
+- Fix small values of a, starting from 1.
+- For each a, check increasing values of n from 1 upwards.
+- For each n, compute x a n and test whether 2^{x a n} - 1 is prime.
+- Stop when the sequence breaks (non-prime found).
+- Record the maximum n for each a; then find the overall maximum.
+
+```python
+import math
+
+def is_prime(num):
+    if num < 2:
+        return False
+    if num in (2, 3):
+        return True
+    if num % 2 == 0:
+        return False
+    sqrt_n = int(math.isqrt(num))
+    for i in range(3, sqrt_n + 1, 2):
+        if num % i == 0:
+            return False
+    return True
+
+def x(a, n):
+    if n == 0:
+        return 0
+    elif n == 1:
+        return a
+    else:
+        return 2 * x(a, n - 1) + 1
+
+max_results = []
+# Limit search within small parameters - a=1..3, n up to 30
+for a in range(1, 4):
+    count = 0
+    for n in range(1, 31):
+        exp = x(a, n)
+        candidate = 2 ** exp - 1
+        if is_prime(candidate):
+            count = n  # n is prime
+        else:
+            break
+    max_results.append((a, count))
+# Find the maximum n over all a
+max_a, max_n = max(max_results, key=lambda t: t[1])
+print(f"Maximum sequence length: n={max_n} for a={max_a}")
+# Also output the corresponding primes
+for n in range(1, max_n + 1):
+    exp = x(max_a, n)
+    prime_candidate = 2 ** exp - 1
+    print(f"a={max_a}, n={n}, x={exp}, 2^{exp}-1={prime_candidate} (prime={is_prime(prime_candidate)})")
+```

@@ -1,0 +1,69 @@
+[write_program]
+The problem describes functions \( f: \mathbb{N} \to \mathbb{N} \) satisfying two conditions:
+
+1. For all \( x,y \in \mathbb{N} \), \( f(f(x) + y) \) divides \( x + f(y) \).
+2. For all \( x \in \mathbb{N} \), \( f(x) > 0 \).
+
+We want to enumerate possible functions \(f\) that meet these conditions.
+
+To tackle this computationally, we can:
+- Limit \( \mathbb{N} \) to small finite sets for \( x,y \) (say 0 to 4).
+- Enumerate all candidate functions \( f: \{0,\ldots,4\} \to \{1,\ldots,M\} \) for some small \(M\), since \(f\) must be positive.
+- Check the divisibility condition for all pairs \( x,y \in \{0,\ldots,4\} \).
+- Print any \( f \) that satisfy the condition on this finite domain, as partial evidence toward conjectures.
+
+We use a small \(M\) like 5 for range and domain to avoid explosion.
+
+This enumeration suggests plausible functions and helps conjecture their form. We will print all candidates found.
+
+```python
+# Enumerate functions f: {0..4} -> {1..5} with f(x)>0
+# Check divisibility condition: for all x,y in {0..4}, f(f(x)+y) divides x + f(y)
+# Since f is defined on {0..4}, f(x)+y may be up to 5+4=9 -- out of range.
+# To handle this, we extend function definition by zero outside domain (infeasible),
+# or restrict to f(x)+y <= 4, hence f(x) in {1..0} impossible.
+# To resolve this, we consider f defined on domain up to max argument needed: maximum f(x)+y
+# Let's choose domain {0..9}, then range {1..9} to keep manageable.
+
+# We'll iterate over all f:[0..9]->[1..9], which is 9^10 ~ 3.5e9 huge; infeasible.
+# Instead, random sampling or heuristic needed.
+
+# For feasibility, do f:[0..4]->[1..5], but only check pairs (x,y) with f(x)+y<=4.
+# Or precompute f(x)+y for all x,y and skip if out of domain.
+
+# Let's implement partial enumeration with pruning.
+
+from itertools import product
+
+DOMAIN = list(range(5))
+RANGE = list(range(1,6))
+
+def satisfies(f):
+    # f is a list mapping x->f[x]
+    for x in DOMAIN:
+        for y in DOMAIN:
+            arg = None
+            # f(x)+ y can be >4, skip such pairs as we can't evaluate f(arg)
+            arg = f[x] + y
+            if arg > 4:
+                continue  # skip, cannot check divisibility outside domain
+            lhs = f[arg]
+            rhs = x + f[y]
+            if rhs % lhs != 0:
+                return False
+    return True
+
+def f_str(f):
+    return '[' + ','.join(str(v) for v in f) + ']'
+
+print("Enumerating candidate functions f: {0..4} -> {1..5} with divisibility condition on partial domain:")
+
+count = 0
+for f in product(RANGE, repeat=5):
+    if satisfies(f):
+        count +=1
+        print(f"Candidate #{count}: f = {f_str(f)}")
+
+print(f"Total candidates found (partial domain): {count}")
+```
+

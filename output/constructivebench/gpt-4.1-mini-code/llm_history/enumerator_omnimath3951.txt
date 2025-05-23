@@ -1,0 +1,75 @@
+[write_program]
+The problem involves checking for polynomials \( P \) with positive degree such that the product of their compositions at powers \( X^{i+1} \) for \( i \in [0, n-1] \) equals the composition at \( X^{n(n+1)/2} \). We want to explore possible \( P \) for small values of \( n \), and try to identify candidate polynomials \( P \) that satisfy the given identity.
+
+We'll:
+- Pick small \( n > 1 \) (e.g., 2, 3)
+- Enumerate simple polynomials (e.g., monomials \( X^k \), sums of monomials with small degrees)
+- Compose them as in the problem statement to check if the polynomial identity holds
+- Print out each successful candidate polynomial \( P \)
+
+To match the condition exactly, we will:
+- Define polynomial multiplication and composition symbolically
+- Check equality of the resulting polynomials exactly
+- Print satisfying \( P \) immediately
+
+```python
+# enumerator.py
+from sympy import symbols, Poly, expand, simplify, Symbol
+
+X = Symbol('X')
+
+def poly_compose(P, Q):
+    """Return polynomial P composed with polynomial Q: P(Q)."""
+    return Poly(P.as_expr().subs(X, Q.as_expr())).as_poly()
+
+def poly_equal(P, Q):
+    """Check exact polynomial equality (coefficients must match exactly)."""
+    return simplify(P.as_expr() - Q.as_expr()) == 0
+
+def generate_candidate_polys(max_deg=4):
+    """
+    Generate candidate polynomials of form X^k or 1 + X^k with degree up to max_deg.
+    For testing only simple forms.
+    """
+    candidates = []
+    # Monomials X^k with k in 1..max_deg
+    for k in range(1, max_deg+1):
+        candidates.append(Poly(X**k))
+    # Polynomials 1 + X^k
+    for k in range(1, max_deg+1):
+        candidates.append(Poly(1 + X**k))
+    # Polynomials X + X^k
+    for k in range(2, max_deg+1):
+        candidates.append(Poly(X + X**k))
+    return candidates
+
+def main():
+    print("Enumerating candidate polynomials P for n=2,3 with positive degree...")
+    for n in [2,3]:
+        print(f"n={n}")
+        # sum of geometric series indices for composition exponent
+        comp_exp = n*(n+1)//2
+
+        for P in generate_candidate_polys():
+            if P.degree() == 0:
+                continue  # degree must be positive
+
+            # Compute product of P composed with X^(i+1) for i in range n
+            prod = Poly(1)
+            for i in range(n):
+                # Q = X^(i+1)
+                Q = Poly(X**(i+1))
+                comp = poly_compose(P, Q)
+                prod = Poly(expand(prod.as_expr()*comp.as_expr()))
+
+            # Compute P composed with X^{comp_exp}
+            Q_big = Poly(X**comp_exp)
+            comp_big = poly_compose(P, Q_big)
+
+            if poly_equal(prod, comp_big):
+                print(f"n={n}, P = {P.as_expr()} satisfies:")
+                print(f"  ∏ P(X^{i+1}) for i in [0..{n-1}] = P(X^{comp_exp})")
+                
+if __name__ == "__main__":
+    main()
+```

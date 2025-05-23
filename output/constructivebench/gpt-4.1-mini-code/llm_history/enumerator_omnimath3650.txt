@@ -1,0 +1,95 @@
+[write_program]
+The problem is to find pairs of positive integers \( (a,b) \) such that:
+- \(\gcd(a,b) = \prod_{i=1}^{50} i\),
+- \(\mathrm{lcm}(a,b) = \prod_{i=1}^{50} i^2\).
+
+We need to enumerate all such pairs (or at least those satisfying conditions for smaller ranges) to conjecture how many there are.
+
+Key observations:
+- Let \(G = \prod_{i=1}^{n} i\).
+- The gcd is \(G\), and lcm is \(G^2\).
+- By the identity \(a \times b = \gcd(a,b) \times \mathrm{lcm}(a,b)\), here \(a \times b = G \times G^2 = G^3\).
+- Since \(G = \prod p^{e_p}\) for prime factorization, let \(a = G \times x\) and \(b = G \times y\) where \(\gcd(x,y) = 1\) and \(x \times y = G\).
+- Therefore, the problem reduces to finding coprime pairs \(x,y\) with product \(G\).
+
+So the problem reduces to counting the number of coprime pairs \((x,y)\) such that \(x \times y = G\).
+
+Since \(G\) is the factorial, factor it into primes for some smaller \(n\), find the factorization, and find coprime pairs (pairs of divisors of \(G\) with gcd 1 and product \(G\)).
+
+To keep output small and efficient, we'll implement it for smaller \(n\), like \(n=5,10,15\), and print the parameters and the count of such pairs.
+
+We'll also print all pairs (a,b) for \(n=5\), which is small enough.
+
+```python
+import math
+from sympy import primerange, factorint
+
+def factorial_prime_factors(n):
+    # Returns prime factorization of n! as dict {prime: exponent}
+    # Using Legendre's formula for exponents
+    primes = list(primerange(2, n+1))
+    factors = {}
+    for p in primes:
+        exp = 0
+        m = n
+        while m > 0:
+            m //= p
+            exp += m
+        factors[p] = exp
+    return factors
+
+def construct_number(factors):
+    # Given prime factor dict {p:e}, construct the number
+    num = 1
+    for p,e in factors.items():
+        num *= p**e
+    return num
+
+def enum_coprime_divisor_pairs(factors):
+    # factors: prime:exponent for G
+    # x and y coprime => their prime factors are disjoint subsets of primes of G.
+    # Also x*y = G, so combined primes of x and y is exactly all primes in G with their full exponents.
+    # Since x and y are coprime, each prime's full power is assigned either to x or y.
+    # So, number of pairs = 2^{number_of_distinct_primes}
+    primes = list(factors.keys())
+    n = len(primes)
+    pairs = []
+    # For each subset of primes, assign full powers to x, rest to y
+    # This ensures gcd(x,y)=1 and x*y=G
+    for mask in range(1 << n):
+        x_factors = {}
+        y_factors = {}
+        for i,p in enumerate(primes):
+            if (mask >> i) & 1:
+                x_factors[p] = factors[p]
+            else:
+                y_factors[p] = factors[p]
+        x = construct_number(x_factors)
+        y = construct_number(y_factors)
+        pairs.append( (x,y) )
+    return pairs
+
+def main():
+    for n in [5, 10]:
+        print(f"Parameters: n = {n}")
+        factors = factorial_prime_factors(n)
+        G = construct_number(factors)
+        print(f"gcd = G = {G}")
+        print(f"lcm = G^2 = {G*G}")
+        pairs = enum_coprime_divisor_pairs(factors)
+        print(f"Number of (x,y) coprime pairs with x*y=G: {len(pairs)}")
+        print(f"Enumerating (a,b) = (G*x, G*y) pairs for n={n}:")
+        limit = 10  # Only print first 10 pairs to limit output
+        count = 0
+        for x,y in pairs:
+            a = G * x
+            b = G * y
+            print(f"(a,b) = ({a}, {b})")
+            count += 1
+            if count >= limit:
+                break
+        print()
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,68 @@
+[write_program]
+This problem involves finding integer pairs (a, b) such that the polynomial X² + aX + b divides a certain polynomial with coefficients alternating between -1 and 1, ending with two 1's. We'll write a Python program to enumerate possible (a, b) pairs by checking small integer values.
+
+The approach:
+1. Generate polynomials of the form X² + aX + b for small integer values of a and b
+2. For each such polynomial, check if it divides any polynomial of the form described in the problem
+3. Since the problem involves infinite possibilities, we'll limit our search to reasonable bounds
+
+```python
+def main():
+    # We'll search for a and b in this range
+    min_val = -10
+    max_val = 10
+    
+    # Maximum degree of the dividend polynomial to check
+    max_n = 20
+    
+    found_pairs = set()
+    
+    for a in range(min_val, max_val + 1):
+        for b in range(min_val, max_val + 1):
+            if b == 0:
+                continue  # X² + aX can't divide our target polynomial
+            
+            # Check for n from 2 to max_n (since divisor is degree 2)
+            for n in range(2, max_n + 1):
+                # Create the dividend polynomial coefficients
+                coeffs = []
+                for i in range(n + 1):
+                    if i == n:
+                        coeffs.append(1)
+                    elif i == n - 1:
+                        coeffs.append(1)
+                    else:
+                        coeffs.append((-1)**i)
+                
+                # Check if X² + aX + b divides the polynomial
+                # We'll use polynomial division to check
+                # Start with the dividend coefficients
+                dividend = coeffs.copy()
+                # Synthetic division for quadratic divisor 1, a, b
+                if len(dividend) < 3:
+                    continue
+                
+                # Perform polynomial division
+                quotient = []
+                try:
+                    for i in range(len(dividend) - 2):
+                        q = dividend[i]
+                        quotient.append(q)
+                        dividend[i+1] -= q * a
+                        dividend[i+2] -= q * b
+                    
+                    # Check if remainder is zero
+                    if dividend[-2] == 0 and dividend[-1] == 0:
+                        found_pairs.add((a, b))
+                        print(f"Found pair (a, b) = ({a}, {b}) for n = {n}")
+                        break
+                except IndexError:
+                    continue
+    
+    print("\nAll found pairs:")
+    for pair in sorted(found_pairs):
+        print(pair)
+
+if __name__ == "__main__":
+    main()
+```

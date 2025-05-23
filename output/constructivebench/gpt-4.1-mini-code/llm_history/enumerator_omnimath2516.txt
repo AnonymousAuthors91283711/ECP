@@ -1,0 +1,42 @@
+[write_program]
+The problem involves a set of competitors and functions assigning scores in two rounds. For pairs of distinct competitors, we consider those pairs where the ordering by general scores is reversed by the ordering of theme scores (a kind of "inversion" or "crossing"). We want to compute the ratio p of such "favorable" pairs over all pairs, scaled by 10000 and floored.
+
+To explore this, we enumerate small sets of competitors (e.g., {0,1,2}) and sample general_scores and theme_scores values, count favorable pairs, and print all observed \(\lfloor 10000p \rfloor\).
+
+```python
+# Enumerate small competitor sets and two scoring functions, print floor(10000*p).
+# p = (#pairs with reversed ordering) / (total pairs)
+from itertools import permutations, product, combinations
+
+def count_favorable(competitors, general_scores, theme_scores):
+    pairs = [(a, b) for a in competitors for b in competitors if a != b]
+    favorable = 0
+    for a, b in pairs:
+        ga, gb = general_scores[a], general_scores[b]
+        ta, tb = theme_scores[a], theme_scores[b]
+        if (ga > gb and tb > ta) or (gb > ga and ta > tb):
+            favorable += 1
+    p = favorable / len(pairs)
+    return int(p * 10000)
+
+def main():
+    competitors = [0,1,2]
+    n = len(competitors)
+    score_range = range(1,4)  # small scores 1..3 to limit output
+    results = set()
+    print(f"Competitors: {competitors}, score values in {list(score_range)}")
+    for gs in product(score_range, repeat=n):
+        general_scores = {c: gs[i] for i,c in enumerate(competitors)}
+        for ts in product(score_range, repeat=n):
+            theme_scores = {c: ts[i] for i,c in enumerate(competitors)}
+            val = count_favorable(competitors, general_scores, theme_scores)
+            if val not in results:
+                results.add(val)
+                print(f"general_scores={gs}, theme_scores={ts} => floor(10000*p)={val}")
+            if len(results) > 20:  # limit output size
+                print("... too many results, stopping enumeration.")
+                return
+
+if __name__ == "__main__":
+    main()
+```

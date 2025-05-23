@@ -1,0 +1,112 @@
+[write_program]
+This problem is about counting integers \( n \) from 1 to 2022 for which there exists a list \( l \) of integers of length \( n \), with sum and product both equal to \( n \).
+
+Key observations:
+- The product of \( n \) integers equals \( n \) means if \( n \) is large, factors must multiply neatly.
+- The sum equals \( n \), so the average element is 1.
+- We want to search over \( n \in [1, 2022] \) and check existence of such lists.
+- To reduce complexity, one can try constructions or small candidates for \( l \).
+
+The program enumerates possible \( n \) and tries to construct example lists \( l \) satisfying:
+- length = \( n \),
+- sum = \( n \),
+- product = \( n \).
+
+Since the constraints combined are strict, we try to generate lists and print \( n \) when found.
+
+```python
+# Enumerate integers n from 1 to 2022 and check if there exists
+# a list l of length n with sum = product = n.
+# To find l, try decomposing n into factors close to 1 to 10.
+# We print each n immediately when found.
+
+def can_construct(n):
+    # We want to find list l of length n with sum=l and product=l=n.
+    # Try if possible via factorization and padding with ones.
+    # The product is n, so factors multiply to n.
+    # If we represent n as product of k factors (each >0),
+    # and then pad with (n-k) ones to achieve length n,
+    # sum will be product factors sum + (n-k) *1 = n.
+    # So sum(factors) + n - k = n => sum(factors) = k.
+    # So sum of factors = number of factors.
+    # So factors all must be 1 to satisfy sum = number of factors,
+    # but product=product(factors)=n and product=1 only if factors=1.
+    # So either n=1 or factors=1's only.
+    # Let's check n=1 separately.
+
+    if n == 1:
+        # list=[1], sum=1, prod=1
+        return True
+
+    # For other n, try factorize n into factors >1,
+    # then try sum(factors) + (n - len(factors)) == n => sum(factors) == len(factors)
+    # So sum of factors = number of factors (k)
+    # Also product of factors = n
+    # Factors all ≥1
+    # Because factors≥1 and sum = k, the factors must all be 1 (sum k), product=1 != n
+    # So factors must be 1, product=1 ≠ n, no good
+    #
+    # So try negative factors? Try lists with negative integers?
+    # Negative factors can balance sums.
+    # Try all factor set lengths k from 1 to min(7, n) for performance:
+    # For k factors, sum plus (n-k) = n => sum = k
+    # So sum of k factors = k
+    #
+    # Generate all integer tuples of length k with product = n and sum = k.
+    #
+    # Upper bound factor values to moderate numbers to avoid slow search.
+    import itertools
+
+    max_k = min(7, n)
+    vals = list(range(-10, 11))
+    vals.remove(0)  # product impossible if zero is included (product=0 != n)
+    for k in range(1, max_k + 1):
+        # Generate all k-tuples of vals with sum=k and product=n
+        # To reduce search space, consider sum fixed to k
+        # To avoid huge enumeration, prune early
+        def backtrack(i, current, s, p):
+            if i == k:
+                if s == k and p == n:
+                    return tuple(current)
+                return None
+            for v in vals:
+                ns = s + v
+                # Prune sums >k early
+                if ns > k + 5 or ns < k - 5:
+                    continue
+                np = p * v
+                if abs(np) > abs(n) * 10:
+                    continue
+                current.append(v)
+                res = backtrack(i + 1, current, ns, np)
+                if res is not None:
+                    return res
+                current.pop()
+            return None
+
+        res = backtrack(0, [], 0, 1)
+        if res is not None:
+            # Construct full list: res + (n-k)*[1]
+            full_sum = sum(res) + (n - k) * 1
+            full_prod = 1
+            for x in res:
+                full_prod *= x
+            full_prod *= 1 ** (n - k)
+            if full_sum == n and full_prod == n:
+                return True
+    return False
+
+
+def main():
+    threshold = 2022
+    found = []
+    for n in range(1, threshold + 1):
+        if can_construct(n):
+            print(n)
+            found.append(n)
+    print("Total found =", len(found))
+
+
+if __name__ == '__main__':
+    main()
+```

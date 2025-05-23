@@ -1,0 +1,61 @@
+[write_program]
+The problem involves three positive real numbers \(a, b, c\) such that:
+\[
+a + b + c = 26, \quad \frac{1}{a} + \frac{1}{b} + \frac{1}{c} = 28.
+\]
+We want to find values of the expression:
+\[
+S = \frac{a}{b} + \frac{b}{c} + \frac{c}{a} + \frac{a}{c} + \frac{c}{b} + \frac{b}{a}.
+\]
+
+To conjecture and possibly prove the value, I'll write a Python program that iterates over positive triples \((a,b,c)\) satisfying \(a+b+c=26\) with rational values, checks the reciprocal sum condition closely, and prints the corresponding \(S\).
+
+We will discretize \(a,b,c\) rationally with a small denominator to keep computations manageable and look for near equality in reciprocals. This enumeration approach helps identify exact or approximate values of \(S\).
+
+```python
+# Enumerate rational triples (a,b,c) with a,b,c >0, a+b+c=26
+# Check if reciprocal sum is 28 within a small tolerance
+# Print exact fraction approximations when found, then S value exactly
+
+from fractions import Fraction
+
+# step denominator for rationals
+den = 8
+total = 26
+target_recip_sum = Fraction(28,1)
+tolerance = Fraction(1, 1000)   # allowed error in reciprocal sum
+
+def reciprocal_sum(a,b,c):
+    return Fraction(1,a) + Fraction(1,b) + Fraction(1,c)
+
+def S_value(a,b,c):
+    # calculate the sum of ratios as per problem
+    return Fraction(a,b) + Fraction(b,c) + Fraction(c,a) + Fraction(a,c) + Fraction(c,b) + Fraction(b,a)
+
+# enumerate a,b with denominator den, c = 26 - a - b >0
+# a,b in (0,26) with steps of 1/den
+# limit a,b increments to keep output small
+
+print("Enumerating triples (a,b,c) with denominator", den)
+
+found_results = set()
+
+for ai in range(1, total*den):    # a from 1/den up to 25 + 7/8, step 1/den
+    a = Fraction(ai, den)
+    for bi in range(1, total*den):
+        b = Fraction(bi, den)
+        c = Fraction(total) - a - b
+        if c <= 0:
+            continue
+        rec_sum = reciprocal_sum(a,b,c)
+        diff = abs(rec_sum - target_recip_sum)
+        if diff <= tolerance:
+            # close enough, print exact fractions and value S
+            s_val = S_value(a,b,c)
+            if s_val not in found_results:
+                found_results.add(s_val)
+                print(f"a={a}, b={b}, c={c}, 1/a+1/b+1/c={float(rec_sum):.4f}, S={float(s_val):.4f} exact={s_val}")
+
+# The output may reveal a unique S value or multiple to conjecture the final answer
+```
+This brute force rational search may discover normalizations or exact values of \(S\) to support a conjecture or proof.

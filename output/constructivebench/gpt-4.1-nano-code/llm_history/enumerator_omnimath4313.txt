@@ -1,0 +1,60 @@
+[write_program]
+This problem involves finding an injective function `f` from `Fin(n^2)` to `Fin(n) × Fin(n)` with specific adjacency and distinctness properties. The key challenge is to enumerate possible `f`s satisfying these constraints for small `n`. For demonstration, we'll select small `n` (say, 2 or 3) and generate candidate functions `f`, checking the conditions. Since the function is supposed to be injective and satisfy adjacency and residue constraints, we narrow down candidates accordingly.
+
+The program will:
+- For a small `n` (e.g., 2), generate all candidate injective mappings `f`.
+- Check adjacency conditions between consecutive images.
+- Ensure distinctness within columns.
+- Stream results matching the criteria.
+
+Because the problem is combinatorial, brute-force over all candidate functions within manageable `n` is feasible.
+
+```python
+from itertools import permutations, product
+
+# Parameters for small n, e.g., n=2
+n = 2
+size = n * n
+
+# Generate all possible injective functions f: Fin(size) -> Fin(n)×Fin(n)
+# Represent f as a permutation of all pairs (row, col)
+domain_indices = range(size)
+pairs = list(product(range(n), range(n)))
+
+# We'll consider permutations of pairs, map index to pair
+# Since f is injective, f is a permutation of pairs
+for perm in permutations(pairs, size):
+    # Create a mapping from index i to pair
+    f_map = {i: perm[i] for i in domain_indices}
+    
+    # Check adjacency between consecutive images
+    def adjacent(p, q):
+        # p,q are pairs: (row, col)
+        return (p[0] == q[0] and abs(p[1] - q[1]) == 1) or \
+               (p[1] == q[1] and abs(p[0] - q[0]) == 1)
+    
+    is_adjacent = True
+    for i in range(size - 1):
+        p_img = f_map[i]
+        q_img = f_map[i + 1]
+        if not adjacent(p_img, q_img):
+            is_adjacent = False
+            break
+    
+    if not is_adjacent:
+        continue
+    
+    # Check distinctness within columns (i.e., for same col assigned to different i)
+    # Values: (row, col). For i,j with same col, their images' rows should differ.
+    column_groups = {}
+    for i in domain_indices:
+        col = f_map[i][1]
+        row = f_map[i][0]
+        column_groups.setdefault(col, []).append(row)
+    distinct_in_columns = all(len(set(rows)) == len(rows) for rows in column_groups.values())
+    if not distinct_in_columns:
+        continue
+    
+    # If all conditions satisfied, print the permutation
+    print(f"Candidate for n={n}: {f_map}")
+```

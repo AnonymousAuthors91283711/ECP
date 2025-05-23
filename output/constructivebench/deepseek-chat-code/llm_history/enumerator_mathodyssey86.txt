@@ -1,0 +1,61 @@
+[write_program]
+This problem asks for the greatest lower bound `c` of the average of even positive integers `b_i` (each paired with a distinct positive integer `a_i` where `0 < a_i/b_i < 1`) divided by `n^(3/2)`, where `n` is the number of terms. We'll explore small values of `n` to find patterns.
+
+The approach is:
+1. For small `n`, generate all valid sequences `(a_i, b_i)` under the constraints
+2. Compute the expression `(sum b_i)/n^(3/2)` for each sequence
+3. Track the minimum value across all sequences for each `n`
+
+```python
+import math
+from itertools import product
+
+def is_even(x):
+    return x % 2 == 0
+
+def is_valid_sequence(a_seq, b_seq):
+    # Check all constraints
+    n = len(a_seq)
+    # Check all a_i/b_i in (0,1) and b_i even
+    for a, b in zip(a_seq, b_seq):
+        if not (0 < a < b) or not is_even(b):
+            return False
+    # Check distinct pairs
+    pairs = list(zip(a_seq, b_seq))
+    for i in range(n):
+        for j in range(i+1, n):
+            if pairs[i] == pairs[j]:
+                return False
+    return True
+
+def compute_candidate(a_seq, b_seq):
+    n = len(a_seq)
+    sum_b = sum(b_seq)
+    return sum_b / (n ** (3/2))
+
+def enumerate_for_n(n, max_b=20):
+    min_c = float('inf')
+    # Generate all possible a sequences (1..max_b-1)
+    # and b sequences (2..max_b, even)
+    possible_a = range(1, max_b)
+    possible_b = range(2, max_b+1, 2)
+    
+    # Generate all possible sequences of length n
+    for a_seq in product(possible_a, repeat=n):
+        for b_seq in product(possible_b, repeat=n):
+            if is_valid_sequence(a_seq, b_seq):
+                c = compute_candidate(a_seq, b_seq)
+                if c < min_c:
+                    min_c = c
+                    print(f"n={n}: new min c={c} with a={a_seq}, b={b_seq}")
+    return min_c
+
+def main():
+    for n in range(1, 5):  # Check small values of n
+        print(f"\nEnumerating for n={n}")
+        min_c = enumerate_for_n(n)
+        print(f"Minimum c for n={n}: {min_c}")
+
+if __name__ == "__main__":
+    main()
+```

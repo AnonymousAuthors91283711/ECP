@@ -1,0 +1,53 @@
+[write_program]
+The problem involves computing sums of largest prime factors over large intervals and then a ratio scaled by 10^4. To explore this, I will:
+- Enumerate over smaller ranges (e.g., up to 10^4 instead of 10^6)
+- Compute largest prime factors of n and n^2 - 1 over these ranges
+- Print partial sums and the ratio times 10^4 (floor)
+This will help conjecture the nature of the exact answer and scale behavior.
+
+```python
+import math
+
+def largest_prime_factor(x):
+    # Compute largest prime factor of x
+    if x < 2:
+        return 1
+    max_pf = 1
+    n = x
+    # Check 2 separately
+    while n % 2 == 0:
+        max_pf = 2
+        n //= 2
+    f = 3
+    while f * f <= n:
+        while n % f == 0:
+            max_pf = f
+            n //= f
+        f += 2
+    if n > 1:
+        max_pf = max(max_pf, n)
+    return max_pf
+
+def main():
+    MAX_N = 10**4  # Smaller sample range for speed
+    sum_lpf_n = 0
+    sum_lpf_n2m1 = 0  # for n^2 - 1
+    print(f"Enumerating for n from 2 to {MAX_N}")
+    for n in range(2, MAX_N + 1):
+        lpf_n = largest_prime_factor(n)
+        lpf_n2m1 = largest_prime_factor(n*n - 1)
+        sum_lpf_n += lpf_n
+        sum_lpf_n2m1 += lpf_n2m1
+        if n % 2000 == 0:
+            ratio = sum_lpf_n2m1 / sum_lpf_n if sum_lpf_n > 0 else 0
+            val = int(10**4 * ratio)
+            print(f"At n={n}, sum_lpf_n={sum_lpf_n}, sum_lpf_n2m1={sum_lpf_n2m1}, floor(10^4 * ratio)={val}")
+
+    ratio = sum_lpf_n2m1 / sum_lpf_n if sum_lpf_n > 0 else 0
+    val = int(10**4 * ratio)
+    print(f"Final: sum_lpf_n={sum_lpf_n}, sum_lpf_n2m1={sum_lpf_n2m1}")
+    print(f"floor(10^4 * (sum lpf(n^2-1) / sum lpf(n))) = {val}")
+
+if __name__ == "__main__":
+    main()
+```

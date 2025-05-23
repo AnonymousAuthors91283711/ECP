@@ -1,0 +1,78 @@
+[write_program]
+The problem involves evaluating the expression:
+\[
+\sin(\arcsin(0.4) + \arcsin(0.5)) \times \sin(\arcsin(0.5) - \arcsin(0.4))
+\]
+
+To conjecture the exact value, we can enumerate values by computing:
+- \(\arcsin(0.4)\) and \(\arcsin(0.5)\)
+- Then compute \(\sin(a + b)\) and \(\sin(b - a)\)
+- Multiply them and print the result with both approximate and simplified fraction/constant if possible
+
+We'll also check the algebraic identity by trying exact trigonometric expansions. This will help us guess a closed form for the expression.
+
+```python
+import math
+from fractions import Fraction
+
+# Helper function to check if a float is close to a simple fraction
+def near_fraction(x, tol=1e-6, max_den=20):
+    best_frac = None
+    min_diff = tol
+    for d in range(1, max_den+1):
+        n = round(x * d)
+        diff = abs(x - n/d)
+        if diff < min_diff:
+            min_diff = diff
+            best_frac = Fraction(n, d)
+    return best_frac
+
+def pretty_print(value, label="Value"):
+    frac = near_fraction(value)
+    if frac is not None:
+        print(f"{label}: approx {value:.9f} ~ fraction {frac} = {float(frac):.9f}")
+    else:
+        print(f"{label}: approx {value:.9f}")
+
+def main():
+    # Given values
+    x = 0.4
+    y = 0.5
+    
+    # arcsin values in radians
+    a = math.asin(x)
+    b = math.asin(y)
+    
+    print(f"arcsin(0.4) = {a:.9f} radians")
+    print(f"arcsin(0.5) = {b:.9f} radians")
+    
+    # Compute sines of sums and differences
+    sin_sum = math.sin(a + b)
+    sin_diff = math.sin(b - a)
+    
+    # Print intermediate results
+    pretty_print(sin_sum, "sin(arcsin(0.4) + arcsin(0.5))")
+    pretty_print(sin_diff, "sin(arcsin(0.5) - arcsin(0.4))")
+    
+    product = sin_sum * sin_diff
+    pretty_print(product, "Product")
+    
+    # Try symbolic approach using sin addition formula:
+    # sin(a+b) = sin a cos b + cos a sin b
+    # sin(b-a) = sin b cos a - cos b sin a
+    # So product = (sin a cos b + cos a sin b) * (sin b cos a - cos b sin a)
+    
+    sa = x  # sin a
+    sb = y  # sin b
+    ca = math.cos(a)
+    cb = math.cos(b)
+    
+    term1 = sa * cb + ca * sb
+    term2 = sb * ca - cb * sa
+    product_algebraic = term1 * term2
+    pretty_print(product_algebraic, "Product (algebraic form from sin/cos)")
+    
+if __name__ == "__main__":
+    main()
+```
+This script prints all intermediate sine values and the final product, attempting to detect if the product is a familiar fraction or constant. This helps to conjecture exact values or closed forms for the given expression.

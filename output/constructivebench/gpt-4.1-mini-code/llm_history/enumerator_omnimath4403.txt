@@ -1,0 +1,70 @@
+[write_program]
+The problem defines a system of four equations with real variables \(x, y, w, z\). We want to enumerate tuples \((x, y, w, z)\) satisfying:
+
+\[
+\begin{cases}
+\sqrt{x} - \frac{1}{y} - 2w + 3z = 1 \\
+x + \frac{1}{y^2} - 4w^2 - 9z^2 = 3 \\
+x \sqrt{x} - \frac{1}{y^3} - 8w^3 + 27z^3 = -5 \\
+x^2 + \frac{1}{y^4} - 16w^4 - 81z^4 = 15
+\end{cases}
+\]
+
+To help conjecture and prove the true answer, we test values for \(x, y, w, z\) in a small rational range and print exact solutions. We enumerate rational candidates for \(x, y, w, z\) using small integer grids and check the equations numerically but prioritize exact rational values. Since \(\sqrt{x}\) appears, \(x\) must be nonnegative and preferably a perfect square for exactness.
+
+We will:
+- Try \(x\) in squares of \([0, 1, 4, 9]\).
+- \(y, w, z\) in \([-3..3]\setminus \{0\}\).
+- Check the equations with exact fractions and decimals for a tolerance.
+
+We print solutions as soon as found.
+
+```python
+from fractions import Fraction
+from math import sqrt, isclose
+
+# Set search ranges for variables
+x_candidates = [0, 1, 4, 9]  # perfect squares for exact sqrt
+y_candidates = [Fraction(n) for n in range(-3,4) if n != 0]
+w_candidates = [Fraction(n) for n in range(-3,4)]
+z_candidates = [Fraction(n) for n in range(-3,4)]
+
+def eval_system(x, y, w, z):
+    # Compute each side precisely
+    try:
+        s = sqrt(x)
+        inv_y = 1 / y
+        inv_y2 = 1 / (y**2)
+        inv_y3 = 1 / (y**3)
+        inv_y4 = 1 / (y**4)
+    except ZeroDivisionError:
+        return None
+    eq1 = s - inv_y - 2*w + 3*z
+    eq2 = x + inv_y2 - 4*w**2 - 9*z**2
+    eq3 = x*s - inv_y3 - 8*w**3 + 27*z**3
+    eq4 = x**2 + inv_y4 - 16*w**4 - 81*z**4
+    return eq1, eq2, eq3, eq4
+
+def close_to_int(frac, tol=1e-10):
+    return abs(float(frac) - round(float(frac))) < tol
+
+def approx_close(a, b, tol=1e-8):
+    return isclose(float(a), float(b), abs_tol=tol)
+
+print("Enumerating candidates (x,y,w,z) with x in perfect squares and y,w,z in small rationals:")
+
+for x_int in x_candidates:
+    for y in y_candidates:
+        for w in w_candidates:
+            for z in z_candidates:
+                vals = eval_system(x_int, y, w, z)
+                if vals is None:
+                    continue
+                eq1, eq2, eq3, eq4 = vals
+                # Check if all equations match their RHS within tolerance
+                if (approx_close(eq1, 1) and approx_close(eq2, 3)
+                    and approx_close(eq3, -5) and approx_close(eq4, 15)):
+                    # Print exact rationals if possible
+                    print(f"x={x_int}, y={y}, w={w}, z={z} satisfy all equations.")
+```
+This enumerates possible small rational values with exact \(x\) squares and prints solutions immediately. This helps conjecture the true solution.

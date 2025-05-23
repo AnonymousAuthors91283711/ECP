@@ -1,0 +1,71 @@
+[write_program]
+The problem involves finding all polynomials \( P \in \mathbb{R}[X] \) satisfying an inequality that compares evaluations at a linear transformation \( 2x + \alpha \) to a polynomial expression involving \( x^{20} + x^{19} \) and the evaluation at \( x \).
+
+To gain insight, I will write a Python program to enumerate candidate polynomials \( P \) with small degrees (up to degree 4 for practicality), and for various values of \(\alpha\) in a small range (e.g., \(\alpha \in \{-1,0,1\}\)). The program will test the inequality for several sample \( x \) values and output any polynomials that satisfy the inequality for all tested \( x \) values.
+
+This should help conjecture the form of \( P \) (which may be monomials or certain "extremal" polynomials) and potentially detect the unique polynomial \( \texttt{omnimath4015\_answer} \).
+
+```python
+# Enumerate candidate real polynomials P with degree <=4 and integer coefficients in [-3,3].
+# For selected alpha in {-1,0,1}, check inequality:
+#   P(2x + alpha) <= (x^20 + x^19)*P(x) for various x in a suitable test set.
+# Print all polynomials passing the test.
+
+import itertools
+import numpy as np
+
+def eval_poly(coeffs, x):
+    # coeffs: list of coefficients, coeffs[i] for x^i
+    return sum(c * x**i for i, c in enumerate(coeffs))
+
+def poly_str(coeffs):
+    terms = []
+    for i, c in enumerate(coeffs):
+        if abs(c) > 1e-8:
+            if i == 0:
+                terms.append(f"{c}")
+            elif i == 1:
+                terms.append(f"{c}*x")
+            else:
+                terms.append(f"{c}*x^{i}")
+    return " + ".join(terms) if terms else "0"
+
+def test_poly(coeffs, alpha, xs):
+    for x in xs:
+        Px = eval_poly(coeffs, x)
+        if Px <= 0:
+            # Because (x^20 + x^19) is positive for most x > 0,
+            # we avoid division by zero or negative values which make inequality trivial.
+            return False
+        lhs = eval_poly(coeffs, 2*x + alpha)
+        rhs = (x**20 + x**19) * Px
+        if lhs > rhs + 1e-12:  # allow small epsilon for float errors
+            return False
+    return True
+
+def main():
+    alphas = [-1,0,1]
+    # test xs chosen mostly positive and a few near zero to avoid trivial zeros
+    xs = [0.1, 0.5, 1, 1.5, 2]
+    degree_max = 4
+    # coefficients in -3..3 integers for enumeration
+    coeff_range = range(-3,4)
+
+    print("Enumerating polynomials P(x) with integer coeffs in [-3..3], deg<=4")
+    for alpha in alphas:
+        print(f"\nTesting alpha = {alpha}")
+        found_any = False
+        # Iterate over all polynomials degree <=4
+        for deg in range(degree_max+1):
+            for coeffs in itertools.product(coeff_range, repeat=deg+1):
+                if all(c == 0 for c in coeffs):
+                    continue  # skip zero polynomial
+                if test_poly(coeffs, alpha, xs):
+                    found_any = True
+                    print(f"P(x) = {poly_str(coeffs)} satisfies inequality for alpha={alpha}")
+        if not found_any:
+            print(f"No polynomial found for alpha={alpha}.")
+
+if __name__ == "__main__":
+    main()
+```

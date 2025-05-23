@@ -1,0 +1,59 @@
+[write_program]
+The problem concerns choosing subsets \(S\) of pairs \((i,j)\) with \(1 \le i < j\), all \(i,j \le 2009\), with these constraints:
+
+- No two pairs share any coordinate (i or j).
+- All sums \(i+j\) are distinct and \(\leq 2009\).
+- Goal: maximize \(|S|\).
+
+We want to enumerate all possible sizes by constructing such sets for smaller parameters \(n\), say \(n=10\), to conjecture the answer for \(2009\).
+
+The approach:
+
+- For small \(n\), list all pairs \((i,j)\) with \(1 \leq i < j \leq n\) and \(i+j \leq n\).
+- Enumerate subsets where pairs have disjoint coordinates and distinct sums.
+- Find max size of such subsets.
+- Print solutions (or sizes) as they are found.
+
+We pick smaller \(n\) due to combinatorial complexity.
+
+```python
+# Enumerate max subset sizes of pairs (i,j), 1<=i<j<=n,
+# with disjoint coordinates, distinct sums, sums <= n.
+# Print partial results for small n to conjecture behavior.
+
+def enumerator(n):
+    pairs = []
+    for i in range(1, n+1):
+        for j in range(i+1, n+1):
+            if i + j <= n:
+                pairs.append((i, j, i+j))
+    pairs.sort(key=lambda x: x[2])  # sort by sum
+
+    max_size = 0
+    solutions = set()
+    used = set()  # used numbers (coordinates and sums)
+
+    # Backtracking to find large subsets satisfying constraints:
+    def backtrack(idx, chosen, used_coords, used_sums):
+        nonlocal max_size
+        if idx == len(pairs):
+            size = len(chosen)
+            if size >= max_size:
+                max_size = size
+                # Print current max_size and chosen pairs
+                print(f"n={n}, size={size}, set={chosen}")
+            return
+        # Option 1: skip current pair
+        backtrack(idx+1, chosen, used_coords, used_sums)
+        # Option 2: take current if safe
+        i, j, s = pairs[idx]
+        if i not in used_coords and j not in used_coords and s not in used_sums:
+            backtrack(idx+1, chosen+[(i,j)], used_coords|{i,j}, used_sums|{s})
+
+    backtrack(0, [], set(), set())
+
+# Run for sample n values
+for small_n in [10,15]:
+    enumerator(small_n)
+```
+

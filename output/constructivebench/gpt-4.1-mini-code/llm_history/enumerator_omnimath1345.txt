@@ -1,0 +1,59 @@
+[write_program]
+The problem has three positive real variables \(a, b, c > 0\) satisfying three quadratic symmetric equations and asks to find a constant to express \(49b^2 - 33bc + 9c^2\) as a multiple of \(a^2\).
+
+The program attempts small rational triples \((a,b,c)\) meeting the constraints approximately, then prints the ratio:
+\[
+\frac{49b^2 - 33bc + 9c^2}{a^2}
+\]
+to guess the "omnimath1345_answer".
+
+We enumerate positive \(a,b,c\) from a small range with small step to balance runtime and accuracy.
+
+```python
+import math
+
+# Since a,b,c >0 and equations symmetric, try rational values near sqrt(9), sqrt(52), sqrt(49)
+# We'll scan a, b, c in range (0.1 to 6) with step 0.1 to find approximate triples satisfying
+# given constraints within a tolerance.
+
+def close(x, y, tol=1e-3):
+    return abs(x - y) < tol
+
+results = set()
+step = 0.1
+tol = 1e-3
+
+for ai in range(1, 61):
+    a = ai * step
+    for bi in range(1, 61):
+        b = bi * step
+        # Check first equation: a^2 + ab + b^2 ≈ 9
+        eq1 = a**2 + a*b + b**2
+        if not close(eq1, 9, tol):
+            continue
+        for ci in range(1, 61):
+            c = ci * step
+            eq2 = b**2 + b*c + c**2
+            eq3 = c**2 + c*a + a**2
+            # Check equations 2 and 3
+            if close(eq2, 52, tol) and close(eq3, 49, tol):
+                val = 49*b**2 - 33*b*c + 9*c**2
+                ratio = val / (a**2)
+                # Round ratio to 4 decimals for output consistency
+                ratio_r = round(ratio, 4)
+                if ratio_r not in results:
+                    results.add(ratio_r)
+                    print(f"a={a:.2f}, b={b:.2f}, c={c:.2f}, ratio={ratio_r}")
+
+# After gathering results, print extremal values found
+if results:
+    print()
+    print("Possible ratio values found:")
+    for r in sorted(results):
+        print(r)
+    print()
+    print(f"Minimum ratio: {min(results)}")
+    print(f"Maximum ratio: {max(results)}")
+else:
+    print("No triples found satisfying equations within tolerance.")
+```

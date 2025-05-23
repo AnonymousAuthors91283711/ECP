@@ -1,0 +1,83 @@
+[write_program]
+This problem involves exploring subsets of divisors of `n` that form arithmetic and geometric progressions with certain constraints. To assist in conjecturing the form of `omnimath64_answer`, I will write a Python program that enumerates divisors of small `n` (for example, `n` from 1 to 100) and checks for examples satisfying the properties: subsets `A` and `G` of divisors, with at least 3 elements each, non-overlapping, where `A` is an arithmetic progression and `G` is a geometric progression. 
+
+The program loads divisors, searches all subsets with at least 3 elements, and checks the progressions. It outputs candidates immediately upon finding them, focusing on small, manageable `n` to infer the structure of such `n`. 
+
+```python
+import math
+from itertools import combinations, chain
+
+def divisors(n):
+    """Return sorted list of divisors of n."""
+    divs = set()
+    for i in range(1, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            divs.add(i)
+            divs.add(n // i)
+    return sorted(divs)
+
+def is_arithmetic_progression(s):
+    """Check if set s forms an arithmetic progression."""
+    sorted_list = sorted(s)
+    if len(sorted_list) < 3:
+        return False
+    d = sorted_list[1] - sorted_list[0]
+    for i in range(2, len(sorted_list)):
+        if sorted_list[i] - sorted_list[i-1] != d:
+            return False
+    return d != 0
+
+def is_geometric_progression(s):
+    """Check if set s forms a geometric progression with ratio r."""
+    sorted_list = sorted(s)
+    if len(sorted_list) < 3:
+        return False
+    r = None
+    # handle zero or 1 separately: geometric progression with ratio 1 is allowed,
+    # but the problem states r ≠ 1, so skip if ratio is 1
+    first = sorted_list[0]
+    second = sorted_list[1]
+    if first == 0:
+        # Zero in geometric progression: only valid if all are zero
+        if all(x == 0 for x in sorted_list):
+            return False  # ratio undefined, but zero sequence may be excluded
+        else:
+            return False
+    if second % first != 0:
+        return False
+    r_candidate = second // first
+    if r_candidate == 1:
+        return False
+    r = r_candidate
+    for i in range(1, len(sorted_list)):
+        prev, curr = sorted_list[i-1], sorted_list[i]
+        if prev == 0 or curr % prev != 0:
+            return False
+        if curr // prev != r:
+            return False
+    return True
+
+# Limit n to small values for feasibility
+max_n = 50
+for n in range(1, max_n + 1):
+    divs = divisors(n)
+    # Generate all subsets with size >= 3
+    for size in range(3, len(divs)+1):
+        for subset in combinations(divs, size):
+            subset_set = set(subset)
+            # Check for disjoint A and G
+            # To find candidates, we try all partitions into A and G
+            # But for simplicity, check all possible pairs of disjoint subsets
+            for a_size in range(3, len(subset)+1):
+                for A_candidates in combinations(subset, a_size):
+                    A_set = set(A_candidates)
+                    remaining = subset_set - A_set
+                    if len(remaining) < 3:
+                        continue
+                    for g_size in range(3, len(remaining)+1):
+                        for G_candidates in combinations(remaining, g_size):
+                            G_set = set(G_candidates)
+                            if A_set.isdisjoint(G_set):
+                                if is_arithmetic_progression(A_set) and is_geometric_progression(G_set):
+                                    print(f"n={n}, A={sorted(A_set)}, G={sorted(G_set)}")
+```

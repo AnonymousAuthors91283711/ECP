@@ -1,0 +1,79 @@
+[write_program]
+The problem involves real variables \( x, y \in [0, \pi) \) satisfying
+\[
+\log_2(\sin x \cdot \cos y) = -\frac{3}{2} \quad \text{and} \quad \log_2\left(\frac{\sin x}{\cos y}\right) = \frac{1}{2}.
+\]
+We want to find all \((x,y)\) pairs fulfilling these conditions.
+
+Rewriting the logarithmic equations with base 2:
+\[
+\sin x \cdot \cos y = 2^{-\frac{3}{2}} = \frac{1}{2^{3/2}} = \frac{1}{2\sqrt{2}}, \quad 
+\frac{\sin x}{\cos y} = 2^{\frac{1}{2}} = \sqrt{2}.
+\]
+
+From these two:
+\[
+\sin x = \sqrt{2} \cos y, \quad \sin x \cos y = \frac{1}{2\sqrt{2}}.
+\]
+
+Substitute \(\sin x = \sqrt{2} \cos y\) into the second:
+\[
+(\sqrt{2} \cos y) \cos y = \frac{1}{2\sqrt{2}} \implies \sqrt{2} \cos^2 y = \frac{1}{2\sqrt{2}} \implies \cos^2 y = \frac{1}{4}.
+\]
+
+Hence \(\cos y = \pm \frac{1}{2}\). Since \(y \in [0,\pi)\), \(\cos y = \frac{1}{2}\) for \(y = \frac{\pi}{3}\) and \(\cos y = -\frac{1}{2}\) for \(y = \frac{2\pi}{3}\).
+
+For \(\cos y = \frac{1}{2}\):
+\[
+\sin x = \sqrt{2} \cdot \frac{1}{2} = \frac{\sqrt{2}}{2} = \frac{1}{\sqrt{2}},
+\]
+thus \(x = \frac{\pi}{4}\).
+
+For \(\cos y = -\frac{1}{2}\):
+\[
+\sin x = \sqrt{2} \cdot (-\frac{1}{2}) = -\frac{\sqrt{2}}{2} < 0,
+\]
+but \(\sin x\) is non-negative in \([0, \pi)\), so this is invalid.
+
+Therefore, the unique solution pair is \(\left(\frac{\pi}{4}, \frac{\pi}{3}\right)\).
+
+Let's enumerate candidates numerically to confirm exactly, focusing on \(\cos y = \pm \frac{1}{2}\) and \(\sin x\) accordingly.
+
+```python
+import math
+
+# Constants
+LOG2 = math.log(2)
+target1 = -3/2  # log2(sin x * cos y)
+target2 = 1/2   # log2(sin x / cos y)
+
+def log2(val):
+    return math.log(val, 2)
+
+# We expect sin x * cos y = 2^-3/2 = 1/(2*sqrt(2)) ~ 0.3535533906
+# and sin x / cos y = 2^0.5 = sqrt(2) ~ 1.414213562
+
+print("Enumerating candidates with step pi/24 (7.5 degrees):")
+step = math.pi / 24
+
+for i in range(1, 24):  # x in (0, pi)
+    x = i * step
+    sinx = math.sin(x)
+    for j in range(1, 24):  # y in (0, pi)
+        y = j * step
+        cosy = math.cos(y)
+        # Check domain validity
+        if sinx <= 0 or cosy == 0:
+            continue
+        val1 = sinx * cosy
+        val2 = sinx / cosy
+        if val1 <= 0 or val2 <= 0:
+            continue
+        logval1 = round(log2(val1), 4)
+        logval2 = round(log2(val2), 4)
+        # Compare with targets within a small tolerance
+        if abs(logval1 - target1) < 0.05 and abs(logval2 - target2) < 0.05:
+            print(f"x = {x:.5f} (~{x*180/math.pi:.1f}°), y = {y:.5f} (~{y*180/math.pi:.1f}°), "
+                  f"log2(sinx*cosy)={logval1}, log2(sinx/cosy)={logval2}")
+```
+This code enumerates in reasonable steps and prints all matching candidates immediately when found, assisting in conjecturing the true solution.

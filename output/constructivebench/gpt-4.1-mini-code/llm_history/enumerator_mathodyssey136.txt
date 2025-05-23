@@ -1,0 +1,77 @@
+[write_program]
+The problem seems to ask for the largest number \( k \) of injective functions \( f_i : \text{Fin}(66) \to \text{Fin}(111) \) such that the images of any two distinct functions differ at least in one dwarf \( d \in \text{Fin}(66) \). In other words, for \( 1 \leq i,j \leq k \), \( i \neq j \), there is some dwarf \( d \) where \( f_i(d) \neq f_j(d) \).
+
+This is equivalent to finding the size of a family of injective functions from a 66-element set to an 111-element set, so that these functions are pairwise distinguishable by their values on at least one argument.
+
+We want to enumerate possible values of \( k \) with small simplified parameters to guess a pattern.
+
+Key insights:
+
+- The functions are injective from 66 elements to 111 elements.
+- For smaller dwarves and hats, we can enumerate possible injective functions sets.
+
+We will try small sample parameters (dwarves = d, hats = h), with d ≤ 4 and h ≤ 6, enumerate sets of injective functions \( f_i: [0..d-1] \to [0..h-1] \) such that all \( f_i \) differ on at least one input.
+
+Due to complexity, we will not attempt full enumeration for 66 and 111 but will attempt to find the maximum number of functions with no two equal, so all functions in the set distinct.
+
+Since injectivity is required per function, and the functions are from a domain of size d to codomain size h, the total number of injective functions is \(P(h,d) = \frac{h!}{(h-d)!}\).
+
+All such functions differ pairwise on some argument (since two distinct injective functions differ somewhere), so the set of all injective functions of size \(P(h,d)\) satisfies the property.
+
+Therefore, the maximum \( k \) is \( P(h,d) \).
+
+Let's verify this with small samples and enumerate:
+
+- Compute \( P(h,d) \)
+- Print the functions count and check pairwise difference condition holds automatically since they're injective and distinct functions.
+
+We will print sample parameters, number of injective functions, and confirm that all pairs differ on some argument.
+
+```python
+from math import factorial
+from itertools import permutations
+
+def P(h, d):
+    return factorial(h)//factorial(h - d)
+
+def all_injective_functions(d, h):
+    # all injective functions: permutations of h elements taken d at a time
+    # Each function can be represented by a tuple of length d with distinct values < h
+    return list(permutations(range(h), d))
+
+def test_pairwise_distinct(functions):
+    # Check pairwise difference: for any two functions f, g, there is some i so that f[i] != g[i]
+    # Since functions are distinct permutations, this must be true
+    for i in range(len(functions)):
+        for j in range(i+1, len(functions)):
+            f = functions[i]
+            g = functions[j]
+            if all(f[k] == g[k] for k in range(len(f))):
+                print("Error: functions identical:", f, g)
+                return False
+    return True
+
+def main():
+    samples = [(2,3), (3,4), (4,6)]
+    for d, h in samples:
+        print(f"Parameters: dwarves={d}, hats={h}")
+        funcs = all_injective_functions(d, h)
+        count = len(funcs)
+        print(f"Total injective functions: {count}")
+        # Check pairwise distinguishability
+        res = test_pairwise_distinct(funcs)
+        print(f"All functions pairwise differ on some dwarf? {res}")
+        print("-"*30)
+
+    # For the original problem dwarves=66, hats=111
+    d, h = 66, 111
+    # Just print P(h,d) since full enumeration is impossible
+    count = P(h, d)
+    print(f"Parameters: dwarves={d}, hats={h}")
+    print(f"Maximum k (number of such functions) = P({h},{d}) = {count}")
+
+if __name__ == "__main__":
+    main()
+```
+
+This enumerator will help conjecture that the maximum \( k \) is \( P(111, 66) = \frac{111!}{(111-66)!} \).

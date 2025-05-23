@@ -1,0 +1,83 @@
+[write_program]
+The problem asks us to consider all polynomials \( P \in \mathbb{R}[x] \) satisfying a certain functional relation uniformly over all non-zero real \( x, y, z \) with a specific relation involving \( x, y, z \), and then determine the set of such polynomial solutions.
+
+Given the complexity, a practical approach is to test simple polynomial candidates, starting from low degrees, and check whether they satisfy the condition for arbitrary choices of \( x, y, z \). We will:
+
+- Focus on constant and linear polynomials.
+- For each candidate polynomial, verify the property over some sample triples \( (x, y, z) \).
+- Output candidates satisfying the relation.
+- Since we need to stream results and find possible solutions, enumerate systematically, prioritize constants, then lines, etc.
+
+```python
+import sympy as sp
+
+# Define variables
+x, y, z = sp.symbols('x y z')
+
+# Candidate polynomials: degree 0 (constants) and degree 1 (linear)
+# We'll test constants first
+constant_candidates = [sp.sympify(c) for c in range(-3, 4)]  # small sample constants
+
+solutions = []
+
+# Check constant polynomials
+for c in constant_candidates:
+    P = c
+    # Test for several (x, y, z)
+    def check(cand):
+        # Generate several sample triples satisfying the given relation
+        samples = [
+            (1, 2, 0.5),
+            (2, 3, 4),
+            (-1, -2, -0.5),
+            (0.1, 0.2, 0.3),
+            (1, -1, 2),
+        ]
+        for xs in samples:
+            xi, yi, zi = xs
+            # Avoid zero values as per condition
+            if xi == 0 or yi == 0 or zi == 0:
+                continue
+            # Check the given implication
+            left = cand.evalf().subs(x, xi)/ (yi * zi) + cand.evalf().subs(y, yi)/ (zi * xi) + cand.evalf().subs(z, zi)/ (xi * yi)
+            rhs = cand.evalf().subs(x, xi - yi) + cand.evalf().subs(y, yi - zi) + cand.evalf().subs(z, zi - xi)
+            if abs(left - rhs) > 1e-6:
+                return False
+        return True
+
+    if check(c):
+        print(c)
+
+# Check linear polynomials: P(x) = a*x + b
+# For a small grid of (a, b) values
+for a in [-1, 0, 1]:
+    for b in range(-2, 3):
+        P = a * x + b
+        def check_linear(P_poly):
+            samples = [
+                (1, 2, 0.5),
+                (2, 3, 4),
+                (-1, -2, -0.5),
+                (0.1, 0.2, 0.3),
+                (1, -1, 2),
+            ]
+            for xs in samples:
+                xi, yi, zi = xs
+                if xi == 0 or yi == 0 or zi == 0:
+                    continue
+                left = P_poly.evalf().subs(x, xi)/ (yi * zi) + P_poly.evalf().subs(y, yi)/ (zi * xi) + P_poly.evalf().subs(z, zi)/ (xi * yi)
+                rhs = P_poly.evalf().subs(x, xi - yi) + P_poly.evalf().subs(y, yi - zi) + P_poly.evalf().subs(z, zi - xi)
+                if abs(left - rhs) > 1e-6:
+                    return False
+            return True
+        if check_linear(P):
+            print(P)
+```
+
+This code:
+- Checks constant polynomials \( P(x) = c \) to see if they satisfy the relation.
+- Checks linear polynomials \( P(x) = a x + b \) over a small parameter grid.
+- Uses sample triples where \( x, y, z \neq 0 \) to verify the property approximately.
+- Prints candidates that satisfy the condition.
+
+This process identifies possible solutions or indicates that only certain polynomials qualify, assisting in formulating the conjecture.

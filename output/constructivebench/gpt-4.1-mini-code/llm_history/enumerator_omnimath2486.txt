@@ -1,0 +1,47 @@
+[write_program]
+The problem involves a sequence \( a_n \) of positive real numbers satisfying, for each \( k \),
+\[
+\sum_{n=0}^\infty \binom{n}{k} a_n = \left(\frac{1}{5}\right)^k.
+\]
+We want to evaluate
+\[
+S = \sum_{n=0}^\infty (-1)^{n+1} a_n.
+\]
+
+To explore patterns, I will enumerate sequences \(a_n\) on a truncated range \(n=0..N\) for small \(N\), and check whether the binomial sums equal \((1/5)^k\) for \(k=0..N\). This provides a linear system of equations on \(a_0,\ldots,a_N\) that can be solved numerically or symbolically. Then I compute \(S\) and print results for various \(N\).
+
+This helps conjecture the value of the infinite sum \(S\).
+
+```python
+from math import comb
+import numpy as np
+
+def test_N(N):
+    # Build matrix M where M[k,n] = comb(n,k)
+    M = np.zeros((N+1,N+1))
+    for k in range(N+1):
+        for n in range(N+1):
+            # comb(n,k) is 0 if k > n
+            M[k,n] = comb(n,k)
+    # RHS vector b = [(1/5)^k for k=0..N]
+    b = np.array([(1/5)**k for k in range(N+1)])
+    # Solve M a = b for a
+    try:
+        a = np.linalg.solve(M,b)
+    except np.linalg.LinAlgError:
+        print(f"N={N}: Singular matrix, skipping")
+        return
+    # Check positivity condition
+    if all(ai > 0 for ai in a):
+        # Compute S = sum (-1)^{n+1} a_n
+        S = sum(((-1)**(n+1))*a[n] for n in range(N+1))
+        print(f"N={N}, a_n approx =", ['{:.5f}'.format(x) for x in a])
+        print(f"Sum S = sum (-1)^(n+1) * a_n approx = {S:.8f}")
+    else:
+        print(f"N={N}: a_n not all positive, solution discarded")
+
+print("Enumerating solutions for small N with sums matching (1/5)^k:")
+for N in range(3,7):
+    test_N(N)
+```
+

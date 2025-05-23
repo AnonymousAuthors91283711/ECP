@@ -1,0 +1,64 @@
+[write_program]
+This problem involves finding the minimal constant α such that a certain inequality holds for all strictly increasing sequences y with y₀=0 and yₖ>0. We'll approach this by:
+
+1. Testing simple sequences (like linear yₙ = n) to get initial bounds
+2. Trying to find patterns in the minimal α for different n
+3. Looking for convergence as n increases
+
+The program will compute the ratio for different sequences and n values to help conjecture the minimal α.
+
+```python
+import math
+
+def compute_ratio(n, y):
+    """Compute the ratio (RHS sum) / (LHS sum) for given n and sequence y"""
+    lhs_sum = 0.0
+    rhs_sum = 0.0
+    
+    for k in range(n):
+        term1 = (k + 1)**1.5
+        dy_sq = y[k + 1]**2 - y[k]**2
+        if dy_sq <= 0:
+            return float('inf')  # invalid sequence
+        
+        lhs_term = term1 / math.sqrt(dy_sq)
+        lhs_sum += lhs_term
+        
+        term2 = (k + 1)**2 + 3*(k + 1) + 3
+        rhs_term = term2 / y[k + 1]
+        rhs_sum += rhs_term
+    
+    return rhs_sum / lhs_sum
+
+def test_sequences(max_n=10):
+    """Test different sequences to find minimal ratios"""
+    # Test linear sequence y_k = k + c
+    print("Testing linear sequences y_k = k + c:")
+    for c in [0.1, 0.5, 1.0]:
+        for n in range(1, max_n + 1):
+            y = [k + c for k in range(n + 1)]
+            y[0] = 0  # enforce y0=0
+            ratio = compute_ratio(n, y)
+            print(f"n={n}, c={c:.1f}, ratio={ratio:.6f}")
+
+    # Test quadratic sequence y_k = (k + c)^2
+    print("\nTesting quadratic sequences y_k = (k + c)^2:")
+    for c in [0.1, 0.5, 1.0]:
+        for n in range(1, max_n + 1):
+            y = [(k + c)**2 for k in range(n + 1)]
+            y[0] = 0
+            ratio = compute_ratio(n, y)
+            print(f"n={n}, c={c:.1f}, ratio={ratio:.6f}")
+
+    # Test exponential sequence y_k = exp(k + c) - exp(c) + 1
+    print("\nTesting exponential sequences:")
+    for c in [0.1, 0.5, 1.0]:
+        for n in range(1, max_n + 1):
+            y = [math.exp(k + c) - math.exp(c) + 1 for k in range(n + 1)]
+            y[0] = 0
+            ratio = compute_ratio(n, y)
+            print(f"n={n}, c={c:.1f}, ratio={ratio:.6f}")
+
+if __name__ == "__main__":
+    test_sequences()
+```

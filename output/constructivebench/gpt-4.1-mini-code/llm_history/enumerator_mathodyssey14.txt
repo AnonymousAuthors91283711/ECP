@@ -1,0 +1,59 @@
+[write_program]
+The problem defines a sequence \( q \) with initial value \( q_0 > 0 \), and recursive relation
+\[ q_i = (q_{i-1} - 1)^3 + 3 \]
+for \( i = 1, \ldots, n \). Each term \( q_i \) must be a prime power \( p^k \) where \( p \) is prime.
+
+We want to find the greatest natural number \( n \) such that there exists such a sequence \( q \) of length \( n+1 \).
+
+To explore this, I'll select some small initial values \( q_0 \) and construct \( q_i \). At each step, I will check if \( q_i \) is a prime power. If so, continue; otherwise stop and record the length. This will allow conjecturing the maximal length for various starting points.
+
+```python
+from sympy import isprime, primerange
+from math import isclose
+
+def is_prime_power(x):
+    # Check if x is a prime power p^k
+    if x < 2:
+        return False
+    # Try all possible prime bases up to x
+    for p in primerange(2, int(x**0.5) + 2):
+        k = 0
+        y = x
+        while y % p == 0:
+            y //= p
+            k += 1
+        if y == 1 and k > 0:
+            return True
+    # If x itself is prime or 1, consider that case
+    return isprime(x)
+
+def generate_sequence(q0):
+    q = [q0]
+    n = 0
+    while True:
+        prev = q[-1]
+        next_val = (prev - 1)**3 + 3
+        if next_val < 2 or not is_prime_power(next_val):
+            break
+        q.append(next_val)
+        n += 1
+    return n, q
+
+def main():
+    print("Testing various q0 values and sequence lengths:")
+    max_n = -1
+    max_q0 = None
+    max_seq = None
+    for q0 in range(2, 20):
+        n, seq = generate_sequence(q0)
+        print(f"q0={q0}, max n={n}, seq={seq}")
+        if n > max_n:
+            max_n = n
+            max_q0 = q0
+            max_seq = seq
+    print(f"Overall max n found: {max_n} with q0={max_q0}")
+    print(f"Sequence: {max_seq}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,103 @@
+[write_program]
+The problem asks to find the smallest natural number \( n \) such that every subset \( T \) of \(\{1, 2, ..., 2024\}\) with size \( n \) which is pairwise coprime must contain a prime number.
+
+In other words, the problem investigates the minimal size \( n \) so that any \( n \)-element subset of \(\{1,\ldots,2024\}\) with pairwise coprime elements contains at least one prime.
+
+Our strategy:
+
+1. Enumerate subsets \( T \subseteq \{1,...,2024\} \) with pairwise coprime elements *without any primes*.
+2. Find the maximum cardinality of such subsets.
+3. The answer \( n \) will be one more than this maximum size.
+
+Because the problem space is huge, we simplify by enumerating primes and prime powers, and combinations thereof to construct pairwise coprime sets without primes.
+
+Key insight: Any composite number whose prime factors are distinct will be coprime to numbers composed of disjoint prime factors.
+
+Try:
+
+- Collect the set of primes up to 2024.
+- To avoid primes, consider sets made up of prime powers with exponent ≥ 2.
+- Also consider 1, which is coprime with all.
+- Maximize the size of prime-free, pairwise coprime subsets.
+- Since primes are forbidden, these sets consist only of composite numbers with prime exponents ≥ 2.
+- We'll enumerate all possible such sets with pairwise coprime elements to find the maximum size.
+
+We focus on prime powers \(p^k\) with \(k \ge 2\), since primes are excluded.
+
+Due to complexity, print all candidates of such sets and track the maximum size found.
+
+The minimum \( n \) is one more than this maximum size.
+
+```python
+# This program enumerates large pairwise coprime sets without primes up to 2024,
+# to find the minimal n such that every pairwise coprime set of size n contains a prime.
+from math import sqrt
+
+MAX_N = 2024
+
+def is_prime(x):
+    if x < 2:
+        return False
+    if x in (2, 3):
+        return True
+    if x%2 == 0:
+        return False
+    for i in range(3, int(sqrt(x))+1, 2):
+        if x % i == 0:
+            return False
+    return True
+
+# Collect primes up to MAX_N
+primes = [p for p in range(2, MAX_N+1) if is_prime(p)]
+
+# Collect prime powers with exponent >= 2 up to MAX_N
+prime_powers = []
+for p in primes:
+    power = p*p
+    while power <= MAX_N:
+        prime_powers.append(power)
+        power *= p
+
+# Include 1 (coprime with all)
+prime_powers.append(1)
+prime_powers = sorted(prime_powers)
+
+# We want to find largest subset of prime_powers with pairwise coprime elements and no primes
+# Since these numbers are prime powers with distinct bases or 1, to be pairwise coprime,
+# their prime bases must be distinct.
+# So maximal size = number of distinct prime bases plus 1 if includes 1.
+
+# Get prime bases used in prime_powers (excluding 1).
+bases = set()
+for x in prime_powers:
+    if x == 1:
+        continue
+    # Find base prime
+    for p in primes:
+        if x % p == 0:
+            bases.add(p)
+            break
+
+max_size = len(bases) + 1  # +1 for 1
+
+print(f"Number of prime bases for prime powers ≥ 2: {len(bases)}")
+print(f"Including 1, maximal coprime set without primes has size: {max_size}")
+print(f"Therefore minimal n is {max_size + 1}")
+
+# Print example elements of such maximal coprime set without primes:
+example_set = [1]
+used_bases = set()
+for x in prime_powers:
+    if x == 1:
+        continue
+    # find base prime
+    for p in primes:
+        if x % p == 0:
+            if p not in used_bases:
+                example_set.append(x)
+                used_bases.add(p)
+            break
+
+print("Example maximal pairwise coprime set with no primes:")
+print(sorted(example_set))
+```

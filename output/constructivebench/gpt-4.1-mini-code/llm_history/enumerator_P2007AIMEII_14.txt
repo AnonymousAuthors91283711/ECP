@@ -1,0 +1,56 @@
+[write_program]
+The problem involves a polynomial \( f \) satisfying:
+- \( f(0) = 1 \)
+- \( f(2) + f(3) = 125 \)
+- \( f(x) f(2x^2) = f(2x^3 + x) \) for all real \( x \).
+
+We want to find \( f(5) \).
+
+To assist with conjecturing \( f(5) \), we enumerate polynomials \( f \) of small degree with the condition \( f(0) = 1 \), then check if they satisfy the functional equation at sample points and the condition \( f(2) + f(3) = 125 \). We print those that fit partially or fully, then print candidate \( f(5) \).
+
+```python
+import itertools
+
+def eval_poly(coeffs, x):
+    return sum(c * x**i for i, c in enumerate(coeffs))
+
+def check_feq(coeffs, test_xs):
+    # Checks f(x)*f(2x^2) = f(2x^3 + x) at several x values
+    for x in test_xs:
+        lhs = eval_poly(coeffs, x) * eval_poly(coeffs, 2*x**2)
+        rhs = eval_poly(coeffs, 2*x**3 + x)
+        if abs(lhs - rhs) > 1e-8:
+            return False
+    return True
+
+max_deg = 4  # limit degree for tractability
+test_xs = [0.1, 0.5, 1]  # sample test points to check functional eqn approximately
+found = set()
+
+for deg in range(1, max_deg+1):
+    # f(0) = 1 fixes constant term = 1
+    # coeffs: [1, c1, c2, ..., c_deg]
+    # To keep search space small, let ci in integers [-5..5]
+    for coeffs_rest in itertools.product(range(-5,6), repeat=deg):
+        coeffs = (1,) + coeffs_rest
+        # Check f(2)+f(3)=125
+        v2 = eval_poly(coeffs, 2)
+        v3 = eval_poly(coeffs, 3)
+        if v2+v3 != 125:
+            continue
+        # Check functional eqn on test points (approximate)
+        if not check_feq(coeffs, test_xs):
+            continue
+        f5 = eval_poly(coeffs, 5)
+        # print candidate polynomial and f(5)
+        poly_str = " + ".join(f"{c}x^{i}" if i>0 else str(c) for i,c in enumerate(coeffs) if c!=0)
+        ans_line = f"Degree {deg}, coeffs={coeffs}, f(5)={f5}"
+        if ans_line not in found:
+            print(ans_line)
+            found.add(ans_line)
+
+# After enumeration, print extremal answer found if desired
+if found:
+    f5_values = [float(line.split("f(5)=")[-1]) for line in found]
+    print("Candidate f(5) values:", sorted(set(f5_values)))
+```

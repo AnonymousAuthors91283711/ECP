@@ -1,0 +1,55 @@
+[write_program]
+This appears to be a problem about primes \( p \) for which the set
+\[
+\{(x,y) \in (\mathbb{Z}/p\mathbb{Z})^2 : y^2 \equiv x^3 + 4x \pmod p \}
+\]
+has exactly \( p \) elements. In other words, the number of solutions to \( y^2 = x^3 + 4x \) over the finite field \( \mathbb{F}_p \) is \( p \).
+
+We want to check primes \( p \) (small ones for enumeration) and count the number of solutions \((x,y)\) modulo \(p\) satisfying the curve equation.
+
+The code below tries small primes \( p \), counts solutions, prints those \( p \) with solution count equal to \( p \) as candidates.
+
+```python
+# Enumerate primes p, count solutions (x,y) mod p to y^2 = x^3 + 4x (mod p), check when count == p
+
+def is_prime(n):
+    if n < 2: return False
+    if n in (2,3): return True
+    if n%2==0: return False
+    r = int(n**0.5)
+    for i in range(3,r+1,2):
+        if n%i==0:
+            return False
+    return True
+
+def count_solutions(p):
+    count = 0
+    # Precompute squares mod p for fast check
+    squares = { (y*y)%p for y in range(p) }
+    for x in range(p):
+        val = (x*x*x + 4*x) % p
+        if val in squares:
+            # y^2 = val has solutions, possibly 0,1 or 2 solutions
+            # We count number of y with y^2 == val
+            # Count how many y satisfy y^2 = val
+            # y^2 == val means y in {val's square roots}
+            # Since we have set of squares, we must count duplicates
+            # Actually, to count exact solutions, iterate y and count matches
+            solutions_y = sum(1 for y in range(p) if (y*y)%p == val)
+            count += solutions_y
+    return count
+
+def main():
+    print("Enumerating primes p where #solutions to y^2 = x^3 + 4x (mod p) equals p")
+    limit = 100  # limit primes up to 100 for speed and brevity
+    for p in range(2, limit+1):
+        if is_prime(p):
+            sol_count = count_solutions(p)
+            # Print info
+            print(f"p={p}, solutions={sol_count}")
+            if sol_count == p:
+                print(f"Candidate prime with #solutions = p: {p}")
+
+if __name__ == "__main__":
+    main()
+```

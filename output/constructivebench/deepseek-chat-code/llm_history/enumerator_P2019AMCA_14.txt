@@ -1,0 +1,58 @@
+[write_program]
+This problem involves finding the condition on the complex constant `c` such that the given quartic polynomial has exactly 4 distinct complex roots. We'll approach this by:
+
+1. Looking for when the polynomial has repeated roots (which would reduce the number of distinct roots)
+2. Finding the condition on `c` that prevents repeated roots
+3. Implementing a numerical search to find the critical value of |c|
+
+We'll use the discriminant condition for repeated roots and search numerically for the threshold value.
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+
+def find_critical_c():
+    # Coefficients of the polynomial f(X) = X^4 + (2-3i)X^3 + (5-6i)X^2 + (2-3i)X + c
+    # We need to find when discriminant is zero (repeated roots)
+    
+    # Numerical search parameters
+    step = 0.01
+    max_abs = 10.0
+    precision = 1e-6
+    
+    # We'll search along the real axis first (simplest case)
+    for re in np.arange(-max_abs, max_abs, step):
+        for im in np.arange(-max_abs, max_abs, step):
+            c = complex(re, im)
+            # Build the polynomial
+            coeffs = [c, 2-3j, 5-6j, 2-3j, 1]
+            p = Polynomial(coeffs)
+            
+            # Compute roots
+            roots = p.roots()
+            
+            # Check if any roots are close (indicating multiplicity)
+            has_repeated = False
+            for i in range(len(roots)):
+                for j in range(i+1, len(roots)):
+                    if abs(roots[i] - roots[j]) < precision:
+                        has_repeated = True
+                        break
+                if has_repeated:
+                    break
+            
+            if has_repeated:
+                abs_c = abs(c)
+                print(f"Found candidate |c| = {abs_c:.6f} at c = {c}")
+                # Refine search around this value
+                return abs_c  # For this problem, we just need the first critical value
+    
+    return None
+
+if __name__ == "__main__":
+    critical_abs = find_critical_c()
+    if critical_abs is not None:
+        print(f"\nCritical |c| value appears to be: {critical_abs:.6f}")
+    else:
+        print("No critical value found in search range")
+```

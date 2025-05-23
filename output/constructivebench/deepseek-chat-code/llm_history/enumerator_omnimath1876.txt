@@ -1,0 +1,38 @@
+[write_program]
+This problem asks for the smallest positive integer n such that there exists a complex number z in the first quadrant (Re(z)>0, Im(z)>0) where z^n equals its complex conjugate's n-th power. We'll write a Python program to find this minimal n by checking each n in order and testing for suitable z values.
+
+The key observation is that z^n = (conj(z))^n implies (z/conj(z))^n = 1, meaning z/conj(z) must be an n-th root of unity. We'll parameterize z in polar form and check for solutions.
+
+```python
+import cmath
+import math
+
+def find_min_n(max_n=20):
+    for n in range(1, max_n + 1):
+        # Check if there's a solution for this n
+        found = False
+        # Try various angles in (0, pi/2)
+        for k in range(1, n):
+            if math.gcd(k, n) != 1:
+                continue  # Reduce to simplest form
+            # z/conj(z) = e^(2iθ) = e^(2πik/n)
+            # So θ = πk/n must be in (0, π/2)
+            if 0 < k/n < 0.5:
+                # Any r > 0 will work, take r=1 for simplicity
+                theta = math.pi * k / n
+                z = cmath.rect(1.0, theta)  # e^(iθ)
+                z_n = z ** n
+                conj_z_n = z.conjugate() ** n
+                if abs(z_n - conj_z_n) < 1e-10:  # Account for floating point errors
+                    print(f"Found solution for n={n}: z with angle {theta/math.pi}π")
+                    found = True
+                    break
+        if found:
+            print(f"Minimal n found: {n}")
+            return n
+    print(f"No solution found up to n={max_n}")
+    return None
+
+if __name__ == "__main__":
+    find_min_n()
+```

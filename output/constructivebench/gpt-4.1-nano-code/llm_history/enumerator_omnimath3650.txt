@@ -1,0 +1,69 @@
+[write_program]
+The problem involves finding the number of pairs `(a, b)` of positive integers such that their GCD and LCM meet specific conditions involving the numbers from 1 to 50. Specifically:
+
+- `gcd(a, b) = ∏_{i=1}^{50} i`
+- `lcm(a, b) = ∏_{i=1}^{50} i^2`
+
+Given the constraints, since `a, b > 0`, and these are related via gcd and lcm, careful analysis reveals that:
+
+- The gcd divides both `a` and `b`.
+- The product gcd * lcm should equal `a * b`.
+- The values involve large products, so direct enumeration over all possibilities up to `lcm` or `gcd` is necessary.
+
+To efficiently find all such pairs, I will:
+
+- Compute the `gcd_value` (product of 1..50).
+- Compute the `lcm_value` (product of i^2 for i in 1..50).
+- Enumerate all divisors of `lcm_value`.
+- For each divisor `d`, check if `d` divides `lcm_value` and whether `gcd_value` divides both `d` and `lcm_value/d`.
+- Count pairs `(a, b)` where `gcd(a, b) = gcd_value` and `lcm(a, b) = lcm_value`.
+
+Since direct enumeration can be large, we will limit the outer loops as much as possible and directly check only relevant divisors.
+
+Below is the code following these considerations.
+
+```python
+from math import gcd
+from functools import reduce
+
+# Compute the product of integers from 1 to 50
+def product_range(start, end):
+    result = 1
+    for i in range(start, end + 1):
+        result *= i
+    return result
+
+gcd_value = product_range(1, 50)
+lcm_value = product_range(1, 50)**2
+
+# Function to get all divisors of a number
+def get_divisors(n):
+    divisors = set()
+    i = 1
+    while i * i <= n:
+        if n % i == 0:
+            divisors.add(i)
+            divisors.add(n // i)
+        i += 1
+    return sorted(divisors)
+
+# Enumerate divisors of lcm_value
+divisors = get_divisors(lcm_value)
+
+count = 0
+
+# For each divisor d of lcm_value, check if it can be gcd of the pair
+for d in divisors:
+    if gcd_value % d != 0:
+        continue
+    m = lcm_value // d
+    if m % gcd_value != 0:
+        continue
+    # Now, check if gcd_value == gcd(d, m)
+    if gcd(d, m) == gcd_value:
+        count += 1
+        print(f"Pair candidates with gcd={d} and lcm={m}")
+
+# Output total count of such pairs
+print("Total pairs:", count)
+```

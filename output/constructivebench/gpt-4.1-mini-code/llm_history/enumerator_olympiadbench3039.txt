@@ -1,0 +1,124 @@
+[write_program]
+The problem asks for the number of integer quadruples \((a,b,c,d) \in \mathbb{Z}^4\) satisfying the system:
+\[
+\begin{cases}
+abc = 12000 \\
+bcd = 24000 \\
+cda = 36000
+\end{cases}
+\]
+
+Our goal is to write a Python program that enumerates possible integer quadruples \((a,b,c,d)\) that satisfy these equations and prints them as soon as found, to assist in conjecturing the count.
+
+Key observations:
+- From the three products, dividing pairwise we can relate variables.
+- Each equation involves products of 3 variables.
+- Since the numbers are large, brute forcing all integers for \(a,b,c,d\) is impossible.
+- Instead, enumerate \(c\) in some reasonable range, factor equations to find possible \(a,b,d\).
+- Use the given products to solve for variables and check integrality and consistency.
+
+We will try \(c\) dividing 12000 (since \(abc=12000\)) and use divisibility to derive \(a,b,d\). Similarly, deduce \(a,b,d\) from the equations and verify all constraints.
+
+We will print tuples \((a,b,c,d)\) that satisfy all three equalities exactly.
+
+```python
+# Enumerator for integer quadruples (a,b,c,d) with:
+# abc=12000, bcd=24000, cda=36000
+
+# We'll enumerate over divisors c of 12000 (since abc=12000 means c divides 12000/(ab)),
+# then get possible a,b from abc=12000 => ab=12000/c,
+# get b from bcd=24000 => d=24000/(b c),
+# and cda=36000 => d=36000/(c a).
+# Equate the two expressions for d to relate a,b,c.
+
+import math
+
+def divisors(n):
+    # Return all positive and negative divisors of n
+    divs = []
+    for i in range(1, int(math.isqrt(n)) + 1):
+        if n % i == 0:
+            divs.append(i)
+            if i != n // i:
+                divs.append(n // i)
+    res = divs + [-x for x in divs]
+    return res
+
+N = 12000
+M = 24000
+P = 36000
+
+results = 0
+
+# Enumerate c dividing 12000 (nonzero)
+for c in divisors(N):
+    if c == 0:
+        continue
+    # ab = N / c
+    if N % c != 0:
+        continue
+    ab = N // c
+    # b*d = M / c
+    if M % c != 0:
+        continue
+    bd = M // c
+    # c*d*a = P => d*a = P / c
+    if P % c != 0:
+        continue
+    da = P // c
+
+    # From ab, bd, da we want integer solutions (a,b,d) such that ab=ab, bd=bd, da=da
+
+    # Note: a,b,d nonzero integers satisfying:
+    # ab = ab_val
+    # bd = bd_val
+    # da = da_val
+
+    # Because a,b,d integers, and these three products are known, all nonzero,
+    # and we want to solve for integer triples (a,b,d).
+
+    # Given ab, bd, da and variables a,b,d, with all nonzero,
+    # notice that (ab)(bd)(da) = (a b)(b d)(d a) = (a^2)(b^2)(d^2)
+    # = (abd)^2 = (abc d/c)^2 not directly useful
+    # Another approach: from ab and bd, we have b divides ab,
+    # similarly a divides ab, d divides bd.
+
+    # For ab fixed, enumerate divisors a of ab, let b = ab / a
+    # For bd fixed, enumerate divisors b of bd, let d = bd / b
+    # For da fixed, enumerate divisors d of da, let a = da / d
+    # These must be consistent: b from first and second must match,
+    # a from first and third must match, d from second and third must match.
+
+    # We'll enumerate candidates a from divisors(ab)
+    ab_divs = divisors(abs(ab))
+    for a in ab_divs:
+        if a == 0:
+            continue
+        # b from ab
+        if ab % a != 0:
+            continue
+        b = ab // a
+        # now b must divide bd
+        if bd % b != 0:
+            continue
+        d = bd // b
+        # check if d divides da, and a = da / d
+        if d == 0 or da % d != 0:
+            continue
+        a_check = da // d
+        # check consistency: is a == a_check?
+        if a_check != a:
+            continue
+
+        # We have a,b,c,d candidate. Check actual equations:
+        if a*b*c == N and b*c*d == M and c*d*a == P:
+            print((a,b,c,d))
+            results += 1
+            if results > 20:  # limit output length
+                break
+    if results > 20:
+        break
+
+print(f"Number of solutions found (partial or all up to limit): {results}")
+```
+

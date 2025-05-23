@@ -1,0 +1,54 @@
+[write_program]
+The problem deals with combinatorial conditions involving drawing balls of three colors (Red, Blue, Yellow) from respective totals, then it states a result involving a fraction 9/26 under some parity conditions on the draw number. We will interpret this as follows:
+
+- totalRed=50, totalBlue=50, totalYellow=30 are fixed totals.
+- numDrawn=65 is fixed.
+- Conditions on numDrawn+5 and numDrawn-5 being even means numDrawn is odd (65 is odd).
+- The function omnimath1133_answer presumably gives some probability or combinational ratio depending on these parameters.
+- The result states that omnimath1133_answer(...) = 9/26.
+
+Since the problem is not fully specified, we attempt to enumerate all possible compositions of draws summing to numDrawn=65 from three colors with provided totals, and check some combinational ratio and print each possibility as a candidate. Then we print the total ratio found.
+
+We will enumerate:
+- R in [0..50]
+- B in [0..50]
+- Y in [0..30]
+such that R+B+Y=65.
+
+For each (R,B,Y) triple, compute the multinomial coefficient C(50,R)*C(50,B)*C(30,Y) as the "number of ways"; sum all for total ways. Then consider a conjectured answer, print partial results.
+
+We will print the fraction of counts for some indicative condition if any (e.g., (R+B) even), or just print the triple and ways, to help find the ratio 9/26.
+
+```python
+from math import comb
+from fractions import Fraction
+
+totalRed = 50
+totalBlue = 50
+totalYellow = 30
+numDrawn = 65
+
+total_ways = 0
+partial_sum = 0  # sum over triples satisfying condition
+
+print(f"Parameters: totalRed={totalRed}, totalBlue={totalBlue}, totalYellow={totalYellow}, numDrawn={numDrawn}")
+
+# Enumerate all valid draws
+for R in range(max(0, numDrawn - totalBlue - totalYellow), min(totalRed, numDrawn) + 1):
+    for B in range(max(0, numDrawn - R - totalYellow), min(totalBlue, numDrawn - R) + 1):
+        Y = numDrawn - R - B
+        if 0 <= Y <= totalYellow:
+            ways = comb(totalRed, R) * comb(totalBlue, B) * comb(totalYellow, Y)
+            total_ways += ways
+            # Example condition: sum of Red and Blue drawn is even (arbitrary)
+            if (R + B) % 2 == 0:
+                partial_sum += ways
+            # Print every 1000th iteration for brevity
+            if (R * totalBlue + B) % 1000 == 0:
+                print(f"R={R}, B={B}, Y={Y}, ways={ways}")
+
+result = Fraction(partial_sum, total_ways)
+print(f"Partial sum / total ways = {result} ≈ {float(result):.6f}")
+print("Check if this matches the 9/26 fraction from the problem statement (≈0.346153)...")
+```
+

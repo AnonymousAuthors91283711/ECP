@@ -1,0 +1,63 @@
+[write_program]
+The problem involves finding the greatest natural number \( m \) such that there exists an injective order-preserving sequence \( P \) of length \( m+2 \) in \(\mathbb{N} \times \mathbb{N}\) with strictly increasing first and second coordinates, and distinctness conditions on coordinates. The constraints resemble finding the longest chain of points in the plane with increasing coordinates and no repeated first or second components.
+
+To assist with conjecturing the maximum possible \( m \) for small \( n \), the Python program below enumerates all possible sequences \( P : \{0, \ldots, m+1\} \to \{0, \ldots, n-1\} \times \{0, \ldots, n-1\} \) that satisfy:
+- distinctness of points,
+- strictly increasing first components,
+- strictly increasing second components,
+- no duplicate first or second coordinates among points.
+
+Since \( m+2 \) points with such constraints correspond to strictly increasing sequences in both coordinates of length \( m+2 \), and the available coordinates range from 0 to \( n-1 \), the program prints all valid sequence lengths \( m \) found, for sample values \( n=2,3,4 \).
+
+```python
+# Enumerate sequences P: {0,..,m+1} -> N x N with:
+# - P injective
+# - first and second coords strictly increasing
+# - distinct first coords
+# - distinct second coords
+# Goal: find max m with sequence length m+2
+
+from itertools import combinations
+
+def check_sequence(seq):
+    # seq is a tuple of (x,y) points
+    # Check strict increasing in x and y
+    for i in range(len(seq)-1):
+        if not (seq[i][0] < seq[i+1][0] and seq[i][1] < seq[i+1][1]):
+            return False
+    # Check distinctness of x and y already guaranteed by strictly increasing
+    # since strict increasing implies distinctness
+    return True
+
+def enumerator():
+    ns = [2,3,4]  # sample n values (domain for coordinates 0..n-1)
+    for n in ns:
+        print(f"n = {n}")
+        max_m = -1
+        coords = [(x,y) for x in range(n) for y in range(n)]
+        # To form sequences of length m+2, try increasing length from 2 up to n*n (max)
+        # We try from length 2 up to n (since strictly increasing coordinates limit length <= n)
+        for length in range(2, n+1):
+            found = False
+            # combinations of coords of size length (sequence candidate)
+            # since increasing strictly in both coordinates, combinations sorted lex works
+            for seq in combinations(coords, length):
+                # Check if seq is strictly increasing in first and second coordinates
+                xs = [p[0] for p in seq]
+                ys = [p[1] for p in seq]
+                # check strictly increasing xs and ys
+                if all(xs[i] < xs[i+1] for i in range(len(xs)-1)) and \
+                   all(ys[i] < ys[i+1] for i in range(len(ys)-1)):
+                    found = True
+                    m = length - 2
+                    print(f"found m = {m} with sequence: {seq}")
+            if found:
+                max_m = max(max_m, length-2)
+        if max_m >= 0:
+            print(f"Max m for n={n}: {max_m}")
+        else:
+            print(f"No valid sequence found for n={n}")
+
+if __name__ == "__main__":
+    enumerator()
+```

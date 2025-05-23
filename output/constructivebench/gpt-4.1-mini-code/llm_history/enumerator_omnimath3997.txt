@@ -1,0 +1,82 @@
+[write_program]
+The problem involves 100 real numbers \( x_i \) such that
+
+\[
+\sum_{i=1}^{100} x_i^2 = \sum_{i=1}^{100} (x_i + 1)^2.
+\]
+
+We want to find the value of
+
+\[
+\sum_{i=1}^{100} (x_i + 2)^2 - \sum_{i=1}^{100} x_i^2.
+\]
+
+Let's analyze the constraint first to guess the answer. Expanding the right side of the equality:
+
+\[
+\sum x_i^2 = \sum (x_i^2 + 2 x_i + 1) \implies 0 = \sum (2 x_i + 1) = 2\sum x_i + 100 \implies \sum x_i = -50.
+\]
+
+The quantity we want is:
+
+\[
+\sum (x_i + 2)^2 - \sum x_i^2 = \sum (x_i^2 + 4 x_i + 4) - \sum x_i^2 = \sum (4 x_i + 4) = 4 \sum x_i + 400.
+\]
+
+Plug in \(\sum x_i = -50\):
+
+\[
+4 \cdot (-50) + 400 = -200 + 400 = 200.
+\]
+
+So the answer should be 200.
+
+We'll verify this by enumeration for small \(n\) (say \(n=1,2,3\)) where we try all integer vectors \(x_i \in [-10, 10]\), prune those that satisfy the constraint, and print the difference sum formula.
+
+This will confirm the pattern numerically.
+
+```python
+# Verify the formula for small n with sample integer vectors satisfying the constraint.
+# The constraint is sum x_i^2 = sum (x_i+1)^2
+# Which implies sum x_i = -n/2.
+# We enumerate integer vectors x in [-10,10]^n with sum x_i = -n/2 (only possible if -n/2 is integer) and check sums.
+
+def check_for_n(n, bound=10):
+    print(f"Testing n={n}")
+    # sum x_i must be -n/2, only integer if n even
+    target_sum = -n/2
+    if target_sum != int(target_sum):
+        print("No integer solutions because sum x_i not integer")
+        return
+    target_sum = int(target_sum)
+
+    # Enumerate all integer vectors x of length n in [-bound,bound]
+    from itertools import product
+    count = 0
+    for x in product(range(-bound, bound+1), repeat=n):
+        if sum(x) != target_sum:
+            continue
+        sum_x2 = sum(xi*xi for xi in x)
+        sum_x1_2 = sum((xi+1)**2 for xi in x)
+        if sum_x2 != sum_x1_2:
+            # Should always be equal if sum x_i = -n/2 by algebra, but due to integer might fail due to rounding
+            continue
+        diff = sum((xi+2)**2 for xi in x) - sum_x2
+        # Theoretical diff is 4*sum(x) + 4n = 4*target_sum + 4*n = 4*(-n/2) + 4*n = -2n + 4n = 2n
+        print(f"x={x} sum_x={sum(x)} diff={diff} expected={2*n}")
+        count += 1
+        if count >= 5:
+            break
+    if count == 0:
+        print("No vectors found.")
+    else:
+        print(f"Theoretical answer for n={n} is {2*n}.")
+
+if __name__ == "__main__":
+    for n in [2,4,6]:
+        check_for_n(n)
+```
+
+The output will show vectors satisfying the constraint and the difference, agreeing with the formula \(2n\).
+
+For \(n=100\), the answer is \(2 \times 100 = 200\).

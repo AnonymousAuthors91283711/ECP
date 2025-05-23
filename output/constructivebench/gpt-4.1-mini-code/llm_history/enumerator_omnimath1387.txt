@@ -1,0 +1,55 @@
+[write_program]
+The problem involves sequences \(a:\{0,1,2,3\}\to\mathbb{R}\) satisfying specific linear relations and fitting quadratic forms to cosines of the \(a_n\). We want to find the greatest value of \(\cos(a_0) - \cos(a_3)\) over such sequences.
+
+To explore this numerically:
+
+- We enumerate real triples \( (A,B,C) \) on a fine grid (over a small range for speed).
+- For each triple, we compute \(a_n = x_n\) defined by the quadratic \(A n^2 + B n + C = \cos(a_n)\) inversion, approximating \(a_n\) by the arccos of the quadratic at \(n\).
+- We check that the linear relations hold for these \(a_n\) (or approximate).
+- For sequences that fit, compute \(\cos(a_0) - \cos(a_3)\) and print them.
+- Then output the maximum found value.
+
+This enumerates candidate answers and helps conjecture the maximum.
+
+```python
+import math
+import itertools
+
+# We approximate by choosing integer tuples (A,B,C) on a small grid
+# Then define a_n by inverting cos(a_n) = A n^2 + B n + C (ignore domain issues)
+# Then check linear relations a_2 = a_1 + a_0 and a_3 = a_2 + a_1 within tolerance
+
+def approx_arccos(x):
+    # Return arccos if in domain else None
+    if -1 <= x <= 1:
+        return math.acos(x)
+    return None
+
+def check_relations(a):
+    # Check a_2 = a_1 + a_0 and a_3 = a_2 + a_1 within tolerance
+    tol = 1e-6
+    return (abs(a[2] - (a[1]+a[0])) < tol and abs(a[3] - (a[2]+a[1])) < tol)
+
+vals = set()
+steps = [-1.0, -0.5, 0.0, 0.5, 1.0]  # small grid for A,B,C
+for A, B, C in itertools.product(steps, repeat=3):
+    a = []
+    for n in range(4):
+        y = A*n**2 + B*n + C
+        angle = approx_arccos(y)
+        if angle is None:
+            break
+        a.append(angle)
+    if len(a) < 4:
+        continue
+    if check_relations(a):
+        val = math.cos(a[0]) - math.cos(a[3])
+        print(f"A={A},B={B},C={C}, val={val:.6f}")
+        vals.add(val)
+
+if vals:
+    maxi = max(vals)
+    print(f"Maximum cos(a_0) - cos(a_3) found: {maxi:.6f}")
+else:
+    print("No valid sequences found.")
+```

@@ -1,0 +1,61 @@
+[write_program]
+This problem asks us to find all real numbers \( x \) such that \((x^2 + 2x + 3)^{(x^2 + 2x + 3)^{(x^2 + 2x + 3)}} = 2012\). The theorem seeks a finite set \( s \) of such \( x \), and the sum of all these solutions.
+
+---
+
+Because directly solving the exponential equation algebraically can be challenging, we can approach the problem numerically:
+
+- Define \( y = x^2 + 2x + 3 \), then the equation simplifies to \( y^{y^y} = 2012 \).
+- For each candidate \( y \), check if \( y^{y^y} \) is approximately 2012.
+
+Our plan:
+
+- Enumerate \( y \) over small, plausible values where \( y^{y^y} \) is near 2012.
+- For each such \( y \), solve \( x^2 + 2x + 3 = y \), which is a quadratic.
+- For each real root \( x \), check if the original equation holds within a small tolerance.
+- Collect these \( x \) values into a set \( s \).
+
+---
+
+Let's implement this with a small grid of \( y \) values around the suspected range.
+
+```python
+import math
+
+# Define the target value
+TARGET = 2012
+tolerance = 1e-5
+
+# List to store solutions
+solutions = set()
+
+# Range of y to test: based on rough estimation, y should be around where y^{y^y} ≈ 2012
+# y must be > 0 and reasonable (since y^{y^y} grows super-exponentially).
+# Pick y from about 1 to 4
+for y in [i/10.0 for i in range(10, 41)]:  # y from 1.0 to 4.0 in steps of 0.1
+    try:
+        val = y**(y**y)
+    except:
+        continue
+    if abs(val - TARGET) < 50:  # broad check, since y^y grows rapidly
+        # Solve x^2 + 2x + (3 - y) = 0
+        a, b, c = 1, 2, 3 - y
+        discriminant = b**2 - 4*a*c
+        if discriminant >= 0:
+            for sign in [1, -1]:
+                x = (-b + sign * math.sqrt(discriminant)) / (2 * a)
+                # Check if this x satisfies the main equation within tolerance
+                y_val = x**2 + 2 * x + 3
+                try:
+                    check_val = y_val ** (y_val ** y_val)
+                except:
+                    continue
+                if abs(check_val - TARGET) < tolerance:
+                    print(f"Found solution x = {x} for y = {y_val}")
+                    solutions.add(x)
+
+# Sum of solutions
+sum_solutions = sum(solutions)
+print("Solutions:", solutions)
+print("Sum of solutions:", sum_solutions)
+```

@@ -1,0 +1,55 @@
+[write_program]
+The problem involves pairs (m, n) of natural numbers with an injectivity condition on a function defined through filtered boolean values over finite sets. To explore this, we'll enumerate small pairs (m, n), checking the injectivity property for all boolean functions on Fin (m*n). Since the domain sizes grow quickly, we'll limit m and n up to 4 for efficiency.
+
+The code will:
+- Iterate over m, n in [1..4]
+- For each boolean function f: Fin(m*n) → Bool, check if the induced function on Fin m is injective
+- Print pairs where injectivity holds for all f
+- At end, print all such (m,n)
+
+Because the condition requires ∀ f, injectivity on k, failure for any f excludes the pair.
+
+```python
+# enumerator.py
+from itertools import product
+
+def finset_univ_filter(f, n):
+    # Returns indices i in 0..n-1 where f(i) is True
+    return [i for i in range(n) if f(i)]
+
+def is_injective(mapping):
+    seen = set()
+    for v in mapping:
+        if v in seen:
+            return False
+        seen.add(v)
+    return True
+
+def check_pair(m, n):
+    size = m * n
+    # All boolean functions f: [0..size-1] -> {0,1}
+    for func_bits in product([0,1], repeat=size):
+        f = lambda idx: func_bits[idx]
+        # induced function on k in [0..m-1]:
+        # count of elements in {0..n-1} where f((k*n + i) % (m*n))=1
+        counts = []
+        for k_ in range(m):
+            filtered = [i for i in range(n) if f(((k_ * n + i) % size))]
+            counts.append(len(filtered))
+        if not is_injective(counts):
+            return False
+    return True
+
+def main():
+    answers = []
+    for m in range(1,5):
+        for n in range(1,5):
+            print(f"Checking (m,n)=({m},{n})...", flush=True)
+            if check_pair(m,n):
+                print(f"(m,n)=({m},{n}) satisfies condition")
+                answers.append((m,n))
+    print("All (m,n) pairs satisfying condition:", answers)
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,70 @@
+[write_program]
+This problem asks for the greatest exponent k such that 7^k divides n, given that n has 60 divisors and 7n has 80 divisors. We'll write a Python program to enumerate possible values of n and find the maximal k.
+
+The approach:
+1. Factorize n as product of primes p_i^e_i
+2. The number of divisors is product of (e_i+1)
+3. For 7n, we either add 7 as new prime (if not in n) or increment its exponent
+4. We'll search for factorizations where d(n)=60 and d(7n)=80
+
+```python
+import math
+from collections import defaultdict
+from itertools import product
+
+def factorize(n):
+    factors = defaultdict(int)
+    while n % 2 == 0:
+        factors[2] += 1
+        n //= 2
+    i = 3
+    while i*i <= n:
+        while n % i == 0:
+            factors[i] += 1
+            n //= i
+        i += 2
+    if n > 1:
+        factors[n] += 1
+    return factors
+
+def num_divisors(factors):
+    count = 1
+    for exp in factors.values():
+        count *= (exp + 1)
+    return count
+
+max_k = 0
+# We'll search up to n with reasonable exponents
+max_prime_exp = 10
+primes = [2, 3, 5, 7, 11, 13]
+
+# Generate possible exponents for primes (excluding 7)
+for exponents in product(*[range(1, max_prime_exp) for _ in range(len(primes)-1)]):
+    factors = dict(zip([p for p in primes if p != 7], exponents))
+    d_n = num_divisors(factors)
+    if d_n != 60:
+        continue
+    
+    # Case 1: 7 not in original factors
+    factors_with_7 = factors.copy()
+    factors_with_7[7] = 1
+    if num_divisors(factors_with_7) == 80:
+        k = 0
+        if 7 in factors:
+            k = factors[7]
+        if k > max_k:
+            max_k = k
+            print(f"Found k={k} with factors={factors}")
+    
+    # Case 2: 7 already in factors (exponent e)
+    if 7 in factors:
+        e = factors[7]
+        new_factors = factors.copy()
+        new_factors[7] = e + 1
+        if num_divisors(new_factors) == 80:
+            if e > max_k:
+                max_k = e
+                print(f"Found k={e} with factors={factors}")
+
+print(f"\nMaximum k found: {max_k}")
+```

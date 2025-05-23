@@ -1,0 +1,62 @@
+[write_program]
+This problem asks for all real-valued functions f:ℝ→ℝ that satisfy the functional equation:
+f(x² + f(y)) = y + (f(x))² for all x,y ∈ ℝ.
+
+We'll write a Python program to search for polynomial solutions by testing different polynomial degrees and coefficients. The program will:
+1. Test linear functions f(x) = ax + b
+2. Test quadratic functions f(x) = ax² + bx + c
+3. Print any solutions found
+
+```python
+import numpy as np
+from itertools import product
+
+def test_polynomial(degree, max_coeff=2, num_points=3):
+    """Test polynomials of given degree with coefficients in [-max_coeff, max_coeff]"""
+    for coeffs in product(range(-max_coeff, max_coeff+1), repeat=degree+1):
+        if coeffs[-1] == 0 and degree > 0:  # Skip lower degree polynomials
+            continue
+            
+        def f(x):
+            return sum(c * (x**i) for i, c in enumerate(coeffs))
+        
+        valid = True
+        # Test random points to filter obvious non-solutions
+        for _ in range(num_points):
+            x, y = np.random.uniform(-10, 10), np.random.uniform(-10, 10)
+            try:
+                lhs = f(x**2 + f(y))
+                rhs = y + f(x)**2
+                if not np.isclose(lhs, rhs, rtol=1e-6):
+                    valid = False
+                    break
+            except:
+                valid = False
+                break
+                
+        if valid:
+            # Verify more thoroughly if initial tests pass
+            thorough = True
+            for x in np.linspace(-5, 5, 10):
+                for y in np.linspace(-5, 5, 10):
+                    try:
+                        lhs = f(x**2 + f(y))
+                        rhs = y + f(x)**2
+                        if not np.isclose(lhs, rhs, rtol=1e-6):
+                            thorough = False
+                            break
+                    except:
+                        thorough = False
+                        break
+                if not thorough:
+                    break
+                    
+            if thorough:
+                print(f"Found solution: f(x) = {' + '.join(f'{c}x^{i}' for i, c in enumerate(coeffs) if c != 0)}")
+
+print("Testing linear functions (degree 1):")
+test_polynomial(1)
+
+print("\nTesting quadratic functions (degree 2):")
+test_polynomial(2)
+```

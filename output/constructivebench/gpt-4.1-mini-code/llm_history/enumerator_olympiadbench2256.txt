@@ -1,0 +1,66 @@
+[write_program]
+The problem is to find real positive \( x \) such that:
+\[
+2^{\frac{\log(x^2)}{\log 10}} = 3 \cdot 2^{1 + \frac{\log x}{\log 10}} + 16.
+\]
+
+Rewrite the equation and try values for \( x \) to get exact or near exact solutions using Python. We will enumerate over rational powers of 10 (as the logarithms suggest) and check if the equation nearly holds.
+
+```python
+import math
+
+# The equation is:
+# 2^(log(x^2)/log(10)) = 3 * 2^(1 + log(x)/log(10)) + 16
+# Rewrite log base 10 as log10
+#
+# Set y = log10(x), then:
+# Left = 2^(2y)
+# Right = 3 * 2^(1 + y) + 16 = 3 * 2 * 2^y + 16 = 6 * 2^y + 16
+#
+# So 2^(2y) = 6 * 2^y + 16
+# Let z = 2^y, then z^2 = 6z + 16
+# z^2 - 6z - 16 = 0
+#
+# Solve quadratic:
+# z = [6 ± sqrt(36 + 64)] / 2 = [6 ± 10]/2
+#
+# z1 = (6+10)/2 = 16/2 = 8
+# z2 = (6-10)/2 = -4/2 = -2 (discard negative)
+#
+# So z=8=2^y
+# y = log2(8) = 3
+# Recall y = log10(x), so x = 10^y = 10^3 = 1000
+
+# Just to verify programmatically and also enumerate some values around 1000.
+
+eps = 1e-10
+
+def f(x):
+    if x <= 0:
+        return None
+    left = 2 ** (math.log(x*x, 10))
+    right = 3 * (2 ** (1 + math.log(x, 10))) + 16
+    return left, right
+
+print("Testing exact and near-exact values:")
+
+# Check x = 10^k for k in 0 to 5 in steps of 1
+for k in range(6):
+    x = 10 ** k
+    left, right = f(x)
+    diff = abs(left - right)
+    print(f"x=10^{k}={x}: left={left:.10f}, right={right:.10f}, diff={diff:.3e}")
+    if diff < eps:
+        print(f"-> Found solution x = {x}")
+
+# Enumeration around x=1000 with rational fractions
+print("\nEnumerating x around 1000 with fractions to find candidates:")
+for k_num in range(950, 1051, 10):
+    x = k_num
+    left, right = f(x)
+    diff = abs(left - right)
+    print(f"x={x}: left={left:.10f}, right={right:.10f}, diff={diff:.3e}")
+    if diff < eps:
+        print(f"-> Found solution x = {x}")
+```
+

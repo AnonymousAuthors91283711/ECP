@@ -1,0 +1,50 @@
+[write_program]
+This problem appears to involve reasoning about multisets of size \(n\) with elements from \(\mathrm{Fin}\,6\), and counts of certain elements exceeding a threshold. Given the sets of counts \([28, 20, 19, 13, 11, 9]\), we are asked about the least \(n\) such that for all multisets \(s\) of size \(n\), there exists an element \(i\) with both \(s.count i \geq 15\) and the counts in the multiset satisfy the bounds.
+
+We will:
+- Experiment with subset sizes \(n\), starting from small values.
+- For each \(n\), check if there's a multiset \(s\) of that size **without** any element \(i\) for which \(s.count i \geq 15\). When an example of such a multiset is found, it disproves the minimality.
+- Continue increasing \(n\) until we can no longer find such a counterexample, confirming the minimal \(n\).
+
+The trial involves generating all possible count distributions summing to \(n\), but given the constraints, a direct brute-force is unfeasible for very high \(n\). Instead, we'll test small values and look for counterexamples.
+
+```python
+# Enumerate multisets of size n over 6 elements to determine the minimal n
+# such that for every multiset s of size n, there exists an element with count >=15.
+
+from itertools import combinations_with_replacement
+
+max_n = 50  # Upper limit for search
+found_counterexample = False
+answer = None
+
+for n in range(1, max_n + 1):
+    # Generate possible count distributions over 6 elements summing to n
+    # with all counts less than 15 (to find counterexamples)
+    def generate_counts(total, parts, max_count):
+        if parts == 1:
+            if total < max_count:
+                yield [total]
+            return
+        for c in range(min(total, max_count)):
+            for rest in generate_counts(total - c, parts - 1, max_count):
+                yield [c] + rest
+
+    # Look for counterexample: sum of counts == n with all counts < 15
+    counterexample_found = False
+    for counts in generate_counts(n, 6, 15):
+        if sum(counts) == n:
+            # Check if any count >=15? No, by construction
+            # This multiset avoids having any element with count >=15
+            # So it's a counterexample
+            counterexample_found = True
+            break
+    if counterexample_found:
+        # Found a multiset of size n with no element >=15
+        print(f"n={n} is NOT sufficient.")
+    else:
+        # For this n, no such multiset exists, minimal n is n
+        answer = n
+        print(f"Minimal n such that in any multiset of size {n}, some element has count >=15: {answer}")
+        break
+```

@@ -1,0 +1,48 @@
+[write_program]
+The problem describes a property about a function \( g: \mathbb{Z}/n\mathbb{Z} \to \mathbb{Z}/n\mathbb{Z} \) being bijective, and for all \( k \) in \([0,100]\), the function \( x \mapsto g(x) + kx \) also being bijective. The goal is to find all \( n \) satisfying these conditions.
+
+Let's analyze small \( n \) and check the condition computationally. Since \( \mathbb{Z}/n\mathbb{Z} \) is a finite ring, bijective functions correspond to permutations. Linear maps of the form \( x \mapsto a x + b \), for \( a, b \in \mathbb{Z}/n\mathbb{Z} \), are bijections if and only if \( a \) is invertible. But here \( g \) is any bijection, not necessarily linear.
+
+Checking all functions is impossible, but if \( g \) is a linear automorphism \( x \mapsto a x \), maybe it suffices. Then \( x \mapsto g(x) + k x = a x + k x = (a + k) x \). For this to be bijective, \( a + k \) must be invertible for all \( k \in [0,100] \). So for \( n \), we want to find \( a \in (\mathbb{Z}/n\mathbb{Z})^\times \) such that \( a + k \in (\mathbb{Z}/n\mathbb{Z})^\times \) for all \( 0 \le k \le 100 \).
+
+We can enumerate \( n \), check for existence of \( a \in U_n \) with \( a + k \in U_n \) for \( k=0..100 \), where \( U_n \) is the unit group mod \( n \).
+
+Let's implement this efficiently for \( n \leq 150 \) due to constraints.
+
+```python
+# Enumerate candidates n where exists a invertible mod n with a+k invertible for k in [0..100]
+def units(n):
+    # returns the set of units modulo n
+    return {x for x in range(n) if gcd(x, n) == 1}
+
+def gcd(a,b):
+    while b:
+        a,b = b,a%b
+    return a
+
+def test_n(n):
+    U = units(n)
+    if len(U) == 0:
+        return False
+    for a in U:
+        # check a+k in U for k=0..100
+        # if all a+k mod n are in U, return True (a witness exists)
+        if all(((a + k) % n) in U for k in range(101)):
+            print(f"n={n}, a={a}")
+            return True
+    return False
+
+def main():
+    MAX = 150
+    candidates = []
+    for n in range(1, MAX+1):
+        if test_n(n):
+            candidates.append(n)
+    print("Candidates:", candidates)
+    if candidates:
+        print("Minimum satisfying n:", min(candidates))
+
+if __name__ == "__main__":
+    main()
+```
+This code enumerates \( n \) up to 150 and for each \( n \) checks whether there is a unit \( a \) such that all \( a+k \) for \( k=0..100 \) are units mod \( n \). It prints such \( n \) and the corresponding \( a \), then finally prints all candidates and the minimal \( n \).

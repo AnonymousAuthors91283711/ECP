@@ -1,0 +1,50 @@
+[write_program]
+The problem deals with sequences \(a_n = a_1 + (n-1)d\) (arithmetic) and \(b_n = b_1 r^{n-1}\) (geometric), with given product constraints for the first four terms. We want to find the greatest possible value of \((a_1 + 3d)(b_1 r^3)\).
+
+We'll write a Python program to enumerate possible exact values (or close rational approximations) of \(a_1, d, b_1, r\) satisfying the first three product constraints, then compute the fourth product and print it.
+
+```python
+from sympy import symbols, Eq, solve, simplify, Rational
+
+# Define variables
+a1, d, b1, r = symbols('a1 d b1 r', real=True)
+
+# Given equations from products
+eq1 = Eq(a1 * b1, 20)
+eq2 = Eq((a1 + d) * (b1 * r), 19)
+eq3 = Eq((a1 + 2*d) * (b1 * r**2), 14)
+
+# Solve eq1 for b1
+b1_expr = solve(eq1, b1)[0]
+
+# Substitute b1 in eq2 and eq3
+eq2_sub = eq2.subs(b1, b1_expr)
+eq3_sub = eq3.subs(b1, b1_expr)
+
+# Solve eq2_sub and eq3_sub for d and r
+sols = solve([eq2_sub, eq3_sub], (d, r), dict=True)
+
+print("Possible values of (a1, d, b1, r) and the 4th product:")
+for s in sols:
+    d_val = s[d]
+    r_val = s[r]
+    b1_val = b1_expr.subs(a1, a1)
+    # from eq1: b1 = 20 / a1, assign to variable after choosing a1
+    # We can pick numerical a1 values from a short range and solve for 4th product
+    # To get exact symbolic, solve for a1 as well. Use eq1, eq2_sub, eq3_sub
+    
+# Since we have 3 equations, solve for a1, d, r:
+sol_all = solve([eq1, eq2, eq3], (a1, d, b1, r), dict=True)
+
+for s in sol_all:
+    a1_val = s[a1].evalf()
+    d_val = s[d].evalf()
+    b1_val = s[b1].evalf()
+    r_val = s[r].evalf()
+    prod4 = (s[a1] + 3*s[d])*(s[b1] * s[r]**3)
+    prod4 = simplify(prod4)
+    print(f"a1 = {s[a1]}, d = {s[d]}, b1 = {s[b1]}, r = {s[r]}, 4th product = {prod4} ≈ {prod4.evalf()}")
+
+# Output suggests the possible 4th product values, printing them immediately
+```
+

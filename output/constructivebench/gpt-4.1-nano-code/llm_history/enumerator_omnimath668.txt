@@ -1,0 +1,49 @@
+[write_program]
+The problem appears to be about finding the minimal size `k` of a set `A` of integers such that every integer `m` can be written as `a^n mod 100` for some `a` in `A` and some positive integer `n`. We need to find the least such `k` and provide representative solutions.
+
+Since directly automating in formal proof environments is complex, I'll instead write a Python program to enumerate small sets `A` and check whether their elements generate all residues modulo 100 via powers. For efficiency, we'll limit the size of `A` and the base elements.
+
+The code will:
+- Test sets `A` of size `k` starting from 1 upwards.
+- For each set, generate the power residues of each element up to a certain threshold.
+- Check if the union covers all residues modulo 100.
+- Print the minimal `k` where coverage is complete.
+
+```python
+import itertools
+
+# Generate all elements for A, check for the minimal size k
+max_element = 20  # limit for base elements to keep runtime manageable
+target_mod = 100
+
+def power_residues(base, max_power=20):
+    residues = set()
+    current = 1
+    for n in range(1, max_power + 1):
+        current = (current * base) % target_mod
+        residues.add(current)
+        if len(residues) == target_mod:
+            break
+    return residues
+
+def covers_all_residues(A):
+    all_residues = set()
+    for a in A:
+        all_residues |= power_residues(a)
+        if len(all_residues) == target_mod:
+            return True
+    return False
+
+for k in range(1, 8):  # search for minimal set size up to 7
+    found = False
+    for A in itertools.product(range(1, max_element), repeat=k):
+        if covers_all_residues(A):
+            print(f"Found set of size {k}: {A}")
+            found = True
+            break
+    if found:
+        print(f"Minimal size k = {k}")
+        break
+```
+
+This program attempts small sets systematically, finds the minimal size that covers all residue classes under powers, and outputs representative solutions. Adjust `max_element` and `max_power` for more thoroughness with a performance trade-off.

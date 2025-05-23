@@ -1,0 +1,51 @@
+[write_program]
+This problem is about finding the maximum size of a subset T of pairs from [1,1993]×[1,4] such that no four points form a "square" configuration with specific distance relationships. We'll approach this by:
+
+1. Modeling the grid as a 1993×4 rectangle
+2. Enumerating possible subsets while checking the square condition
+3. Looking for patterns in small cases before scaling up
+
+The key observation is that we can likely take all points from 3 columns (3×1993) plus some additional points from the 4th column without forming the forbidden configuration.
+
+```python
+def has_forbidden_square(points):
+    # Check if any 4 points form the forbidden square configuration
+    from itertools import combinations
+    for a, b, c, d in combinations(points, 4):
+        if (a[0] == b[0] and a[1] == c[1] and b[1] == d[1] and c[0] == d[0] and
+            (a[0]-a[1])**2 + (b[0]-b[1])**2 == (a[0]-c[0])**2 + (a[1]-c[1])**2 and
+            (a[0]-a[1])**2 + (b[0]-b[1])**2 == (b[0]-d[0])**2 + (b[1]-d[1])**2 and
+            (a[0]-a[1])**2 + (b[0]-b[1])**2 == (c[0]-d[0])**2 + (c[1]-d[1])**2):
+            return True
+    return False
+
+def max_subset_size(n_rows, n_cols):
+    # Try different subset sizes to find maximum without forbidden square
+    max_size = 3 * n_rows  # Start with all points from 3 columns
+    
+    while max_size <= n_rows * n_cols:
+        # Try to add points from remaining columns
+        test_set = [(r, c) for r in range(1, n_rows+1) for c in range(1, 4)]
+        remaining = [(r, 4) for r in range(1, n_rows+1)]
+        
+        for add in range(0, min(n_rows, n_rows*n_cols - max_size) + 1):
+            test = test_set + remaining[:add]
+            if not has_forbidden_square(test):
+                current_size = len(test)
+                if current_size > max_size:
+                    max_size = current_size
+                    print(f"New max size found: {max_size}")
+        break  # Just check one iteration for demonstration
+    
+    return max_size
+
+# Test with smaller parameters first
+print("Testing with n_rows=5, n_cols=4:")
+small_result = max_subset_size(5, 4)
+print(f"\nFinal max size for small case: {small_result}")
+
+# Then try the actual problem parameters
+print("\nRunning for n_rows=1993, n_cols=4:")
+result = max_subset_size(1993, 4)
+print(f"\nFinal max size: {result}")
+```

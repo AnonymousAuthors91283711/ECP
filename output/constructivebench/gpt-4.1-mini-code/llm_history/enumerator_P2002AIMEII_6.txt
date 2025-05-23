@@ -1,0 +1,86 @@
+[write_program]
+The problem involves evaluating or approximating a large sum of reciprocal quadratic expressions:
+
+\[
+S = \sum_{n=0}^{9997} \frac{1}{(n+3)^2 - 4}.
+\]
+
+We want to understand the value or behavior of
+
+\[
+1000 \times S.
+\]
+
+To assist in conjecturing the closed form or the numeric value, we will:
+
+- Enumerate values of the sum for smaller upper limits, say \(N \leq 20\),
+- Print partial sums exactly when possible, otherwise as floating points,
+- Try to simplify each term using partial fractions to recognize telescoping patterns or known series.
+
+This stepwise enumeration will help understand the convergence and value pattern of the sum.
+
+```python
+def partial_fraction_term(n):
+    # Decompose 1/((n+3)^2 - 4) = 1/((n+5)(n+1)) using partial fractions
+    # 1 / ((n+3)^2 - 2^2) = 1 / ((n+5)(n+1))
+    # We want A/(n+5) + B/(n+1) = 1/((n+5)(n+1))
+    # Multiply both sides by (n+5)(n+1):
+    # A(n+1) + B(n+5) = 1
+    # For n = -1 => A(0) + B(4) = 1 -> 4B=1 -> B=1/4
+    # For n = -5 => A(-4) + B(0) = 1 -> -4A =1 -> A = -1/4
+    A = -0.25
+    B = 0.25
+    return A/(n+5) + B/(n+1)
+
+def exact_partial_fraction_term(n):
+    # Return tuple (A_coeff, denom1), (B_coeff, denom2)
+    # To later sum as rationals or decimals
+    return ((-1, 4, n+5), (1, 4, n+1))
+    # Meaning: -1/4 / (n+5) + 1/4 / (n+1)
+
+def main():
+    from fractions import Fraction
+
+    print("Summation for n=0 to N of 1/((n+3)^2 - 4), scaled by 1000")
+    print("Using partial fractions: 1/((n+3)^2 -4) = -1/4/(n+5) + 1/4/(n+1)")
+
+    max_N = 20  # sample smaller N for enumeration
+    partial_sums = []
+    acc = Fraction(0,1)
+    for N in range(max_N+1):
+        # partial sum from n=0 to N
+        # Using telescoping:
+        # sum_{n=0}^N 1/((n+3)^2 - 4) = (1/4) * sum [1/(n+1) - 1/(n+5)]
+        # = (1/4) * [ (1/1 + 1/2 + 1/3 + 1/4 + ... + 1/(N+1)) - (1/5 + 1/6 + ... + 1/(N+5)) ]
+        # = (1/4) * (sum_{k=1}^{N+1} 1/k - sum_{k=5}^{N+5} 1/k )
+        # = (1/4) * ( (1 + 1/2 + 1/3 + 1/4) - (1/(N+2) + 1/(N+3) + 1/(N+4) + 1/(N+5)) )
+
+        # sum_{k=1}^{N+1} 1/k
+        def harmonic(m):
+            return sum(Fraction(1, i) for i in range(1, m+1))
+
+        h1 = harmonic(N+1)
+        h2 = harmonic(N+5) - harmonic(4)
+        val = Fraction(1,4)*(h1 - h2)
+        val_float = float(val)
+        scaled_val = val_float * 1000
+        print(f"N={N}: Sum = {val} ≈ {val_float:.8f}, 1000*Sum ≈ {scaled_val:.5f}")
+        partial_sums.append(scaled_val)
+    
+    # Print approximate limit at N=9997 for curiosity (approximate only)
+    # Using harmonic number approximation: H_m ~ ln(m) + γ + 1/(2m)
+    import math
+    gamma = 0.5772156649
+    def H_approx(m):
+        return math.log(m) + gamma + 1/(2*m)
+
+    N_large = 9997
+    h1_approx = H_approx(N_large+1)
+    h2_approx = H_approx(N_large+5) - (1/1 + 1/2 + 1/3 + 1/4)
+    val_approx = 0.25 * (h1_approx - h2_approx)
+    scaled_val_approx = val_approx * 1000
+    print(f"N=9997 (approx): 1000*Sum ≈ {scaled_val_approx:.5f}")
+
+if __name__ == "__main__":
+    main()
+```

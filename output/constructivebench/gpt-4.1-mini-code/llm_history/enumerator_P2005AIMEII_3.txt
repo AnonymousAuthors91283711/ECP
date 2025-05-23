@@ -1,0 +1,66 @@
+[write_program]
+The problem involves finding a rational number \( r = \frac{p}{q} \) and a nonzero \( a \) such that the series \( \sum_{n=0}^\infty a r^n \) converges with sum 2005, and the sum of squares \( \sum_{n=0}^\infty (a r^n)^2 \) equals 20050.
+
+Given geometric series:
+\[
+\sum_{n=0}^\infty a r^n = \frac{a}{1-r} = 2005
+\]
+\[
+\sum_{n=0}^\infty (a r^n)^2 = \sum_{n=0}^\infty a^2 r^{2n} = \frac{a^2}{1-r^2} = 20050
+\]
+
+We want to find rational \( r \in (-1,1), r \neq 0 \), with fully reduced fraction form \( p/q \) (coprime), and corresponding \( a \neq 0 \) satisfying these equations.
+
+The program will enumerate small positive integers \( p, q \) with gcd=1, \( |p| < q \) (so \( |r|<1 \)), find \( a \) from the first sum, then check the second sum condition exactly.
+
+We print candidates as they are found, with \( r = p/q \) and \( a \) rational, then print the answer with minimal denominator.
+
+```python
+from math import gcd
+
+# Enumerate coprime pairs (p,q) with |p|<q<=10, q!=0
+# For each, r = p/q, see if sums match exactly
+# sum1 = a/(1-r)=2005 => a = 2005*(1 - r) = 2005*(q - p)/q
+# sum2 = a^2/(1 - r^2) = 20050
+#  => a^2/(1 - r^2) = 20050
+#  => a^2 = 20050 * (1 - r^2)
+# Plug in a => (2005*(q-p)/q)^2 = 20050*(1 - (p/q)^2)
+# Simplify:
+# (2005^2)*(q-p)^2 / q^2 = 20050*(q^2 - p^2)/q^2
+# Multiply both sides by q^2:
+# (2005^2)*(q-p)^2 = 20050*(q^2 - p^2)
+# Check if equality holds for integer p,q
+
+target1 = 2005
+target2 = 20050
+max_q = 10
+
+print("Searching for rational r = p/q with gcd(p,q)=1, |p|<q <= %d" % max_q)
+found = []
+for q in range(1, max_q+1):
+    for p in range(-q+1, q):
+        if p == 0:
+            continue
+        if gcd(p,q) != 1:
+            continue
+        lhs = (target1**2) * (q - p)**2
+        rhs = target2 * (q**2 - p**2)
+        if lhs == rhs:
+            # Compute a exactly as rational: a = 2005*(q-p)/q
+            from fractions import Fraction
+            r = Fraction(p, q)
+            a = Fraction(target1 * (q - p), q)
+            print(f"Found candidate: r = {r}, a = {a}, a/(1-r) = {a/(1 - r)}")
+            found.append((r.numerator, r.denominator))
+
+if found:
+    print("\nAll candidates (p,q):")
+    for p, q in found:
+        print(f"r = {p}/{q}")
+    # Choose minimal denominator solution (arbitrary criterion)
+    ans = min(found, key=lambda x: x[1])
+    print(f"\nAnswer: r = {ans[0]}/{ans[1]}")
+
+else:
+    print("No candidates found up to denominator %d" % max_q)
+```

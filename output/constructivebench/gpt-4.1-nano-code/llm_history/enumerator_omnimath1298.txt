@@ -1,0 +1,45 @@
+[write_program]
+The problem models a combinatorial path counting with certain parity restrictions across subsets. To aid in conjecturing and verifying the answer, I will enumerate all functions `f : Fin (n + m) → Bool` that satisfy the conditions, counting how many such functions exist. Based on the parameters `n=8` and `m=14`, the code will generate all functions, check the conditions, and count valid solutions, streaming each count and outputting the total.
+
+This enumeration is feasible because the total length is `n + m = 22`, and therefore the total functions are `2^22 ≈ 4,194,304`, which might be on the edge but can be filtered efficiently with pruning. For demonstration, we can optimize by early pruning and small sample enumeration.
+
+```python
+from itertools import product
+
+def main():
+    n, m = 8, 14
+    total_length = n + m
+
+    valid_count = 0
+
+    # Generate all functions: each represented as a list of booleans
+    for f in product([False, True], repeat=total_length):
+        x = sum(1 for i in range(total_length) if not f[i])
+        y = sum(1 for i in range(total_length) if f[i])
+
+        # Check initial conditions
+        if x != n or y != m:
+            continue
+
+        def get_xk_yk(k):
+            xk = sum(1 for i in range(k) if not f[i])
+            yk = sum(1 for i in range(k) if f[i])
+            return xk, yk
+
+        valid = True
+        for k in range(1, total_length + 1):
+            xk, yk = get_xk_yk(k)
+            # Check the negation of always having both odd
+            if (xk % 2 == 1 and yk % 2 == 1):
+                valid = False
+                break
+
+        if valid:
+            valid_count += 1
+            print(valid_count)
+
+    print(f"Total valid functions: {valid_count}")
+
+if __name__ == "__main__":
+    main()
+```

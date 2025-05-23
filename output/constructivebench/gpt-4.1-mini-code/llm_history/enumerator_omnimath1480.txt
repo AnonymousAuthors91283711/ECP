@@ -1,0 +1,82 @@
+[write_program]
+The problem involves finding a natural number \( n \) such that the number of divisors of \( n^2 \) is three times the number of divisors of \( n \):
+\[
+d(n^2) = 3 \cdot d(n).
+\]
+Then, we want to find the ratio
+\[
+\frac{d(n^7)}{d(n)}.
+\]
+
+To explore this, recall that if the prime factorization of \( n \) is
+\[
+n = p_1^{a_1} p_2^{a_2} \cdots p_k^{a_k},
+\]
+then the number of divisors is
+\[
+d(n) = \prod_{i=1}^k (a_i + 1).
+\]
+Similarly,
+\[
+d(n^2) = \prod_{i=1}^k (2a_i + 1), \quad d(n^7) = \prod_{i=1}^k (7a_i + 1).
+\]
+
+Given the condition,
+\[
+\prod_{i=1}^k (2a_i + 1) = 3 \prod_{i=1}^k (a_i + 1).
+\]
+
+We want to find integer \( a_i \geq 0 \) satisfying this, then compute
+\[
+\prod_{i=1}^k (7a_i + 1) / \prod_{i=1}^k (a_i + 1).
+\]
+
+We try small \( k \) and values of \( a_i \). For efficiency, try \( k=1,2,3 \), with small exponents.
+
+Below is a Python enumerator to find all tuples \((a_1, \ldots, a_k)\) with small \( a_i \) satisfying the divisor condition and print the ratio for \( d(n^7)/d(n) \).
+
+```python
+# author: enumerator for the omnimath1480 problem
+# Find all tuples (a_i) with small exponents satisfying d(n^2) = 3 * d(n),
+# then compute d(n^7)/d(n)
+
+from math import prod
+
+def divisor_count(a):
+    # number of divisors given exponents a_i: product of (a_i + 1)
+    return prod(a_i + 1 for a_i in a)
+
+def divisor_count_exp(a, e):
+    # number of divisors of n^e where exponents are a_i
+    return prod(e * a_i + 1 for a_i in a)
+
+def search(max_k=3, max_a=10):
+    # Try all tuples length k from 1 to max_k
+    # with exponents from 0 to max_a
+    # satisfying product(2a_i+1) = 3 * product(a_i+1)
+    found = []
+    for k in range(1, max_k + 1):
+        from itertools import product as iterproduct
+        for a in iterproduct(range(max_a + 1), repeat=k):
+            if all(ai == 0 for ai in a):
+                continue  # exclude trivial n=1
+            d_n = divisor_count(a)
+            d_n2 = prod(2 * ai + 1 for ai in a)
+            if d_n2 == 3 * d_n:
+                # compute ratio d(n^7)/d(n)
+                d_n7 = divisor_count_exp(a,7)
+                ratio = d_n7 / d_n
+                print(f"Exponents {a} satisfy d(n^2)=3*d(n).")
+                print(f"d(n)={d_n}, d(n^2)={d_n2}, d(n^7)={d_n7}, ratio={ratio}")
+                found.append((a, ratio))
+    if found:
+        # print minimum and maximum ratio found
+        ratios = [r for _,r in found]
+        print(f"Minimum ratio d(n^7)/d(n): {min(ratios)}")
+        print(f"Maximum ratio d(n^7)/d(n): {max(ratios)}")
+    else:
+        print("No solutions found with given parameters.")
+
+if __name__ == "__main__":
+    search()
+```

@@ -1,0 +1,45 @@
+[write_program]
+This problem is about solving the Diophantine equation x²(1 + x²) = -1 + 21^y for integers x and natural numbers y. We want to enumerate candidate integer pairs (x, y) satisfying this.
+
+We can rewrite as x² + x⁴ = 21^y - 1. For y=0, RHS=0; for larger y, rapidly grows.
+
+We will try small values of y, from 1 up to some threshold, compute RHS=21^y -1, then try integer x values with x²(1+x²)=RHS. We check if RHS can be written as x² + x⁴.
+
+The equation can be rewritten as x⁴ + x² - RHS=0, consider it as a quadratic in z = x²: z² + z - RHS=0. Check if discriminant 1+4*RHS is a perfect square. Then from z = (-1 ± sqrt(1+4*RHS))/2 pick integer positive z (x²), and x=±sqrt(z).
+
+We enumerate y from 0 to 7 or so, compute RHS=21^y-1, try to find integer z ≥0 solutions of z² + z - RHS=0.
+
+Print all such pairs immediately as we find them.
+
+```python
+# Program to find integer solutions (x,y) to x²(1 + x²) = 21^y -1
+
+import math
+
+def is_perfect_square(n):
+    if n < 0: return False
+    r = int(math.isqrt(n))
+    return r*r == n
+
+def try_y(y):
+    RHS = pow(21, y) -1
+    disc = 1 + 4*RHS  # discriminant of z² + z - RHS = 0
+    if is_perfect_square(disc):
+        s = int(math.isqrt(disc))
+        # z = (-1 ± s)/2
+        for sign in [-1,1]:
+            numerator = -1 + sign * s
+            if numerator % 2 == 0:
+                z = numerator // 2
+                if z >= 0:
+                    # z = x², check if z is perfect square
+                    if is_perfect_square(z):
+                        x = int(math.isqrt(z))
+                        for xx in [x, -x]:
+                            print(f"Found solution: x={xx}, y={y}")
+
+print("Enumerating possible solutions (x,y) for x^2(1 + x^2) = 21^y -1")
+
+for y in range(8):  # small y values
+    try_y(y)
+```

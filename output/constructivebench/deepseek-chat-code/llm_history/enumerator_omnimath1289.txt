@@ -1,0 +1,44 @@
+[write_program]
+This problem asks for the area of the region in the unit square [0,1]×[0,1] where the quartic equation x⁴ + p₁x³ - p₂x² + p₁x + 1 = 0 has at least one real solution. We'll approach this by:
+
+1. For each (p₁,p₂) in a grid over [0,1]×[0,1], check if the equation has real roots
+2. Count the fraction of points satisfying the condition to estimate the area
+3. Use Sturm's theorem to exactly determine when real roots exist
+
+The exact solution involves analyzing the discriminant of the quartic, but we'll first explore numerically.
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+
+def has_real_root(p1, p2):
+    # Quartic: x^4 + p1*x^3 - p2*x^2 + p1*x + 1
+    coeffs = [1, p1, -p2, p1, 1]
+    p = Polynomial(coeffs)
+    roots = p.roots()
+    return any(np.isreal(r) for r in roots)
+
+# Grid parameters
+N = 100  # Grid size
+p1_vals = np.linspace(0, 1, N)
+p2_vals = np.linspace(0, 1, N)
+
+# Count points with real roots
+count = 0
+for i, p1 in enumerate(p1_vals):
+    for j, p2 in enumerate(p2_vals):
+        if has_real_root(p1, p2):
+            count += 1
+    # Print partial results every 10% progress
+    if i % (N//10) == 0:
+        print(f"Progress {i/N*100:.0f}%, current area estimate: {count/((i+1)*N):.4f}")
+
+# Final estimate
+area_estimate = count / (N*N)
+print(f"Final area estimate: {area_estimate:.6f}")
+
+# For exact analysis, we'd need to:
+# 1. Find discriminant condition for real roots
+# 2. Integrate the region where discriminant ≥ 0
+# But this requires symbolic computation beyond basic Python
+```

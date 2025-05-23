@@ -1,0 +1,54 @@
+[write_program]
+The problem involves a recurrence relation with parameters \(a_0 > 0\) and \(c > 0\), and conditions on the sign of terms up to index 1989 and at 1990. We'll enumerate values for \(a_0\) and \(c\) over small rational samples, compute the sequence, and print the parameter triple together with the sign behavior. This helps conjecture the condition for the answer predicate.
+
+```python
+# Enumerate sample (a0,c) pairs, compute f_n, check sign conditions up to n=1990
+# Print (a0, c), then whether f_n>0 for all n<=1989 and f_1990<0 holds
+
+def f_sequence(a0, c, n_max=1990):
+    f = a0
+    for n in range(n_max):
+        if f * c == 1:
+            return None  # denominator zero
+        f = (f + c) / (1 - c * f)
+        yield f
+
+def check_conditions(a0, c):
+    if a0 <= 0 or c <= 0:
+        return False
+    f0 = a0
+    if f0 <= 0:
+        return False
+    vals = list(f_sequence(a0, c))
+    if vals is None or len(vals) < 1990:
+        return False
+    # vals[0] = f1, ..., vals[1989] = f1990
+    # check f_n>0 for n<=1989 i.e. vals[0..1988]
+    all_pos_1989 = all(x > 0 for x in vals[:1989])
+    f_1990 = vals[1989]
+    return all_pos_1989 and f_1990 < 0
+
+def rational_samples():
+    # small positive rationals for a0 and c
+    nums = [1, 2, 3, 4, 5]
+    dens = [1, 2, 3, 4, 5]
+    for a_num in nums:
+        for a_den in dens:
+            a = a_num / a_den
+            for c_num in nums:
+                for c_den in dens:
+                    c = c_num / c_den
+                    yield (a, c)
+
+def main():
+    count = 0
+    for a0, c in rational_samples():
+        res = check_conditions(a0, c)
+        print(f"a0={a0:.3f}, c={c:.3f}, condition={res}")
+        count += 1
+        if count >= 30:
+            break
+
+if __name__ == "__main__":
+    main()
+```

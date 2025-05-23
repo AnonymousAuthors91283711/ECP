@@ -1,0 +1,47 @@
+[write_program]
+The problem involves finding real numbers \( x \) such that 
+\[
+\bigl(x^2 + 2x + 3\bigr)^{\bigl(x^2 + 2x + 3\bigr)^{\bigl(x^2 + 2x + 3\bigr)}} = 2012,
+\]
+then summing these real numbers. Since the expression is complicated and involves iterated exponentiation, I'll enumerate values \( x \) over a reasonable range, compute the expression, and print those \( x \) that yield the value 2012 (within a tolerance to catch floating-point rounding). Given the complexity, I'll prioritize exactness in the base expression but allow approximate equality for the pow-tower expression.
+
+```python
+import math
+
+def tetration(base, height=3):
+    # Compute base^(base^(...)) height times
+    # Since it's three times, we do pow(base, pow(base, base))
+    # Validate domain to avoid math errors
+    if base <= 0:
+        # Not defined for non-positive base under real powers reliably
+        return None
+    try:
+        inner = pow(base, base)
+        return pow(base, inner)
+    except OverflowError:
+        return None
+    except ValueError:
+        return None
+
+def main():
+    # Scan x in small increments over a reasonable range where base > 0
+    # Since base = x^2 + 2x + 3 = (x+1)^2 + 2 > 2 always, base > 0 always.
+    # Let's check x from -10 to 10
+    base_values = []
+    for i in range(-1000, 1001): # step 0.01
+        x = i / 100
+        base = x*x + 2*x + 3  # base always > 2
+        val = tetration(base)
+        if val is None:
+            continue
+        if abs(val - 2012) < 1e-2:
+            print(f"x = {x:.2f}, tower = {val:.4f}")
+            base_values.append(x)
+    if base_values:
+        print("Sum of all found x:", sum(base_values))
+    else:
+        print("No solutions found in the scanned range.")
+
+if __name__ == "__main__":
+    main()
+```

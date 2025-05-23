@@ -1,0 +1,59 @@
+[write_program]
+The problem is to study real numbers \(\theta < \pi\) for which each \(\cos(2^k \theta) \neq 0\) for \(k=0,\dots,10\) and also the product \(\prod_{k=0}^{10} \left(1 + \frac{1}{\cos(2^k \theta)}\right) = 1\). The goal is to find the greatest \(\theta\) with these properties.
+
+We can't solve this analytically here, so the plan is to enumerate \(\theta\) values incrementally approaching \(\pi\) from below, check the conditions, and print the \(\theta\)'s where this equation holds (or nearly holds, since floating point). We prioritize exact values if possible by targeting rational multiples of \(\pi\). We use discretization and float computations to seek candidates. We'll print candidates immediately, and the maximum found value at the end.
+
+```python
+import math
+
+# Enumerate rational multiples of pi between 0 and pi
+# up to denominator max_d, focus near pi to find greatest satisfying theta
+max_d = 60  # Max denominator for rational approximation
+k_max = 10  # Highest k
+
+def is_cos_nonzero(theta):
+    # Check cos(2^k * theta) != 0 for k=0..k_max approximately
+    for k in range(k_max + 1):
+        val = math.cos((2**k) * theta)
+        # cos zero near pi/2 + n*pi, threshold avoids division by near zero
+        if abs(val) < 1e-12:
+            return False
+    return True
+
+def prod_condition(theta):
+    # Compute product of (1 + 1/cos(2^k * theta))
+    prod = 1.0
+    for k in range(k_max + 1):
+        c = math.cos((2**k) * theta)
+        if abs(c) < 1e-12:
+            return None
+        prod *= (1.0 + 1.0/c)
+    return prod
+
+candidates = []
+pi = math.pi
+
+print("Enumerating candidates θ = (m/d)*π with θ < π:")
+
+for d in range(1, max_d + 1):
+    for m in range(1, d):
+        theta = (m/d)*pi
+        if theta >= pi:
+            continue
+        if not is_cos_nonzero(theta):
+            continue
+        p = prod_condition(theta)
+        if p is None:
+            continue
+        # Check if product close to 1 within tolerance
+        if abs(p - 1.0) < 1e-9:
+            candidates.append(theta)
+            print(f"θ ≈ {theta:.10f} (m={m}, d={d}), product={p:.12f}")
+
+if candidates:
+    max_theta = max(candidates)
+    print(f"Greatest θ found ≈ {max_theta:.10f}")
+else:
+    print("No candidates found.")
+```
+

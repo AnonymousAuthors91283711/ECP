@@ -1,0 +1,58 @@
+[write_program]
+The problem asks for the count of prime numbers between 2^8 (256) and 9^8 (43046721) where:
+1. All digits are between 2 and 9 inclusive
+2. All digits are distinct
+3. The number is prime
+
+We'll write a Python program to enumerate such numbers efficiently by:
+1. Generating numbers with distinct digits from 2-9
+2. Checking primality
+3. Counting those in the range
+
+```python
+import math
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def generate_numbers(length, digits, current=0, used_digits=set()):
+    if length == 0:
+        yield current
+        return
+    for d in digits:
+        if d not in used_digits:
+            yield from generate_numbers(length - 1, digits, current * 10 + d, used_digits | {d})
+
+count = 0
+digits = [2,3,4,5,6,7,8,9]
+
+for length in range(1, 9):  # Numbers from 1 to 8 digits (9^8 has 9 digits but we stop at 8)
+    for num in generate_numbers(length, digits):
+        if 256 <= num <= 43046721 and is_prime(num):
+            print(num)
+            count += 1
+
+print("Total count:", count)
+```

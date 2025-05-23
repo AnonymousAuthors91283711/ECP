@@ -1,0 +1,66 @@
+[write_program]
+The problem provides a functional equation over positive rationals and asks to characterize all functions \( f : \mathbb{Q}^+ \to \mathbb{Q}^+ \) satisfying
+\[
+f\bigl(x^2 (f(y))^2 \bigr) = (f(x))^2 f(y).
+\]
+We want to enumerate possible rational-valued functions \( f \) with samples to guess the form of \( f \).
+
+A natural approach is to test candidate functions \( f(x) = a x^b \) for rational \( a,b \) and verify the equation for sample values, streaming solutions found.
+
+```python
+# Enumerate candidate functions f(x) = a * x^b (a,b in Q+),
+# check the functional equation at sample points,
+# print candidates that satisfy it approximately over test points
+
+from fractions import Fraction
+import math
+
+def qpow(x, r):  # x and r are Fraction; x^r computed if denominator divides log2 nicely
+    # Since only rationals, limit ourselves to integer exponents for safety
+    if r.denominator != 1:
+        return None  # skip non-integer exponents
+    return x ** r.numerator
+
+# Rational candidates for a and b
+# limit denominators and absolute values for tractability
+as_ = [Fraction(n, d) for n in range(1,4) for d in range(1,4)]
+bs_ = [Fraction(n, d) for n in range(-3,4) for d in range(1,4)]
+
+# Samples x,y positive rationals
+samples = [(Fraction(x,1), Fraction(y,1)) for x in range(1,4) for y in range(1,4)]
+
+def f(x,a,b):
+    # x^{b} with b int only
+    powx = qpow(x,b)
+    if powx is None or powx <= 0:
+        return None
+    return a * powx
+
+print("Testing candidates f(x) = a*x^b for a,b in small rationals")
+
+for a in as_:
+    for b in bs_:
+        # Check equation at sample points
+        ok = True
+        for x,y in samples:
+            fy = f(y,a,b)
+            if fy is None or fy <= 0:
+                ok = False
+                break
+            lhs_arg = x**2 * (fy**2)
+            lhs = f(lhs_arg,a,b)
+            if lhs is None:
+                ok = False
+                break
+            rhs = (f(x,a,b)**2)*fy
+            if rhs is None:
+                ok = False
+                break
+            # Compare lhs and rhs exactly as fractions
+            if lhs != rhs:
+                ok = False
+                break
+        if ok:
+            print(f"Candidate function: f(x) = {a} * x^{b}")
+```
+This program enumerates simple power functions and tests if they satisfy the functional equation exactly on small positive rationals, printing candidates immediately. This helps conjecture the true form of \( f \).

@@ -1,0 +1,45 @@
+[write_program]
+This problem asks for the number of real solutions x in the interval [0, π] that satisfy the equation sin(π/2 * cos x) = cos(π/2 * sin x). We'll write a Python program to numerically find and count these solutions.
+
+Approach:
+1. We'll sample points in [0, π] and check where the equation holds approximately
+2. To avoid missing solutions, we'll look for sign changes in the difference between both sides
+3. We'll use a fine enough grid to detect all solutions while being computationally efficient
+
+```python
+import numpy as np
+from math import pi, sin, cos
+
+def f(x):
+    """Difference between left and right sides of the equation"""
+    return sin(pi/2 * cos(x)) - cos(pi/2 * sin(x))
+
+# Search interval [0, pi] with sufficient resolution
+a, b = 0, pi
+n_points = 10000  # High enough to catch all roots
+xs = np.linspace(a, b, n_points)
+ys = [f(x) for x in xs]
+
+# Find approximate roots by detecting sign changes
+roots = []
+for i in range(len(xs)-1):
+    if ys[i] * ys[i+1] <= 0:  # Sign change or zero
+        # Refine using linear approximation
+        x0, x1 = xs[i], xs[i+1]
+        y0, y1 = ys[i], ys[i+1]
+        if y0 == 0:
+            root = x0
+        else:
+            root = x0 - y0 * (x1 - x0)/(y1 - y0)
+        roots.append(root)
+        print(f"Found root at x ≈ {root:.5f}")
+
+# Remove duplicates (due to multiple nearby points hitting same root)
+unique_roots = []
+tolerance = 1e-6
+for root in sorted(roots):
+    if not unique_roots or abs(root - unique_roots[-1]) > tolerance:
+        unique_roots.append(root)
+
+print(f"\nTotal distinct roots found: {len(unique_roots)}")
+```

@@ -1,0 +1,49 @@
+[write_program]
+The problem appears to involve finding a set \( S \subseteq \mathbb{N} \) with specific properties, including the set being inside the interval \([1, 108]\), nonempty, with the property that for any two elements \(a, b \in S\), there exists \(c \in S\) such that both \(a\) and \(b\) are coprime with \(c\), and additionally, for any two elements \(a, b \in S\), there exists some \(c'\) in \(S\) (distinct from \(a, b\)) such that both have a common factor greater than 1 with \(c'\).
+
+In particular, the question involves the **greatest** such set \(S\) satisfying these conditions, and the goal hints at examining the extremal (probably maximum-sized) set within the bounds.
+
+Given a bounded search space (\(1\) to \(108\)), we can enumerate all potential candidates for \(S\) and check the constraints. Since directly enumerating all subsets is exponential, we can prioritize small candidate sizes and check for the largest valid set, or we can focus on some promising constructions.
+
+Here's a simplified approach:
+- Generate all non-empty subsets of \([1, 108]\) up to a certain size (e.g., maximum size 10 for feasibility).
+- For each candidate, check whether it satisfies the constraints.
+- Keep track of the largest such set.
+
+This enumeration can be optimized by applying the checks early.
+
+Let's implement this idea with a focus on correctness and efficiency, printing each candidate as it passes the constraints and updating the maximum size.
+
+```python
+import itertools
+import math
+
+# Check the conditions for a candidate set S
+def is_valid(S):
+    S_list = list(S)
+    # Condition: For all a, b in S, ∃ c in S s.t gcd(a, c) = gcd(b, c) = 1
+    for a, b in itertools.combinations(S_list, 2):
+        # For each pair, check existence of c with gcd(a, c)=1 and gcd(b, c)=1
+        if not any(math.gcd(c, a) == 1 and math.gcd(c, b) == 1 for c in S_list):
+            return False
+        # Condition: ∃ c' ≠ a, b in S with gcd(a, c')>1 and gcd(b, c')>1
+        if not any(c != a and c != b and math.gcd(a, c) > 1 and math.gcd(b, c) > 1 for c in S_list):
+            return False
+    return True
+
+max_size = 0
+max_set = set()
+
+# Generate subsets and check
+for size in range(1, 11):  # limit size for efficiency
+    for S in itertools.combinations(range(1, 109), size):
+        S_set = set(S)
+        if is_valid(S_set):
+            print("Valid set of size", size, ":", S_set)
+            if size > max_size:
+                max_size = size
+                max_set = S_set
+
+print("Maximum size found:", max_size)
+print("One example set:", max_set)
+```

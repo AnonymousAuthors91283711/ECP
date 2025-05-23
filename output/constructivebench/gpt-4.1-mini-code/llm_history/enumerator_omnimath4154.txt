@@ -1,0 +1,54 @@
+[write_program]
+The problem is to find triples \((p, x, y)\) where \(p\) is prime, \(x, y > 0\), and there exist \(a, b \in \mathbb{N}\) such that:
+\[
+x^{p-1} + y = p^a \quad \text{and} \quad x + y^{p-1} = p^b.
+\]
+
+We will enumerate small primes \(p\), small positive integers \(x, y\), and check if these conditions hold for some exponents \(a, b\) by checking powers of \(p\). Results will be printed immediately.
+
+```python
+def is_prime(n):
+    if n < 2: return False
+    if n == 2: return True
+    if n % 2 == 0: return False
+    r = int(n**0.5)
+    for i in range(3, r+1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+def powers_up_to_limit(p, limit=10**9):
+    # yield all powers p^e <= limit
+    power = 1
+    e = 0
+    while power <= limit:
+        yield (power, e)
+        power *= p
+        e += 1
+
+def enumerate_solutions(max_p=19, max_xy=50):
+    # Enumerate primes up to max_p and x,y in [1,max_xy].
+    print(f"Enumerating solutions for primes p <= {max_p}, x,y <= {max_xy}...")
+    for p in range(2, max_p+1):
+        if not is_prime(p):
+            continue
+
+        # Precompute powers of p for quick lookup
+        p_powers = {}
+        for val, e in powers_up_to_limit(p, limit=10**12):
+            p_powers[val] = e
+
+        for x in range(1, max_xy+1):
+            x_pow = pow(x, p-1)
+            for y in range(1, max_xy+1):
+                lhs1 = x_pow + y
+                lhs2 = x + pow(y, p-1)
+                if lhs1 in p_powers and lhs2 in p_powers:
+                    a = p_powers[lhs1]
+                    b = p_powers[lhs2]
+                    # Print in form (p, x, y, a, b)
+                    print(f"Found: p={p}, x={x}, y={y}, a={a}, b={b}")
+
+if __name__ == "__main__":
+    enumerate_solutions()
+```

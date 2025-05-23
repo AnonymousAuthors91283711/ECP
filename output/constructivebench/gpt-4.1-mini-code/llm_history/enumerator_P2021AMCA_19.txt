@@ -1,0 +1,66 @@
+[write_program]
+The problem asks for the number of real \( x \in [0, \pi] \) such that:
+\[
+\sin\left(\frac{\pi}{2} \cos x\right) = \cos\left(\frac{\pi}{2} \sin x\right).
+\]
+
+Rewrite using the identity \(\cos y = \sin(\frac{\pi}{2} - y)\):
+\[
+\sin\left(\frac{\pi}{2} \cos x\right) = \sin\left(\frac{\pi}{2} - \frac{\pi}{2} \sin x\right).
+\]
+
+For \(a = \frac{\pi}{2} \cos x\) and \(b = \frac{\pi}{2} - \frac{\pi}{2} \sin x\), the equation \(\sin a = \sin b\) implies:
+\[
+a = b + 2k\pi \quad \text{or} \quad a = \pi - b + 2k\pi, \quad k \in \mathbb{Z}.
+\]
+
+We will numerically enumerate \(x\) in \([0,\pi]\) to find all solutions for small values of \(k\), print each solution found, and then print the total count.
+
+```python
+import math
+
+def f(x):
+    return math.sin((math.pi/2)*math.cos(x)) - math.cos((math.pi/2)*math.sin(x))
+
+def close(a,b,eps=1e-10):
+    return abs(a-b) < eps
+
+solutions = set()
+eps = 1e-12
+N = 100000  # high resolution for root-finding
+
+# We use a root-finding by sign change scanning since exact roots are complicated.
+xs = [0 + i*(math.pi)/N for i in range(N+1)]
+fs = [f(x) for x in xs]
+
+for i in range(N):
+    if fs[i] == 0:
+        solutions.add(xs[i])
+    elif fs[i]*fs[i+1] < 0:  # root in (xs[i], xs[i+1])
+        # Bisection to find root more precisely
+        a, b_ = xs[i], xs[i+1]
+        fa, fb = fs[i], fs[i+1]
+        for _ in range(50):
+            mid = (a+b_)/2
+            fm = f(mid)
+            if abs(fm)<eps:
+                a = b_ = mid
+                break
+            if fa*fm < 0:
+                b_ = mid
+                fb = fm
+            else:
+                a = mid
+                fa = fm
+        root = (a+b_)/2
+        # Round to 12 decimals to avoid duplicates
+        root = round(root, 12)
+        if 0 <= root <= math.pi:
+            # print new root found
+            if root not in solutions:
+                print(f"Solution at x = {root}")
+            solutions.add(root)
+
+print(f"Total solutions in [0, π]: {len(solutions)}")
+```
+This program uses sign changes to isolate roots and uses bisection to find roots precisely, printing each solution as it finds it and finally printing the total count.

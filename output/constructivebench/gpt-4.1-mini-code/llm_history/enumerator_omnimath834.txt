@@ -1,0 +1,76 @@
+[write_program]
+The problem involves an equilateral triangle \(ABC\) with side length 18 in the complex plane, and the sum of its vertices satisfies \(\lvert a+b+c \rvert = 36\). We want to enumerate possible values of \(\lvert bc + ca + ab \rvert\).
+
+We can parametrize \(a, b, c\) using complex numbers on the plane, ensuring that pairwise distances are 18 and \(\lvert a+b+c \rvert = 36\). Then, compute \( |bc + ca + ab| \).
+
+Let's check some small variants by rotating and translating the triangle to satisfy the conditions approximately for various configurations, then print the values found for \( |bc+ca+ab| \). This helps conjecture the correct value.
+
+```python
+import cmath
+import math
+
+# side length
+s = 18
+
+# The equilateral triangle vertices can be represented as complex numbers:
+# b and c at s on x-axis and at s*exp(i*2pi/3), a can be shifted by adding some vector w so that |a+b+c|=36
+# We try various translations w = x + iy with small grids.
+
+# First, set b=0 for convenience, then c = 18 on real axis.
+# a must be at position forming equilateral triangle:
+# Since |a-b|=18 and |b-c|=18, and |c-a|=18, 
+# If b=0, c=18+0j, then a = 9 + 9*sqrt(3)*i or a=9 - 9*sqrt(3)*i
+# We'll consider only +ve imaginary part.
+
+b = 0 + 0j
+c = 18 + 0j
+a_base = 9 + 9 * math.sqrt(3) * 1j
+
+# To vary sum = a+b+c magnitude, try adding w to all 3 points (translation)
+# Let w range in small set so that |(a+w)+(b+w)+(c+w)|=|a+b+c+3w| = 36
+# sum_0 = a_base + b + c
+sum_0 = a_base + b + c
+
+# sum_0 magnitude
+mag_sum_0 = abs(sum_0)
+
+# We want to find w so that |sum_0 + 3w|=36
+# Let w = x + yi, then
+# |sum_0 + 3w| = 36
+# try grid x,y to satisfy this approx, then compute |bc + ca + ab|
+
+# Since b=0, convenient to consider abc without offset,
+# But original abc + w gives vertices, distances remain 18 (translation), so condition on side remains,
+# translation doesn't affect distances, polygon shape unchanged.
+
+# So side lengths fixed, now check for which w magnitude |sum_0 + 3w|=36
+
+# We try integer x,y in [-10,10]
+
+def magnitude_poly(a,b,c):
+    return abs(b*c + c*a + a*b)
+
+print(f"Base configuration sum magnitude: {mag_sum_0:.5f}")
+
+found_values = set()
+
+for dx in range(-10,11):
+    for dy in range(-10,11):
+        w = complex(dx, dy)
+        new_sum = sum_0 + 3*w
+        if abs(new_sum - 36) < 0.1:  # accept within tolerance
+            # new vertices:
+            a = a_base + w
+            b1 = b + w
+            c1 = c + w
+            val = magnitude_poly(a, b1, c1)
+            val_rounded = round(val, 5)
+            if val_rounded not in found_values:
+                found_values.add(val_rounded)
+                print(f"w=({dx},{dy}) sum={abs(new_sum):.5f} |bc+ca+ab|={val_rounded}")
+
+# print minimum
+if found_values:
+    min_val = min(found_values)
+    print(f"Minimum |bc+ca+ab| found: {min_val:.5f}")
+```

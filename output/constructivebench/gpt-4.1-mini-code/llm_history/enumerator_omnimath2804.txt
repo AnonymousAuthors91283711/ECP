@@ -1,0 +1,109 @@
+[write_program]
+The problem describes sequences \( f: \{0,\ldots,10\} \to \mathbb{R} \) where \( f(0)=4 \), \( f(10)=1024 \), and for each \( n=1,\dots,10 \),
+\[
+f(n) + f(n-1) = \frac{5}{2} \sqrt{f(n) f(n-1)}.
+\]
+We want to enumerate such sequences and count them modulo 100.
+
+To explore this, I will try to find all sequences \(f\) with \(f(0)=4\), \(f(10)=1024\), satisfying the equation step by step. The equation relates consecutive terms, and it's symmetric in \( f(n) \) and \( f(n-1) \). 
+
+Rewrite the condition for each pair \((x,y) = (f(n-1), f(n))\):
+\[
+x + y = \frac{5}{2} \sqrt{x y}.
+\]
+We can try to solve for \(y\) given \(x\). Let \(r = \sqrt{y/x}\), then:
+\[
+x + y = x + x r^2 = x(1 + r^2) = \frac{5}{2} x r.
+\]
+Dividing by \(x\), assuming \(x >0\):
+\[
+1 + r^2 = \frac{5}{2} r \implies r^2 - \frac{5}{2} r + 1=0.
+\]
+Solve quadratic for \(r\):
+\[
+r = \frac{\frac{5}{2} \pm \sqrt{\left(\frac{5}{2}\right)^2 - 4}}{2} = \frac{2.5 \pm \sqrt{6.25 -4}}{2} = \frac{2.5 \pm 1.5}{2}.
+\]
+So,
+\[
+r_1 = \frac{4}{2} = 2, \quad r_2 = \frac{1}{2} = 0.5.
+\]
+Therefore, for each step,
+\[
+\sqrt{\frac{f(n)}{f(n-1)}} = 2 \quad \text{or} \quad 0.5 \implies f(n) = 4 f(n-1) \quad \text{or} \quad \frac{f(n-1)}{4}.
+\]
+
+Hence the sequence is formed by choosing at each step to multiply by 4 or divide by 4, starting from \(f(0)=4\).
+
+We want \(f(10) = 1024\), so
+\[
+f(10) = 4 \times 4^{a} \times \left(\frac{1}{4}\right)^b = 4 \times 4^{a - b},
+\]
+where \(a+b=10\), \(a,b \ge 0\) counts how many times we multiply or divide by 4.
+
+So,
+\[
+f(10) = 4^{1 + a - b} = 1024 = 4^5,
+\]
+since \(1024 = 2^{10} = (2^2)^5 = 4^5\).
+
+Thus,
+\[
+1 + a - b = 5 \implies a - b = 4.
+\]
+Since \(a + b =10\), solving,
+\[
+a = 7, \quad b=3.
+\]
+
+So in the 10 steps, exactly 7 steps multiply by 4, 3 steps divide by 4, and sequences correspond to the choice of which 7 steps multiply by 4. Number of sequences = \(\binom{10}{7} = 120\).
+
+Below is the Python code enumerating all sequences by all subsets of positions where we multiply.
+
+```python
+from math import comb
+
+def enumerate_sequences():
+    n = 10
+    start = 4
+    end = 1024
+    ratio1 = 4
+    ratio2 = 0.25
+
+    # The sequence condition implies at each step:
+    # f(n) = f(n-1)*4 or f(n-1)/4
+    # Count how many multiply and divide steps chosen:
+    # For a sequences with a steps multiply by 4 and b steps divide by 4:
+    # f(10) = 4 * 4^{a - b} = 4^{1 + a - b} = 1024 = 4^5
+    # So 1 + a - b =5 => a - b=4, a+b=10 solved as a=7, b=3.
+    print(f"Total steps: {n}, start: {start}, end: {end}")
+    print("Number of multiply by 4 steps (a): 7")
+    print("Number of divide by 4 steps (b): 3")
+    print("Number of sequences = C(10,7) = ", comb(10,7))
+
+    from itertools import combinations
+
+    # Enumerate subsets of size 7: positions of multiply steps (0-based)
+    positions = range(1, n+1)
+    count = 0
+    for mul_positions in combinations(positions, 7):
+        seq = [start]
+        for i in positions:
+            if i in mul_positions:
+                seq.append(seq[-1]*4)
+            else:
+                seq.append(seq[-1]*0.25)
+        # Check end matches 1024
+        if abs(seq[-1] - end) < 1e-9:
+            # print intermediate sequences as integers when possible
+            seq_print = [int(x) if abs(x - round(x)) < 1e-9 else x for x in seq]
+            print(seq_print)
+            count += 1
+            if count >= 5:  # Limit output for brevity
+                break
+    print(f"Enumerated {count} sequences (subset size limit).")
+    print(f"Total valid sequences: {comb(10,7)}")
+    print(f"Answer modulo 100: {comb(10,7) % 100}")
+
+if __name__ == "__main__":
+    enumerate_sequences()
+```

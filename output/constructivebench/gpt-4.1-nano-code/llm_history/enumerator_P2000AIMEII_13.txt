@@ -1,0 +1,67 @@
+[write_program]
+This problem involves analyzing a degree-6 polynomial to determine its roots and specific form related to rational and quadratic expressions. To aid in conjecture and verification, I will implement a Python script that:
+
+- Defines the polynomial.
+- Searches for roots numerically over a small interval.
+- Finds real roots with high precision.
+- Checks if roots match the form (m + sqrt(n))/r with integers m, r, n.
+- Enumerates candidate roots for possible solutions, focusing on minimal positive roots.
+- Streamingly prints the roots and candidate forms.
+
+This approach helps approximate the roots, identify their structure, and support conjecture about the polynomial's roots and their special form.
+
+```python
+import math
+import numpy as np
+
+# Define the polynomial p(x) = 2000x^6 + 100x^5 + 10x^3 + x - 2
+def p(x):
+    return 2000 * x**6 + 100 * x**5 + 10 * x**3 + x - 2
+
+# Use numpy to find approximate roots over a specified interval
+# We select a broad interval based on initial estimates
+intervals = [(-2, 2), (2, 3), (3, 4), (4, 5)]
+roots = []
+
+# Tolerance for root approximation
+tolerance = 1e-8
+
+for (a, b) in intervals:
+    xs = np.linspace(a, b, 2000)
+    for i in range(len(xs)-1):
+        x0, x1 = xs[i], xs[i+1]
+        y0, y1 = p(x0), p(x1)
+        # Check if there is a sign change
+        if y0 * y1 <= 0:
+            # Find root via bisection
+            low, high = x0, x1
+            for _ in range(100):
+                mid = (low + high) / 2
+                val = p(mid)
+                if abs(val) < tolerance:
+                    break
+                if y0 * val < 0:
+                    high = mid
+                else:
+                    low = mid
+            root = (low + high) / 2
+            # Avoid duplicates
+            if not any(abs(root - r) < 1e-6 for r in roots):
+                roots.append(root)
+                print(f"Found root at x ≈ {root}")
+
+# Analyze roots for form (m + sqrt(n))/r
+# Search over small integer ranges for m, r, n
+max_m = 5
+max_r = 5
+max_n = 5
+
+print("\nCandidates matching (m + sqrt(n))/r form:")
+for root in roots:
+    for m in range(-max_m, max_m + 1):
+        for n in range(0, max_n + 1):
+            for r in range(1, max_r + 1):
+                candidate = (m + math.sqrt(n)) / r
+                if abs(candidate - root) < 1e-4:
+                    print(f"Root {root:.6f} ≈ (m={m} + sqrt({n})) / r={r}")
+```

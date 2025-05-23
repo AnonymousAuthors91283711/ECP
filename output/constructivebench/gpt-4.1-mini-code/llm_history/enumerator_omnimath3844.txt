@@ -1,0 +1,80 @@
+[write_program]
+The problem is to find the smallest integer \( n \) such that in every subset \( T \subseteq \{1, \ldots, 280\} \) with \( |T| = n \), there exists a 5-element subset of pairwise coprime numbers.
+
+We will enumerate subset sizes \( n \) and check if there's a subset \( T \subseteq \{1,\ldots,280\} \) of size \( n \) with *no* 5-element coprime subset. If none exists, \( n \) is a candidate for the minimal such number. This is a hard problem, so we'll sample smaller ranges and print partial results.
+
+We will:
+- Use smaller intervals, e.g. up to 30 or 50, to find max subsets with no 5 coprimes.
+- For each candidate \( n \), try to find a subset \( T \) of size \( n \) with no 5 pairwise coprime elements.
+- Print \( n \) and examples if found.
+- Print some heuristic bounds.
+
+```python
+import math
+from itertools import combinations
+
+def are_pairwise_coprime(s):
+    lst = list(s)
+    for i in range(len(lst)):
+        for j in range(i+1, len(lst)):
+            if math.gcd(lst[i], lst[j]) != 1:
+                return False
+    return True
+
+def has_5_pairwise_coprime_subset(T):
+    # Check if there is a 5-element subset pairwise coprime
+    for subset in combinations(T, 5):
+        if are_pairwise_coprime(subset):
+            return True
+    return False
+
+def test_n_in_range(max_val, n):
+    # Try to find a subset T of size n in 1..max_val with no 5-element pairwise coprime subset
+    # Heuristic: search random subsets or use deterministic approach
+    
+    # Use a greedy approach: choose numbers to minimize chance of 5 pairwise coprime
+    # For performance, we build subsets by excluding small primes
+    # Actually, we try to build T with no 5 pairwise coprime subset by using "cliques"
+    
+    from itertools import combinations
+    # Generate all subsets only for small max_val and small n
+    # For larger, try sampling random subsets
+    from random import sample, seed
+    seed(0)
+    
+    def check_subsets():
+        # Slow but exact: check all subsets T of size n
+        # Only feasible for small max_val
+        xs = list(range(1,max_val+1))
+        for T in combinations(xs, n):
+            if not has_5_pairwise_coprime_subset(T):
+                print(f"Found T of size {n} with no 5-pairwise-coprime subset (max_val={max_val}): {T}")
+                return True
+        return False
+
+    if max_val <= 20 and n <= 10:
+        return check_subsets()
+    
+    # For bigger, try random sampling
+    for _ in range(10000):
+        T = set(sample(range(1,max_val+1), n))
+        if not has_5_pairwise_coprime_subset(T):
+            print(f"Found T of size {n} with no 5-pairwise-coprime subset (max_val={max_val}): {sorted(T)}")
+            return True
+    return False
+
+if __name__ == "__main__":
+    # Test small max_val to get intuition
+    max_vals = [20, 30, 50]
+    for max_val in max_vals:
+        print(f"Testing max_val={max_val}, seeking n with no 5-coprime-subset")
+        # min n to test: 5 (obviously no for n<5)
+        # max n to test: max_val
+        for n in range(5, max_val+1):
+            found = test_n_in_range(max_val, n)
+            print(f"max_val={max_val} n={n} no 5-coprime-subset found: {found}")
+            if not found:
+                print(f"Minimal n for max_val={max_val} where any subset size n has 5 pairwise coprime is {n}")
+                break
+```
+This program heuristically finds the minimal size \( n \) for which any size-\( n \) subset of \(\{1,\ldots,max\_val\}\) contains a 5-element pairwise coprime subset, printing examples where possible. This will help investigate the true minimal \( n \) for max_val=280.

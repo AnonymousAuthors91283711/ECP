@@ -1,0 +1,62 @@
+[write_program]
+The problem is to find the greatest size (cardinality) of a nonempty subset \( S \subseteq \{1, 2, \ldots, 108\} \) such that:
+
+1. For every pair \(a,b \in S\), there exists \(c \in S\) with \(\gcd(a,c) = \gcd(b,c) = 1\).
+2. For every pair \(a,b \in S\), there exists \(c' \in S,\ c' \neq a,b\) with \(\gcd(a,c') > 1\) and \(\gcd(b,c') > 1\).
+
+We want to enumerate subsets \( S \) of \(\{1,\ldots,108\}\) meeting these conditions, prioritize larger sizes, and print found sizes immediately.
+
+Since enumerating all subsets of size up to 108 is infeasible, I'll pick smaller testing parameters and then print candidates with increasing sizes to conjecture the maximum size.
+
+This program enumerates candidates in smaller intervals like \(\{1,\ldots,20\}\) to identify largest sets. It checks the conditions and prints the sizes and example sets found.
+
+```python
+# We try small ranges to guess max size. Checking all subsets is expensive.
+# Instead, we try incremental construction and print found sizes & sets.
+
+from math import gcd
+from itertools import combinations
+
+def check_conditions(S):
+    # Condition 1: For every a,b in S, ∃ c in S with gcd(a,c)=gcd(b,c)=1
+    for a,b in combinations(S,2):
+        if not any(gcd(a,c)==1 and gcd(b,c)==1 for c in S):
+            return False
+    # Condition 2: For every a,b in S, ∃ c' in S, c' != a,b with gcd(a,c')>1 and gcd(b,c')>1
+    for a,b in combinations(S,2):
+        if not any(c!=a and c!=b and gcd(a,c)>1 and gcd(b,c)>1 for c in S):
+            return False
+    return True
+
+def main():
+    max_n = 20  # smaller testing range from 1 to 20
+    from time import time
+    found_sizes = set()
+
+    # For efficiency, test from largest sizes down to smaller sizes
+    for size in range(max_n,0,-1):
+        # To not produce too much output, limit to first 3 sets per size found
+        count = 0
+        for subset in combinations(range(1,max_n+1),size):
+            S = set(subset)
+            if check_conditions(S):
+                print(f"Found set of size {size}: {sorted(S)}")
+                found_sizes.add(size)
+                count += 1
+                if count >= 3:
+                    break
+        if count > 0:
+            # After finding some sets for this size, no need to try smaller sizes here
+            # (since smaller subsets are trivial and count would be smaller)
+            # But let's continue to find all candidates for conjecturing
+            continue
+
+    if found_sizes:
+        max_size = max(found_sizes)
+        print(f"Maximum size found in range 1..{max_n} is: {max_size}")
+    else:
+        print(f"No sets satisfy the conditions in range 1..{max_n}")
+
+if __name__ == "__main__":
+    main()
+```

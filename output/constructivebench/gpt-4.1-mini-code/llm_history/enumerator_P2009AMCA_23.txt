@@ -1,0 +1,111 @@
+[write_program]
+The problem describes two quadratic functions \( f \) and \( g \) related by \( g(x) = -f(100 - x) \), with given roots and a gap condition. We want to find values related to the expression \( x_4 - x_1 = m + n\sqrt{p} \) with \( m, n, p \in \mathbb{N} \), \( p \) squarefree, and minimal parameters satisfying the problem conditions.
+
+We will:
+- Try some sample parameters \( a, b, c, d, e, k \) consistent with the problem constraints.
+- Compute roots for \( f \) and \( g \).
+- Check gap conditions.
+- Compute \( x_4 - x_1 \) and attempt to represent it in the desired form.
+- Enumerate possible \( (m,n,p) \) triples.
+
+This brute force approach can guide insight into the problem.
+
+```python
+import math
+
+def is_squarefree(num):
+    # Check if num is squarefree by testing divisibility by squares up to sqrt(num)
+    if num < 1:
+        return False
+    for i in range(2, int(math.sqrt(num)) + 1):
+        if num % (i*i) == 0:
+            return False
+    return True
+
+def quadratic_roots(a, b, c):
+    disc = b*b - 4*a*c
+    if disc < 0:
+        return None
+    r1 = (-b - math.sqrt(disc)) / (2*a)
+    r2 = (-b + math.sqrt(disc)) / (2*a)
+    return (r1, r2) if r1 < r2 else (r2, r1)
+
+def approx_int(x, tol=1e-7):
+    n = round(x)
+    return abs(x - n) < tol, n
+
+def approx_sqrt_form(x, max_p=50, tol=1e-7):
+    # Try m + n*sqrt(p) with m,n,p integers and p squarefree p<=max_p
+    for p in range(1, max_p+1):
+        if not is_squarefree(p):
+            continue
+        sqrt_p = math.sqrt(p)
+        # Solve for m,n integers roughly: n*sqrt(p) ~ x - m
+        # We'll try m in range near x
+        m_start = int(math.floor(x)) - 5
+        m_end = int(math.ceil(x)) + 5
+        for m in range(m_start, m_end+1):
+            diff = x - m
+            if abs(sqrt_p) < 1e-14:
+                continue
+            n_approx = diff / sqrt_p
+            n_round = round(n_approx)
+            if abs(n_approx - n_round) < tol and n_round >= 0:
+                # Check total sum m+n+p later
+                yield (m, n_round, p)
+                
+print("# Enumerating candidates for m,n,p such that x4 - x1 = m + n*sqrt(p) with squarefree p")
+# We loop over sample f and then define g accordingly from relation
+
+# We use a=1 for simplicity, sample b, c, then define g from f
+a = 1
+
+for b in range(-3,4):
+    for c in range(-3,4):
+        # f(x)=x^2 + b x + c
+        roots_f = quadratic_roots(a,b,c)
+        if roots_f is None:
+            continue
+        x1, x2 = roots_f
+        if x1 >= x2:
+            continue
+        # Define g(x) = -f(100 - x) = ?
+        # g(x) = -[a(100 - x)^2 + b(100 - x)+ c]
+        # = -[a(10000 - 200 x + x^2) + b(100 - x) + c]
+        # = -[a x^2 - 200 a x + 10000 a + 100 b - b x + c]
+        # = -a x^2 + (200 a + b) x - (10000 a + 100 b + c)
+        d = -a
+        e = 200*a + b
+        k = -(10000*a + 100*b + c)
+        roots_g = quadratic_roots(d,e,k)
+        if roots_g is None:
+            continue
+        x3, x4 = roots_g
+        if x3 >= x4:
+            continue
+        # Condition: x3 - x2 = 150
+        gap = x3 - x2
+        if abs(gap - 150) > 1e-5:
+            continue
+        # Condition: vertex v of f satisfies g(v) = f(v)
+        # vertex of f at v = -b/(2a)
+        v = -b/(2*a)
+        # f(v)
+        fv = a*v*v + b*v + c
+        # g(v)
+        gv = d*v*v + e*v + k
+        if abs(fv - gv) > 1e-5:
+            continue
+        # Compute x4 - x1
+        diff = x4 - x1
+        # Try expressing diff = m + n sqrt(p)
+        for (m,n,p) in approx_sqrt_form(diff):
+            total = m + n + p
+            print(f"Parameters: a={a}, b={b}, c={c}, d={d}, e={e}, k={k}")
+            print(f"x1={x1:.6f}, x2={x2:.6f}, x3={x3:.6f}, x4={x4:.6f}, gap={gap:.6f}")
+            print(f"x4 - x1 = {diff:.6f} = {m} + {n}*sqrt({p}) with m+n+p = {total}")
+            print()
+
+# After enumerating candidates, identify minimal total m+n+p
+# The printed candidates help conjecture the answer.
+```

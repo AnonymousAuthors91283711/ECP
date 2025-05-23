@@ -1,0 +1,43 @@
+[write_program]
+The problem is about the range of the product \((x-y)(y-z)(x-z)\) under the constraint \(x^2 + y^2 + z^2 = 1\). We want to find the supremum and infimum (max and min) values and possibly the set of all achievable values.
+
+To conjecture these values, we enumerate triples \((x,y,z)\) on the unit sphere in \(\mathbb{R}^3\), compute the product, and track candidates near extremal values. We will discretize variables with some step and filter those nearly on the unit sphere to avoid too many outputs.
+
+We will print all products found (distinct values) up to a limit and then print the max and min found.
+
+```python
+import math
+
+def approx_equal(a, b, eps=1e-6):
+    return abs(a-b) < eps
+
+def main():
+    step = 0.1
+    values = set()
+    max_val = -float('inf')
+    min_val = float('inf')
+    # We'll iterate x,y,z in [-1,1] with step 0.1 for a coarse search
+    for ix in range(-10, 11):
+        x = ix * step
+        for iy in range(-10, 11):
+            y = iy * step
+            for iz in range(-10, 11):
+                z = iz * step
+                r2 = x*x + y*y + z*z
+                if abs(r2 - 1) < 0.02:  # close to unit sphere
+                    w = (x - y)*(y - z)*(x - z)
+                    # Round to avoid near duplicates:
+                    w_r = round(w, 6)
+                    if w_r not in values:
+                        values.add(w_r)
+                        print(f"x={x:.2f}, y={y:.2f}, z={z:.2f} -> w={w_r}")
+                        if w > max_val:
+                            max_val = w
+                        if w < min_val:
+                            min_val = w
+    print(f"Max product found: {max_val:.6f}")
+    print(f"Min product found: {min_val:.6f}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,50 @@
+[write_program]
+The problem involves finding the greatest value of a sum defined over a set "orders" of 2017 pairs of distinct natural numbers. Each number's "cost" counts how many pairs include that number, and the sum takes the minimum cost of the two elements in each pair.
+
+To conjecture about the maximum total, we can:
+- Enumerate small examples (smaller cardinals than 2017) to understand patterns.
+- For each subset of pairs, compute costs and the sum.
+- Print all totals found to find the greatest values.
+
+Due to the large combinatorial space, we restrict ourselves to small samples and reasonably sized sets, and print the maximum found for these cases.
+
+```python
+from itertools import combinations
+from collections import Counter
+
+def min_cost_sum(orders):
+    # Compute cost per element: number of pairs containing element
+    counts = Counter()
+    for a,b in orders:
+        counts[a] += 1
+        counts[b] += 1
+    # Sum over orders the minimum of the two costs
+    return sum(min(counts[a], counts[b]) for a,b in orders)
+
+def enumerate_orders(n_pairs, elements):
+    # Enumerate all subsets of distinct pairs with n_pairs pairs
+    # For performance, pick a small pool of elements
+    all_pairs = [(a,b) for a in elements for b in elements if a < b]
+    max_sum = 0
+    printed = set()
+    # We will only sample up to some large cap to avoid explosion
+    # For small cases, enumerate all combinations
+    for orders in combinations(all_pairs, n_pairs):
+        val = min_cost_sum(orders)
+        if val not in printed:
+            printed.add(val)
+            print(f"Pairs={n_pairs}, Sum={val}")
+            if val > max_sum:
+                max_sum = val
+    print(f"Max sum for {n_pairs} pairs and elements {elements}: {max_sum}\n")
+
+def main():
+    # Sample values of n_pairs and an elements pool
+    samples = [(3, [1,2,3,4]), (4, [1,2,3,4,5])]
+    for n, elems in samples:
+        print(f"Using n_pairs={n}, elements={elems}")
+        enumerate_orders(n, elems)
+
+if __name__ == "__main__":
+    main()
+```

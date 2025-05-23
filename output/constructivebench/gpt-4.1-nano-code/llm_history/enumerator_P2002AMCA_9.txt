@@ -1,0 +1,55 @@
+[write_program]
+The problem describes finding the minimal value of `d` such that there exists a function `g : Fin 30 → Fin d` with certain sum restrictions over the parts defined by `g`, where `f` is a function from 30 elements to {7, 8, 4} with specific counts.
+
+Key observations:
+- `f` takes values 7, 8, or 4.
+- Exactly 3 are 8s, and 12 are 7s, the rest (15) are 4s.
+- For each part `k` in `Fin d`, the sum of `f i` over `i` with `g i = k` is at most 144.
+- The goal is to find the minimal `d` satisfying these conditions.
+
+To assist the proof, we enumerate feasible distributions of `f`, then test minimal `d`.
+
+```python
+# Enumerate all possible distributions of the 30 elements into groups
+# with counts: 3 of value 8, 12 of value 7, 15 of value 4
+# then compute the minimal d needed for sum constraints
+
+from itertools import combinations, product
+
+# Total counts
+count_eights = 3
+count_sevens = 12
+count_fours = 15
+total = count_eights + count_sevens + count_fours
+
+# Generate all partitions of 30 elements into groups matching counts
+elements = list(range(total))
+answers = []
+
+# Generate positions for '8's
+for eights_positions in combinations(elements, count_eights):
+    remaining1 = set(elements) - set(eights_positions)
+    # Generate positions for '7's
+    for sevens_positions in combinations(remaining1, count_sevens):
+        fours_positions = remaining1 - set(sevens_positions)
+        # Map each position to its value
+        f_map = {}
+        for i in range(total):
+            if i in eights_positions:
+                f_map[i] = 8
+            elif i in sevens_positions:
+                f_map[i] = 7
+            else:
+                f_map[i] = 4
+
+        # Now, assign each to a group g: min d satisfying sum constraints
+        # For each group, sum of f_i ≤ 144
+        # The minimal d is at least the number of groups needed to satisfy sum constraints
+        # in the worst-case distribution, assume each group has as many as possible
+        # to maximize sums, so minimal d ≈ total sum / 144
+
+        total_sum = 8*count_eights + 7*count_sevens + 4*count_fours
+        min_d = (total_sum + 143) // 144  # ceiling division
+        answers.append(min_d)
+        print(min_d)
+```

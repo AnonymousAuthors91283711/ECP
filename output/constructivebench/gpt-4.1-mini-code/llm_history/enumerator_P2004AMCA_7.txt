@@ -1,0 +1,44 @@
+[write_program]
+The problem involves iterating a process on triples \((x,y,z)\) of natural numbers starting from \((a,b,c) = (15,14,13)\) and tracking the values of \(n\) for which some coordinate in the triple becomes zero at the \(n\)-th iteration. The goal is to find the greatest such \(n\).
+
+I will write a Python program that simulates this iteration step by step for small initial triples near the given one, prints every \(n\) at which a coordinate hits zero, and tries to identify the greatest such \(n\). This simulation can help conjecture the maximum number of iterations before hitting zero coordinates.
+
+```python
+# Enumerate iteration steps for given (a,b,c)
+# print n when any coordinate hits zero
+# also try a few sample initial triples near (15,14,13)
+
+def step(x,y,z):
+    if x >= y and x >= z:
+        return (x - (y+z+1), y+1, z+1)
+    elif y >= x and y >= z:
+        return (x+1, y - (x+z+1), z+1)
+    else:
+        return (x+1, y+1, z - (x+y+1))
+
+def simulate(a,b,c,max_iter=1000):
+    x,y,z = a,b,c
+    for n in range(max_iter+1):
+        if x == 0 or y == 0 or z == 0:
+            print(f"Initial ({a},{b},{c}), n={n}, triple=({x},{y},{z}) zero coordinate hit")
+            yield n
+        x,y,z = step(x,y,z)
+        # stop if any coordinate negative because negative is forbidden
+        if x < 0 or y < 0 or z < 0:
+            # This iteration leads to negative, stop
+            break
+
+# Explore the original triple
+found = list(simulate(15,14,13))
+
+# Explore small nearby samples for comparison
+samples = [(15,14,13),(14,14,13),(15,13,13),(15,14,12),(16,14,13)]
+for a,b,c in samples:
+    list(simulate(a,b,c))
+
+# Print the maximum n found for the original triple
+if found:
+    print(f"Max n with zero coordinate starting from (15,14,13) is {max(found)}")
+else:
+    print("No zero coordinate reached up to iteration limit.")
+```

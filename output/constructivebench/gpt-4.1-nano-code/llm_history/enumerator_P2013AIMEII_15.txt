@@ -1,0 +1,64 @@
+[write_program]
+The problem involves finding angles in a triangle with specific properties, including trigonometric conditions and coprimality. To explore possible solutions, we'll systematically generate small parameters satisfying the given conditions, particularly focusing on rational cosine values of the form (p + q * sqrt r) / s, with constraints on r (squarefree) and coprimality conditions. 
+
+We will:
+- Choose small squarefree r values (e.g., 2, 3, 5).
+- Search small integer p, q, s, ensuring rational cosines fit the triangle conditions.
+- Check coprimality of p + q with s.
+- Use approximate cosine values to filter candidates.
+- Output potential solutions immediately to aid in conjecture.
+
+This approach emphasizes efficiency and early streaming of answers.
+
+```python
+import math
+import sys
+from math import gcd, sqrt
+
+# Function to check if a number is squarefree
+def is_squarefree(n):
+    if n < 2:
+        return True
+    for i in range(2, int(sqrt(n)) + 1):
+        if n % (i * i) == 0:
+            return False
+    return True
+
+# Generate small r values that are squarefree
+squarefree_rs = [r for r in range(2, 20) if is_squarefree(r)]
+
+# Search parameters
+max_pqrs = 20  # limit for p, q, s
+epsilon = 0.01  # tolerance for approximate cosine matching
+
+for r in squarefree_rs:
+    for p in range(1, max_pqrs):
+        for q in range(1, max_pqrs):
+            for s in range(1, max_pqrs):
+                # Ensure p,q,s are coprime in the numerator
+                if gcd(p + q, s) != 1:
+                    continue
+                # Compute the cosine value
+                val = (p + q * sqrt(r)) / s
+                # Filter out invalid cosines
+                if abs(val) > 1 + epsilon:
+                    continue
+                # Check approximate angle
+                angle = math.acos(min(1, max(-1, val)))
+                # Check if the angles sum to π with positive angles
+                A = angle
+                # For simplicity, test with common small angles
+                # Approximate the sum with two similar angles and see if the third is positive
+                for A_deg in [60, 45, 30, 90]:
+                    A_rad = math.radians(A_deg)
+                    cosA = math.cos(A_rad)
+                    # Try to find matching parameters
+                    if abs(cosA - val) < epsilon:
+                        # Sum of angles close to π if A + B + C = π
+                        # Approximate B and C as similar angles for simplicity
+                        B_deg = A_deg
+                        C_deg = 180 - 2 * A_deg
+                        if C_deg <= 0:
+                            continue
+                        print(f"Found candidate: p={p}, q={q}, r={r}, s={s}, cosA={cosA:.3f}")
+```

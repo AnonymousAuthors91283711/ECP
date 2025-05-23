@@ -1,0 +1,54 @@
+[write_program]
+The problem asks for the least positive integer \( n \) such that for every \( m \) coprime to \( n \), the order of \( m \) modulo \( n \) is less than \(\frac{\varphi(n)}{10}\).
+
+We will test some small \( n \) values, compute \(\varphi(n)\), determine order of all coprime \( m \), and print \( n \) values that satisfy the condition.
+
+```python
+from math import gcd
+from sympy import totient
+
+def order_mod(m, n):
+    # Compute order of m modulo n
+    if gcd(m, n) != 1:
+        return 0
+    x = 1
+    power = m % n
+    while power != 1:
+        power = (power * m) % n
+        x += 1
+        if x > n:  # Avoid infinite loops
+            return n
+    return x
+
+print("Testing n from 2 to 100, for each check if all coprime m satisfy order(m) < totient(n)/10")
+
+for n in range(2, 101):
+    phi = totient(n)
+    if phi == 0:
+        continue
+    threshold = phi / 10
+    coprimes = [m for m in range(1, n) if gcd(m, n) == 1]
+    # Check max order
+    max_order = 0
+    for m in coprimes:
+        o = order_mod(m, n)
+        if o > max_order:
+            max_order = o
+        if o >= threshold:
+            break
+    else:
+        # All orders < threshold
+        print(f"n={n}, phi={phi}, max_order={max_order} < phi/10={threshold:.2f}")
+
+# We can also print the minimal such n found:
+candidates = []
+for n in range(2, 101):
+    phi = totient(n)
+    if phi == 0:
+        continue
+    threshold = phi / 10
+    coprimes = [m for m in range(1, n) if gcd(m, n) == 1]
+    if all(order_mod(m, n) < threshold for m in coprimes):
+        candidates.append(n)
+print(f"Minimal n with desired property among tested is {min(candidates) if candidates else 'None found'}")
+```

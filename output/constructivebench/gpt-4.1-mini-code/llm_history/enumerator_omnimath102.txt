@@ -1,0 +1,52 @@
+[write_program]
+This problem looks at the least upper bound on the sum of pairwise squared differences between four real numbers after shifting each by some integer. We want to find the minimum value \(a\) such that for any real quadruple \((a_1,a_2,a_3,a_4)\), we can find integers \(k_1,k_2,k_3,k_4\) making the sum of all squared pairwise differences of the fractional parts (after subtracting \(k_i\)) at most \(a\).
+
+We can heuristically enumerate the maximum sums over all choices of fractional parts in \([0,1)^4\), because subtracting integers only changes the integral parts. The differences involve fractional parts on a unit interval, so the differences themselves lie in \([-1,1]\).
+
+Since the sum includes all 6 pairwise squared differences, the maximum sum arises when points are maximally spread on the unit circle modulo integers.
+
+Let's write a Python program that enumerates quadruples of points on \([0,1)^4\) at increments of 0.1 (for a fast partial map). For each quadruple, compute all integer shifts \(k_i \in \{0,1\}\) to minimize the sum, then print the maximum sum encountered.
+
+Since shifting by integers can add or subtract 1, we need to consider all \(2^4=16\) choices of \(k_i\)'s to minimize the sum.
+
+We'll print each candidate maximum sum as we find larger values, then output the largest value after checking all points.
+
+```python
+import itertools
+from math import inf
+
+# Step size for fractional part sampling
+step = 0.1
+
+# Possible fractional parts from 0 to 0.9
+vals = [i*step for i in range(10)]
+
+max_sum = -inf
+
+# The indices of all 6 pairs in a quadruple
+pairs = [(0,1),(0,2),(0,3),(1,2),(1,3),(2,3)]
+
+print("Enumerating quadruples of fractional parts a_1,a_2,a_3,a_4 in [0,1):")
+print("Using step size =", step)
+
+for quad in itertools.product(vals, repeat=4):
+    # For each quad, consider all integer shifts k_i in {0,1} to minimize sum
+    min_sum_for_quad = inf
+    # Boolean shifts: True corresponds to adding integer 1, effectively shifting fractional part by -1
+    # Actually subtracting k_i from a_i, so shifting fractional part is a_i - k_i, k_i in {0,1}
+    # So fractional part after shift lies in [-1,1)
+    for k in itertools.product((0,1), repeat=4):
+        shifted = [quad[i] - k[i] for i in range(4)]
+        s = 0
+        for (i,j) in pairs:
+            diff = shifted[i] - shifted[j]
+            s += diff*diff
+        if s < min_sum_for_quad:
+            min_sum_for_quad = s
+    if min_sum_for_quad > max_sum:
+        max_sum = min_sum_for_quad
+        print(f"New max sum found: {max_sum:.4f} at quadruple {quad}")
+
+print(f"\nEstimated least upper bound on sum is approximately {max_sum:.4f}")
+```
+This should give insights about the minimal \(a\) bounding sums across all quadruples after integral shifts.

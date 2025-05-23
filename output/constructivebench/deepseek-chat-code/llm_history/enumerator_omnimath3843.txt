@@ -1,0 +1,47 @@
+[write_program]
+This problem asks for the greatest natural number `d` that divides the product of `(n*k + 1)` for `k` from 0 to 16 (17 terms) for every `n` between 1 and 2016. 
+
+To solve this computationally, we'll:
+1. Find the minimal requirements by testing small `n` values
+2. Compute the GCD of products for these test cases
+3. Verify the candidate `d` works for all `n` up to 2016
+
+The key insight is that the answer must be the GCD of products for small `n` values, since larger `n` values won't introduce new prime factors.
+
+```python
+import math
+from functools import reduce
+from itertools import count
+
+def compute_product(n):
+    """Compute product of (n*k + 1) for k=0..16"""
+    product = 1
+    for k in range(17):
+        product *= (n * k + 1)
+    return product
+
+def find_gcd_of_products(max_n):
+    """Find GCD of products for n=1..max_n"""
+    current_gcd = compute_product(1)
+    for n in range(2, max_n + 1):
+        current_gcd = math.gcd(current_gcd, compute_product(n))
+        if current_gcd == 1:
+            break
+    return current_gcd
+
+# First find candidate by testing small n values
+test_n = 10  # small sample sufficient to find the GCD
+candidate = find_gcd_of_products(test_n)
+print(f"GCD of products for n=1..{test_n}: {candidate}")
+
+# Verify candidate works for all n up to 2016
+verified = True
+for n in range(1, 2017):
+    if compute_product(n) % candidate != 0:
+        verified = False
+        break
+if verified:
+    print(f"Verified: {candidate} works for all n up to 2016")
+else:
+    print("Verification failed")
+```

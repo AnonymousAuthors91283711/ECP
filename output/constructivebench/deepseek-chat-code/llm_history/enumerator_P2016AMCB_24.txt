@@ -1,0 +1,69 @@
+[write_program]
+This problem asks for the smallest natural number n such that there are exactly 77,000 quadruples (a,b,c,d) of natural numbers where the gcd of all four numbers is 77 and the lcm of all four numbers is n. 
+
+To approach this computationally, we'll:
+1. Factorize n as n = 77 * k where 77 doesn't divide k
+2. For each candidate n, count the number of quadruples (a',b',c',d') where a'=a/77 etc. that satisfy gcd(a',b',c',d')=1 and lcm(a',b',c',d')=k
+3. The count of such quadruples is determined by the prime factorization of k
+
+We'll enumerate possible k values and compute the number of quadruples for each, stopping when we find one that gives exactly 77,000 solutions.
+
+```python
+import math
+from collections import defaultdict
+from functools import reduce
+from itertools import product
+
+def factorize(n):
+    factors = defaultdict(int)
+    while n % 2 == 0:
+        factors[2] += 1
+        n = n // 2
+    i = 3
+    while i*i <= n:
+        while n % i == 0:
+            factors[i] += 1
+            n = n // i
+        i += 2
+    if n > 1:
+        factors[n] += 1
+    return factors
+
+def count_quadruples(k_factors):
+    # For each prime in k's factorization, count possible exponent assignments
+    # to a',b',c',d' where at least one has exponent 0 and at least one has exponent = k's exponent
+    total = 1
+    for p, exp in k_factors.items():
+        # For each prime p^exp in k, count assignments to a',b',c',d':
+        # Each must have exponent between 0 and exp, with at least one 0 and at least one exp
+        # The count is (exp+1)^4 - 2*(exp)^4 + (exp-1)^4
+        cnt = (exp+1)**4 - 2*(exp**4) + (exp-1)**4
+        total *= cnt
+    return total
+
+def find_min_n(target=77000):
+    k = 1
+    while True:
+        if math.gcd(k, 77) != 1:
+            k += 1
+            continue
+        
+        factors = factorize(k)
+        count = count_quadruples(factors)
+        
+        if count == target:
+            n = 77 * k
+            print(f"Found candidate: n = {n} (k = {k})")
+            print(f"Prime factorization: {dict(factors)}")
+            print(f"Number of quadruples: {count}")
+            print("This appears to be the minimal n")
+            return n
+        
+        k += 1
+        if k > 1000:  # Safety limit
+            print("Reached search limit without finding solution")
+            return None
+
+if __name__ == "__main__":
+    find_min_n()
+```

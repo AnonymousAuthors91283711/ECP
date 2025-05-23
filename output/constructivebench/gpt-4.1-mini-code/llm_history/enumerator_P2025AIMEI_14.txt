@@ -1,0 +1,104 @@
+[write_program]
+The problem describes a convex pentagon \(ABCDE\) with given side lengths and angles, and asks for the minimum possible sum of distances from a point \(X\) to the vertices \(A, B, C, D, E\). To assist in conjecturing the true answer, this Python program will:
+
+- Enumerate approximate coordinates for the vertices respecting given side lengths and angles.
+- For a grid of points inside a reasonable bounding box around the pentagon, compute the sum of distances.
+- Stream partial results with points and their sums.
+- Keep track of the minimal sum found.
+
+This numerical approximation approach allows conjecturing the minimal sum and the point \(X\) achieving it.
+
+```python
+import math
+
+# Given data
+AB = 14
+BC = 7
+CD = 24
+DE = 13
+angle_B = math.pi / 3  # 60 degrees
+angle_E = math.pi / 3  # 60 degrees
+
+def dist(p, q):
+    return math.hypot(p[0]-q[0], p[1]-q[1])
+
+# Fix A at origin
+A = (0.0, 0.0)
+# Place B on x-axis to right
+B = (AB, 0.0)
+
+# Use length BC=7 and angle_B = 60° at B: angle ABC = 60°
+# Vector BA points left (towards A), vector BC makes 60° with BA
+# BA vector = (0-14,0-0)=(-14,0)
+# BC vector direction: rotate BA vector by +60° CCW
+def rotate(v, theta):
+    return (v[0]*math.cos(theta) - v[1]*math.sin(theta),
+            v[0]*math.sin(theta) + v[1]*math.cos(theta))
+
+BA = (A[0]-B[0], A[1]-B[1])
+BC_dir = rotate(BA, angle_B)
+length_BC = BC
+C = (B[0] + BC_dir[0]/math.hypot(*BC_dir)*length_BC,
+     B[1] + BC_dir[1]/math.hypot(*BC_dir)*length_BC)
+
+# Now place D using length CD=24 on segment CD
+# Since no angle given at C, try placing D along line from C to the reflection of B to guess possible positions
+# We guess D lies such that CD=24 and DE=13 with angle at E = 60°; enumerate possible D and E
+
+# We enumerate candidate D points around C within circle radius 24
+best_sum = float('inf')
+best_point = None
+
+# For convenience, precompute some candidate Es given D to satisfy angle_E = 60° at E
+# We'll discretize D's direction around C
+
+def candidate_points(center, radius, steps=12):
+    for i in range(steps):
+        theta = 2*math.pi*i/steps
+        yield (center[0] + radius*math.cos(theta), center[1] + radius*math.sin(theta))
+
+# Find point E so that angle D E A = 60°, lengths DE=13 fixed, and A known
+# For given D, E lies on circle radius 13 centered at D
+# Also angle at E between points D-E-A is 60°, so using law of cosines or geometric constraints we solve numerically
+
+def angle(p, q, r):
+    # angle at q between p-q and r-q
+    v1 = (p[0]-q[0], p[1]-q[1])
+    v2 = (r[0]-q[0], r[1]-q[1])
+    dot = v1[0]*v2[0] + v1[1]*v2[1]
+    l1 = math.hypot(*v1)
+    l2 = math.hypot(*v2)
+    if l1*l2 == 0:
+        return 0
+    c = dot/(l1*l2)
+    c = min(1.0, max(-1.0,c))
+    return math.acos(c)
+
+for D in candidate_points(C, CD, 24): # more steps for denser search
+    # For each candidate D, find possible E on circle DE=13 around D
+    for E in candidate_points(D, DE, 24):
+        # Check angle D-E-A = 60 deg approx
+        ang = angle(D, E, A)
+        if abs(ang - angle_E) < 0.05:
+            # Check polygon edges roughly convex by distances and basic conditions
+            # Compute sum of distances from grid of test points X inside bounding box
+            xs = [A[0], B[0], C[0], D[0], E[0]]
+            ys = [A[1], B[1], C[1], D[1], E[1]]
+
+            xmin, xmax = min(xs), max(xs)
+            ymin, ymax = min(ys), max(ys)
+
+            # We test points inside bounding rectangle
+            for ix in range(11):
+                for iy in range(11):
+                    x = xmin + (xmax - xmin)*ix/10
+                    y = ymin + (ymax - ymin)*iy/10
+                    s = (dist((x,y),A)+dist((x,y),B)+dist((x,y),C)+dist((x,y),D)+dist((x,y),E))
+                    print(f"Sum={s:.4f} at X=({x:.2f},{y:.2f}) with D={D}, E={E}")
+                    if s < best_sum:
+                        best_sum = s
+                        best_point = (x,y,D,E)
+
+print(f"Approx minimal sum dist to vertices: {best_sum:.4f} at point X={best_point[0]:.2f},{best_point[1]:.2f}")
+```
+

@@ -1,0 +1,65 @@
+[write_program]
+The problem asks to find the greatest possible value of `y = f(8)` given a sequence `f` from `Fin 9` with certain properties:
+- Injective and only taking values in the set {1, 2, 4, 5, 6, 9, 10, 11, 13}.
+- Boundary conditions: `f(0) = x`, `f(8) = y`.
+- `f(1) = f(0) + f(2)`, `f(3) = f(2) + f(4)`, `f(5) = f(4) + f(6)`, `f(7) = f(6) + f(8)`.
+
+By exploring small values systematically, especially the possible values for each `f(i)` consistent with the restrictions, we can track candidate sequences that maximize `f(8)`.
+
+```python
+# We will enumerate possible values for f at key points based on the constraints and try to maximize y = f(8).
+# The set of allowed values.
+allowed_values = {1, 2, 4, 5, 6, 9, 10, 11, 13}
+
+# Store maximum y found.
+max_y = -1
+max_sequence = None
+
+# To reduce computation, we will iterate over possible f(0) and f(2), then derive subsequent values.
+for f0 in allowed_values:
+    for f2 in allowed_values:
+        # f(1) = f0 + f2 must be in allowed set
+        f1 = f0 + f2
+        if f1 not in allowed_values:
+            continue
+
+        # Choose f(4) in allowed set
+        for f4 in allowed_values:
+            # f(3) = f2 + f4 must be allowed
+            f3 = f2 + f4
+            if f3 not in allowed_values:
+                continue
+
+            # f(6) in allowed set
+            for f6 in allowed_values:
+                # f(5) = f4 + f6 must be allowed
+                f5 = f4 + f6
+                if f5 not in allowed_values:
+                    continue
+
+                # f(8) = y, f(7) = f6 + f8
+                # We want to maximize f8 given these fixed previous values.
+                for f8 in allowed_values:
+                    # Verify injectivity: all f(i) uniquely assigned
+                    sequence = [f0, f1, f2, f3, f4, f5, f6, None, f8]
+                    # f(7) = f6 + f8
+                    f7 = f6 + f8
+                    if f7 not in allowed_values:
+                        continue
+                    sequence[7] = f7
+
+                    # Check all values are unique so far
+                    if len(set(sequence)) != 9:
+                        continue
+
+                    # Confirm sequence is valid with the constraints
+                    # Conditions already checked, so just update max if needed
+                    if f8 > max_y:
+                        max_y = f8
+                        max_sequence = sequence
+
+# Output the maximum value for y (= f(8))
+print(f"Maximum y (f(8)) = {max_y}")
+# Optionally, print the sequence
+print(f"Sequence achieving this maximum: {max_sequence}")
+```

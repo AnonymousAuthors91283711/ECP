@@ -1,0 +1,53 @@
+[write_program]
+The problem asks for the smallest positive integer \(a\) such that there exists an integer-coefficient polynomial \(P(x)\) satisfying:
+\[
+P(1) = P(3) = P(5) = P(7) = a, \quad P(2) = P(4) = P(6) = P(8) = -a.
+\]
+
+We want to enumerate possible values of \(a\) and check if such a polynomial exists. The polynomial satisfies 8 conditions, all integer values, so its degree is at most 7. Given the values at these 8 points, the polynomial of degree at most 7 is uniquely determined by these values (Lagrange interpolation).
+
+Since the polynomial is integer-coefficient, the interpolation reveals that certain linear combinations of \(a\) must be integers.
+
+The outline for the program: 
+- For small positive integers \(a\), construct the polynomial by interpolating the points \((x_i, y_i)\) where \(x_i\in\{1,2,\dots,8\}\), with the given +a and -a pattern.
+- Check if the resulting polynomial has integer coefficients (exactly).
+- Print each \(a\) for which this integer polynomial exists.
+- After checking up to some threshold \(a_{\max}\), print the minimal one found.
+
+We use sympy to handle polynomials and exact rational arithmetic.
+
+```python
+from sympy import symbols, interpolate, Rational
+from sympy.polys.polytools import Poly
+
+x = symbols('x')
+
+# Points: 
+# P(odd) = a, P(even) = -a
+xs = list(range(1,9))
+def y(a):
+    return [a if xi % 2 == 1 else -a for xi in xs]
+
+def integer_coefficients(poly):
+    # poly is Poly with rational coeffs; check if all coeffs are integers
+    coeffs = poly.all_coeffs()
+    return all(c.q == 1 for c in coeffs)  # c is Rational, check denominator=1
+
+found = []
+MAX_A = 20  # check up to a=20
+
+for a in range(1, MAX_A+1):
+    points = list(zip(xs, y(a)))
+    P = interpolate(points, x)
+    p_poly = Poly(P, x, domain='QQ')
+    if integer_coefficients(p_poly):
+        print(f'a = {a} yields integer-coefficient polynomial:')
+        print(p_poly)
+        found.append(a)
+
+if found:
+    print(f'Minimum a found: {min(found)}')
+else:
+    print('No integer a up to', MAX_A, 'works.')
+```
+

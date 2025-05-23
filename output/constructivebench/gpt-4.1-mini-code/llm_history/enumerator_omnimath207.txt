@@ -1,0 +1,84 @@
+[write_program]
+The problem describes a finite set of vertices \( V = \text{Fin } n \) with edges \( E : \text{Fin } n \times \text{Fin } n \to \{0,1,2\} \), symmetric, such that every vertex has edges of all three colors (0,1,2) incident to it (no vertex is connected only by one color). Also, each color appears on at least one edge, and there is no triangle of size 3 all of whose edges are the same color.
+
+We are to find the greatest \( n \) for which such an edge-coloring exists. I'll write a Python program that for small \( n \) enumerates symmetric edge colorings with given constraints and prints the valid \( n \).
+
+```python
+# Enumerate symmetric 3-colorings of complete graphs on n vertices with constraints
+# For each n, attempt to find a coloring E: edges -> {0,1,2},
+# symmetric: E[i,j]==E[j,i], no monochromatic triangle, each vertex incident to edges of all colors,
+# each color present on some edge.
+
+from itertools import combinations, product
+import sys
+
+def has_monochromatic_triangle(E, n):
+    # E indexed as dict with (i,j): color, i<j
+    for a,b,c in combinations(range(n),3):
+        colors = { E[tuple(sorted(edge))] for edge in [(a,b),(b,c),(a,c)] }
+        if len(colors) == 1:
+            return True
+    return False
+
+def vertex_colors(E, n):
+    # For each vertex check which colors appear on edges incident to it
+    incident = [set() for _ in range(n)]
+    for (i,j),c in E.items():
+        incident[i].add(c)
+        incident[j].add(c)
+    return incident
+
+def all_colors_present(E):
+    # Check if all colors {0,1,2} appear somewhere
+    return set(E.values()) == {0,1,2}
+
+def valid_coloring(E,n):
+    if has_monochromatic_triangle(E,n):
+        return False
+    incident = vertex_colors(E,n)
+    for s in incident:
+        # exclude vertices with edges all same color (they must have at least 2 colors)
+        # problem requires no vertex to have incident edges all same color
+        # but actually stronger: no vertex has all edges of same color, must have all 3? The statement says
+        # "∀ i : Fin n, ¬ (∀ j ≠ i, E i j = 0) ∧ ¬ (∀ j ≠ i, E i j = 1) ∧ ¬ (∀ j ≠ i, E i j = 2)"
+        # which means no vertex has all incident edges equal to one color; so each vertex must have edges in at least 2 colors
+        if len(s) == 1:
+            return False
+    if not all_colors_present(E):
+        return False
+    return True
+
+def enumerate_colorings(n):
+    # edges: pairs i<j from n vertices
+    edges = list(combinations(range(n),2))
+    m = len(edges)
+    cset = [0,1,2]
+    count = 0
+    for colors in product(cset, repeat=m):
+        E = dict(zip(edges, colors))
+        if valid_coloring(E,n):
+            count+=1
+            print(f"Valid coloring found for n={n}")
+            # Print a sample coloring edges with colors
+            # Just print edges with colors immediately
+            for e,c in E.items():
+                print(f"Edge {e}: color {c}")
+            print()
+            # Enumerate limited outputs to avoid too much output
+            if count>=2:
+                break
+    return count
+
+def main():
+    # Try n from 3 up to 6 (beyond 6 is too large to search exhaustively)
+    for n in range(3,7):
+        print(f"Trying n={n}")
+        found = enumerate_colorings(n)
+        print(f"Total valid colorings found for n={n}: {found}\n")
+        # If none found for some n, can conjecture max n is previous one
+
+if __name__=="__main__":
+    main()
+```
+
+This program systematically searches and prints valid colorings for \( n=3,4,5,6 \). For larger \( n \), the search space is too big for brute force. Observing output for these small \( n \), one can form conjectures. The program prints each found coloring immediately.

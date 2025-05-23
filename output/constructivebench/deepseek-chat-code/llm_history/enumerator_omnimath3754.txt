@@ -1,0 +1,55 @@
+[write_program]
+The problem asks to find all pairs of positive integers (n, p) where p is prime, such that the sum of the first n natural numbers equals three times the sum of the squares of the first p natural numbers. 
+
+We'll write a Python program to:
+1. Precompute sums of natural numbers and their squares
+2. Check for valid (n, p) pairs where p is prime
+3. Enumerate solutions up to reasonable bounds
+
+```python
+import math
+
+def is_prime(num):
+    if num < 2:
+        return False
+    for i in range(2, int(math.sqrt(num)) + 1):
+        if num % i == 0:
+            return False
+    return True
+
+# Precompute triangular numbers (sum of first n naturals)
+triangular = [0]
+n = 1
+while triangular[-1] < 10**6:  # Arbitrary large bound
+    triangular.append(triangular[-1] + n)
+    n += 1
+
+# Precompute sum of squares of first p naturals
+sum_squares = [0]
+p = 1
+while sum_squares[-1] < 10**6:  # Same bound as above
+    sum_squares.append(sum_squares[-1] + p*p)
+    p += 1
+
+# Find all valid (n, p) pairs
+solutions = []
+for p_val in range(1, len(sum_squares)):
+    if not is_prime(p_val):
+        continue
+    target = 3 * sum_squares[p_val]
+    # Binary search in triangular numbers
+    left, right = 1, len(triangular)-1
+    while left <= right:
+        mid = (left + right) // 2
+        if triangular[mid] == target:
+            solutions.append((mid, p_val))
+            break
+        elif triangular[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+# Output found solutions
+for sol in solutions:
+    print(f"Found solution: n={sol[0]}, p={sol[1]}")
+```

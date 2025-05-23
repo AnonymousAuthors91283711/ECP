@@ -1,0 +1,69 @@
+[write_program]
+This problem involves finding a specific value for an expression involving trigonometric functions under certain constraints. We'll approach it by:
+
+1. Using the given constraints to find relationships between the angles
+2. Numerically searching for angles that satisfy all conditions
+3. Calculating the target expression value
+
+The key observation is that each ratio has the form k*tan(x)/(1+1/cos(x)) where k increases from 3 to 6. We'll search for angles that satisfy all constraints within the valid range (0, π/2).
+
+```python
+import math
+import numpy as np
+
+def f(k, x):
+    """Computes k*tan(x)/(1 + 1/cos(x))"""
+    return k * math.tan(x) / (1 + 1/math.cos(x))
+
+def find_angles():
+    """Search for angles satisfying all constraints"""
+    # We'll search in small increments
+    step = 0.0001
+    target_sum = 2 * math.pi
+    
+    # Search for alpha in (0, pi/2)
+    for alpha in np.arange(0.01, math.pi/2, step):
+        # Compute the common value from first equation
+        common_val = f(3, alpha)
+        
+        # Find beta that satisfies second equation
+        try:
+            beta = find_angle(4, common_val, alpha, step)
+            if beta <= 0:
+                continue
+                
+            # Find gamma that satisfies third equation
+            gamma = find_angle(5, common_val, beta, step)
+            if gamma <= 0:
+                continue
+                
+            # Find delta that satisfies fourth equation
+            delta = find_angle(6, common_val, gamma, step)
+            if delta <= 0:
+                continue
+                
+            # Check angle sum constraint
+            if abs(alpha + beta + gamma + delta - target_sum) < 0.001:
+                print(f"Found angles: α={alpha:.4f}, β={beta:.4f}, γ={gamma:.4f}, δ={delta:.4f}")
+                print(f"Common value: {common_val:.6f}")
+                return common_val
+        except:
+            continue
+    
+    return None
+
+def find_angle(k, target, prev_angle, step):
+    """Find angle x where f(k,x) = target, x < prev_angle"""
+    # The angles should be decreasing due to increasing k factors
+    for x in np.arange(0.01, prev_angle, step):
+        if abs(f(k, x) - target) < 1e-6:
+            return x
+    return -1
+
+if __name__ == "__main__":
+    result = find_angles()
+    if result is not None:
+        print(f"Final computed value: {result:.10f}")
+    else:
+        print("No solution found in the search space")
+```

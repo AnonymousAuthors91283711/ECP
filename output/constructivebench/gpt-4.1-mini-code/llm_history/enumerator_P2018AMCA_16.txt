@@ -1,0 +1,76 @@
+[write_program]
+The problem concerns counting the number of points \( p = (x,y) \) satisfying the system:
+\[
+y = x^2 - a, \quad x^2 + y^2 = a^2,
+\]
+and establishing for which real values \( a \) the number of such points is exactly 3.
+
+We can rewrite the system and count intersections numerically or symbolically for various values of \( a \geq 0 \) (since \( a \) negative likely yields fewer or no intersections). We will enumerate values of \( a \) in some range, solve for intersections, and print the number of solutions found.
+
+The program:
+- For a range of \( a \) values (e.g., from 0 to 5 with small step), finds all intersection points.
+- Prints the value \( a \) and the exact or approximated solutions.
+- Prints when exactly 3 points are found.
+
+This will help to conjecture the set \( P2018AMCA_16\_answer \) of all \( a \) with exactly 3 intersection points.
+
+```python
+# Enumerate values of a to find when the system
+# y = x^2 - a and x^2 + y^2 = a^2 has exactly 3 real solutions (x,y).
+# Prints solutions immediately when found, highlighting cases with 3 solutions.
+
+import math
+
+def approx_equal(x, y, tol=1e-9):
+    return abs(x - y) < tol
+
+def find_intersections(a):
+    # Solve system:
+    # y = x^2 - a
+    # x^2 + y^2 = a^2
+    # Substitute y: x^2 + (x^2 - a)^2 = a^2
+    # x^2 + (x^2 - a)^2 = a^2
+    # Let t = x^2, then:
+    # t + (t - a)^2 = a^2
+    # t + t^2 - 2 a t + a^2 = a^2
+    # t^2 - 2 a t + t + a^2 - a^2 = 0
+    # t^2 + (1 - 2a) t = 0
+    # t (t + 1 - 2a) = 0
+
+    # So t=0 or t = 2a -1
+    sols = []
+    candidates = [0, 2*a -1]
+    for t in candidates:
+        if t < 0:
+            continue
+        x_vals = [math.sqrt(t), -math.sqrt(t)] if t>0 else [0.0]
+        for x in x_vals:
+            y = x**2 - a
+            # Check circle equation to ensure numerical stability
+            lhs = x**2 + y**2
+            rhs = a**2
+            if approx_equal(lhs, rhs):
+                sols.append( (x,y) )
+    return sols
+
+def main():
+    print("# Enumerate a values with solutions of given system:")
+    threshold = 5
+    step = 0.1
+    for i in range(int(threshold / step) + 1):
+        a = i * step
+        sols = find_intersections(a)
+        # remove near-duplicates since x=0 from both roots can repeat
+        unique_sols = []
+        for s in sols:
+            if all(not (approx_equal(s[0], u[0]) and approx_equal(s[1], u[1])) for u in unique_sols):
+                unique_sols.append(s)
+        print(f"a={a:.2f}, number of solutions = {len(unique_sols)}")
+        for (x,y) in unique_sols:
+            print(f"  (x,y)=({x:.6f},{y:.6f})")
+        if len(unique_sols) == 3:
+            print(f"*** a = {a:.2f} yields exactly 3 solutions ***\n")
+
+if __name__ == "__main__":
+    main()
+```

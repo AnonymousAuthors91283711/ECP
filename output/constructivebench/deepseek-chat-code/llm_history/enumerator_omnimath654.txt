@@ -1,0 +1,63 @@
+[write_program]
+This problem involves finding all real-valued functions f: ℝ → ℝ that satisfy two conditions:
+1. The zero set {x | f(x)=0} has finite cardinality
+2. The functional equation f(x⁴ + y) = x³f(x) + f(f(y)) for all x,y ∈ ℝ
+
+We'll write a Python program to enumerate polynomial solutions (since they're easier to handle computationally) and check the functional equation. We'll focus on low-degree polynomials first.
+
+```python
+import numpy as np
+from itertools import product
+
+def check_functional_eq(f_coeffs, x, y):
+    """Check if the functional equation holds for given coefficients at (x,y)"""
+    # Evaluate f(x⁴ + y)
+    lhs = np.polyval(f_coeffs, x**4 + y)
+    
+    # Evaluate x³f(x) + f(f(y))
+    fx = np.polyval(f_coeffs, x)
+    fy = np.polyval(f_coeffs, y)
+    ffy = np.polyval(f_coeffs, fy)
+    rhs = x**3 * fx + ffy
+    
+    return np.isclose(lhs, rhs, atol=1e-6)
+
+def test_polynomial(degree):
+    """Test all polynomials up to given degree"""
+    print(f"\nTesting degree {degree} polynomials...")
+    found = False
+    
+    # We'll test coefficients from -3 to 3 for simplicity
+    for coeffs in product(range(-3, 4), repeat=degree+1):
+        if coeffs[-1] == 0:  # Skip if not actually this degree
+            continue
+            
+        f_coeffs = list(coeffs)
+        valid = True
+        
+        # Test random points to filter out candidates
+        for _ in range(10):
+            x, y = np.random.uniform(-2, 2), np.random.uniform(-2, 2)
+            if not check_functional_eq(f_coeffs, x, y):
+                valid = False
+                break
+                
+        if valid:
+            # Verify more thoroughly
+            thorough = True
+            for x, y in product(np.linspace(-1, 1, 3), repeat=2):
+                if not check_functional_eq(f_coeffs, x, y):
+                    thorough = False
+                    break
+                    
+            if thorough:
+                print(f"Found candidate: f(x) = {np.poly1d(f_coeffs)}")
+                found = True
+                
+    if not found:
+        print(f"No valid degree {degree} polynomials found")
+
+# Test polynomials up to degree 4
+for degree in range(5):
+    test_polynomial(degree)
+```

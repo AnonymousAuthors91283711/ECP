@@ -1,0 +1,82 @@
+[write_program]
+This problem involves a polynomial \( P \) in three variables with specific symmetry and zeroing conditions, along with a fixed evaluation at a specific point. The goal is to determine the value of a given evaluation under these constraints. 
+
+Since the problem is high-level mathematics (involving multivariable polynomials, symmetry, degrees, and evaluations), a brute-force enumeration of inputs with small sample values is a practical approach to conjecture solutions or bounds.
+
+Key points:
+- The polynomial degree is 4, in 3 variables.
+- Zero evaluations for certain fixed points (hzero).
+- Cyclic invariance property (hcyclic) which constrains \( P \)'s form.
+- A specific evaluation at a fixed point (h123).
+
+Given the constraints, our plan:
+1. Generate all degree-4 multivariate polynomials with coefficients over \(\mathbb{R}\) (sample coefficients from small rational sets).
+2. For each polynomial, test the constraints (zero at given points, cyclic symmetry, specific evaluation).
+3. When constraints are satisfied, compute the target evaluation and print it.
+
+We will focus on a small sample of polynomial coefficients to make enumeration feasible, considering symmetries and constraints to reduce the candidate space.
+
+The code below:
+- uses a small coefficient set (-2 to 2, as an example),
+- constructs candidate polynomials parameterized by their monomials,
+- tests all constraints,
+- if satisfied, outputs the evaluation at the required point.
+
+```python
+import itertools
+import math
+
+# Generate all monomials of degree 4 in 3 variables
+def monomials():
+    return [(i,j,k) for i in range(5) for j in range(5) for k in range(5)
+            if i + j + k == 4]
+
+# Sample small coefficient set for enumeration
+coeffs = [-2, -1, 0, 1, 2]
+
+# Points for evaluation
+def eval_poly(coeff_map, point):
+    total = 0
+    for (i,j,k), coeff in coeff_map.items():
+        total += coeff * (point[0]**i) * (point[1]**j) * (point[2]**k)
+    return total
+
+# Check the zero conditions
+def check_zero_at(coeff_map):
+    # (a, a, b) -> zero
+    for a in [-2,-1,0,1,2]:
+        for b in [-2,-1,0,1,2]:
+            if eval_poly(coeff_map, (a,a,b)) != 0:
+                return False
+    return True
+
+# Check cyclic condition
+def check_cyclic(coeff_map):
+    # For a, b, c in sample bounds
+    for a in [-2,-1,0,1,2]:
+        for b in [-2,-1,0,1,2]:
+            for c in [-2,-1,0,1,2]:
+                original = eval_poly(coeff_map, (a,b,c))
+                cycled = eval_poly(coeff_map, (b,c,a))
+                if not math.isclose(original, cycled, rel_tol=1e-9):
+                    return False
+    return True
+
+# Check h123 evaluation
+def check_h123(coeff_map):
+    val = eval_poly(coeff_map, (1,2,3))
+    return math.isclose(val, 1, rel_tol=1e-9)
+
+# Collect candidates
+for coeffs_tuple in itertools.product(coeffs, repeat=len(monomials())):
+    coeff_map = {}
+    for coef, mon in zip(coeffs_tuple, monomials()):
+        if coef != 0:
+            coeff_map[mon] = coef
+    # Check constraints
+    if check_zero_at(coeff_map) and check_cyclic(coeff_map) and check_h123(coeff_map):
+        # Compute target evaluation
+        answer = eval_poly(coeff_map, (2,4,8))
+        print("Possible answer:", answer)
+        # Since only streaming answers, continue to find all solutions
+```

@@ -1,0 +1,62 @@
+[write_program]
+This problem asks for all integers n where for all positive real numbers a,b,c,x,y,z with certain conditions, the inequality aⁿ + bⁿ + cⁿ ≥ xⁿ + yⁿ + zⁿ holds. We'll write a program to test small integer values of n to find patterns.
+
+The conditions are:
+1. All variables positive
+2. a is the maximum among all variables
+3. a+b+c = x+y+z
+4. abc = xyz
+
+We'll test n values from -10 to 10, checking random cases that satisfy the conditions.
+
+```python
+import random
+import math
+
+def test_n(n, num_trials=1000):
+    for _ in range(num_trials):
+        # Generate a,b,c with a being largest
+        a = random.uniform(1, 10)
+        b = random.uniform(0.1, a)
+        c = random.uniform(0.1, a)
+        
+        # Generate x,y,z satisfying the conditions
+        # Using symmetric case where x=a, y+z=b+c, yz=bc
+        # This is one possible configuration that satisfies the conditions
+        x = a
+        sum_yz = b + c
+        prod_yz = b * c
+        
+        # Solve for y and z (roots of t^2 - (b+c)t + bc = 0)
+        discriminant = sum_yz**2 - 4*prod_yz
+        if discriminant < 0:
+            continue  # Skip complex cases
+            
+        y = (sum_yz + math.sqrt(discriminant))/2
+        z = (sum_yz - math.sqrt(discriminant))/2
+        
+        # Verify conditions
+        if not (y > 0 and z > 0 and math.isclose(a+b+c, x+y+z) and math.isclose(a*b*c, x*y*z)):
+            continue
+            
+        # Check the inequality
+        lhs = a**n + b**n + c**n
+        rhs = x**n + y**n + z**n
+        
+        if lhs < rhs:
+            return False
+    return True
+
+def main():
+    print("Testing integer values of n:")
+    candidates = []
+    for n in range(-10, 11):
+        if test_n(n):
+            print(f"n = {n} satisfies the condition in tested cases")
+            candidates.append(n)
+    
+    print("\nCandidate values found:", candidates)
+
+if __name__ == "__main__":
+    main()
+```

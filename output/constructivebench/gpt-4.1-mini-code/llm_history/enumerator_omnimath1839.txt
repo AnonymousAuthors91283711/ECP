@@ -1,0 +1,93 @@
+[write_program]
+The problem involves permutations \( f \) of \(\{0,\dots,9\}\) without zero in the range (so values are from 1 to 9) with a condition, and we want to compute the average of a certain count \( X(f) \) defined on these permutations.
+
+We will enumerate all permutations of \(\{1,\dots,9\}\) (since \(f i \neq 0\)) of length 10 mapping from \(\{0,\dots,9\}\), but the codomain is also size 10. Actually, domain is \( \{0,\dots,9\} \), codomain also \( \{0,\dots,9\} \), but with the constraint \( f i \neq 0 \), so the image excludes 0, so image is in \(\{1,\dots,9\}\).
+
+But this is impossible for a bijection \( f:\{0,\dots,9\} \to \{1,\dots,9\} \) because the codomain would be size 9, domain size 10, so no bijection possible.
+
+So possibly the problem is in the original: \(f:\) Fin 10 → Fin 10 is a bijection, and \(\forall i, f i \neq 0\), so the image excludes zero.
+
+Since the domain is size 10, codomain size 10: bijection \(f\), so the image is all of \(\{0,\dots,9\}\). If \(f i \neq 0\) for all \(i\), the image excludes 0, so image has at most 9 elements, but must be 10 elements for bijection. This is contradiction.
+
+Therefore the definition of Fin 10 is 0..9. So if \(f\) is a bijection Fin 10 → Fin 10 and \(f i \neq 0\), for all \(i\), then \(f\) is a bijection onto \(\{1,\dots,9\}\), which is size 9, contradiction.
+
+Hence, possibly there's a misunderstanding. Maybe the problem is slightly different or there's an error in the problem statement? Or it means \(f(i) \neq 0\) in the sense that the value 0 is excluded from image.
+
+So let's assume the problem is: \(f:\{0,\dots,9\} → \{1,\dots,9\}\) a bijection onto \(\{1,\dots,9\}\) with domain size 10, codomain size 9, so no bijection possible.
+
+Alternative: Maybe Fin 10 means 1 through 10 (unlikely).
+
+Alternatively, maybe the problem means \(f: \text{Fin } 10 → \text{Fin } 10\) bijective, with the restriction \(f(i) \neq 0\) for all i, i.e. 0 is never in image, so image is in \(\{1,\dots,9\}\) plus something? The only way is that \(f\) is a bijection onto \(\{1,\dots,9\}\) plus something else. So maybe the domain and codomain sizes are not equal. The problem's Lean code excerpt is partial so possibly it is incomplete.
+
+Given the problem complexity, it is better to assume the problem is to enumerate permutations \( f \) of \(\{0,\dots,9\}\) onto itself with the restriction \(f(i) \neq 0\) for all i, so image excludes 0, so image in \(\{1, \ldots, 9\}\). But since image must have 10 distinct elements for a bijection and \(\{1, \ldots, 9\}\) only has 9 elements, this is impossible.
+
+Maybe \(n=10\) is just a sample, maybe smaller sample sets make sense for exploration.
+
+Therefore, for exploration, take smaller \(n\), like 3 or 4, to enumerate all bijections \(f: \text{Fin } n \to \text{Fin } n\) with \(f(i) \neq 0\), which means no value 0 in the image. For small \(n\), we can enumerate all permutations excluding those with zero in image.
+
+For each such \(f\), compute
+
+\[
+X(f) = |\{ i : (f i - f(i+1)) \geq 2 \text{ or } (f i - f(i-1)) \geq 2\}|
+\]
+
+(where addition is modulo n)
+
+Finally, average \(X(f)\) over all such \(f\).
+
+We will implement a program enumerating permutations on domain of size \(n\) with the image never including zero (i.e. all values > 0). So for domain \(\{0,\ldots,n-1\}\) and codomain \(\{0,\ldots,n-1\}\), the range is \(\{1, \ldots, n-1\}\), which means the image size is \(n-1\), domain size is \(n\), so no bijection for \(n \geq 2\). So only case \(n=1\), trivial.
+
+Hence, better to generalize: For each \(n\), consider the set of all permutations of \(\{0, \ldots, n-1\}\) that *do not* have 0 in the image, i.e. the permutations on the set \(\{1, \ldots, n-1\}\) together with the value 0 excluded. But such permutations don't exist for \(n > 1\) because the image would not cover all \(n\) values.
+
+Hence, since this general setup is contradictory for the original problem, for enumerating we will drop the \(f(i) \neq 0\) restriction to compute the average of \(X(f)\) over all permutations of \(\{0,\ldots,n-1\}\), (or possible to filter those with \(f(i) \neq 0\), but zero included anyway so no results),
+
+Hence for enumeration let's do the average number of indices \(i\) in a permutation \(f\) of \(\{0,\ldots,n-1\}\) such that
+
+\[
+f(i) - f(i+1) \geq 2 \; \text{or} \; f(i) - f(i-1) \geq 2
+\]
+
+where addition/subtraction of indices mod \(n\).
+
+We will write Python that enumerates all permutations of \(\{0,..., n-1\}\) for small \(n\), e.g. n=4 or n=5, print each permutation, the indices where the condition holds, the value of \(X(f)\), and finally print average \(X(f)\).
+
+This will help conjecture the formula or value if the original problem is clarified.
+
+We will print partial results streaming as required and final average.
+
+---
+
+```python
+# enumerate permutations f of {0,...,n-1}
+# compute number of indices i where (f[i] - f[(i+1)%n]) >= 2 or (f[i] - f[(i-1)%n]) >= 2
+# print for each permutation: f, indices satisfying, X(f)
+# finally print average X(f) over all permutations
+
+import itertools
+
+n = 4  # small n to keep output short
+domain = list(range(n))
+
+total_X = 0
+count = 0
+
+print(f"Enumerating permutations of {domain} with n={n}")
+
+for f in itertools.permutations(domain):
+    indices = []
+    for i in range(n):
+        diff_next = f[i] - f[(i+1) % n]
+        diff_prev = f[i] - f[(i-1) % n]
+        if diff_next >= 2 or diff_prev >= 2:
+            indices.append(i)
+    X = len(indices)
+    total_X += X
+    count += 1
+
+    print(f"f={f}, indices with condition={indices}, X(f)={X}")
+
+avg = total_X / count
+print(f"Average X(f) over {count} permutations: {avg:.4f}")
+```
+
+This code gives direct data about the problem which can be used to make a conjecture or proof.

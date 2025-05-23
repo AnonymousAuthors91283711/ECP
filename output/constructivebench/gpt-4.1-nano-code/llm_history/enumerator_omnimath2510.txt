@@ -1,0 +1,166 @@
+[write_program]
+Given the problem statement, we're considering functions f: Fin 10 → Fin 10 satisfying the condition: for all i, j, if i.val + j.val + 2 = 11, then f i + f j = 11. Interpreting this, the key is to analyze the pairs of indices that satisfy the property, then determine how many such functions exist.
+
+Specifically, since i and j are Fin 10 (indices 0..9), the condition i.val + j.val + 2 = 11 simplifies to i.val + j.val = 9. So, for all pairs (i, j) with i + j = 9, f i + f j = 11. This imposes a symmetric constraint on pairs of indices where their indices sum to 9.
+
+Let's identify the pairs:
+
+- (0, 9)
+- (1, 8)
+- (2, 7)
+- (3, 6)
+- (4, 5)
+- (5, 4)
+- (6, 3)
+- (7, 2)
+- (8, 1)
+- (9, 0)
+
+Since (i, j) and (j, i) are both included, the key pairs are symmetric, and the constraints are:
+
+- For each pair (i, 9 - i), f i + f (9 - i) = 11.
+
+Because of symmetry, the constraints reduce to 5 unique pairs:
+
+(0, 9), (1, 8), (2, 7), (3, 6), (4, 5).
+
+Each pair imposes that their f-values sum to 11, i.e., f i + f (9 - i) = 11.
+
+Constraints:
+
+- For i in 0..4:
+
+  f i + f (9 - i) = 11.
+
+with 0 ≤ f i ≤ 9 (since the codomain is Fin 10).
+
+The remaining indices (6..9), beyond these pairs, are unrestricted other than the constraints from pairs.
+
+Constraints per pair:
+
+For each pair, both f i and f (9 - i) must be in [0..9], and their sum is 11, so possible value pairs:
+
+(0, 11), (1, 10), ..., (9, 2), (10, 1), (11, 0).
+
+But since f i, f j in [0..9], only pairs that sum to 11 within 0..9 are:
+
+f i + f j = 11, with 0 ≤ f i, f j ≤ 9:
+
+f i ∈ [0..9], f j = 11 - f i
+
+To be valid: 0 ≤ 11 - f i ≤ 9 → f i ≥ 2, and f i ≤ 9
+
+And f i ≤ 9, so f i ∈ [2..9], f j ∈ [2..9].
+
+Check:
+
+For example, f i = 2 → f j = 9
+
+f i=3→f j=8
+
+f i=4→f j=7
+
+f i=5→f j=6
+
+f i=6→f j=5
+
+f i=7→f j=4
+
+f i=8→f j=3
+
+f i=9→f j=2
+
+So, for each pair, possible (f i, f (9 - i)) are:
+
+(2, 9), (3, 8), (4, 7), (5, 6), (6, 5), (7, 4), (8, 3), (9, 2).
+
+Similarly, the values of f i and f (9 - i) must be chosen from these pairs, respecting the sum = 11 and the range constraints.
+
+Note that:
+
+- For each pair, f i and f (9 - i) are determined once one is chosen:
+
+f i ∈ [2..9]
+
+f (9 - i) = 11 - f i
+
+which is in [2..9], so f i ∈ [2..9].
+
+Now, for each pair i in 0..4, the possible choices of (f i, f (9 - i)) are exactly these 8 pairs:
+
+(2,9), (3,8), (4,7), (5,6), (6,5), (7,4), (8,3), (9,2).
+
+Thus, for each pair, we need to select one of these two values for f i, which automatically determines f (9 - i).
+
+Remaining indices (others aside from these pairs) are unconstrained and can take any value in [0..9].
+
+Variables:
+
+- For pairs i in 0..4:
+
+  f i and f (9 - i), with the above options.
+
+- For the rest (indices 0..9 excluding these pairs), f j can be any value in [0..9].
+
+To count all functions:
+
+- For each of the 5 pairs:
+
+  Number of choices per pair: 8 (since 8 pairs)
+
+Note: Because the pair options are symmetric around the sum = 11 constraint, and the only restriction is f i ∈ [2..9], each pair choice has 8 options.
+
+- For the other 10 - 10 = 0 indices outside pairs? No, total indices are 0..9 (10 elements). The 5 pairs cover all indices, because each pair consists of two indexes, total of 10 indices in 5 pairs.
+
+So, the entire function is determined by the choices on these 5 pairs with 8 options each.
+
+Total number of functions:
+
+= 8^5 = 32768.
+
+Because for each of the 5 pairs, there are 8 choices, and choices for different pairs are independent.
+
+---
+
+Now, let's implement a Python script to enumerate all such functions:
+
+- For each of the 5 pairs:
+
+  - Iterate over possible values for f i.
+
+  - f (9 - i) is then determined.
+
+- For each combination, assign remaining free values (here, none outside pairs, as all indices are in pairs).
+
+- For simplicity, since all indices are in these pairs, total functions are 8^5.
+
+The code will generate and count all functions satisfying the constraints.
+
+Let's output the total count and perhaps the first few functions as examples, streaming each.
+
+---
+
+```python
+# Enumerate all functions from Fin 10 to Fin 10 satisfying the pairwise sum-to-11 constraints.
+# For each of the 5 pairs, choose one of the 8 valid assignments.
+# The remaining indices are fully determined by these choices.
+
+import itertools
+
+# Define the pairs of indices with their possible (f i, f j) assignments
+pair_indices = [(0, 9), (1, 8), (2, 7), (3, 6), (4, 5)]
+value_options = [ [ (x, 11 - x) for x in range(2,10) ] for _ in range(5) ]  # 8 options per pair
+
+count = 0
+for choices in itertools.product(*value_options):
+    f = [0]*10
+    for idx, (val_i, val_j) in zip(pair_indices, choices):
+        i, j = idx
+        f[i]=val_i
+        f[j]=val_j
+    print(f"Function #{count+1}: {f}")
+    count +=1
+print(f"Total number of functions: {count}")
+```
+
+This script enumerates all 8^5=32768 functions that satisfy the constraints, displaying them immediately as they are generated, and finally prints the total count.

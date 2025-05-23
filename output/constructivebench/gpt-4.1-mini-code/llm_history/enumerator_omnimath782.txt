@@ -1,0 +1,105 @@
+[write_program]
+This describes a tiling problem on a 12x12 grid with sets P of special pentomino-like shapes. There are four distinct shape types, each covering 5 cells. The collection P tiles the grid exactly with these shapes, non-overlapping.
+
+We want to:
+- Enumerate candidate tilings P of the 12x12 grid using these shapes,
+- Count how many distinct P exist,
+- Conjecture omnimath782_answer = that count.
+
+Due to the complexity, I'll try smaller grids (like 4x4 or 6x6), print parameters and some sample coverings using these shapes, to observe patterns and count perfect coverings; this can hint at the answer for 12x12.
+
+We'll:
+- Define the 4 shape patterns as sets of relative (dx, dy) coords,
+- For chosen small grids, generate all valid placements,
+- Backtrack to find all tilings with these shapes,
+- Print tilings found (or counts) as we find them,
+- Print final count.
+
+We prioritize exact matches (no approximations). The program outputs streaming results.
+
+```python
+# Enumerate tilings of an n x n grid by 4 pentomino-shaped tiles defined by the problem.
+# Due to complexity, we choose small n like 4 or 6.
+# Print parameters and incremental counts.
+
+def main():
+    # Define the 4 tile shapes as lists of (dx,dy)
+    shapes = [
+        {(0,0),(1,0),(2,0),(0,1),(1,1)},  # shape A
+        {(0,0),(1,0),(0,1),(0,2),(1,2)},  # shape B
+        {(0,0),(1,0),(2,0),(1,1),(2,1)},  # shape C
+        {(0,0),(1,0),(1,1),(1,2),(2,2)},  # shape D
+    ]
+
+    # Choose grid sizes to test (smaller than 12 for feasibility)
+    grid_sizes = [4,6]
+
+    for n in grid_sizes:
+        print(f"Trying grid size n = {n} x {n}")
+        grid_points = {(x,y) for x in range(n) for y in range(n)}
+
+        # Generate all possible placements of each shape within the grid
+        placements = []
+        for shape_id, shape in enumerate(shapes):
+            dxs = [p[0] for p in shape]
+            dys = [p[1] for p in shape]
+            max_dx = max(dxs)
+            max_dy = max(dys)
+            for x in range(n - max_dx):
+                for y in range(n - max_dy):
+                    translated = {(x+dx, y+dy) for (dx,dy) in shape}
+                    placements.append((shape_id, translated))
+
+        print(f"Total placements for n={n}: {len(placements)}")
+
+        # Backtracking search for exact covers
+        # We must select a subset of placements, disjoint, covering all grid points.
+
+        # Build mapping from point to placements covering it
+        point_to_placements = {p: [] for p in grid_points}
+        for i,(sid,cells) in enumerate(placements):
+            for p in cells:
+                point_to_placements[p].append(i)
+
+        solution_count = 0
+        used = [False]*len(placements)
+
+        # Track which points are covered
+        covered = set()
+
+        # Order points to cover by how many placements cover them (heuristic)
+        points_order = sorted(grid_points, key=lambda p: len(point_to_placements[p]))
+
+        def backtrack(idx):
+            nonlocal solution_count
+            if idx == len(points_order):
+                # All points covered
+                solution_count += 1
+                print(f"Found solution #{solution_count}")
+                return
+            p = points_order[idx]
+            if p in covered:
+                backtrack(idx+1)
+                return
+            # Try all placements covering p & disjoint with chosen placements
+            for placement_idx in point_to_placements[p]:
+                if used[placement_idx]:
+                    continue
+                candidate_cells = placements[placement_idx][1]
+                if candidate_cells & covered:
+                    continue
+                # Choose placement
+                used[placement_idx] = True
+                covered.update(candidate_cells)
+                backtrack(idx+1)
+                # Undo
+                used[placement_idx] = False
+                covered.difference_update(candidate_cells)
+
+        backtrack(0)
+        print(f"Total tilings of {n}x{n} with given shapes = {solution_count}")
+        print()
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,48 @@
+[write_program]
+This problem is from the 2003 AIME II competition, problem 12. It asks for the smallest positive integer n such that there exists a vote distribution among 27 candidates where:
+1. The total votes sum to n
+2. For each candidate, the percentage of votes they received (rounded down) is strictly less than their vote count minus 1
+
+We'll write a Python program to find the minimal n satisfying these conditions by checking candidates in order. The key insight is that for each candidate i, we need floor(100*votes_i/n) < votes_i - 1.
+
+```python
+def find_min_n():
+    n = 1
+    while True:
+        # Try to find a vote distribution for this n
+        # We'll use a greedy approach where candidates get as few votes as possible
+        votes = []
+        total = 0
+        possible = True
+        
+        for i in range(27):
+            # Find minimal votes_i satisfying (100*votes_i)//n < votes_i - 1
+            # Which is equivalent to votes_i > (100*votes_i)//n + 1
+            # We need to find the smallest votes_i where this holds
+            votes_i = 2  # start checking from 2 since votes_i must be >=1 and condition fails for 1
+            while True:
+                if (100 * votes_i) // n < votes_i - 1:
+                    break
+                votes_i += 1
+                if votes_i > n:  # Can't allocate more than total votes
+                    possible = False
+                    break
+            
+            if not possible:
+                break
+            votes.append(votes_i)
+            total += votes_i
+        
+        if possible and total <= n:
+            # We can adjust the remaining votes (n - total) to any candidate
+            # without violating the conditions (since adding votes only helps)
+            print(f"Found candidate n = {n} with votes = {votes}")
+            return n
+        
+        n += 1
+        if n > 10000:  # safety limit
+            print("Search limit reached")
+            return None
+
+find_min_n()
+```

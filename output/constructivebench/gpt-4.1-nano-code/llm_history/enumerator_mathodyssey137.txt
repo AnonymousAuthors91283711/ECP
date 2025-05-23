@@ -1,0 +1,62 @@
+[write_program]
+The problem appears to involve finding the smallest `n` such that for any function `f : Fin n → Fin 17` with positive `f(i).val`, there exist `p`, `x`, and `y` with `x.val > y.val` and the inequality `118 * x.val ≤ 119 * y.val`, where `f x = p` and `f y = p`. This resembles a pigeonhole principle with a ratio condition, involving some kind of mononicity or crossing point guarantee.
+
+Given the structure, a typical approach is:
+- Try small values of `n`.
+- For each, check the condition for all functions `f`.
+- When the condition always holds, record that `n`.
+- Stop at the minimal such `n`.
+
+For demonstration, we'll check small values starting from 1 upwards, enumerate all functions with the given restrictions, and stop when the required property always holds. To prevent excessive combinatorial explosion, we limit `n` to a manageable size (like 20).
+
+Here's a Python program that performs a brute-force search over small `n`, enumerates all functions `f`, and tests whether the property holds:
+
+```python
+from itertools import product
+
+# For small n, functions are mappings from {0,...,n-1} to {1,...,17}
+# We are seeking the smallest n such that for all such functions with all f(i) > 0,
+# there exist x,y, p satisfying the given conditions.
+
+def check_property(n):
+    # Generate all functions f: [0, n-1] -> [1,..,17]
+    for f_vals in product(range(1, 18), repeat=n):
+        f = list(f_vals)
+        # For each function, check if the property holds for all pairs
+        # The property is: There exist x,y,p with:
+        # x > y, f x = p, f y = p, and 118 * x > 119 * y
+        # or, equivalently, there's a pair with the specified conditions
+        # since the problem states the property should always hold,
+        # we verify that for every function, such a pair exists.
+        pairs_found = False
+        for x in range(n):
+            for y in range(n):
+                if x != y and f[x] == f[y]:
+                    # Check the ratio condition: x > y and 118*x <= 119*y
+                    if x > y and 118 * (x+1) <= 119 * (y+1):
+                        pairs_found = True
+                        break
+            if pairs_found:
+                break
+        # If we find a function where the property does NOT hold, return False
+        if not pairs_found:
+            return False
+    return True
+
+n = 1
+while n <= 20:
+    if check_property(n):
+        print(f"Answer n = {n}")
+        break
+    n += 1
+else:
+    print("No answer found up to n=20")
+```
+
+This code:
+- Checks `n` from 1 to 20.
+- For each `n`, enumerates all functions `f`.
+- For each `f`, verifies that there exists `x, y, p` satisfying the conditions.
+- Stops when it finds the minimal such `n`.
+
+Adjust the upper limit as needed to improve accuracy or efficiency.

@@ -1,0 +1,51 @@
+[write_program]
+The problem asks for the least positive integer \(a\) such that there exists a polynomial \(P\) with integer coefficients satisfying \(P(1)=P(3)=P(5)=P(7)=a\) and \(P(2)=P(4)=P(6)=P(8)=-a\). To find this minimal \(a\), we can attempt small positive values and see if such a polynomial exists.
+
+Our approach:
+- Generate candidate \(a\) starting from 1 upwards.
+- For each \(a\), set up equations based on the evaluations and check if a polynomial \(P\) with suitable coefficients exists.
+- Since \(P\) is degree at most 7 (from the 8 points), we can interpolate directly and verify if the resulting polynomial satisfies the conditions.
+- Print each candidate \(a\) as soon as possible, stopping when the minimal is found.
+
+```python
+import numpy as np
+
+# Polynomial degree at most 7, so interpolate with points:
+# For each candidate 'a', evaluate if polynomial passing through
+# points (x, y) where x in {1,2,3,4,5,6,7,8} and y according to the pattern
+# satisfies the given values.
+
+def find_min_a(max_a=100):
+    # Generate points based on the pattern:
+    # a points: (1,a), (3,a), (5,a), (7,a)
+    # -a points: (2,-a), (4,-a), (6,-a), (8,-a)
+    x_points = np.array([1, 2, 3, 4, 5, 6, 7, 8], dtype=float)
+    for a in range(1, max_a + 1):
+        y_points = np.array([a, -a, a, -a, a, -a, a, -a], dtype=float)
+        # Interpolate polynomial passing through these points
+        coeffs = np.polyfit(x_points, y_points, 7)
+        # Check if coefficients are integers
+        if not np.allclose(coeffs, np.round(coeffs)):
+            continue
+        coeffs = np.round(coeffs).astype(int)
+        # Define polynomial function
+        def P(x):
+            res = 0
+            for c in coeffs:
+                res = res * x + c
+            return res
+        # Verify evaluation at points
+        valid = True
+        for xi, yi in zip(x_points, y_points):
+            if P(xi) != yi:
+                valid = False
+                break
+        if valid:
+            print(f"Found minimal a: {a}")
+            return a
+    print("No suitable a found up to max_a")
+    return None
+
+# Immediately run to find the minimal a and print it.
+find_min_a()
+```

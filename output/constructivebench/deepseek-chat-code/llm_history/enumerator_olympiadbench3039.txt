@@ -1,0 +1,66 @@
+[write_program]
+This problem asks for the number of integer quadruples (a, b, c, d) that satisfy three equations involving products of three variables at a time. We'll write a Python program to enumerate all possible solutions by:
+
+1. Analyzing the equations to find relationships between variables
+2. Using divisors of key values to limit the search space
+3. Checking all valid combinations systematically
+
+The approach involves:
+- Expressing variables in terms of others using the equations
+- Finding possible values for one variable (like c) that divide key constants
+- Calculating other variables based on these values
+- Verifying all equations hold for each candidate solution
+
+```python
+import math
+
+def get_divisors(n):
+    """Return all divisors of n, including negatives"""
+    if n == 0:
+        return []
+    abs_n = abs(n)
+    divisors = set()
+    for i in range(1, int(math.sqrt(abs_n)) + 1):
+        if abs_n % i == 0:
+            divisors.add(i)
+            divisors.add(-i)
+            divisors.add(abs_n // i)
+            divisors.add(-(abs_n // i))
+    return sorted(divisors)
+
+def count_solutions():
+    count = 0
+    # From equations: a*b*c=12000, b*c*d=24000, c*d*a=36000
+    # We can derive relationships:
+    # d = 2a (from first two equations)
+    # b = (3/2)a (from first and third equations)
+    # So solutions must satisfy b = (3/2)a and d = 2a
+    
+    # Since b must be integer, a must be even
+    # Let a = 2k, then b = 3k, d = 4k
+    # Substitute into first equation: 2k * 3k * c = 12000 => 6k²c = 12000 => c = 2000/(k²)
+    # c must be integer, so k² must divide 2000
+    
+    # Find all k where k² divides 2000
+    max_k = int(math.sqrt(2000)) + 1
+    for k in get_divisors(2000):
+        if k == 0:
+            continue
+        if 2000 % (k*k) != 0:
+            continue
+        a = 2 * k
+        b = 3 * k
+        c = 2000 // (k * k)
+        d = 4 * k
+        
+        # Verify all original equations
+        if (a * b * c == 12000 and 
+            b * c * d == 24000 and 
+            c * d * a == 36000):
+            count += 1
+            print(f"Solution found: a={a}, b={b}, c={c}, d={d}")
+    
+    print(f"Total number of solutions: {count}")
+
+count_solutions()
+```

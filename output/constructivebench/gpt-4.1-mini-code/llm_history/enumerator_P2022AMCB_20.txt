@@ -1,0 +1,123 @@
+[write_program]
+The problem looks for a polynomial \( P \in \mathbb{Q}[X] \) of degree less than 4 that satisfies congruences modulo \( X^2 + X + 1 \) and \( X^2 + 1 \), and also that the sum of squares of its coefficients equals some unique value. We want to enumerate all candidates \( P \) with degree \( < 4 \) that satisfy the modular equalities, computing the sum of squares of coefficients for each.
+
+Note: Working over rationals, we must solve linear congruences to find coefficients \( a_0, a_1, a_2, a_3 \) of \( P = a_0 + a_1 X + a_2 X^2 + a_3 X^3 \).
+
+We will:
+
+- Represent \( P = a_0 + a_1 X + a_2 X^2 + a_3 X^3 \) with rational coefficients, where denominator and numerator are small integers (to enumerate candidates).
+
+- Using the polynomial remainders specified:
+
+  1. \( P \equiv X + 2 \pmod{X^2 + X + 1} \)
+  
+  2. \( P \equiv 2X + 1 \pmod{X^2 + 1} \)
+  
+We write equations for coefficients mod each modulus and solve them over rationals.
+
+Because rational enumeration is infinite, we restrict to coefficients with small integer numerators and denominators (e.g., denominators ≤ 5 and numerators ≤ 10) and check which ones satisfy the conditions exactly.
+
+We'll output each \( P \) found, along with the sum of squares of coefficients (exact), then identify the unique sum.
+
+```python
+# Enumerate rational polynomials P = a0 + a1 X + a2 X^2 + a3 X^3 with denominators ≤ 5 and numerators ≤ 10,
+# find those satisfying P mod (X^2+X+1) = X+2 and P mod (X^2+1) = 2X+1,
+# compute sum of squares of coefficients, and print results.
+
+from fractions import Fraction
+
+# Polynomial modulus helpers
+
+def mod_x2_plus_x_plus_1(P):
+    # P degree <4: [a0,a1,a2,a3]
+    # mod X^2 + X + 1 reduces degrees ≥ 2
+    # Use relation: X^2 = -X -1
+    a0,a1,a2,a3 = P
+    # Replace X^2 by -X -1
+    # P = a0 + a1 X + a2 X^2 + a3 X^3
+    # = a0 + a1 X + a2(-X-1) + a3 X^3
+    # X^3 = X * X^2 = X*(-X -1) = -X^2 - X = -(-X -1) - X = X +1 - X = 1
+    # So X^3 reduces to 1
+    r0 = a0 - a2 + a3  # constant term
+    r1 = a1 - a2        # coefficient at X
+    return [r0, r1]     # degree < 2
+
+def mod_x2_plus_1(P):
+    # mod X^2 + 1 means X^2 = -1
+    a0,a1,a2,a3 = P
+    # X^2 = -1 => X^3 = X^2*X = -X
+    r0 = a0 - a2
+    r1 = a1 - a3
+    return [r0, r1]
+
+def approx_equal(frac1, frac2):
+    # Exact check for fractions
+    return frac1 == frac2
+
+def print_poly(P):
+    # Print polynomial nicely
+    terms = []
+    vars = ['','X','X^2','X^3']
+    for i,c in enumerate(P):
+        if c == 0:
+            continue
+        terms.append(f"({c})*{vars[i]}" if i>0 else f"({c})")
+    return ' + '.join(terms) if terms else '0'
+
+def sum_squares(P):
+    # sum of squares of coefficients (Fractions)
+    return sum(c*c for c in P)
+
+def frac_range(max_num=10, max_den=5):
+    # yield fractions with numerator from -max_num to max_num, denominator from 1 to max_den
+    for den in range(1, max_den+1):
+        for num in range(-max_num, max_num+1):
+            yield Fraction(num, den)
+
+def main():
+    # Target remainders modulo X^2 + X + 1 : [2 (const), 1 (X coefficient)]
+    target_mod1 = [Fraction(2), Fraction(1)]
+    # Target remainders modulo X^2 + 1 : [1 (const), 2 (X coefficient)]
+    target_mod2 = [Fraction(1), Fraction(2)]
+
+    found = []
+    print("Enumerating candidate polynomials P with rational coeffs (small integers)...")
+    for a0 in frac_range():
+        for a1 in frac_range():
+            for a2 in frac_range():
+                for a3 in frac_range():
+                    P = [a0,a1,a2,a3]
+                    # Check modular conditions
+                    r1 = mod_x2_plus_x_plus_1(P)
+                    if not (approx_equal(r1[0], target_mod1[0]) and approx_equal(r1[1], target_mod1[1])):
+                        continue
+                    r2 = mod_x2_plus_1(P)
+                    if not (approx_equal(r2[0], target_mod2[0]) and approx_equal(r2[1], target_mod2[1])):
+                        continue
+                    ssq = sum_squares(P)
+                    print(f"P = {print_poly(P)}, sum sq coeffs = {ssq}")
+                    found.append((P, ssq))
+                    if len(found) >= 5:
+                        # Limit output to avoid long prints
+                        print("...limit reached")
+                        break
+                if len(found) >= 5:
+                    break
+            if len(found) >= 5:
+                break
+        if len(found) >= 5:
+            break
+
+    if found:
+        # Find unique sum of squares if it exists
+        sums = set(ssq for _,ssq in found)
+        if len(sums) == 1:
+            print(f"Unique sum of squares found: {sums.pop()}")
+        else:
+            print(f"Multiple sum of squares found: {sums}")
+    else:
+        print("No polynomial found with given conditions and coefficient ranges.")
+
+if __name__ == "__main__":
+    main()
+```

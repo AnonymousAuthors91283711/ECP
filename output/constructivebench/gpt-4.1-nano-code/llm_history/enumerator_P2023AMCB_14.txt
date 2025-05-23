@@ -1,0 +1,54 @@
+[write_program]
+The problem involves finding all triplets `(r, s, t)` of integers such that a cubic polynomial with integer coefficients factors over the integers into linear factors with roots `(r, s, t)`, matching the polynomial with the constant term 6, and with the roots pairwise distinct. The goal is to enumerate all such triplets efficiently and find the number of such polynomials.
+
+The polynomial is:
+\[ X^3 + C p_1 \cdot X^2 + C p_2 \cdot X + C 6 \]
+
+Factoring over integers:
+\[ (X - r)(X - s)(X - t) \]
+which expands to:
+\[ X^3 - (r + s + t) X^2 + (r s + r t + s t) X - r s t \]
+
+Matching coefficients:
+- \( -(r + s + t) = p_1 \)
+- \( r s + r t + s t = p_2 \)
+- \( - r s t = 6 \)
+
+Since the roots are integers, the product root sum relationships give us bounds:
+
+- \( r s t = -6 \). Enumerate divisors of 6.
+- The roots \( r, s, t \) are integer divisors of 6 with sign considerations.
+
+To cover all root triplets, we generate divisors of 6, including negative divisors, and check whether they are pairwise distinct. We can then compute the coefficients accordingly.
+
+```python
+# Enumerate all triplets of integers whose product is -6, with roots pairwise distinct
+# For each such triplet, check if roots are pairwise distinct and collect the roots
+# Output the roots and corresponding p1, p2 for each valid triplet
+
+def divisors(n):
+    """Return positive divisors of n."""
+    divs = set()
+    for i in range(1, int(abs(n)**0.5) + 1):
+        if n % i == 0:
+            divs.add(i)
+            divs.add(-i)
+            divs.add(n // i)
+            divs.add(-n // i)
+    return divs
+
+roots_candidates = set()
+for r in range(-10, 11):
+    for s in range(-10, 11):
+        for t in range(-10, 11):
+            if r * s * t == -6:
+                if len({r, s, t}) == 3:  # pairwise distinct roots
+                    # store roots sorted for consistency
+                    roots_candidates.add(tuple(sorted([r, s, t])))
+
+for roots in roots_candidates:
+    r, s, t = roots
+    p1 = -(r + s + t)
+    p2 = r * s + r * t + s * t
+    print(f"Roots: {roots}, p1: {p1}, p2: {p2}")
+```

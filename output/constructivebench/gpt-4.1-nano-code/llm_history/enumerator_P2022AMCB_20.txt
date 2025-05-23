@@ -1,0 +1,83 @@
+[write_program]
+This problem involves finding a polynomial \( P \) over \( \mathbb{Q}[X] \) with degree less than 4 that satisfies certain modular conditions, and then computing the sum of the squares of its coefficients. The conditions involve polynomial remainders modulo two quadratic polynomials, which lead to a system of linear equations for the polynomial's coefficients.
+
+To tackle this with code:
+- I'll choose sample parameters where the coefficients are rational numbers.
+- Since the degree of \( P \) is less than 4, coefficients \( a_0, a_1, a_2, a_3 \) are free variables (some could be zero).
+- The modular conditions translate into linear equations involving these coefficients.
+- I'll enumerate possible rational coefficients within small bounds for simplicity.
+- For each candidate polynomial, check the conditions and if satisfied, compute the sum of squares of the coefficients.
+
+Here's an efficient approach:
+- Fix small bounds for coefficients.
+- Generate candidate coefficient vectors.
+- Check the modular conditions.
+- When satisfied, compute and print the sum.
+
+The code will systematically generate and test solutions.
+
+```python
+import itertools
+
+# Define polynomial degree less than 4, i.e., degree <=3
+# Coefficients a0, a1, a2, a3 with small rational bounds
+coefficient_bounds = range(-5, 6)  # small integer bounds for simplicity
+
+solutions_found = []
+
+for a0, a1, a2, a3 in itertools.product(coefficient_bounds, repeat=4):
+    # Construct P as a polynomial: a3*X^3 + a2*X^2 + a1*X + a0
+    # Since we're working mod linear polynomials, check the conditions directly.
+    # Modular conditions:
+    # P ≡ X + 2 mod (X^2 + X + 1)
+    # P ≡ 2X + 1 mod (X^2 + 1)
+    #
+    # Since mod (X^2 + X + 1), the remainder is degree < 2
+    # Remainder of P mod (X^2 + X + 1):
+    def rem_mod_X2_Xplus1(coeffs):
+        # Polynomial division remainder mod X^2 + X + 1
+        a3, a2, a1, a0 = coeffs
+        # Polynomial: a3 X^3 + a2 X^2 + a1 X + a0
+        # Reduce degree 3:
+        # X^3 = -X^2 - X (mod X^2 + X + 1)
+        # so, X^3 ≡ -X^2 - X
+        # Replace:
+        rem_a2, rem_a1, rem_a0 = a2, a1, a0
+        rem_a2 = a2 + a3 * 1  # because X^3 term replaced this way
+        rem_a1 = a1 + a3 * 0  # after reduction, no change, but need to confirm
+        rem_a0 = a0
+        # Actually, systematically:
+        # Polynomial division is complex, but since degree < 4, can simulate.
+        # Alternatively, directly evaluate polynomial at basis modulo
+        # but easier to rely on sympy or manual calculation.
+        # For simplicity, directly evaluate remainder:
+        # Since we're in code, do polynomial division:
+        # Let's implement a helper:
+        pass
+
+# To avoid complexity, verify the modular conditions directly using symbolic polynomial manipulation.
+# Since the problem is small scale, we can use sympy for polynomial operations.
+
+import sympy as sp
+X = sp.symbols('X')
+for a0, a1, a2, a3 in itertools.product(coefficient_bounds, repeat=4):
+    P = a3*X**3 + a2*X**2 + a1*X + a0
+    # Remainder mod X^2 + X + 1
+    r1 = sp.rem(P, X**2 + X + 1, X)
+    # Check if r1 equals X + 2
+    if not sp.simplify(r1 - (X + 2)) == 0:
+        continue
+    # Remainder mod X^2 + 1
+    r2 = sp.rem(P, X**2 + 1, X)
+    # Check if r2 equals 2X + 1
+    if not sp.simplify(r2 - (2*X + 1)) == 0:
+        continue
+    # If both conditions hold, compute sum of squares of coefficients
+    coeffs = [a0, a1, a2, a3]
+    sum_squares = sum(c**2 for c in coeffs)
+    # Print the polynomial and sum
+    print(f'P = {a3}*X^3 + {a2}*X^2 + {a1}*X + {a0}, sum of squares = {sum_squares}')
+    # Since the problem asks for enumeration, do not break; find all solutions
+```
+
+This code systematically tests small rational coefficient polynomials, checks the modular conditions using symbolic algebra, and outputs each solution immediately, aiding in conjecture and proof for the problem's unique polynomial.

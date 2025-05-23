@@ -1,0 +1,91 @@
+[write_program]
+The provided Lean code snippet describes a complex state transformation system involving two types of operations applied to a state function over a finite domain. To explore this, I'll write a Python program to simulate the system for small operation lists and small initial values, enumerating sequences of operations and printing the resulting states. This may help in conjecturing properties or counterexamples related to the theorem.
+
+The Python program below:
+- Uses small parameters: domain size 6, initial counts of 1 per index, and a small number of operations.
+- Enumerates operation sequences up to a small length.
+- Prints each resulting state after applying the operation sequence.
+- Uses symbolic states without exponential initialization to keep enumeration feasible.
+- Prioritizes exact state counts (integers).
+- Streams results as soon as they're computed.
+
+```python
+# Enumerate possible states obtained by applying operations on initial state
+
+from itertools import product
+
+# Domain indices 0..6 (7 total) for convenience
+DOMAIN_SIZE = 7
+
+# Initial state: counts 1 for indices < 6, else 0
+def initial_state():
+    return [1 if i < 6 else 0 for i in range(DOMAIN_SIZE)]
+
+# Operations:
+# Sum.inl j, j in Fin 5 => j in [0..4]
+# operation type 0 with parameter j in [0..4]
+
+# Sum.inr k, k in Fin 4 => k in [0..3]
+# operation type 1 with parameter k in [0..3]
+
+# We encode operations as tuples: (op_type, index)
+# op_type: 0 for Sum.inl, 1 for Sum.inr
+
+# Define apply operation to state
+def apply_op(state, op):
+    s = state.copy()
+    op_type, idx = op
+    if op_type == 0:
+        # Sum.inl j
+        if s[idx] > 0:
+            s[idx] -= 1
+            s[idx + 1] += 2
+    else:
+        # Sum.inr k
+        if s[idx] > 0:
+            s[idx] -= 1
+            temp = s[idx + 1]
+            s[idx + 1] = s[idx + 2]
+            s[idx + 2] = temp
+    return s
+
+# Enumerate all operation sequences up to length max_len
+# For tractability, max_len=3
+max_len = 3
+
+# All possible operations
+ops = []
+for j in range(5):
+    ops.append((0, j))
+for k in range(4):
+    ops.append((1, k))
+
+# Print parameter info
+print(f"Domain size: {DOMAIN_SIZE}, Max op length: {max_len}")
+print(f"Initial state: {initial_state()}")
+
+from collections import deque
+
+# BFS to avoid duplicates: store visited states with minimal op sequences
+visited = {}
+queue = deque()
+
+init = tuple(initial_state())
+queue.append( (init, []) )
+visited[init] = []
+
+while queue:
+    state, seq = queue.popleft()
+    # Print current state and op sequence
+    print(f"Ops: {seq} -> State: {state}")
+
+    if len(seq) == max_len:
+        continue
+
+    for op in ops:
+        new_state = tuple(apply_op(state, op))
+        if new_state not in visited:
+            visited[new_state] = seq + [op]
+            queue.append( (new_state, seq + [op]) )
+```
+

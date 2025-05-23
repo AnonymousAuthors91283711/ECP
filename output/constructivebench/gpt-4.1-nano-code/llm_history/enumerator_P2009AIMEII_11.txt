@@ -1,0 +1,91 @@
+[write_program]
+Let's analyze the problem carefully:
+
+Given `m, n` with `m ≥ n > 0`, we look at the set \( A = \{ k \in \mathbb{N} \mid 0 < k \text{ and } |\log m - \log k| < \log n \} \). The conditions are:
+
+- \( A \) is finite.
+- The number of elements in \( A \) is exactly 50.
+- \( s = m \times n \).
+
+Our goal: Find the greatest possible \( s \).
+
+Since the set involves logarithms, the condition \( |\log m - \log k| < \log n \) can be rewritten as:
+
+\[
+-\log n < \log m - \log k < \log n,
+\]
+which implies
+
+\[
+\log m - \log n < \log k < \log m + \log n.
+\]
+
+Exponentiating:
+
+\[
+e^{\log m - \log n} = \frac{m}{n} < k < m \times n.
+\]
+
+But note that \( |\log m - \log k| < \log n \) is equivalent to:
+
+\[
+e^{-\log n} < \frac{k}{m} < e^{\log n},
+\]
+
+which simplifies to:
+
+\[
+\frac{m}{n} < k < m n.
+\]
+
+Rearranged, the possible \( k \) are integers strictly between \( m / n \) and \( m n \). But since \( k \) must be positive, and the inequalities are strict:
+
+\[
+k \in (\frac{m}{n}, m n),
+\]
+and \( k \in \mathbb{N} \).
+
+We also need the set of such \( k \) to have exactly 50 elements.
+
+---
+
+### Approach:
+
+- For fixed \( m, n \),
+- Determine the integers strictly between \( m/n \) and \( m n \).
+- Count those integers; if exactly 50, compute \( s = m n \) and keep track of the maximum.
+
+---
+
+### Implementation plan:
+
+- Fix small \( n \), from 1 to 20 (arbitrary small range).
+- For each \( n \), vary \( m \) starting from \( n \) (since \( m \geq n \)), increasing until the count of relevant \( k \) exceeds 50.
+- Count integers \( k \) with \( \lfloor m / n \rfloor + 1 \leq k \leq \lfloor m n \rfloor \), ensuring the count is 50.
+- Record the maximum \( s = m n \).
+
+This approach is efficient enough for such small ranges.
+
+---
+
+```python
+# Enumerate small values of n and m to find where exactly 50 integers k satisfy
+# (m/n < k < m n), i.e., count of integers between m/n and m n.
+
+max_s = 0  # track maximum s = m * n
+for n in range(1, 21):  # small n
+    for m in range(n, 50):  # start from m >= n, up to some upper limit
+        lower_bound = m / n
+        upper_bound = m * n
+        # Count integers strictly between lower_bound and upper_bound
+        low_int = int(lower_bound) + 1 if lower_bound != int(lower_bound) else int(lower_bound) + 1
+        high_int = int(upper_bound)  # because strictly less than m n, so largest k < m n
+        count = max(0, high_int - low_int)
+        if count == 50:
+            s = m * n
+            print(f"Found candidate: m={m}, n={n}, s={s}")
+            if s > max_s:
+                max_s = s
+
+print(f"Maximum s with exactly 50 such k: {max_s}")
+```

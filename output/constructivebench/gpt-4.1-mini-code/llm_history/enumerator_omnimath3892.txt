@@ -1,0 +1,69 @@
+[write_program]
+The problem asks to characterize the solution set of the equation \((x - a)(x - b) = (x - c)(x - d)\) under the constraints \(a + d = 2015\), \(b + c = 2015\), and \(a \neq c\). Reformulating and analyzing the equation for various sample parameter values can help guess the form of the solutions.
+
+The Python program enumerates sample values \(a, b, c, d\) that satisfy the two sum conditions, then finds roots of the equation \((x-a)(x-b) - (x-c)(x-d) = 0\), printing them exactly (if rational), as decimals otherwise. This enumeration aids in conjecturing the possible values of \(x\).
+
+```python
+from fractions import Fraction
+from math import isclose
+
+def try_fraction(x):
+    # Try to represent x as a fraction with small denominator for exactness
+    for denom in range(1, 21):
+        numer = round(x * denom)
+        if isclose(x, numer / denom, rel_tol=1e-9):
+            return Fraction(numer, denom)
+    return None
+
+print("Enumerating solutions for (x - a)(x - b) = (x - c)(x - d) with")
+print("a + d = 2015, b + c = 2015, a != c")
+
+S = 2015
+
+# Select small integer samples for a and c (to cover cases), then determine d and b
+for a in range(2010, 2016):
+    for c in range(2010, 2016):
+        if a == c:
+            continue
+        d = S - a
+        b = S - c
+        # Compute coefficients of quadratic: (x-a)(x-b) - (x-c)(x-d)=0
+        # which expands to: x^2 - (a+b)x + ab - [x^2 - (c+d)x + cd] = 0
+        # => (-a - b + c + d) x + (ab - cd) = 0
+        # Note x^2 terms cancel.
+        A = 0
+        B = -a - b + c + d
+        C = a*b - c*d
+        print(f"\na={a}, b={b}, c={c}, d={d}")
+        print(f"Equation reduces to: {B}*x + {C} = 0")
+        if B == 0:
+            if C == 0:
+                print("All x satisfy the equation (degenerate case).")
+            else:
+                print("No solution (inconsistent).")
+            continue
+        x = -C / B
+        fr = try_fraction(x)
+        if fr is not None:
+            print(f"Root: x = {fr} (exact fraction)")
+        else:
+            print(f"Root: x ≈ {x:.6f}")
+
+# Additional test for real numbers not integers (fractional)
+# pick a=2013.5, c=2011.5
+a, c = 2013.5, 2011.5
+d = S - a
+b = S - c
+B = -a - b + c + d
+C = a*b - c*d
+print(f"\nSample non-integer a, c: a={a}, b={b}, c={c}, d={d}")
+print(f"Equation reduces to: {B}*x + {C} = 0")
+if B == 0:
+    if C == 0:
+        print("All x satisfy the equation (degenerate case).")
+    else:
+        print("No solution (inconsistent).")
+else:
+    x = -C / B
+    print(f"Root: x ≈ {x:.6f}")
+```

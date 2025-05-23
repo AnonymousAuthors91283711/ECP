@@ -1,0 +1,66 @@
+[write_program]
+We want to find all real functions \(f:\mathbb{R}\to \mathbb{R}\) such that for all real \(x,y\):
+
+\[
+f(f(x)-y) \cdot f(x+f(y)) = x^2 - y^2.
+\]
+
+The problem is challenging algebraically; so, to assist, we will enumerate candidate functions from simple families (e.g., linear, affine, odd, even) and test the functional equation on a grid of sample values.
+
+This program will:
+
+- Test linear functions \(f(x)=ax+b\) for small integer \(a,b\).
+- Print candidates that satisfy the relation for a small set of sample inputs \((x,y)\).
+- Print the parameters and function expression when a candidate is found.
+
+The testing points are small integers to keep computations manageable and cover some variety.
+
+```python
+import math
+
+def test_func(f, samples):
+    # Test all (x,y) in samples whether f satisfies f(f(x)-y)*f(x+f(y)) == x**2 - y**2 (within tolerance)
+    tol = 1e-8
+    for x in samples:
+        for y in samples:
+            lhs = f(f(x) - y)*f(x + f(y))
+            rhs = x**2 - y**2
+            if abs(lhs - rhs) > tol:
+                return False
+    return True
+
+def linear_candidates():
+    # Try small integers for a,b in f(x)=a*x + b
+    for a in range(-3,4):
+        for b in range(-3,4):
+            # Skip zero function to avoid trivial
+            if a==0 and b==0:
+                continue
+            def f(x, a=a, b=b):
+                return a*x + b
+            # Sample points
+            samples = [-2,-1,0,1,2]
+            if test_func(f, samples):
+                print(f"Candidate linear f(x) = {a}*x + {b}")
+
+def try_parity():
+    # Try odd functions: f(-x) = -f(x)
+    # For f(x) = a*x (odd and linear), test
+    for a in range(-3,4):
+        if a == 0:
+            continue
+        def f(x, a=a):
+            return a*x
+        samples = [-2,-1,0,1,2]
+        if test_func(f, samples):
+            print(f"Candidate odd linear f(x) = {a}*x")
+
+def main():
+    linear_candidates()
+    try_parity()
+
+if __name__ == "__main__":
+    main()
+```
+
+This will print candidate linear functions that satisfy the equation on the tested sample points. This may guide conjectures about the solution set.

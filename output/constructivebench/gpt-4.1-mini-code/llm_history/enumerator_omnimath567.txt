@@ -1,0 +1,114 @@
+[write_program]
+The problem seems to ask for the greatest size \( k \) of a set of pairs \((i, j)\) with \(i, j \leq n\) such that there exists a *unique* injective function \( f: [0..n] \to \mathbb{N} \) with \(f(i)\) matching the second element in pairs for each \(i\).
+
+In other words, among subsets of \(\{0, \ldots, n\} \times \{0, \ldots, n\}\), we want the largest cardinality \(k\) of sets \(S\) with exactly one injective function \(f\) such that for all \(i\), \( (i, f(i)) \in S \).
+
+We will enumerate small \(n\), construct candidate subsets, count injective functions satisfying the constraints, and check uniqueness.
+
+Because full search is exponential in \(k\), we approach by enumerating functions \(f\), then constructing the subset \(S = \{(i, f(i)) \mid i \leq n\}\) and trying to add pairs without adding alternative injective functions.
+
+We will:
+
+- For \(n=1,2,3\), enumerate all injective functions from \([0..n]\) to \([0..n]\).
+- For each \(f\), produce the minimal \(S = \{(i,f(i))\}\).
+- Try to add pairs to \(S\) that do NOT create new injective functions.
+- Output the size \(k=|S|\) and \(S\).
+
+Finally, identify the maximum \(k\) found per \(n\).
+
+This will help conjecture 'omnimath567_answer'.
+
+```python
+# Enumerate and print candidate maximum subset sizes k for small n with uniqueness of injective f.
+
+from itertools import permutations, combinations
+from collections import defaultdict
+
+def injective_functions(n):
+    # injective from [0..n] to [0..n], that is permutations of length n+1
+    domain = list(range(n+1))
+    codomain = list(range(n+1))
+    for image in permutations(codomain, n+1):
+        yield dict(zip(domain, image))
+
+def get_all_pairs(n):
+    for i in range(n+1):
+        for j in range(n+1):
+            yield (i,j)
+
+def has_unique_injective_function(S, n):
+    # Check if there is exactly one injective f: [0..n]->[0..n] with (i,f(i)) in S for all i<=n
+    count = 0
+    for f in injective_functions(n):
+        # Check if all (i,f(i)) in S
+        if all((i,f[i]) in S for i in range(n+1)):
+            count +=1
+            if count > 1:
+                return False
+    return count == 1
+
+def run():
+    max_k_by_n = dict()
+    for n in range(1,4):  # small samples
+    
+        codomain = list(range(n+1))
+        all_pairs = set((i,j) for i in range(n+1) for j in range(n+1))
+        best_k = 0
+        best_sets = []
+        
+        funcs = list(injective_functions(n))
+        print(f"n={n}: total injective functions = {len(funcs)}")
+        
+        # Try each function f, start with minimal S = {(i,f(i))} size n+1
+        for f in funcs:
+            base_S = set((i,f[i]) for i in range(n+1))
+            # Candidates to add: all pairs except those already in base_S
+            candidates = list(all_pairs - base_S)
+            # Enumerate adding subsets of candidates to base_S 
+            # that keep uniqueness of the injective function f
+            # To limit output size, try adding combinations of size up to 2
+            # for efficiency
+            
+            # First try no additions
+            if has_unique_injective_function(base_S, n):
+                k = len(base_S)
+                if k > best_k:
+                    best_k = k
+                    best_sets = [base_S]
+                elif k == best_k:
+                    best_sets.append(base_S)
+                
+                print(f"f={f} S size={k} unique func check passed")
+                
+            # Try adding 1 extra pair
+            for c1 in candidates:
+                S1 = base_S | {c1}
+                if has_unique_injective_function(S1, n):
+                    k = len(S1)
+                    if k > best_k:
+                        best_k = k
+                        best_sets = [S1]
+                    elif k == best_k:
+                        best_sets.append(S1)
+                    print(f"f={f} S size={k} unique func check passed with +{c1}")
+                    
+            # Try adding 2 extra pairs (only if small n)
+            if n <=2:
+                for c1,c2 in combinations(candidates,2):
+                    S2 = base_S | {c1,c2}
+                    if has_unique_injective_function(S2, n):
+                        k = len(S2)
+                        if k > best_k:
+                            best_k = k
+                            best_sets = [S2]
+                        elif k == best_k:
+                            best_sets.append(S2)
+                        print(f"f={f} S size={k} unique func check passed with +{c1},+{c2}")
+            
+        print(f"n={n} best maximum k={best_k}")
+        for s in best_sets[:3]:  # limit number output
+            print(f"max set (size {len(s)}): {sorted(s)}")
+
+if __name__ == "__main__":
+    run()
+```

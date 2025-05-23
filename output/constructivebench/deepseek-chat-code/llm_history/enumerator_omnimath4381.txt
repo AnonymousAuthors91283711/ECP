@@ -1,0 +1,61 @@
+[write_program]
+This problem involves finding all triples (a, b, c) of rational numbers where a > b > c, such that for all integers n, the sum f(n*a) + f(n*b) + f(n*c) = n, where f is a rounding function with special behavior at half-integers.
+
+We'll write a Python program to enumerate possible rational triples (a, b, c) with small denominators that satisfy the condition for small integer values of n. The program will test the condition for n from -5 to 5 to filter candidates.
+
+```python
+from fractions import Fraction
+
+def f(r):
+    """The special rounding function defined in the problem"""
+    integer_part = int(r)
+    fractional_part = r - integer_part
+    if fractional_part < 0.5:
+        return integer_part
+    elif fractional_part > 0.5:
+        return integer_part + 1
+    else:
+        # Exactly 0.5 - problem says return floor(r) in this case
+        return integer_part
+
+def test_triple(a, b, c, max_n=5):
+    """Test if the triple satisfies the condition for n from -max_n to max_n"""
+    for n in range(-max_n, max_n + 1):
+        if n == 0:
+            continue  # condition is trivially true for n=0
+        na = n * a
+        nb = n * b
+        nc = n * c
+        if f(na) + f(nb) + f(nc) != n:
+            return False
+    return True
+
+def enumerate_triples(max_denominator=4):
+    """Enumerate possible triples with denominators up to max_denominator"""
+    seen = set()
+    # Generate all possible rationals with denominator up to max_denominator
+    rationals = []
+    for den in range(1, max_denominator + 1):
+        for num in range(-2*den, 2*den + 1):
+            f = Fraction(num, den)
+            if f not in rationals:
+                rationals.append(f)
+    
+    # Check all ordered triples
+    for a in rationals:
+        for b in rationals:
+            if b >= a:
+                continue
+            for c in rationals:
+                if c >= b:
+                    continue
+                if test_triple(float(a), float(b), float(c)):
+                    triple = (a, b, c)
+                    if triple not in seen:
+                        seen.add(triple)
+                        print(triple)
+
+if __name__ == "__main__":
+    print("Searching for valid triples (a, b, c) with small denominators...")
+    enumerate_triples()
+```

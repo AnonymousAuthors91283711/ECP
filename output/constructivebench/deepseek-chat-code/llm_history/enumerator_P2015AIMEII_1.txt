@@ -1,0 +1,54 @@
+[write_program]
+The problem is to find the smallest positive integer N such that:
+1. N = floor(0.78k) for some integer k>0, and 0.78k is integer
+2. N = floor(0.116m) for some integer m>0, and 0.116m is integer
+3. N ≡ 131 mod 1000
+
+We'll write a Python program to find the smallest N satisfying these conditions by:
+1. Iterating through possible N values
+2. For each N, checking if there exist k and m satisfying the conditions
+3. Outputting candidates that meet all requirements
+
+```python
+def find_min_N():
+    # We'll search N values ≡131 mod 1000 up to a reasonable limit
+    max_N = 100000  # Arbitrary large enough limit
+    for N in range(131, max_N, 1000):
+        # Check first condition: N = floor(0.78k) and 0.78k is integer
+        # So 0.78k must be in [N, N+1), and divisible by 1
+        # => k must be multiple of 50 (since 78/100 = 39/50)
+        # Minimum k is ceil(N/0.78)
+        min_k = (N * 50 + 38) // 39  # ceil(N/(39/50)) = ceil(50N/39)
+        found_k = False
+        # Check nearby k values (since floating point might cause off-by-one)
+        for delta in [-2, -1, 0, 1, 2]:
+            k_candidate = min_k + delta
+            if k_candidate <= 0:
+                continue
+            if (78 * k_candidate) % 100 == 0 and N == (78 * k_candidate) // 100:
+                found_k = True
+                break
+        
+        if not found_k:
+            continue
+        
+        # Check second condition: N = floor(0.116m) and 0.116m is integer
+        # 116/100 = 29/25, so m must be multiple of 25
+        min_m = (N * 25 + 24) // 29  # ceil(N/(29/25)) = ceil(25N/29)
+        found_m = False
+        for delta in [-2, -1, 0, 1, 2]:
+            m_candidate = min_m + delta
+            if m_candidate <= 0:
+                continue
+            if (116 * m_candidate) % 100 == 0 and N == (116 * m_candidate) // 100:
+                found_m = True
+                break
+        
+        if found_m:
+            print(f"Found candidate: N = {N}")
+            return  # Return after first found since we want minimal N
+    
+    print("No solution found in search range")
+
+find_min_N()
+```

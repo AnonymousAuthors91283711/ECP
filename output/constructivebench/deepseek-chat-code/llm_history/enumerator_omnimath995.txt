@@ -1,0 +1,58 @@
+[write_program]
+This problem involves finding primes p where the number of solutions (x,y) modulo p to the congruence y² ≡ x³ + 4x (mod p) is exactly p. We'll write a Python program to enumerate small primes and count the solutions to this equation.
+
+The approach:
+1. Generate primes up to a reasonable limit (we'll use 100)
+2. For each prime, count all pairs (x,y) in F_p × F_p that satisfy y² ≡ x³ + 4x mod p
+3. Output primes where the count equals p
+
+```python
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def count_solutions(p):
+    count = 0
+    for x in range(p):
+        rhs = (x**3 + 4*x) % p
+        # Count y such that y² ≡ rhs mod p
+        if rhs == 0:
+            count += 1  # y=0
+        else:
+            # Use Euler's criterion to check if rhs is quadratic residue
+            legendre = pow(rhs, (p-1)//2, p)
+            if legendre == 1:
+                count += 2  # two solutions
+            elif legendre == p-1:
+                count += 0   # no solutions
+    return count
+
+max_p = 100
+print(f"Searching primes up to {max_p} where #solutions = p")
+for p in range(2, max_p + 1):
+    if is_prime(p):
+        sol_count = count_solutions(p)
+        if sol_count == p:
+            print(f"Found p = {p} with {sol_count} solutions")
+```

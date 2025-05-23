@@ -1,0 +1,45 @@
+[write_program]
+This problem asks for the smallest positive integer k such that there exists a function f from integers to subsets of {1,...,k} where any two integers differing by 5, 7, or 12 must be assigned different subsets. We'll write a program to find the minimal k by testing possible values incrementally.
+
+The approach:
+1. For each candidate k starting from 1 upwards
+2. Check if a valid coloring exists by modeling this as a graph coloring problem where nodes are integers and edges connect numbers differing by 5, 7, or 12
+3. Since the graph is infinite, we'll check a finite window that captures the essential constraints
+4. For each k, we'll try to assign colors (subsets) to integers in a way that satisfies the condition
+
+```python
+def main():
+    from itertools import product
+
+    max_k_to_test = 7  # We'll test up to k=7 since the answer is expected to be small
+    window_size = 24    # Large enough to capture dependencies from differences 5,7,12
+
+    for k in range(1, max_k_to_test + 1):
+        # Generate all possible colorings for the window
+        # Each position can be any subset of {1,...,k}, represented as a bitmask
+        num_colors = 1 << k
+        for coloring in product(range(num_colors), repeat=window_size):
+            valid = True
+            # Check all pairs in the window with required differences
+            for i in range(window_size):
+                for delta in [5, 7, 12]:
+                    j = i + delta
+                    if j >= window_size:
+                        continue
+                    if coloring[i] == coloring[j]:
+                        valid = False
+                        break
+                if not valid:
+                    break
+            if valid:
+                print(f"Found valid coloring for k={k}")
+                print(f"Minimal k is {k}")
+                return
+
+        print(f"No valid coloring found for k={k}")
+
+    print("Tested up to k={max_k_to_test} without finding solution")
+
+if __name__ == "__main__":
+    main()
+```

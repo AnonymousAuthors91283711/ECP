@@ -1,0 +1,64 @@
+[write_program]
+This problem involves finding triples of bases \(a, b, c \geq 2\) such that a certain 6-digit number in base \(a\) equals 2017, and by removing one digit at a time to form shorter digit lists, the resulting numbers in bases \(b\) and \(c\) also equal 2017. Then sum \(a+b+c\) is considered.
+
+We will:
+- Enumerate bases \(a, b, c\) from 2 up to a small max (e.g., 20).
+- Fix the digits [1,3,3,2,0,1].
+- For each \(a\), compute the base-\(a\) number from these digits, check if it's 2017.
+- Then remove one digit from the list to get 5 digits, for each \(b\), check if the base-\(b\) number equals 2017.
+- Then remove one digit from this 5-digit list to get 4 digits, and for each \(c\) verify if base-\(c\) number equals 2017.
+- Collect valid triples, print them immediately.
+- Finally output the minimal sum \(a+b+c\).
+
+This brute-force approach should be efficient over small bases and digits.
+
+```python
+# Enumerate triples (a,b,c) with a,b,c >=2 and up to 20,
+# digits = [1,3,3,2,0,1] interpreted in base a equals 2017
+# Then by removing one digit at a time:
+# digits' from removing one digit from digits, base b -> 2017
+# digits'' from removing one digit from digits', base c ->2017
+# Output each found triple and sum a+b+c, then minimal sum at end.
+
+digits = [1,3,3,2,0,1]
+from itertools import combinations
+
+def to_num(base, ds):
+    val = 0
+    for d in ds:
+        if d >= base:
+            return -1
+        val = val*base + d
+    return val
+
+def erase_idx(lst, idx):
+    return lst[:idx]+lst[idx+1:]
+
+max_base = 20
+found = []
+min_sum = None
+
+for a in range(2, max_base+1):
+    if to_num(a,digits) != 2017:
+        continue
+    # remove one digit for b
+    for i in range(len(digits)):
+        digits_b = erase_idx(digits,i)
+        for b in range(2, max_base+1):
+            if to_num(b,digits_b) != 2017:
+                continue
+            # remove one digit for c
+            for j in range(len(digits_b)):
+                digits_c = erase_idx(digits_b,j)
+                for c in range(2, max_base+1):
+                    if to_num(c,digits_c) == 2017:
+                        total = a+b+c
+                        print(f"a={a}, b={b}, c={c}, sum={total}")
+                        found.append(total)
+                        if min_sum is None or total < min_sum:
+                            min_sum = total
+if found:
+    print(f"Minimal sum a+b+c = {min_sum}")
+else:
+    print("No solution found with bases up to", max_base)
+```

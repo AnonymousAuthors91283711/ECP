@@ -1,0 +1,63 @@
+[write_program]
+The problem is about finding the minimal size \( k \) of a subset \( B \subseteq X \) such that \( B \cup f(B) = X \), where \( X \) is a finite set of size 100, and \( f: X \to X \) has no fixed points and satisfies that every 40-element subset \( A \) intersects its image \( f(A) \).
+
+I will enumerate candidates for \( k \) for small sample sets with \( |X| = 6 \) instead of 100 to observe behavior. I will randomly generate some \( f \) with no fixed points, and verify the intersection condition for subsets of size 3 (half of 6, approximating 40 for 100). Then, I will try to find minimal \( k \) such that there is a \( B \subseteq X \) with \( |B| = k \) and \( B \cup f(B) = X \).
+
+This will help conjecture the minimal \( k \), although it won't solve the problem for real size 100, but offers computational experimentation.
+
+```python
+import itertools
+import random
+
+def is_valid_f(X, f):
+    # Condition: no fixed points
+    if any(f[x] == x for x in X):
+        return False
+    # For all subsets A with size 3 (approximate 40/100 of size 6),
+    # A and f(A) intersect
+    for A in itertools.combinations(X, 3):
+        A_set = set(A)
+        fA_set = set(f[x] for x in A)
+        if A_set.isdisjoint(fA_set):
+            return False
+    return True
+
+def find_min_k(X, f):
+    n = len(X)
+    for k in range(1, n+1):
+        # check all subsets B of size k
+        for B in itertools.combinations(X, k):
+            B_set = set(B)
+            fB_set = set(f[x] for x in B)
+            if B_set.union(fB_set) == set(X):
+                print(f'Candidate k = {k}, B = {B}')
+                return k
+    return None
+
+def main():
+    n = 6
+    X = list(range(n))
+    trials = 0
+    found = 0
+    while found < 3 and trials < 50:
+        trials += 1
+        # create random f with no fixed points: permute X with no fixed points (derangement)
+        perm = list(X)
+        random.shuffle(perm)
+        # fix to a derangement if needed
+        for i in range(n):
+            if perm[i] == X[i]:
+                # swap with some other index
+                swap_idx = (i+1)%n
+                perm[i], perm[swap_idx] = perm[swap_idx], perm[i]
+        f = {X[i]: perm[i] for i in range(n)}
+        if is_valid_f(X, f):
+            print(f'Found valid f: {f}')
+            k = find_min_k(X, f)
+            if k is not None:
+                print(f'Minimal k: {k}\n')
+                found +=1
+
+if __name__ == '__main__':
+    main()
+```

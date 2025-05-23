@@ -1,0 +1,74 @@
+[write_program]
+This problem asks for the maximum sum of exponents in the prime factorization of a perfect square divisor of 12 factorial. We'll write a Python program to enumerate all square divisors of 12! and calculate their exponent sums to find the maximum.
+
+The approach:
+1. First compute the prime factorization of 12!
+2. Generate all possible square divisors by considering even exponents (since squares require even exponents)
+3. For each square divisor, sum its exponents
+4. Track and output the maximum sum found
+
+```python
+import math
+from collections import defaultdict
+
+def factorize(n):
+    factors = defaultdict(int)
+    while n % 2 == 0:
+        factors[2] += 1
+        n = n // 2
+    i = 3
+    while i * i <= n:
+        while n % i == 0:
+            factors[i] += 1
+            n = n // i
+        i += 2
+    if n > 1:
+        factors[n] += 1
+    return factors
+
+def compute_factorial_factors(n):
+    factors = defaultdict(int)
+    for i in range(2, n+1):
+        for p, exp in factorize(i).items():
+            factors[p] += exp
+    return factors
+
+def generate_square_divisors(factors):
+    primes = sorted(factors.keys())
+    exponents = [factors[p] for p in primes]
+    divisors = [1]
+    
+    for i in range(len(primes)):
+        p = primes[i]
+        max_exp = exponents[i]
+        new_divisors = []
+        for d in divisors:
+            for e in range(0, min(max_exp, 30) + 1, 2):  # Only even exponents
+                new_divisors.append(d * (p ** e))
+        divisors = new_divisors
+    return divisors
+
+def sum_exponents(n):
+    if n == 1:
+        return 0
+    return sum(factorize(n).values())
+
+def main():
+    n = 12
+    fact_factors = compute_factorial_factors(n)
+    print(f"Prime factorization of {n}!: {dict(fact_factors)}")
+    
+    square_divisors = generate_square_divisors(fact_factors)
+    max_sum = 0
+    
+    for d in square_divisors:
+        current_sum = sum_exponents(d)
+        if current_sum > max_sum:
+            max_sum = current_sum
+            print(f"New max sum: {max_sum} from divisor {d}")
+    
+    print(f"Final maximum exponent sum: {max_sum}")
+
+if __name__ == "__main__":
+    main()
+```

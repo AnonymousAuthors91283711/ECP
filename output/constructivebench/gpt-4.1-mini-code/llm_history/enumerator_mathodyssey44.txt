@@ -1,0 +1,62 @@
+[write_program]
+The problem involves finding the largest finite subset \( S \subseteq \mathbb{Z} \) such that for any two distinct elements \( p, q \in S \), there is a quadratic polynomial \( a x^2 + b x + c \) (with coefficients from \( S \), and \( a \neq 0 \)) that has both \( p \) and \( q \) as roots.
+
+To explore this, the program below tries small finite subsets \( S \subseteq \mathbb{Z} \) of increasing size and checks if \( P(S) \) holds by verifying the polynomial condition for every pair \( (p, q) \in S \). We use small sets centered around 0 for manageability and enumerate possible triples \( (a,b,c) \in S^3 \) with \( a \neq 0 \).
+
+This approach may yield maximal \( n \) values or patterns that help conjecture the true answer. We print every \( n \) for which such a set \( S \) is found.
+
+```python
+# Enumerate subsets of integers with property P:
+# For every distinct p,q in S, exists quadratic polynomial with coefficients in S and a!=0, vanishing at p,q.
+# We'll try small sets: subsets of [-m..m], m small, increasing.
+# For each candidate set of size n, check condition P.
+# Print tuples (n, S) as they satisfy P.
+
+from itertools import combinations, product
+
+def eval_poly(x, a,b,c):
+    return a*x*x + b*x + c
+
+def has_poly_with_roots(p, q, S):
+    # Find (a,b,c) in S^3, a!=0, s.t. eval_poly(p)=eval_poly(q)=0
+    # Since p,q are roots: a p^2 + b p + c = 0 and a q^2 + b q + c = 0.
+    # For fixed p,q and a in S\{0}, solve for b,c in S if possible (from linear system).
+    # But b,c must be in S, so try all a,b,c in S^3 with a!=0 and test.
+    # To reduce work: fix a,b,c in S, test condition.
+    # This is small since sets small.
+    for a in S:
+        if a == 0:
+            continue
+        for b in S:
+            for c in S:
+                if eval_poly(p,a,b,c)==0 and eval_poly(q,a,b,c)==0:
+                    return True
+    return False
+
+def check_property(S):
+    for p,q in combinations(S,2):
+        if not has_poly_with_roots(p,q,S):
+            return False
+    return True
+
+def main():
+    max_n = 6  # upper limit, to keep output short
+    # Try S as subsets of [-m,m], with m increasing, sizes up to max_n
+    # For efficiency, we try sets with cardinality n starting from max_n down to 2.
+    # Print found sets immediately.
+    universe = list(range(-3,4))  # from -3 to 3
+    found_sizes = set()
+    for n in range(max_n,1,-1):
+        for S in combinations(universe, n):
+            S_set = set(S)
+            if check_property(S_set):
+                print(f"n={n}, S={sorted(S)}")
+                found_sizes.add(n)
+        if found_sizes:
+            # print maximum found n only once
+            print(f"Maximum n found: {max(found_sizes)}")
+            break
+
+if __name__=="__main__":
+    main()
+```

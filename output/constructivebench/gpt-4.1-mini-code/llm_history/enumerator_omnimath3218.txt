@@ -1,0 +1,77 @@
+[write_program]
+This problem involves enumerating sets of 4 integer lattice points forming a certain shape (likely a square or square-like shape) with side vectors related to sums of squares equal to powers of two. We want to explore \( P_n \) and find such 4-point sets that satisfy the given shape condition.
+
+I will enumerate for small \( n \), print \( n \) and each square set found by listing coordinates of the points. This may help conjecture the count or pattern of such squares, assisting proof or understanding of omnimath3218_answer.
+
+```python
+import itertools
+
+def is_power_of_two(x):
+    return x > 0 and (x & (x - 1)) == 0
+
+def squares_of_sum2k(k):
+    # Return integer pairs (a,b) with a^2 + b^2 = 2^k
+    target = 2**k
+    res = []
+    limit = int(target**0.5) + 1
+    for a in range(-limit, limit+1):
+        b_sq = target - a*a
+        if b_sq < 0:
+            continue
+        b = int(b_sq**0.5)
+        if b*b == b_sq:
+            res.append((a,b))
+    return set(res)
+
+def generate_Pn(n):
+    # P_n := {(0,0)} ∪ {p ∈ ℤ×ℤ | ∃ k≤n, p₁² + p₂² = 2^k}
+    P = {(0,0)}
+    for k in range(n+1):
+        P |= squares_of_sum2k(k)
+    return P
+
+def translate(p, d):
+    return (p[0]+d[0], p[1]+d[1])
+
+def rotate_90_CCW(v):
+    # rotate vector 90 degrees counterclockwise
+    return (-v[1], v[0])
+
+def add_vectors(a,b):
+    return (a[0]+b[0], a[1]+b[1])
+
+def subtract_vectors(a,b):
+    return (a[0]-b[0], a[1]-b[1])
+
+def quadruple_points(p, d):
+    # points: p, p+d, p - rotate(d), p + d - rotate(d)
+    d90 = rotate_90_CCW(d)
+    return {p, add_vectors(p, d), subtract_vectors(p, d90), add_vectors(add_vectors(p,d), d90)}
+
+def main():
+    max_n = 4
+    for n in range(max_n+1):
+        P = generate_Pn(n)
+        P_list = list(P)
+        squares = set()
+        print(f"n = {n}")
+        # Because sets are defined on subsets of P_n, and S has cardinality 4 with the form defined,
+        # try each point p in P and each nonzero vector d in P, check conditions.
+        for p in P_list:
+            for d in P_list:
+                if d == (0,0):
+                    continue
+                # quadruple points
+                quad = quadruple_points(p,d)
+                # check subset condition
+                if quad.issubset(P):
+                    # add tuple of sorted points to avoid duplicates, sorted by coordinates
+                    quad_t = tuple(sorted(quad))
+                    if quad_t not in squares:
+                        squares.add(quad_t)
+                        print("Square points:", quad_t)
+        print(f"Total squares for n={n}: {len(squares)}\n")
+
+if __name__ == "__main__":
+    main()
+```

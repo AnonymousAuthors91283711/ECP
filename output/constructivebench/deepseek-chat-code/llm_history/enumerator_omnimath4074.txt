@@ -1,0 +1,56 @@
+[write_program]
+This problem asks for the minimal rational constant `c` such that for any finite simple graph `G`, the number of triangles (3-cliques) cubed is at most `c` times the number of edges (2-cliques) to the fourth power. We'll write a Python program to enumerate small graphs and compute the ratio (triangles^3)/(edges^4) to find candidate values for `c`.
+
+The program will:
+1. Generate all non-isomorphic graphs up to a small number of vertices (n=5)
+2. For each graph, compute the number of edges and triangles
+3. Calculate the ratio (triangles^3)/(edges^4), avoiding division by zero
+4. Track the maximum ratio found across all graphs
+
+```python
+import itertools
+from fractions import Fraction
+
+def count_edges(adj_matrix):
+    """Count number of edges in adjacency matrix (undirected, no loops)"""
+    n = len(adj_matrix)
+    return sum(adj_matrix[i][j] for i in range(n) for j in range(i+1, n)) // 1
+
+def count_triangles(adj_matrix):
+    """Count number of triangles in adjacency matrix"""
+    n = len(adj_matrix)
+    count = 0
+    for i in range(n):
+        for j in range(i+1, n):
+            if adj_matrix[i][j]:
+                for k in range(j+1, n):
+                    if adj_matrix[i][k] and adj_matrix[j][k]:
+                        count += 1
+    return count
+
+def generate_graphs(n):
+    """Generate all possible undirected graphs with n vertices (up to isomorphism)"""
+    edges = [(i,j) for i in range(n) for j in range(i+1, n)]
+    for edge_mask in itertools.product([0,1], repeat=len(edges)):
+        adj = [[0]*n for _ in range(n)]
+        for idx, (i,j) in enumerate(edges):
+            adj[i][j] = adj[j][i] = edge_mask[idx]
+        yield adj
+
+max_ratio = Fraction(0,1)
+max_graph = None
+
+for n in range(2, 6):  # Check graphs with 2-5 vertices
+    for adj in generate_graphs(n):
+        edges = count_edges(adj)
+        if edges == 0:
+            continue  # Skip graphs with no edges
+        triangles = count_triangles(adj)
+        ratio = Fraction(triangles**3, edges**4)
+        if ratio > max_ratio:
+            max_ratio = ratio
+            max_graph = adj
+            print(f"New max ratio: {float(ratio)} (for graph with {n} vertices)")
+
+print("\nFinal maximum ratio found:", max_ratio)
+```

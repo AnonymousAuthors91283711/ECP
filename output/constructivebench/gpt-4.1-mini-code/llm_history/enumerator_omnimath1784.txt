@@ -1,0 +1,58 @@
+[write_program]
+The problem concerns real roots r, s, t with product 1 whose squares are roots of a cubic polynomial with specific coefficients linked to parameters m, n, p, and a constraint at x = -1. It asks for the greatest value b of the symmetric sum r*s + s*t + t*r given those conditions.
+
+To investigate, I will enumerate rational or small integer triples (r, s, t) with product 1, check conditions on m, n, p and evaluate constraints. For plausibility, consider r, s, t rational with small numerator and denominator, and validate the polynomial relations and the constraint at x=-1.
+
+The goal is to list possible b values meeting the constraints, then conjecture the supremum.
+
+```python
+# Enumerate triples (r,s,t) with r*s*t=1, r,s,t in small rationals,
+# compute b = r*s+s*t+t*r,
+# check if the cubic with roots r^2, s^2, t^2 satisfies the given condition at x=-1:
+# (-1)^3 + m*(-1)^2 + n*(-1) + p = -5
+# where cubic is (x-r^2)(x-s^2)(x-t^2) = x^3 - (r^2+s^2+t^2)*x^2 + (r^2 s^2 + s^2 t^2 + t^2 r^2)*x - r^2 s^2 t^2
+
+from fractions import Fraction
+import itertools
+
+def eval_cubic_at_neg1(m, n, p):
+    return (-1)**3 + m * (-1)**2 + n * (-1) + p
+
+def approx_eq(a, b, eps=1e-9):
+    return abs(a - b) < eps
+
+vals = []
+max_print = 20
+count = 0
+
+print("Enumerating (r,s,t) with r*s*t=1, small rationals, checking conditions and printing b:")
+
+rationals = [Fraction(n,d) for n in range(-3,4) for d in range(1,4)]
+rationals = [r for r in rationals if r != 0]
+
+for r, s, t in itertools.product(rationals, repeat=3):
+    if r * s * t == 1:
+        # roots squared
+        rsq, ssq, tsq = r*r, s*s, t*t
+        # coefficients of cubic with roots r^2,s^2,t^2
+        m = - (rsq + ssq + tsq)
+        n = rsq*ssq + ssq*tsq + tsq*rsq
+        p = - rsq*ssq*tsq
+
+        val = eval_cubic_at_neg1(m, n, p)
+        if approx_eq(val, -5):
+            b = r*s + s*t + t*r
+            print(f"r={float(r):.3g}, s={float(s):.3g}, t={float(t):.3g}, b={float(b):.5g}")
+            vals.append(float(b))
+            count += 1
+            if count >= max_print:
+                break
+    if count >= max_print:
+        break
+
+if vals:
+    max_b = max(vals)
+    print(f"Greatest b found: {max_b:.5g}")
+else:
+    print("No b found satisfying constraints.")
+```

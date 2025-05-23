@@ -1,0 +1,62 @@
+[write_program]
+To assist in understanding the equation \(\frac{x^2 + x + 4}{2x + 1} = \frac{4}{x}\), let's enumerate solutions numerically. We'll check rational candidates and then try to find roots of the transformed polynomial \(x(x^2 + x + 4) = 4(2x + 1)\), i.e., \(x^3 + x^2 + 4x = 8x + 4\), or \(x^3 + x^2 -4x - 4=0\). We will try small integer and fractional candidates and approximate roots numerically.
+
+```python
+# Enumerate possible solutions for (x^2 + x + 4)/(2x + 1) = 4/x
+# which simplifies to the cubic: x^3 + x^2 - 4x - 4 = 0
+
+def f(x):
+    return x**3 + x**2 - 4*x -4
+
+# Test small integer candidates
+candidates = range(-5,6)
+print("Testing small integer candidates:")
+for x in candidates:
+    if x == 0 or 2*x+1 == 0:
+        continue  # avoid division by zero in original equation
+    lhs = (x**2 + x + 4)/(2*x + 1)
+    rhs = 4/x
+    if abs(lhs - rhs) < 1e-12:
+        print(f"x = {x} is a root exactly: lhs = {lhs}, rhs = {rhs}")
+    else:
+        # Check cubic value
+        val = f(x)
+        if val == 0:
+            print(f"x = {x} satisfies cubic exactly")
+
+# Check fractional candidates with small denominators
+print("\nTesting small fractional candidates:")
+for numerator in range(-5,6):
+    for denominator in range(1,6):
+        x = numerator / denominator
+        if x == 0 or 2*x + 1 == 0:
+            continue
+        lhs = (x**2 + x + 4)/(2*x +1)
+        rhs = 4/x
+        if abs(lhs - rhs) < 1e-12:
+            print(f"x = {x} is a root exactly: lhs = {lhs}, rhs = {rhs}")
+
+# Approximate roots numerically with bisection from -3 to 3 avoiding singularities at x=0 and x=-1/2
+print("\nNumerical root approximations:")
+import numpy as np
+
+def sign(x):
+    return (x > 0) - (x < 0)
+
+intervals = [(-3,-1), (-1, -0.6), (-0.4, 0), (0.1,1), (1,3)]
+
+for a,b in intervals:
+    if sign(f(a))*sign(f(b)) <0:
+        # Bisection method
+        left, right = a, b
+        for _ in range(30):
+            mid = (left+right)/2
+            if f(mid) == 0:
+                break
+            elif sign(f(left))*sign(f(mid)) < 0:
+                right = mid
+            else:
+                left = mid
+        approx_root = (left+right)/2
+        print(f"Root approx: {approx_root:.12f}, f(root)={f(approx_root):.2e}")
+```

@@ -1,0 +1,42 @@
+[write_program]
+This problem involves enumerating particular configurations of finite sets of triplets (piles), each with size three, where within each pile, there exist elements satisfying a multiplication relation, and all elements are within 1 to 100. The goal seems to be to find the greatest such number n, with the associated configuration.
+
+Since a direct formal solution involves complex logic, we will approximate with a Python program that:
+- Iterates over possible pile sizes and configurations, 
+- Checks the conditions (size, multiplication relation, disjointness, elements in 1..100),
+- Finds the maximum size such a collection can have.
+
+We will limit the enumeration to small sizes and configurations to avoid over-computation, while following instructions for output streaming.
+
+```python
+import itertools
+
+# Generate all possible triplets of numbers from 1 to 100
+numbers = range(1, 101)
+triplets = list(itertools.combinations(numbers, 3))
+
+# Store valid sets of piles; each pile is a triplet satisfying the multiplication condition
+valid_piles = []
+
+for trip in triplets:
+    a, b, c = trip
+    if a * b == c:
+        valid_piles.append({a, b, c})
+
+# Now, try to select as many disjoint piles as possible
+# Using a greedy approach: pick the first pile, remove conflicts, repeat
+piles_found = []
+
+remaining_piles = valid_piles.copy()
+
+while remaining_piles:
+    pile = remaining_piles.pop(0)
+    # Check disjointness with already selected piles
+    if all(pile.isdisjoint(p) for p in piles_found):
+        piles_found.append(pile)
+
+# Output the number of such disjoint sets and the sets themselves
+print("Maximum number of disjoint triplets satisfying a*b=c:", len(piles_found))
+for idx, pile in enumerate(piles_found, 1):
+    print(f"Pile {idx}: {sorted(pile)}")
+```

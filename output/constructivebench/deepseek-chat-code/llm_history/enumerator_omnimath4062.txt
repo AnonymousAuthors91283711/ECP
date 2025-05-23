@@ -1,0 +1,55 @@
+[write_program]
+This problem appears to be a number theory problem about finding all natural numbers n ≥ 2 where for any set S of n distinct integers whose sum is not divisible by n, there exists an injective function f from {0,...,n-1} to S such that the weighted sum Σ(i+1)*f(i) is divisible by n.
+
+We'll write a Python program to enumerate possible values of n that might satisfy this condition by testing small cases. The program will:
+1. Test values of n from 2 upwards
+2. For each n, generate random test cases of n distinct integers
+3. Check if the condition holds for these test cases
+4. Output n if it passes several test cases
+
+```python
+import random
+from math import gcd
+from itertools import permutations
+
+def test_n(n, num_tests=20):
+    for _ in range(num_tests):
+        # Generate a random set of n distinct integers with sum not divisible by n
+        while True:
+            s = random.sample(range(-100, 100), n)
+            if sum(s) % n != 0:
+                break
+        
+        found = False
+        # Try all permutations (injective functions) for small n, random samples for larger n
+        if n <= 6:
+            for perm in permutations(s):
+                weighted_sum = sum((i+1)*x for i,x in enumerate(perm))
+                if weighted_sum % n == 0:
+                    found = True
+                    break
+        else:
+            for _ in range(1000):  # Limit attempts for larger n
+                perm = random.sample(s, n)
+                weighted_sum = sum((i+1)*x for i,x in enumerate(perm))
+                if weighted_sum % n == 0:
+                    found = True
+                    break
+        
+        if not found:
+            return False
+    return True
+
+def main():
+    max_n = 20  # Test up to this value
+    candidates = []
+    for n in range(2, max_n+1):
+        if test_n(n):
+            candidates.append(n)
+            print(f"Potential candidate found: {n}")
+    
+    print("\nFinal candidates up to n={max_n}: {candidates}")
+
+if __name__ == "__main__":
+    main()
+```

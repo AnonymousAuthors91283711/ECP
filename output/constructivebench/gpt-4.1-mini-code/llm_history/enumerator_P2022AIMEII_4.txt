@@ -1,0 +1,71 @@
+[write_program]
+The problem involves finding positive real \(x\neq \frac{1}{20}, \frac{1}{2}\) and positive coprime integers \(m,n\) such that 
+\[
+\log_{20x}(22x) = \log_{10}\frac{m}{n},
+\]
+with \(m+n\) minimized (or at least identified). 
+
+Rewrite as 
+\[
+\frac{\log(22x)}{\log(20x)} = \log_{10}\frac{m}{n}.
+\]
+Given the logarithm base 10 for the RHS, \(m,n\) positive and coprime, the left side should be a rational log ratio.
+
+We can enumerate for \(x\) of form \(\frac{a}{10}\) with small positive integers \(a\neq 1,5\) (excluded due to \(x\neq \frac{1}{20}, \frac{1}{2}\)), and small coprime pairs \((m,n)\). We check if 
+\[
+\log_{20x}(22x) = \log_{10} \frac{m}{n}
+\]
+holds approximately (up to a reasonable float tolerance), then print candidates and eventually minimum \(m+n\).
+
+```python
+import math
+
+# Enumerate candidate x values as small fractions (a/10) excluding 0.05 and 0.5
+# and small coprime pairs (m,n) with m+n <= 40 as an example bound
+
+def gcd(a,b):
+    while b:
+        a,b=b,a%b
+    return a
+
+def approx_equal(a,b, tol=1e-9):
+    return abs(a-b)<tol
+
+max_sum = 40
+found = []
+
+print("Trying x = a/10 for a=1..9 except 1/20=0.05,1/2=0.5 excluded")
+for a in range(1,10):
+    x = a/10
+    if abs(x-0.05)<1e-9 or abs(x-0.5)<1e-9:
+        continue
+    try:
+        # Precompute lhs = log_{20x}(22x) = log(22x)/log(20x)
+        denom = math.log(20*x)
+        if denom == 0:
+            continue
+        lhs = math.log(22*x)/denom
+    except:
+        continue
+    for s in range(2, max_sum+1):
+        for m in range(1, s):
+            n = s - m
+            if gcd(m,n)!=1:
+                continue
+            # rhs = log_10(m/n) = log(m/n)/log(10)
+            if m <=0 or n <=0:
+                continue
+            try:
+                rhs = math.log(m/n)/math.log(10)
+            except:
+                continue
+            if approx_equal(lhs, rhs, tol=1e-8):
+                print(f"x={x:.2f}, m={m}, n={n}, m+n={s}, lhs={lhs:.9f}, rhs={rhs:.9f}")
+                found.append((s,m,n,x))
+# Find minimal sum
+if found:
+    min_sum = min(f[0] for f in found)
+    print(f"Minimal m+n = {min_sum}")
+else:
+    print("No solutions found in the search range.")
+```

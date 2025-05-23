@@ -1,0 +1,70 @@
+[write_program]
+The problem involves finding natural numbers \( n \) with a certain prime factorization structure (product of a prime squared times two other primes) such that Euler's totient function \(\varphi(n) = 11^3 + 1 = 1332\).
+
+We want to find all triples \((p, q, r)\) with \(p, q, r\) primes such that:
+\[
+n = p^2 \cdot q \cdot r
+\]
+and
+\[
+\varphi(n) = \varphi(p^2) \cdot \varphi(q) \cdot \varphi(r) = 1332,
+\]
+where
+\[
+\varphi(p^2) = p^2 - p, \quad \varphi(q) = q-1, \quad \varphi(r) = r-1.
+\]
+Thus
+\[
+(p^2 - p)(q-1)(r-1) = 1332.
+\]
+
+We enumerate primes \( p, q, r \), compute the left side, and print answers where it equals 1332. Enumerate primes up to some limit, say 100, for practical efficiency.
+
+```python
+import math
+
+# Generate primes with sieve for efficiency
+def primes_up_to(n):
+    sieve = [True]*(n+1)
+    sieve[0] = sieve[1] = False
+    for i in range(2,int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i, n+1, i):
+                sieve[j] = False
+    return [i for i in range(2,n+1) if sieve[i]]
+
+target_phi = 11**3 + 1  # 1332
+
+primes = primes_up_to(100)  # enumerating primes <= 100
+
+# For each prime triple (p,q,r)
+# p prime squared times q * r prime
+# compute (p^2 - p)*(q-1)*(r-1), print (p,q,r,n) when equals target_phi
+
+# Since (p^2 - p) increases quickly, limit p up to 20 for efficiency
+primes_p = [p for p in primes if p <= 20]
+
+print(f"Looking for primes p,q,r with (p^2 - p)*(q-1)*(r-1) = {target_phi}")
+
+count = 0
+for p in primes_p:
+    phi_p2 = p*p - p
+    if target_phi % phi_p2 != 0:
+        continue
+    prod_qr = target_phi // phi_p2
+    # Find pairs (q,r) primes s.t (q-1)*(r-1)=prod_qr
+    # enumerate q,r in primes
+    for i,q in enumerate(primes):
+        q_minus_1 = q - 1
+        if prod_qr % q_minus_1 != 0:
+            continue
+        r_minus_1 = prod_qr // q_minus_1
+        r = r_minus_1 + 1
+        # check if r is prime
+        if r in primes:
+            n = p**2 * q * r
+            print(f"Found: p={p}, q={q}, r={r}, n={n}, phi(n)={target_phi}")
+            count += 1
+
+print(f"Total solutions found: {count}")
+```

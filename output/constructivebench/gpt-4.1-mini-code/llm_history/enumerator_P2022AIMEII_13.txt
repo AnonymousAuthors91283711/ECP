@@ -1,0 +1,59 @@
+[write_program]
+This problem involves finding an integer-coefficient polynomial \(P\) with roots precisely all real numbers \(x\) in the interval \((0,1)\), and its 2022nd coefficient equals some integer \(P2022AIMEII_13_answer\).
+
+To explore such polynomials and the 2022nd coefficient, I will enumerate low-degree polynomials with roots in \((0,1)\) and integer coefficients, or study patterns, possibly starting with products of linear factors \((x - r)\) for rational \(r \in (0,1)\), then identify the coefficient of \(x^{2022}\) when extending to degree 2022.
+
+Because enumerating all degree-2022 polynomials is impossible, I'll sample small degrees \(n\) (up to 6 or 7), build polynomials with roots in \((0,1)\) at rational steps, then print all coefficients and especially the coefficient of \(x^{n}\), representing the "highest order" term (or indexing from 0, the leading coefficient is always 1 in monic polynomials).
+
+This helps to conjecture the form of the coefficient at a given power.
+
+I will:
+
+- For degrees \(n=1\) to 7,
+- Choose roots at \(\frac{k}{n+1}\) for \(k=1\) to \(n\) (all in \((0,1)\)),
+- Form the monic polynomial \(\prod_{k=1}^n (x - \frac{k}{n+1})\) with rational coefficients,
+- Multiply by \((n+1)^n\) to clear denominators and get integer coefficients,
+- Print the degree \(n\), polynomial coefficients, and the "middle" coefficient closest to degree 2022 if applicable.
+
+This may reveal patterns about the coefficients of such polynomials, especially the coefficient of \(x^{2022}\) in the original problem.
+
+```python
+from fractions import Fraction
+
+# Enumerate polynomials with roots k/(n+1), k=1..n, degree n up to 7.
+# Multiply by (n+1)^n to clear denominators and get integer coefficients.
+# Print degree n and all integer coefficients (from constant term to leading).
+
+def polynomial_coefficients_from_roots(roots):
+    # roots: list of Fractions, returns coefficients as Fractions, highest degree first
+    coeffs = [Fraction(1)]  # start with polynomial 1
+    for r in roots:
+        # multiply current polynomial by (x - r)
+        new_coeffs = [Fraction(0)]*(len(coeffs)+1)
+        for i in range(len(coeffs)):
+            new_coeffs[i] += coeffs[i]
+            new_coeffs[i+1] -= coeffs[i]*r
+        coeffs = new_coeffs
+    # coeffs from highest degree to constant (unshifted from construction), reverse:
+    return coeffs[::-1]
+
+print("Enumerating polynomials with roots k/(n+1), k=1..n, degree n<=7")
+for n in range(1,8):
+    roots = [Fraction(k, n+1) for k in range(1, n+1)]
+    coeffs_frac = polynomial_coefficients_from_roots(roots)  # constant to leading
+    # multiply by (n+1)^n to clear denominator
+    scale = (n+1)**n
+    coeffs_int = [int(c*scale) for c in coeffs_frac]
+    print(f"Degree {n}, scale factor {(n+1)}^{n}={scale}")
+    print("Coefficients (constant to leading):", coeffs_int)
+    # print the coefficient with index min(2022, n) = n, leading term 1*scale^(0) = scale^0=1
+    # For degree n polynomial, index 2022 doesn't exist; this shows scaling behavior.
+    # But print coeff of x^n (leading): coeffs_int[-1]
+    # coeff of x^{n-1}: coeffs_int[-2] if n>0
+    if n >= 1:
+        print(f"Leading coeff x^{n}: {coeffs_int[-1]}")
+        # coefficient of x^{1} if exists:
+        if n>=2:
+            print(f"Coefficient x^{1}: {coeffs_int[1]}")
+    print()
+```

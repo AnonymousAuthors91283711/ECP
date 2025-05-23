@@ -1,0 +1,180 @@
+[write_program]
+This problem involves finding a polynomial \( p(x) \) satisfying a functional equation involving evaluations of \( p \) at scaled and shifted arguments.
+
+The given equation is:
+\[
+\forall x \in \mathbb{R}, \quad (x + 10) \cdot p(2x) = (8x - 32) \cdot p(x + 6),
+\]
+with the condition \( p(1) = 210 \).
+
+We want to enumerate candidate polynomials \( p \) that satisfy this functional equation, focusing on low degrees first, since high-degree polynomials complicate the problem. The strategy is:
+
+- Assume \( p \) is a polynomial of degree \( d \) with unknown coefficients.
+- Express both sides in terms of coefficients and attempt to solve the resulting algebraic equations.
+- Enumerate candidate polynomials for small degrees and check the relation symbolically or numerically for sample points to identify possible solutions satisfying the equation.
+- Normalize such that \( p(1) = 210 \).
+
+We will enumerate candidate polynomials with integer coefficients within a reasonable range to find feasible \( p \), printing each valid candidate found. Then report the polynomial satisfying the condition.
+
+```python
+# enumerator.py
+
+import numpy as np
+
+def eval_poly(coeffs, x):
+    # Evaluate polynomial at x; coeffs: [a0, a1, ..., an]
+    return sum(c * x**i for i, c in enumerate(coeffs))
+
+def poly_degree(coeffs):
+    # Return degree considering trailing zeros
+    deg = len(coeffs) - 1
+    while deg > 0 and abs(coeffs[deg]) < 1e-14:
+        deg -= 1
+    return deg
+
+def multiply_poly_by_linear(coeffs, a, b):
+    # Multiply polynomial coeffs by (a x + b)
+    res = [0] * (len(coeffs) + 1)
+    for i, c in enumerate(coeffs):
+        res[i] += b * c
+        res[i+1] += a * c
+    return res
+
+def poly_equal(c1, c2, tol=1e-8):
+    # Compare two polynomials (arrays), allow small tolerance
+    deg1 = poly_degree(c1)
+    deg2 = poly_degree(c2)
+    if deg1 != deg2:
+        return False
+    for i in range(deg1+1):
+        if abs(c1[i] - c2[i]) > tol:
+            return False
+    return True
+
+def shift_poly(coeffs, h):
+    # Compute p(x+h) from p(x) using binomial expansions
+    n = poly_degree(coeffs)
+    res = [0]*(n+1)
+    for i in range(n+1):
+        # p(x) includes coeffs[i] x^i
+        for k in range(i+1):
+            # coeffs[i] * C(i,k) h^{i-k} x^k
+            c = coeffs[i] * comb(i,k) * h**(i-k)
+            if k < len(res):
+                res[k] += c
+    return res
+
+def comb(n,k):
+    # Simple combinational n choose k
+    if k > n or k < 0:
+        return 0
+    if k == 0 or k == n:
+        return 1
+    c = 1
+    for i in range(min(k, n-k)):
+        c = c * (n - i) // (i + 1)
+    return c
+
+def check_polynomial(pcoeffs):
+    # Given p(x)=pcoeffs, check if (x+10)p(2x) = (8x-32)p(x+6)
+    # We'll check by expanding both sides as polynomials in x
+    # Evaluate left side:
+    p2x = [0]*(len(pcoeffs)*2)
+    # p(2x) coefficients:
+    # p(2x) = sum a_i (2x)^i = sum a_i 2^i x^i
+    p2x = [pcoeffs[i]*2**i for i in range(len(pcoeffs))]
+    # Multiply by (x+10)
+    left = multiply_poly_by_linear(p2x,1,10)
+
+    # Compute p(x+6):
+    p_x6 = shift_poly(pcoeffs, 6)
+    # Multiply by (8x - 32)
+    right = multiply_poly_by_linear(p_x6,8, -32)
+
+    return poly_equal(left, right)
+
+def print_poly(coeffs):
+    # Print polynomial with descending powers
+    deg = poly_degree(coeffs)
+    terms = []
+    for i in range(deg, -1, -1):
+        c = coeffs[i]
+        if abs(c) < 1e-12:
+            continue
+        if i == 0:
+            terms.append(f"{c:.0f}")
+        elif i == 1:
+            terms.append(f"{c:.0f}x")
+        else:
+            terms.append(f"{c:.0f}x^{i}")
+    return " + ".join(terms) if terms else "0"
+
+def main():
+    # Enumerate candidate degrees from 0 to 5
+    # Coefficients from -10 to 10 (integer)
+    degree_range = range(0,6)
+    coef_range = range(-10,11)
+    found_candidates = []
+
+    for d in degree_range:
+        # We'll enumerate a polynomial with leading coefficient nonzero
+        # To reduce computations, fix leading coeff to 1 or -1, then scale later
+        for lead_sign in [1,-1]:
+            lead_coeff = lead_sign * 1
+            # Build coefficient lists with last coeff fixed
+            # Enumerate other coefficients
+            total_coeffs = d + 1
+            if d == 0:
+                # constant polynomial; check only coeff=lead_coeff
+                p = [lead_coeff]
+                # Then scale to match p(1) = 210
+                val = eval_poly(p,1)
+                if abs(val) > 1e-14:
+                    scale = 210/val
+                    p_scaled = [c*scale for c in p]
+                    if check_polynomial(p_scaled):
+                        print(f"Candidate degree 0: p(x) = {print_poly(p_scaled)} with p(1)=210")
+                        found_candidates.append(p_scaled)
+                continue
+
+            # enumerate coefficients except leading one
+            # indices 0..d-1
+            def recurse_coefs(i, current):
+                if i == d:
+                    # leading coeff fixed
+                    current.append(lead_coeff)
+                    # scale so p(1)=210
+                    val = sum(current)
+                    if abs(val) < 1e-14:
+                        current.pop()
+                        return
+                    scale = 210/val
+                    p_scaled = [c*scale for c in current]
+                    if check_polynomial(p_scaled):
+                        print(f"Candidate degree {d}: p(x) = {print_poly(p_scaled)} with p(1)=210")
+                        found_candidates.append(p_scaled)
+                    current.pop()
+                    return
+                else:
+                    for c in coef_range:
+                        current.append(c)
+                        recurse_coefs(i+1, current)
+                        current.pop()
+            recurse_coefs(0,[])
+
+    if found_candidates:
+        # Possibly multiple candidates, print minimum degree candidate as answer
+        min_deg = min(poly_degree(c) for c in found_candidates)
+        for c in found_candidates:
+            if poly_degree(c) == min_deg:
+                print("\nFinal solution polynomial of minimal degree:")
+                print(print_poly(c))
+                break
+    else:
+        print("No polynomial candidate found in search range.")
+
+if __name__ == "__main__":
+    main()
+```
+
+This program enumerates polynomials up to degree 5 with integer coefficients from -10 to 10 (except it normalizes to ensure \( p(1)=210 \)) and checks the main functional equality symbolically by comparing polynomial coefficients. It prints all candidates found and explicitly states the minimal-degree solution found.

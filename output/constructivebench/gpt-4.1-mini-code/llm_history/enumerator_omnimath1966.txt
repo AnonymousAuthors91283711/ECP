@@ -1,0 +1,64 @@
+[write_program]
+The problem involves parameters \(a_0, b_0, r_a, r_b\) and infinite sums related to geometric series. We want to explore the condition and find values \(c\) that satisfy the inequalities. I'll pick small sample values for the parameters and enumerate possible \(c\) candidates consistent with the condition, printing each candidate immediately.
+
+```python
+# Enumerate candidates for c based on given condition for geometric series
+def geom_sum(a0, r):
+    # sum of infinite geometric series a0 + a0*r + ...
+    return a0 / (1 - r) if abs(r) < 1 else None
+
+def geom_sum_squares(a0, r):
+    # sum of squares: a0^2 + (a0*r)^2 + ...
+    return a0**2 / (1 - r**2) if abs(r) < 1 else None
+
+def inner_sum(a0, r, b0, s):
+    # sum of (a0 r^i)*(b0 s^i) = a0 b0 sum (r s)^i
+    return a0 * b0 / (1 - r * s) if abs(r * s) < 1 else None
+
+def test_params():
+    # Candidates for parameters based on constraints:
+    # a0, b0 > 0; |ra|, |rb| < 1; sum of series = 1 (for both)
+    # sum_i a0 ra^i = 1 -> a0/(1-ra) = 1 -> a0 = 1 - ra
+    # similarly b0 = 1 - rb
+    
+    c_candidates = set()
+    # Use rational ra, rb in (-0.9, -0.5, 0, 0.5, 0.9), avoiding 1
+    ra_list = [-0.9, -0.5, 0, 0.5, 0.9]
+    rb_list = [-0.9, -0.5, 0, 0.5, 0.9]
+    
+    for ra in ra_list:
+        a0 = 1 - ra
+        if a0 <= 0:
+            continue
+        for rb in rb_list:
+            b0 = 1 - rb
+            if b0 <= 0:
+                continue
+            # sums
+            sum_a = geom_sum(a0, ra)
+            sum_b = geom_sum(b0, rb)
+            if sum_a is None or abs(sum_a - 1) > 1e-12:
+                continue
+            if sum_b is None or abs(sum_b - 1) > 1e-12:
+                continue
+            sum_a2 = geom_sum_squares(a0, ra)
+            sum_b2 = geom_sum_squares(b0, rb)
+            sum_ab = inner_sum(a0, ra, b0, rb)
+            # check main equality condition:
+            lhs = sum_a2 * sum_b2
+            rhs = sum_ab
+            if abs(lhs - rhs) < 1e-12:
+                # c ≤ a0 should hold
+                c_candidates.add(a0)
+                print(f"Parameters: a0={a0:.3f}, ra={ra}, b0={b0:.3f}, rb={rb:.3f}")
+                print(f"Condition matched; candidate c ≤ {a0:.6f}")
+
+    if c_candidates:
+        c_min = min(c_candidates)
+        print(f"Minimal c candidate found: {c_min:.6f}")
+    else:
+        print("No candidates found.")
+
+if __name__ == "__main__":
+    test_params()
+```

@@ -1,0 +1,64 @@
+[write_program]
+The problem involves finding all positive integers \( K \) such that there exists \( \theta \in (0, \pi/2) \) with
+\[
+K = \lfloor K_{\text{val}} \rfloor \text{ or } K = \lceil K_{\text{val}} \rceil,
+\]
+where
+\[
+K_{\text{val}} = \text{side}^2 \cdot \sin\left(\frac{\pi}{2} - 2\theta\right), \quad \text{with} \quad \text{side} = \sqrt{\frac{\sqrt{2006}}{\sin \theta}}.
+\]
+
+Simplifying \( K_{\text{val}} \):
+\[
+\text{side}^2 = \frac{\sqrt{2006}}{\sin \theta},
+\]
+\[
+K_{\text{val}} = \frac{\sqrt{2006}}{\sin \theta} \cdot \cos (2\theta).
+\]
+
+We want to enumerate possible integer values of \(\lfloor K_{\text{val}} \rfloor\) or \(\lceil K_{\text{val}} \rceil\) as \(\theta\) ranges over \((0, \pi/2)\).
+
+The Python program below discretizes \(\theta\) in \((0, \pi/2)\) with fine steps, computes \(K_{\text{val}}\), and prints all distinct integers encountered as floors or ceils of \(K_{\text{val}}\). To gain insight, we also track the minimum and maximum possible integers for \(K\).
+
+```python
+import math
+
+def main():
+    sqrt_2006 = math.sqrt(2006)
+    theta_step = 0.0005  # fine step for theta steps in (0, pi/2)
+    theta_min = 0.001
+    theta_max = math.pi / 2 - 0.001
+
+    encountered = set()
+    min_K = None
+    max_K = None
+
+    theta = theta_min
+    while theta <= theta_max:
+        sin_theta = math.sin(theta)
+        if sin_theta == 0:
+            theta += theta_step
+            continue
+        side_squared = math.sqrt(2006) / sin_theta
+        val = side_squared * math.cos(2 * theta)
+
+        # floor and ceil integers near val (only positive integers)
+        for K_candidate in {math.floor(val), math.ceil(val)}:
+            if K_candidate > 0:
+                if K_candidate not in encountered:
+                    encountered.add(K_candidate)
+                    print(f"K = {K_candidate} at θ ≈ {theta:.5f} radians")
+                if (min_K is None) or (K_candidate < min_K):
+                    min_K = K_candidate
+                if (max_K is None) or (K_candidate > max_K):
+                    max_K = K_candidate
+        theta += theta_step
+
+    print(f"\nMinimum K found: {min_K}")
+    print(f"Maximum K found: {max_K}")
+
+if __name__ == "__main__":
+    main()
+```
+
+This enumerates all possible \( K \) values meeting the conditions, printing each immediately when found, and finally prints the minimum and maximum possible \( K \). The results help to conjecture the finite set and its cardinality without hardcoding the final answer.

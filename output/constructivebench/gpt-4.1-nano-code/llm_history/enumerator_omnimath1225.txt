@@ -1,0 +1,46 @@
+[write_program]
+The problem involves identifying a pair of coprime natural numbers `(r, s)` that approximates the real expression `(2 * (sqrt 2 + sqrt 10)) / (5 * sqrt (3 + sqrt 5))`. To assist in conjecturing the exact rational pair, we will numerically approximate the value with small denominators and search for minimal differences, prioritizing simplified fractions with small `s`.
+
+```python
+import math
+from fractions import Fraction
+
+# Target real value: (2*(sqrt(2)+sqrt(10))) / (5*sqrt(3+sqrt(5)))
+num = 2 * (math.sqrt(2) + math.sqrt(10))
+den = 5 * math.sqrt(3 + math.sqrt(5))
+target_value = num / den
+
+# Search over small denominators for close rational approximations
+max_denominator = 100
+
+print(f"Target value approximation: {target_value}")
+
+# Initialize list to keep track of best approximations
+best_candidates = []
+
+for s in range(1, max_denominator + 1):
+    # Approximate numerator as closest integer multiple of s (to form a rational s/r)
+    approx_r_float = target_value * s
+    # Candidate numerator as nearest integer
+    r_candidate = round(approx_r_float)
+    # Reduce fraction to check coprime
+    frac = Fraction(r_candidate, s).limit_denominator()
+    r_simpl = frac.numerator
+    s_simpl = frac.denominator
+    
+    # Check if numerator and denominator are coprime
+    if math.gcd(r_simpl, s_simpl) == 1:
+        # Compute the rational value of this candidate
+        val = r_simpl / s_simpl
+        diff = abs(val - target_value)
+        # Store candidate if it's very close
+        if diff < 0.01:
+            print(f"Candidate: {r_simpl}/{s_simpl} = {r_simpl / s_simpl} (diff: {diff})")
+        best_candidates.append((diff, r_simpl, s_simpl))
+        
+# Find the minimal difference candidate
+if best_candidates:
+    best_candidates.sort(key=lambda x: x[0])
+    diff_min, r_min, s_min = best_candidates[0]
+    print(f"Best approximation: {r_min}/{s_min} with difference {diff_min}")
+```

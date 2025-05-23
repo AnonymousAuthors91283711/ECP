@@ -1,0 +1,73 @@
+[write_program]
+The problem involves finding the minimal positive integers \(x, y\) such that \(1584x = k^3\) for some integer \(k\), and \(1584x\) divides \(xy\), with minimal \(x\) and \(y\). The goal is to enumerate possible \(x, y\) values that satisfy these conditions to conjecture the minimal \(y\).
+
+We will:
+- Enumerate integer \(k\) from 1 upwards,
+- Check if \(k^3\) is divisible by 1584 (which gives \(x = k^3 / 1584\)),
+- For each such \(x\), find minimal \(y\) such that \(1584x \mid x y\), i.e., \(1584x \mid x y\) means \(1584 \mid y\),
+- So \(y\) must be a multiple of 1584,
+- Find smallest \(y > 0\) meeting above,
+- Print \(x, y\) candidates up to some range,
+- Then filter minimal \(x\) and corresponding minimal \(y\).
+
+```python
+# Enumerate x,y satisfying the problem constraints:
+# 1) 1584*x = k^3 for some integer k>0 -> x = k^3/1584, must be integer
+# 2) 1584*x divides x*y => 1584 divides y
+# We find minimal x,y and print candidates
+
+def gcd(a,b):
+    while b:
+        a,b=b,a%b
+    return a
+
+def lcm(a,b):
+    return a*b//gcd(a,b)
+
+def is_cube(n):
+    root = int(round(n ** (1/3)))
+    return root**3 == n or (root+1)**3 == n or (root-1)**3 == n
+
+def minimal_y(x):
+    # Since 1584*x divides x*y, and x>0, simplify:
+    # 1584*x | x*y => 1584 | y
+    # So minimal y >0 with 1584 | y is 1584
+    return 1584
+
+def factor(n):
+    # Simple prime factorization for 1584 factor check if needed
+    i=2
+    factors = {}
+    while i*i<=n:
+        while n%i==0:
+            factors[i]=factors.get(i,0)+1
+            n//=i
+        i+=1
+    if n>1:
+        factors[n]=factors.get(n,0)+1
+    return factors
+
+def main():
+    max_k = 100000  # limit search for speed
+    printed = 0
+    min_x = None
+    min_y = None
+    for k in range(1, max_k):
+        cube = k**3
+        if cube % 1584 == 0:
+            x = cube // 1584
+            if x > 0:
+                y = minimal_y(x)
+                print(f'x={x}, y={y}, k={k}, k^3={cube}')
+                printed +=1
+                if min_x is None or x < min_x or (x == min_x and y < min_y):
+                    min_x = x
+                    min_y = y
+        if printed >=10:
+            break
+    if min_x is not None:
+        print(f'Minimal x={min_x}, minimal y={min_y}')
+
+if __name__=='__main__':
+    main()
+```

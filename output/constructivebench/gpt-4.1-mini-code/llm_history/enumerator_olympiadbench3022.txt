@@ -1,0 +1,56 @@
+[write_program]
+Let's enumerate values of \( x \) around the critical points and check the given equation:
+
+\[
+\log_6(\sqrt{x - 7}) + \log_{36}(x - 2) = 1
+\]
+
+We will try values with \( x > 7 \) (to satisfy domain), compute left hand side exactly when possible, else numerically, and print solutions close to equality. This can help spot the correct \( x \).
+
+```python
+import math
+
+def log_base(y, b):
+    # Compute log base b of y, y > 0, b > 0, b != 1
+    return math.log(y) / math.log(b)
+
+print("Enumerating possible x values satisfying log_6(sqrt(x-7)) + log_36(x-2) = 1")
+
+# Since domain constraints: x-7 > 0 -> x > 7 and x-2 > 0 -> x > 2, so x > 7.
+# Try integer x from 8 to 20 with step 0.1 for finer search.
+for i in range(80, 201):
+    x = i / 10
+    if x - 7 <= 0 or x - 2 <= 0:
+        continue
+    try:
+        lhs = log_base(math.sqrt(x - 7), 6) + log_base(x - 2, 36)
+        if abs(lhs - 1) < 1e-6:
+            print(f"Candidate x = {x:.3f}, lhs = {lhs:.6f}")
+    except ValueError:
+        continue
+
+# Additionally, try to symbolically rearrange:
+# log_6(sqrt(x-7)) = (1/2)log_6(x-7)
+# Equation:
+# (1/2)log_6(x-7) + log_36(x-2) = 1
+
+# Note log_36(x-2) = log_6(x-2) / 2 because 36 = 6^2.
+# So:
+# (1/2)log_6(x-7) + (1/2)log_6(x-2) = 1
+# (1/2)(log_6((x-7)(x-2))) = 1
+# log_6((x-7)(x-2)) = 2
+# (x-7)(x-2) = 6^2 = 36
+# x^2 - 9x + 14 = 36 -> x^2 - 9x - 22 = 0
+
+# Solve quadratic:
+a, b, c = 1, -9, -22
+d = b*b - 4*a*c
+if d >= 0:
+    root1 = (-b + math.sqrt(d)) / (2*a)
+    root2 = (-b - math.sqrt(d)) / (2*a)
+    for r in [root1, root2]:
+        if r > 7:
+            print(f"Exact solution x = {r}, verified by quadratic.")
+
+```
+

@@ -1,0 +1,76 @@
+[write_program]
+This problem asks for the number of integers n > 1 such that n divides x^13 - x for all positive integers x. These numbers are called Carmichael numbers of order 13. We'll write a program to find all such numbers up to a reasonable threshold.
+
+The key insight is that such numbers must be square-free and satisfy that for every prime p dividing n, p-1 divides 13-1=12. We'll:
+1. Generate square-free numbers up to a threshold
+2. Check if all prime factors satisfy p-1 divides 12
+3. Verify the divisibility condition for small x values (since it's impractical to check all x)
+
+```python
+import math
+from itertools import combinations
+from functools import reduce
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def get_primes_up_to(limit):
+    primes = []
+    for n in range(2, limit + 1):
+        if is_prime(n) and (n - 1) % 12 == 0:
+            primes.append(n)
+    return primes
+
+def square_free_combinations(primes, max_n):
+    results = []
+    for r in range(1, len(primes) + 1):
+        for combo in combinations(primes, r):
+            n = reduce(lambda x, y: x * y, combo)
+            if n <= max_n:
+                results.append(n)
+    return sorted(results)
+
+def verify_condition(n, test_values=[2, 3, 5, 7]):
+    for x in test_values:
+        if pow(x, 13, n) != x % n:
+            return False
+    return True
+
+def main():
+    max_n = 100000
+    primes = get_primes_up_to(max_n)
+    candidates = square_free_combinations(primes, max_n)
+    
+    valid = []
+    for n in candidates:
+        if n > 1 and verify_condition(n):
+            valid.append(n)
+            print(n)
+    
+    print(f"Total count up to {max_n}: {len(valid)}")
+
+if __name__ == "__main__":
+    main()
+```

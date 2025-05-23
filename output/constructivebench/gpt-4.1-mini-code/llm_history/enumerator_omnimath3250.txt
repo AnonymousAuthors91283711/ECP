@@ -1,0 +1,86 @@
+[write_program]
+The problem describes a property \( P(N,a) \) for natural numbers \(N,a\) such that \(N\) equals the sum of \(k\) consecutive integers starting from \(a\), with \(k > 1\).
+
+Specifically,
+\[
+P(N,a) := \exists k > 1, N = \sum_{i=0}^{k-1} (a + i)
+\]
+
+The theorem involves finding a least \(a\) such that there exists \(N\) with property \(P(N,a)\), but for all \(k > 1\), \(k \neq 2017\), \(P(N,a+k)\) is false. So, \(a\) is such that for some \(N\), \(N\) can be written as the sum of \(k\) consecutive integers starting from \(a\), and for all other \(k \neq 2017\), \(N\) cannot be represented as the sum of \(k\) consecutive integers starting from \(a+k\).
+
+We want to enumerate possible values of \(a\) and \(N\), for various \(k\), including \(k=2017\), to find \(a\) that satisfy this condition.
+
+A plan:
+
+- Recall that sum of \(k\) consecutive integers starting at \(a\) is:
+
+\[
+N = k \cdot a + \frac{k(k-1)}{2}
+\]
+
+- Given \(k\) and \(N\), solve for \(a\):
+
+\[
+a = \frac{N - \frac{k(k-1)}{2}}{k}
+\]
+
+- \(a\) must be a natural number (integer \(\geq 0\)).
+
+- For each \(a\), check if there exists \(N\) such that \(P(N,a)\), and for other \(k \neq 2017\), \(P(N,a+k)\) is false.
+
+Given the complexity, we'll try small values for \(a\) and \(k\), and check the condition for the particular \(k=2017\).
+
+Because \(k=2017\) is big, let's fix \(k=2017\), and then for trial values of \(a\), compute \(N = 2017 \cdot a + \frac{2017 \cdot 2016}{2}\), and check if for other \(k \neq 2017\), there is no integer \(a'\) such that
+
+\[
+N = k \cdot a' + \frac{k(k-1)}{2}
+\]
+
+with \(a'\) natural.
+
+We will enumerate candidate \(a\) up to a limit \(L\), compute \(N\), and check the condition.
+
+Print all \(a\) satisfying the condition, then print the minimal \(a\).
+
+```python
+# Enumerate a for given k=2017 and check the condition described.
+# For each a, compute N = k*a + k(k-1)/2, then check for all other k >1 and k!=2017 if
+# N can be represented as sum of k consecutive integers starting at some natural number.
+
+def can_represent(N, k):
+    # Check if N can be written as sum of k consecutive integers starting at some a≥0.
+    # a = (N - k(k-1)/2)/k
+    numerator = N - k*(k-1)//2
+    if numerator < 0:
+        return False
+    if numerator % k != 0:
+        return False
+    a = numerator // k
+    return a >= 0
+
+def check_a(a, k_target=2017, k_max=50):
+    # Compute N for k_target and a
+    N = k_target * a + k_target*(k_target -1)//2
+    # For all k in range 2..k_max, k != k_target, check if N can be represented by k consecutive numbers
+    for k in range(2, k_max+1):
+        if k == k_target:
+            continue
+        if can_represent(N, k):
+            return False  # representation found for other k
+    return True
+
+if __name__ == "__main__":
+    k_target = 2017
+    k_max = 50  # check other k ≤ 50 for efficiency
+    max_a = 1000  # search up to a=1000
+    candidates = []
+    for a in range(max_a+1):
+        if check_a(a, k_target, k_max):
+            print(f"a={a} satisfies condition")
+            candidates.append(a)
+    if candidates:
+        minimal = min(candidates)
+        print(f"Minimal a satisfying condition: {minimal}")
+    else:
+        print("No a found satisfying condition up to a =", max_a)
+```

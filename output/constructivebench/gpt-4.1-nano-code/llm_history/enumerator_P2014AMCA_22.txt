@@ -1,0 +1,63 @@
+[write_program]
+The problem asks us to count the number of ordered pairs (p.1, p.2) with p.1 in [1,2012] and p.2 in ℕ such that:
+
+\[ 2^{p.1} \leq 5^{p.2} < 2^{p.1+1} \]
+
+This can be rearranged into inequalities for p.2:
+
+\[ p.2 \geq \log_5(2^{p.1}) = p.1 \times \log_5(2) \]
+\[ p.2 < \log_5(2^{p.1+1}) = (p.1 + 1) \times \log_5(2) \]
+
+Let’s define \( L = \log_5(2) \).
+
+Since \( p.2 \) is an integer, for each \( p.1 \), the \( p.2 \) must satisfy:
+
+\[ p.2 \in [ \lceil p.1 \times L \rceil , \lfloor (p.1 + 1) \times L - \varepsilon \rfloor ] \]
+
+(But because of strict inequalities, we need to be precise with the bounds).
+
+Since the original inequality involves strict inequality on the right, the maximum \( p.2 \) must be less than \( (p.1+1) \times L \), but not including it. For the lower bound, it is inclusive.
+
+Note: For this count, we'd compute the range of integer \( p.2 \) for each \( p.1 \), then sum over all \( p.1 \).
+
+Given that the problem involves floating point calculations of logs, but we want exactness, we can use Python's `math.log` for log base change:
+
+\[ \log_5(x) = \frac{\log(x)}{\log(5)} \]
+and similarly for \(\log(2)\).
+
+We will enumerate \( p.1 \) from 1 to 2012, compute the bounds for \( p.2 \), count integers within, and sum these counts.
+
+Below, we implement this counting.
+
+```python
+import math
+
+# Precompute log(2) and log(5)
+log2 = math.log(2)
+log5 = math.log(5)
+
+# Use change of base to compute the logarithm
+def log_base(x, base):
+    return math.log(x) / math.log(base)
+
+total_pairs = 0
+# For each p in 1..2012
+for p1 in range(1, 2013):
+    lower_bound = p1 * log_base(2, 5)  # p.1 * log_base(5)(2)
+    upper_bound = (p1 + 1) * log_base(2, 5)  # (p.1 + 1) * log_base(5)(2)
+    # Since the inequality is:
+    # 2^{p.1} <= 5^{p.2} < 2^{p.1+1}
+    # => p.2 >= lower_bound, p.2 < upper_bound
+    # p.2 is integer, so:
+    # p.2 in [ceil(lower_bound), floor(upper_bound - epsilon)]
+    # Because strict inequality on the right, we'll subtract a tiny epsilon
+    epsilon = 1e-15
+    min_p2 = math.ceil(lower_bound)
+    max_p2 = math.floor(upper_bound - epsilon)
+    count_p2 = max(0, max_p2 - min_p2 + 1)
+    # Immediately print each count for debugging/streaming
+    print(f"p1={p1}, p2 range=[{min_p2},{max_p2}], count={count_p2}")
+    total_pairs += count_p2
+
+print("Total number of pairs:", total_pairs)
+```

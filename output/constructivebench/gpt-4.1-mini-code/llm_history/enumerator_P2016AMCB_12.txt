@@ -1,0 +1,63 @@
+[write_program]
+Problem: Find a 3x3 matrix M with entries from 1 to 9, all distinct, such that any two entries differing by 1 are adjacent cells (neighbors either horizontally or vertically), the sum of the four corners is 18, and find the center value.
+
+We want to enumerate all such matrices and print any that satisfy the constraints, along with their P2016AMCB_12_answer = M(1,1).
+
+Approach:
+- Use permutations of 1..9 as matrix entries.
+- Check distinctness (always true for permutations).
+- Check adjacent difference=1 implies adjacency in grid.
+- Check sum corners = 18.
+- Print each such M and the center value.
+- Since 9! is large (362,880), pruning is important.
+- For each permutation, can arrange as 3x3 and check constraints efficiently.
+- Will minimize output by printing only valid matrices and their center entries.
+
+We will print the matrix as a list of lists, and the center value.
+
+```python
+from itertools import permutations
+
+def neighbors(i, j):
+    return [(i+di, j+dj) for di,dj in [(-1,0),(1,0),(0,-1),(0,1)] if 0<=i+di<3 and 0<=j+dj<3]
+
+# Map 1D idx to 2D (i,j)
+def idx_to_ij(idx):
+    return divmod(idx,3)
+
+values = range(1,10)
+count = 0
+
+for perm in permutations(values):
+    M = [list(perm[i*3:(i+1)*3]) for i in range(3)]
+    # sum corners =18
+    s = M[0][0]+M[0][2]+M[2][0]+M[2][2]
+    if s!=18:
+        continue
+    # check "difference of 1 implies adjacency"
+    valid = True
+    pos = {}
+    for i in range(3):
+        for j in range(3):
+            pos[M[i][j]] = (i,j)
+    for a in range(1,10):
+        for b in range(a+1,10):
+            if abs(a-b)==1:
+                (i1,j1) = pos[a]
+                (i2,j2) = pos[b]
+                if abs(i1 - i2) + abs(j1 - j2)!=1:
+                    valid=False
+                    break
+        if not valid:
+            break
+    if not valid:
+        continue
+    # If passed all checks, print matrix and center value.
+    count += 1
+    print(f"Valid matrix #{count}:")
+    for row in M:
+        print(row)
+    print("Center value (M[1][1]) =", M[1][1])
+    print()
+```
+This program stops after enumerating all such valid matrices and prints the center values.

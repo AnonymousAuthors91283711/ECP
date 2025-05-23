@@ -1,0 +1,68 @@
+[write_program]
+The given Lean snippet describes a unique representation of natural numbers \( N \) as a non-empty list \( l \) of digits (each ≤ 10) with no leading zero. The number \( N \) is formed as \( N = \sum d_i 10^{k-i-1} \) (a base-10 expansion with digits up to 10).
+
+We want to explore properties of such representations where digits can be from 0 to 10 (including 10), rather than the usual 0–9. The uniqueness condition might fail if digits can be 10, since typically digits in base 10 are 0–9.
+
+This script enumerates numbers up to a limit and tries to find all possible lists \( l \) with digits in [0..10], leading digit ≠ 0, and which evaluate to \( N \) in base 10 with these digits. It will identify numbers that have exactly one such representation (uniqueness), printing them as candidates for \(\text{omnimath3544\_answer}\).
+
+To keep output short, limit length and \(N\), and immediately print each \( N \) with exactly one representation found.
+
+```python
+# Enumerate numbers N with unique representation as lists of digits d_i ≤ 10 in base 10,
+# with no leading zero digit and non-empty list l.
+# Prints N and its unique representation immediately.
+
+def to_number(digits):
+    # digits: list of digits with d <= 10
+    n = 0
+    for d in digits:
+        n = n * 10 + d
+    return n
+
+def find_representations(n, max_len=5, max_digit=10):
+    # Find all lists l of length ≤ max_len with digits <= max_digit,
+    # leading digit != 0, and value l interpreted in base 10 = n.
+    # Returns list of all such lists
+    reps = []
+    def backtrack(pos, length, acc, digits):
+        if pos == length:
+            if acc == n:
+                reps.append(digits[:])
+            return
+        # For next digit:
+        # if pos=0, digit in 1..max_digit; else 0..max_digit
+        start = 1 if pos == 0 else 0
+        # Since the value is acc*10 + d, and must not exceed n:
+        for d in range(start, max_digit+1):
+            val = acc * 10 + d
+            # Prune if val > n
+            if val > n:
+                continue
+            digits.append(d)
+            backtrack(pos+1, length, val, digits)
+            digits.pop()
+
+    results = []
+    for length in range(1, max_len+1):
+        reps.clear()
+        backtrack(0, length, 0, [])
+        if reps:
+            results.extend(reps)
+    return results
+
+def main():
+    max_n = 5000
+    max_len = 4
+    max_digit = 10
+    for n in range(1, max_n+1):
+        reps = find_representations(n, max_len, max_digit)
+        if len(reps) == 1:
+            # Print the number and its unique representation
+            print(f"N={n} unique representation: {reps[0]}")
+        elif len(reps) > 1:
+            # Multiple representations: print a sample (showing non-uniqueness)
+            print(f"N={n} multiple representations: {reps[:2]}")
+
+if __name__ == "__main__":
+    main()
+```

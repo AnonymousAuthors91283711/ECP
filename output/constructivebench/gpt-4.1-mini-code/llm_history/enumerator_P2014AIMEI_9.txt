@@ -1,0 +1,75 @@
+[write_program]
+The problem involves a cubic polynomial with roots \( x_1 < x_2 < x_3 \):
+\[
+\sqrt{2014} \cdot x^3 - 4029 x^2 + 2 = (x - x_1)(x - x_2)(x - x_3).
+\]
+We want to find \( x_2(x_1 + x_3) \).
+
+We will enumerate and approximate roots of a cubic polynomial 
+\[
+a x^3 + b x^2 + c x + d = 0
+\]
+with \( a = \sqrt{2014} \), \( b = -4029 \), \( c = 0 \), \( d = 2 \) to identify the three roots and check the product expression. We'll print the roots and the computed \( x_2 (x_1 + x_3) \).
+
+```python
+import math
+import cmath
+
+# Coefficients of the cubic: a x^3 + b x^2 + c x + d = 0
+a = math.sqrt(2014)
+b = -4029
+c = 0
+d = 2
+
+def cubic_roots(a,b,c,d):
+    # Convert to depressed cubic t^3 + pt + q = 0 by substitution x = t - b/(3a)
+    p = (3*a*c - b**2) / (3*a**2)
+    q = (2*b**3 - 9*a*b*c + 27*a**2*d) / (27*a**3)
+
+    # Discriminant
+    discriminant = (q/2)**2 + (p/3)**3
+
+    roots = []
+    if discriminant > 0:
+        # One real root
+        A = (-q/2 + math.sqrt(discriminant))**(1/3)
+        B = (-q/2 - math.sqrt(discriminant))**(1/3)
+        t1 = A + B
+        roots.append(t1 - b/(3*a))
+    elif abs(discriminant) < 1e-14:
+        # Triple or double root
+        if abs(q) < 1e-14:
+            t1 = 0
+            roots.extend([t1 - b/(3*a)]*3)
+        else:
+            u = (-q/2)**(1/3)
+            roots.append(2*u - b/(3*a))
+            roots.append(-u - b/(3*a))
+            roots.append(-u - b/(3*a))
+    else:
+        # Three real roots
+        r = math.sqrt(-p**3/27)
+        phi = math.acos(-q/(2*r))
+        m = 2*math.sqrt(-p/3)
+        t1 = m*math.cos(phi/3)
+        t2 = m*math.cos((phi + 2*math.pi)/3)
+        t3 = m*math.cos((phi + 4*math.pi)/3)
+        roots.extend([t1 - b/(3*a), t2 - b/(3*a), t3 - b/(3*a)])
+    # Filter real roots (imag part small)
+    # Sort roots real parts
+    filtered_roots = [root.real if isinstance(root, complex) else root for root in roots]
+    filtered_roots.sort()
+    return filtered_roots
+
+roots = cubic_roots(a,b,c,d)
+print("Roots:", roots)
+
+if len(roots) == 3:
+    x1, x2, x3 = roots
+    val = x2*(x1+x3)
+    print(f"x2*(x1 + x3) = {val}")
+else:
+    print("Did not find 3 roots.")
+
+```
+This code approximates roots well and outputs directly the needed expression for the three sorted roots as per the problem statement.

@@ -1,0 +1,53 @@
+[write_program]
+The problem involves finding pairs of monic polynomials \( P, Q \in \mathbb{C}[x] \) satisfying two divisibility conditions: \( P \mid Q^2 + 1 \) and \( Q \mid P^2 + 1 \). To explore such pairs, we will try monic polynomials \( P, Q \) of low degree with integer coefficients (for enumeration), check the divisibility relations, and print all pairs found. We restrict degrees and coefficients to keep computations manageable.
+
+```python
+# Enumerate pairs of monic polynomials P,Q with integer coefficients, degrees 1 or 2,
+# such that P | Q^2 + 1 and Q | P^2 + 1 in ℂ[x]. Focus on small integer coefficients.
+from sympy import Poly, symbols, div
+x = symbols('x')
+
+def monic_polys(deg, coeff_range):
+    # Generate monic polynomials of degree deg with integer coeffs in coeff_range,
+    # where monic means leading coeff is 1.
+    if deg == 0:
+        # degree 0 monic polynomials: only 1 (constant 1)
+        yield Poly(1, x)
+        return
+    if deg == 1:
+        # linear monic: x + a
+        for a in coeff_range:
+            yield Poly(x + a, x)
+    elif deg == 2:
+        # quadratic monic: x^2 + a x + b
+        for a in coeff_range:
+            for b in coeff_range:
+                yield Poly(x**2 + a*x + b, x)
+
+def divides(A, B):
+    # Return True if A divides B in polynomial ring ℂ[x].
+    q, r = div(B, A, domain='QQ')
+    return r.is_zero
+
+def main():
+    coeffs = range(-3,4)
+    max_deg = 2
+    found = []
+    # Enumerate possible degrees for P and Q: 1 or 2
+    for degP in [1,2]:
+        for degQ in [1,2]:
+            # Generate monic polynomials P,Q
+            for P in monic_polys(degP, coeffs):
+                for Q in monic_polys(degQ, coeffs):
+                    # Compute polynomials Q^2 +1 and P^2 +1
+                    Q2p1 = Q*Q + Poly(1, x)
+                    P2p1 = P*P + Poly(1, x)
+                    if divides(P, Q2p1) and divides(Q, P2p1):
+                        print(f"P = {P.as_expr()}, Q = {Q.as_expr()} satisfy P|Q^2+1 and Q|P^2+1")
+                        found.append((P, Q))
+    # Print summary
+    print(f"Total pairs found: {len(found)}")
+
+if __name__ == "__main__":
+    main()
+```

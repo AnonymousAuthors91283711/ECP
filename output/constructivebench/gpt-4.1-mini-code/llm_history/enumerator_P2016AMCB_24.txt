@@ -1,0 +1,61 @@
+[write_program]
+The problem asks for the least natural number \( n \) such that the number of 4-tuples \((a,b,c,d)\) of natural numbers satisfying \(\gcd(a,b,c,d)=77\) and \(\mathrm{lcm}(a,b,c,d)=n\) is 77,000.
+
+Key ideas:
+- Since \(\gcd(a,b,c,d) = 77\), let \(a=77a'\), \(b=77b'\), \(c=77c'\), \(d=77d'\), where \(\gcd(a',b',c',d')=1\).
+- Then \(\mathrm{lcm}(a,b,c,d) = 77 \times \mathrm{lcm}(a',b',c',d') = n\).
+- The problem reduces to counting 4-tuples with gcd 1 whose lcm is \(n/77\).
+- We want to find all \(n\) such that number of such tuples = 77,000.
+
+We will:
+- Consider \(n = 77 \times m\), enumerate possible \(m\).
+- Counting 4-tuples with gcd 1 and lcm \(m\) is tricky, but since tuple elements divide the lcm, use prime factorization.
+- To keep enumerations feasible, consider \(m\) with small prime exponents.
+- Print \(m\) and number of tuples for candidate \(m\).
+
+```python
+from math import gcd
+from functools import reduce
+
+# Auxiliary: gcd of list
+def gcd_list(lst):
+    return reduce(gcd, lst)
+
+# Number of 4-tuples with gcd=1 and lcm=m
+# For n=product p_i^{e_i}, number of 4-tuples with gcd=1 and lcm=n
+# can be found via a formula (hard to derive here), so try to count by inclusion-exclusion on exponents.
+
+# Strategy:
+# For prime powers: number of 4-tuples with lcm=p^e and gcd=1 is (e+1)^4 - e^4
+# because the exponent in each element can be 0..e, and at least one must be e,
+# and at least one must be 0 to keep gcd=1 over p.
+
+# For n = product p_i^{e_i}, number of 4-tuples with gcd=1 and lcm=n is product over p_i of Q(e_i),
+# where Q(e) = (e+1)^4 - e^4
+
+def Q(e):
+    return (e+1)**4 - e**4
+
+# Primes to try: 2,3,5 for small exponents since 77=7*11 is fixed factor.
+primes = [2,3,5]
+
+TARGET = 77000
+count = 0
+
+print("Enumerating candidates for n=77*m:")
+for e2 in range(0,6):
+    for e3 in range(0,6):
+        for e5 in range(0,6):
+            m = (2**e2)*(3**e3)*(5**e5)
+            val = Q(e2)*Q(e3)*Q(e5)
+            # Total tuples with gcd=1 and lcm=m = val
+            # Total tuples with gcd=77 and lcm=77*m = val
+            if val == TARGET:
+                n = 77 * m
+                print(f"Found n={n} with m={m} factored as 2^{e2}3^{e3}5^{e5}, tuples={val}")
+
+# Print minimal such n
+print("Minimal n with 77000 tuples found above.")
+```
+
+This will print all \( n = 77m \) encountered with exactly 77,000 4-tuples. We use the formula adapted from the factorization of lcm and the structure explained.

@@ -1,0 +1,58 @@
+[write_program]
+The problem studies the probability that repeatedly breaking a piece into equal parts results in all pieces being equal after 7 breaks. The total break sequences count is 7! = 5040 (assuming the pieces are broken sequentially). The desired sequences count is 1, representing the unique way to get all equal pieces by breaking exactly in half each time (or a similar unique pattern depending on the problem).
+
+We'll enumerate all possible sequences of breaks up to 7 steps, count those sequences yielding all equal-sized pieces, and calculate the ratio. The program will simulate break sequences for small cases to conjecture the answer.
+
+```python
+# Enumerate break sequences to check when all final pieces are equal-sized after 7 breaks.
+# A break splits one piece into two; starting from one piece of size 1.
+# We represent pieces as fractions of the original.
+
+from fractions import Fraction
+from collections import Counter
+
+def break_pieces(pieces):
+    # Generate all possible ways to break one piece into two equal halves
+    # For simplicity, assume each break splits one existing piece exactly in half.
+    new_states = []
+    for i, p in enumerate(pieces):
+        # skip pieces that can't be broken further (not divisible into two equal parts)
+        # but since fractions can always be split into halves, all can be broken
+        new_piece = p / 2
+        new_pieces = list(pieces[:i]) + [new_piece, new_piece] + list(pieces[i+1:])
+        new_pieces.sort()
+        new_states.append(tuple(new_pieces))
+    return new_states
+
+def enumerate_sequences(steps):
+    # Start with one piece of size 1
+    states = { (Fraction(1),): 1 }  # state: count of sequences leading here
+    for _ in range(steps):
+        next_states = {}
+        for pieces, cnt in states.items():
+            for new_state in break_pieces(pieces):
+                next_states[new_state] = next_states.get(new_state,0) + cnt
+        states = next_states
+    return states
+
+def all_equal(pieces):
+    return len(set(pieces)) == 1
+
+def main():
+    steps = 7
+    states = enumerate_sequences(steps)
+    total_sequences = 7*6*5*4*3*2*1  # 7! per problem statement
+    desired_count = 0
+    for pieces, cnt in states.items():
+        if all_equal(pieces):
+            print(f"Equal pieces: {pieces} sequences: {cnt}")
+            desired_count += cnt
+    print(f"Total sequences: {total_sequences}")
+    print(f"Desired sequences: {desired_count}")
+    prob = Fraction(desired_count, total_sequences)
+    print(f"Probability (exact): {prob}")
+    print(f"Probability (approx): {float(prob):.8f}")
+
+if __name__ == "__main__":
+    main()
+```

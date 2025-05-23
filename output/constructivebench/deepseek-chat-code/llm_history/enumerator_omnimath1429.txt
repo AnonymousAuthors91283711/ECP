@@ -1,0 +1,51 @@
+[write_program]
+This problem involves solving a recursive expectation equation for the expected number of steps in a random process. The equation is:
+
+E = 1 + p_H*E + p_M*(1 + p_H*E + p_M*0 + p_T*E) + p_T*E
+
+Where:
+- p_H = 1/4 (probability of H)
+- p_M = 1/2 (probability of M)
+- p_T = 1/4 (probability of T)
+
+We'll write a Python program to solve this equation numerically and symbolically to find the value of E.
+
+```python
+from fractions import Fraction
+from sympy import symbols, Eq, solve
+
+def solve_numerically():
+    # Using exact fractions to avoid floating point errors
+    p_H = Fraction(1, 4)
+    p_M = Fraction(1, 2)
+    p_T = Fraction(1, 4)
+    
+    # The equation: E = 1 + p_H*E + p_M*(1 + p_H*E + p_M*0 + p_T*E) + p_T*E
+    # Let's expand and collect terms:
+    # E = 1 + p_H*E + p_M + p_M*p_H*E + p_M*p_T*E + p_T*E
+    # E = (1 + p_M) + (p_H + p_M*p_H + p_M*p_T + p_T)*E
+    
+    # Move all E terms to left side:
+    # E - (p_H + p_M*p_H + p_M*p_T + p_T)*E = 1 + p_M
+    # E*(1 - p_H - p_M*p_H - p_M*p_T - p_T) = 1 + p_M
+    
+    numerator = 1 + p_M
+    denominator = 1 - p_H - p_M*p_H - p_M*p_T - p_T
+    
+    E = numerator / denominator
+    return E
+
+def solve_symbolically():
+    E, p_H, p_M, p_T = symbols('E p_H p_M p_T')
+    equation = Eq(E, 1 + p_H*E + p_M*(1 + p_H*E + p_M*0 + p_T*E) + p_T*E)
+    solution = solve(equation, E)[0]
+    return solution.subs({p_H: Fraction(1,4), p_M: Fraction(1,2), p_T: Fraction(1,4)})
+
+# Both methods should give the same result
+numerical_result = solve_numerically()
+symbolic_result = solve_symbolically()
+
+print("Numerical solution:", numerical_result)
+print("Exact value:", numerical_result.numerator, "/", numerical_result.denominator)
+print("Decimal approximation:", float(numerical_result))
+```

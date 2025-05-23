@@ -1,0 +1,48 @@
+[write_program]
+The problem appears to be a formalization in Lean using Mathlib, asking for the greatest natural number \(n\) such that 91 is the largest number \(m\) for which the Diophantine equation \(5a + nb + (n+1)c = m\) has no solutions in non-negative integers \(a, b, c\). 
+
+To interpret:
+- The inner set consists of all \(m\) that cannot be expressed as \(5a + nb + (n+1)c\).
+- The outer set's \(n\) is the greatest such \(n\) where 91 is in that set, i.e., 91 cannot be expressed as this particular form for that \(n\).
+
+I will find all feasible \(n\), check whether 91 can be expressed as such a combination, and find the largest \(n\) for which it cannot be expressed, up to some small threshold. 
+
+Here is an efficient enumeration approach:
+- Iterate over a small set of \(n\) values.
+- For each \(n\), determine if \(m=91\) can be written as \(5a + nb + (n+1)c\) with \(a, b, c \geq 0\).
+- Use a bounded search based on \(m\) and the coefficients' sizes.
+
+```python
+# Enumerate small n to find the maximum n for which 91 cannot be expressed as 5a + nb + (n+1)c
+max_n = 0
+answer_n = None
+
+for n in range(1, 101):  # sample small n values
+    can_represent = False
+    max_a = 91 // 5 + 1
+    max_b = 91 // n + 1 if n != 0 else 0
+    max_c = 91 // (n+1) + 1 if n != 0 else 0
+    
+    for a in range(max_a):
+        for b in range(max_b):
+            # Compute remaining after subtracting 5a + nb
+            remaining = 91 - 5*a - n*b
+            if remaining < 0:
+                continue
+            # Check if remaining can be expressed as (n+1)c
+            if (n+1) != 0 and remaining % (n+1) == 0:
+                c = remaining // (n+1)
+                if c >= 0:
+                    can_represent = True
+                    break
+        if can_represent:
+            break
+    
+    if not can_represent:
+        print(f"n={n}: cannot represent 91")
+        if n > max_n:
+            max_n = n
+            answer_n = n
+
+print(f"Largest n for which 91 cannot be represented: {answer_n}")
+```

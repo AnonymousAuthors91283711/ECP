@@ -1,0 +1,67 @@
+[write_program]
+The problem asks to find the greatest natural number \(N\) such that the decimal digits of \(7N\) are exactly the digits of \(N\) after multiplying by 2. More specifically, converting the digits of \(7N\) back to a number equals \(2N\).
+
+We want to enumerate natural numbers \(N\) meeting the condition:
+
+\[
+\text{fromDigits}_{10}(\text{digits}_7(N)) = 2N.
+\]
+
+Here, \(\text{digits}_7(N)\) means the digits of \(N\) in base 7, and then interpreted as base 10 digits to form a decimal number. In other words:
+
+- Take \(N\).
+- Express in base 7 giving a sequence of digits \(d_k ... d_0\).
+- Interpret this sequence as a base 10 number: \(d_k \cdot 10^k + \cdots + d_0\).
+- This equals \(2N\).
+
+The problem likely wants the greatest such natural \(N\).
+
+We will enumerate candidate \(N\) values, convert to base 7 digits, convert digits back as base 10, and check if equals \(2N\). We'll print all satisfying \(N\) found and track the max.
+
+To avoid overflow and long computations, we'll limit search to some maximum number of digits in base 7 representation, since digits are all \(\leq 6\).
+
+We print each satisfying \(N\) immediately. At the end, print the max \(N\).
+
+```python
+# Enumerate natural numbers N and check if interpreting base-7 digits of N as a decimal number equals 2*N.
+# Print all found solutions immediately, and print the maximum at the end.
+
+def base7_digits(n):
+    if n == 0:
+        return [0]
+    digits = []
+    while n > 0:
+        digits.append(n % 7)
+        n //=7
+    digits.reverse()
+    return digits
+
+def digits_as_decimal(digs):
+    # Interpret list of digits as a base-10 number
+    val = 0
+    for d in digs:
+        val = val*10 + d
+    return val
+
+def main():
+    maxN = 0
+    # We limit max digit length in base 7 to 10, since 7^10 ~ 282475249 big but still feasible.
+    # To keep output concise and fast, limit to smaller range first.
+    max_base7_len = 7
+    # Upper bound: max number with max_base7_len digits base 7 is 7**max_base7_len -1
+    upper = 7**max_base7_len - 1
+    for N in range(1, upper+1):
+        digs = base7_digits(N)
+        val = digits_as_decimal(digs)
+        if val == 2*N:
+            print(f"N={N}, base7_digits={digs}, val={val}, 2N={2*N}")
+            if N > maxN:
+                maxN = N
+    if maxN > 0:
+        print(f"Maximum N found: {maxN}")
+    else:
+        print("No N found satisfying the condition.")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,66 @@
+[write_program]
+This problem involves counting valid and "good" hands in a combinatorics scenario. We'll write a Python program to enumerate possible fractions p/q where p is the count of good hands and q is the count of valid hands, looking for the simplified form p'/q' where p' + q' matches the answer.
+
+The problem involves:
+- A deck of 49 cards (7 colors × 7 numbers)
+- Valid hands: 8-card subsets containing at least one card of each color and number
+- Good hands: valid hands where removing any one card still leaves at least one of each color and number
+
+We'll use itertools to generate combinations and check conditions.
+
+```python
+import itertools
+from math import gcd
+from collections import defaultdict
+
+def main():
+    colors = 7
+    numbers = 7
+    deck = [(c, n) for c in range(colors) for n in range(numbers)]
+    
+    # Precompute all 8-card subsets that are valid hands
+    valid_hands = []
+    for hand in itertools.combinations(deck, 8):
+        has_color = [False] * colors
+        has_number = [False] * numbers
+        for (c, n) in hand:
+            has_color[c] = True
+            has_number[n] = True
+        if all(has_color) and all(has_number):
+            valid_hands.append(hand)
+    
+    q = len(valid_hands)
+    print(f"Total valid hands (q): {q}")
+    
+    # Check which valid hands are good hands
+    good_hands = 0
+    for hand in valid_hands:
+        is_good = True
+        for card in hand:
+            # Check if removing this card maintains both conditions
+            remaining = [c for c in hand if c != card]
+            has_color = [False] * colors
+            has_number = [False] * numbers
+            for (c, n) in remaining:
+                has_color[c] = True
+                has_number[n] = True
+            if not (all(has_color) and all(has_number)):
+                is_good = False
+                break
+        if is_good:
+            good_hands += 1
+    
+    p = good_hands
+    print(f"Good hands (p): {p}")
+    
+    # Simplify fraction p/q
+    common_divisor = gcd(p, q)
+    p_prime = p // common_divisor
+    q_prime = q // common_divisor
+    
+    print(f"Simplified fraction: {p_prime}/{q_prime}")
+    print(f"Final answer (p' + q'): {p_prime + q_prime}")
+
+if __name__ == "__main__":
+    main()
+```

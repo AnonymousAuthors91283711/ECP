@@ -1,0 +1,45 @@
+[write_program]
+The problem appears to define a sequence \(a(n)\) recursively, starting with \(a(1) = 2\), and where \(a(n+1) = a(n) + l(a(n))\). Here, \(l(n) = \sup\{ p \mid p \text{ is prime and } p \le n \}\). The goal seems to find all squares that appear in the sequence \(\{ a_i \}\), i.e., all \(a_i = m^2\).
+
+To analyze, I'll:
+- Generate small values of \(a(n)\).
+- For each step, compute \(l(a(i))\) as the maximum prime \(\leq a(i)\).
+- Generate \(a(i+1) = a(i) + l(a(i))\).
+- Check if \(a(i)\) is a perfect square.
+- Limit steps to keep under 400 tokens.
+
+This will allow us to enumerate possible squares in the sequence.
+
+```python
+import math
+
+# Function to generate the largest prime <= n efficiently for small n
+def largest_prime_leq(n):
+    # For small n, a simple search suffices
+    for candidate in range(n, 1, -1):
+        for divisor in range(2, int(math.sqrt(candidate)) + 1):
+            if candidate % divisor == 0:
+                break
+        else:
+            return candidate
+    return 2 if n >= 2 else 1
+
+a = [2]  # starting value: a(1) = 2
+squares_found = set()
+steps = 50  # number of steps to simulate
+for i in range(1, steps + 1):
+    current = a[-1]
+    p_max = largest_prime_leq(current)
+    next_val = current + p_max
+    a.append(next_val)
+    root = int(math.isqrt(next_val))
+    if root * root == next_val:
+        print(f"a({i+1}) = {next_val} = {root}^2")
+        squares_found.add(next_val)
+```
+
+This script:
+- Simulates initial steps of the sequence.
+- Prints each term that is a perfect square.
+- Uses small sample values for primes and sequence length.
+- Can be extended or modified for more steps or deeper analysis.

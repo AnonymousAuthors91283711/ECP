@@ -1,0 +1,42 @@
+[write_program]
+The problem is to determine whether, for a natural number n, there exists a function f from the set {0, ..., n-1} to the 4x4 grid, such that by sequentially flipping cells and their neighbors, all cells become true. The goal is to find out for which n such an arrangement exists.
+
+Approach:
+- For small n, enumerate all possible functions f: Fin n → Fin 4 × Fin 4.
+- For each f, simulate the flipping process, starting from all false.
+- Check if the final grid is all true.
+- Output any such configuration immediately upon discovery.
+
+Since direct enumeration of all functions grows exponentially with n, limit the testing to small n (like 1 to 10). Print all solutions found.
+
+```python
+import itertools
+
+def neighbors(pos):
+    i, j = pos
+    neighbor_coords = []
+    if i > 0: neighbor_coords.append((i - 1, j))
+    if i < 3: neighbor_coords.append((i + 1, j))
+    if j > 0: neighbor_coords.append((i, j - 1))
+    if j < 3: neighbor_coords.append((i, j + 1))
+    return neighbor_coords
+
+def flip(grid, pos):
+    new_grid = [row[:] for row in grid]
+    for (i, j) in [pos] + neighbors(pos):
+        new_grid[i][j] = not new_grid[i][j]
+    return new_grid
+
+def all_true(grid):
+    return all(all(row) for row in grid)
+
+max_n = 10
+for n in range(1, max_n + 1):
+    for f_tuple in itertools.product(itertools.product(range(4), range(4)), repeat=n):
+        grid = [[False]*4 for _ in range(4)]
+        for k in range(n):
+            pos = f_tuple[k]
+            grid = flip(grid, pos)
+        if all_true(grid):
+            print(f"n={n} with f={f_tuple} leads to all true grid.")
+```

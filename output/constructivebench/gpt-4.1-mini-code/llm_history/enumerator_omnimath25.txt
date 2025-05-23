@@ -1,0 +1,87 @@
+[write_program]
+The problem involves a finite set \( S \) of size 35 and a set \( F \) of functions from \( S \) to \( S \). Property \( P(S,F,k) \) means that for any two elements \( x,y \in S \), there is a composition of \( k \) functions from \( F \) mapping \( x \) to the same image as \( y \). The theorem states if \( P(S,F,2019) \) holds, then property \( P \) also holds for some smaller natural number `omnimath25_answer`.
+
+To explore possible values for `omnimath25_answer`, we can simulate with small sample sets \( S \) and sets of functions \( F \), checking when property \( P(S,F,k) \) holds, and observe the minimal \( k \) that guarantees it. We will try enumerations with small sets (like size 3 or 4) and explore compositions up to certain lengths.
+
+Because a direct simulation with \( |S| = 35 \) is too large, the program below selects small \( S \) sizes, enumerates all functions on \( S \) (or a subset), enumerates compositions, and tries to find the minimal \( k \) such that the property \( P(S,F,k) \) holds—i.e., any two points can be connected by some composition of length \( k \).
+
+We print all candidate minimal \( k \) values found for these small parameters, which may help in conjecturing the minimal \( k \) for \( |S|=35 \).
+
+```python
+# Enumerate possible minimal k values for property P(S,F,k) with small S and F
+# to gain intuition on omnimath25_answer for |S|=35.
+# We consider S = {0,...,n-1} with n small (e.g. n=3 or 4).
+# For a given F (collection of functions S→S), property_P(S,F,k)
+# states: for all x,y in S, there exists a length-k composition from F
+# mapping x and y to the same element.
+
+from itertools import product
+
+def all_functions(n):
+    # All possible functions from S={0,...,n-1} to itself
+    # Returns list of tuples (f(0), f(1), ..., f(n-1))
+    return list(product(range(n), repeat=n))
+
+def compose(f, g):
+    # Compose functions f and g (represented as tuples): (f ∘ g)(x) = f(g(x))
+    return tuple(f[g[x]] for x in range(len(f)))
+
+def property_P_holds(S_size, F, k):
+    n = S_size
+    # For all x,y, check if there exists fs: [0..k-1]→F s.t.
+    # the composition of fs maps x and y to the same element.
+    # We model compositions as sequences of length k from F.
+    # Because large k and large F causes explosion, we optimize:
+    # We'll build sets of all images of elements under all compositions of length ≤ k,
+    # and check if for each pair x,y, there is some composition s.t. image(x)=image(y).
+
+    # To avoid full search:
+    # Generate reachable images for each element x under compositions of length k:
+    # We use sets M_i[x] = images of x under compositions of length i
+    # At step 0: M_0[x] = {x}
+    # Step i: M_i[x] = union over f in F of { f(y) for y in M_{i-1}[x] }
+    M_prev = [set([x]) for x in range(n)]
+    for step in range(1, k+1):
+        M_cur = []
+        for x in range(n):
+            images = set()
+            for f in F:
+                for y in M_prev[x]:
+                    images.add(f[y])
+            M_cur.append(images)
+        M_prev = M_cur
+
+    # Now for each pair (x,y), check intersection of M_k[x] and M_k[y] is non-empty
+    for x in range(n):
+        for y in range(n):
+            if M_prev[x].isdisjoint(M_prev[y]):
+                return False
+    return True
+
+def main():
+    for n in [3,4]:  # Small sizes for enumeration
+        print(f"S size: {n}")
+        all_funs = all_functions(n)
+        # Take candidate sets F: for example all functions or subsets with 2 or 3 functions
+        # To keep output small, try F = all functions (maximum)
+        F = all_funs
+        # Check property_P for increasing k up to threshold (e.g., 6)
+        for k in range(1, 7):
+            if property_P_holds(n, F, k):
+                print(f"property_P holds for all x,y with k={k} on S size {n} with F=all functions")
+                break
+        # Try smaller subsets of F
+        # For efficiency and output size, try F = identity + one non-identity function
+        id_fun = tuple(range(n))
+        for other_fun in all_funs:
+            if other_fun == id_fun:
+                continue
+            F_small = [id_fun, other_fun]
+            for k in range(1, 7):
+                if property_P_holds(n, F_small, k):
+                    print(f"property_P holds with k={k}, S={n}, F=id+{other_fun}")
+                    break
+
+if __name__=="__main__":
+    main()
+```

@@ -1,0 +1,70 @@
+[write_program]
+The problem characterizes the greatest natural number \(n \ge 2\) such that for every function \(z : \text{Fin } n \to \mathbb{C}\) with zero sum and all values on the unit circle, there exists a rotation \(\theta\) making all \(z_i\) equally spaced points on the unit circle (roots of unity rotated by \(\theta\)).
+
+To help conjecture the answer, we enumerate \(n\) from 2 to a small upper bound (like 10). For each \(n\), we test a few configurations \(z\) of points on the unit circle summing to zero and check if they can or cannot be represented as a rotated \(n\)-th root of unity tuple. If we find a counterexample \(z\) for some \(n\), then \(n\) is not valid; otherwise print \(n\) as possible.
+
+Because enumeration of *all* \(z\) is impossible, we sample some representative \(z\); for example, permutations of roots of unity with a modification of one point.
+
+The script prints which \(n\) it tests, and for failing \(n\) prints a counterexample. If no counterexample is found, prints "Possible n".
+
+```python
+import math
+import cmath
+
+def roots_of_unity(n):
+    return [cmath.exp(2j * math.pi * k / n) for k in range(n)]
+
+def rotated_roots(n, theta):
+    return [cmath.exp(theta*1j) * cmath.exp(2j * math.pi * k / n) for k in range(n)]
+
+def can_represent(z):
+    n = len(z)
+    # The needed theta satisfies z[i] = exp(I * theta) * exp(2πi I * i / n)
+    # So z[i]/z[0] = exp(2πi I * (i)/n)
+    # Check if ratios z[i]/z[0] are close to exp(2π i/n * i)
+    ratio0 = z[0]
+    for i in range(n):
+        ratio = z[i] / ratio0
+        expected = cmath.exp(2j * math.pi * i / n)
+        if abs(ratio - expected) > 1e-9:
+            return False
+    return True
+
+def sum_zero(z):
+    total = sum(z)
+    return abs(total) < 1e-9
+
+print("Enumerating n from 2 to 10:")
+
+for n in range(2, 11):
+    print(f"Testing n = {n}")
+
+    R = roots_of_unity(n)
+    # Check original roots - must be representable
+    if not can_represent(R):
+        print("  Counterexample: original roots not representable (should not happen)")
+
+    # Try small perturbations that sum to zero - e.g. swap two points
+    fail_found = False
+    for i in range(n):
+        for j in range(i+1, n):
+            z = R[:]
+            # Swap points and multiply one by -1 to keep sum zero but break order:
+            z[i] = -z[i]
+            z[j] = -z[j]
+            if abs(sum(z)) > 1e-9:
+                continue
+            if not can_represent(z):
+                print(f"  Counterexample with modified points at indices {i},{j}:")
+                print("   z =", [round(c.real,3)+round(c.imag,3)*1j for c in z])
+                fail_found = True
+                break
+        if fail_found:
+            break
+
+    if not fail_found:
+        print(f"  Possible n = {n}")
+
+print("End of enumeration.")
+```
+This program prints all checked \(n\), counterexamples if found, else notes possible \(n\). By running this, a conjecture about the greatest \(n\) satisfying the condition can be motivated.

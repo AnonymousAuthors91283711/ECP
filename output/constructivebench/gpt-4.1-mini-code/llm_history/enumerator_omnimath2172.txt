@@ -1,0 +1,55 @@
+[write_program]
+The problem involves analyzing the sum of ratios of the absolute values of a modified Pascal triangle entry to the standard binomial coefficients at row 2018. The modified Pascal entries are defined with subtraction instead of addition.
+
+We'll enumerate values for smaller n and k, calculate the sum of |modified_pascal(n,k)| / binomial(n,k), and observe patterns to conjecture the answer.
+
+```python
+import math
+
+def mod_pascal(n, k, memo={}):
+    # Modified Pascal triangle defined by:
+    # P(n,k) = 1 if k==0 or k==n
+    # P(n,k) = P(n-1,k) - P(n-1,k-1) for 1 <= k <= n-1
+    if (n,k) in memo:
+        return memo[(n,k)]
+    if k == 0 or k == n:
+        memo[(n,k)] = 1
+        return 1
+    if 1 <= k <= n-1:
+        val = mod_pascal(n-1,k,memo) - mod_pascal(n-1,k-1,memo)
+        memo[(n,k)] = val
+        return val
+    memo[(n,k)] = 0
+    return 0
+
+def binom(n, k):
+    # Standard binomial n choose k
+    if k < 0 or k > n:
+        return 0
+    return math.comb(n,k)
+
+# Enumerate for small n and print sum of |mod_pascal(n,k)| / C(n,k)
+max_n = 15
+for n in range(1, max_n+1):
+    s = 0
+    terms = []
+    for k in range(n+1):
+        mp = mod_pascal(n,k)
+        bc = binom(n,k)
+        ratio = abs(mp) / bc if bc != 0 else 0
+        terms.append(ratio)
+        s += ratio
+    print(f"n={n}, sum = {s:.6f}, terms:", end=" ")
+    # Print first 10 terms for brevity
+    print(", ".join(f"{t:.3f}" for t in terms[:10]))
+
+# Test direct values at n=2018 for some k to check feasibility
+n_test = 20
+print(f"\nPartial values of |mod_pascal({n_test}, k)|/C({n_test},k):")
+for k in range(0, n_test+1, 5):
+    mp = mod_pascal(n_test, k)
+    bc = binom(n_test,k)
+    ratio = abs(mp) / bc if bc != 0 else 0
+    print(f"k={k}: |P|={mp}, C={bc}, ratio={ratio:.6f}")
+```
+

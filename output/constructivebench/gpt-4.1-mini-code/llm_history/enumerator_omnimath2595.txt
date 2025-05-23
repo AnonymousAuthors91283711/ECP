@@ -1,0 +1,63 @@
+[write_program]
+The problem seems to involve the expected area covered by the union of two random 1x1 squares each centered independently and uniformly in the unit square. We want to estimate the expected value of the area of their union when their centers are in [0,1]^2.
+
+We will:
+- Generate many pairs of points in [0,1]^2.
+- Compute the union of the two 1x1 squares clipped to [0,1]^2.
+- Compute their union's area.
+- Average over all samples.
+- Print the area for each pair along with the running average.
+Note: The max possible area is at most 2 (if non-overlapping), minimum 1 (if fully overlapping). Integration is over 4D unit cube.
+
+We'll generate a grid of samples with step 0.25 in [0,1]^2 for both centers for quick enumeration (results will be partial). For each pair, compute the exact union area of two squares clipped to unit square and print it.
+
+```python
+# Estimate expected area of union of two centered squares side length 1, centers uniform in unit square.
+# Each square spans [x-0.5, x+0.5] clipped to [0,1].
+# Compute union area = sum of clipped areas - intersection area.
+# Area of each square clipped to unit square is always 1.
+# Intersection is the overlap of the two squares clipped.
+
+def clipped_interval_length(c):
+    # Length of side of square clipped in [0,1]
+    left = max(c - 0.5, 0)
+    right = min(c + 0.5, 1)
+    return max(0, right - left)
+
+def intersection_interval_length(c1, c2):
+    # Intersection of two intervals clipped to [0,1]
+    left1 = max(c1 - 0.5, 0)
+    right1 = min(c1 + 0.5, 1)
+    left2 = max(c2 - 0.5, 0)
+    right2 = min(c2 + 0.5, 1)
+    left_i = max(left1, left2)
+    right_i = min(right1, right2)
+    return max(0, right_i - left_i)
+
+def union_area(p1, p2):
+    # p1, p2 are (x,y) in [0,1]^2
+    # Each square clipped area is 1 (side length always 1 inside unit square)
+    # Intersection area is product of intersection lengths in x and y
+    inter_x = intersection_interval_length(p1[0], p2[0])
+    inter_y = intersection_interval_length(p1[1], p2[1])
+    inter_area = inter_x * inter_y
+    union = 1 + 1 - inter_area
+    return union
+
+step = 0.25
+pts = [i * step for i in range(int(1 / step) + 1)]
+sum_area = 0
+count = 0
+
+for x1 in pts:
+    for y1 in pts:
+        for x2 in pts:
+            for y2 in pts:
+                ua = union_area((x1,y1),(x2,y2))
+                sum_area += ua
+                count += 1
+                avg = sum_area / count
+                print(f"p1=({x1:.2f},{y1:.2f}) p2=({x2:.2f},{y2:.2f}) area={ua:.4f} avg={avg:.4f}")
+
+print(f"Approximate expected union area: {avg:.4f}")
+```

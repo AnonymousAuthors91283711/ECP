@@ -1,0 +1,49 @@
+[write_program]
+The problem is about finding the minimum real number \(\alpha\) such that there exist \(\beta, \gamma \in \mathbb{R}\) with
+\[
+\cos \alpha + \cos \beta + \cos \gamma = 1 \quad \text{and} \quad \sin \alpha + \sin \beta + \sin \gamma = 1.
+\]
+
+We can try to enumerate values of \(\alpha, \beta, \gamma\) on a fine grid within \([0, 2\pi]\), check the equations, and print values of \(\alpha\) that work. We will use a tolerance to handle floating-point approximations.
+
+Then we output the minimum \(\alpha\) found.
+
+```python
+import math
+
+# Check a triple (a,b,c) if it satisfies the conditions within a tolerance
+def check(a,b,c, tol=1e-6):
+    s1 = math.cos(a)+math.cos(b)+math.cos(c)
+    s2 = math.sin(a)+math.sin(b)+math.sin(c)
+    return abs(s1 - 1) < tol and abs(s2 - 1) < tol
+
+# We enumerate α, β, γ in 0..2pi by steps of 0.1 radian for efficiency
+step = 0.1
+candidates = []
+alpha_min = None
+
+print("Enumerating possible α satisfying the system for some β, γ:")
+
+alphas = [round(i*step,3) for i in range(int(2*math.pi/step)+1)]
+betas = alphas
+gammas = alphas
+
+for a in alphas:
+    found_for_a = False
+    for b in betas:
+        for c in gammas:
+            if check(a,b,c):
+                print(f"α={a:.3f}, β={b:.3f}, γ={c:.3f}")
+                if alpha_min is None or a < alpha_min:
+                    alpha_min = a
+                found_for_a = True
+                # Once we find any triple for a, no need to continue with more triples for that α
+                break
+        if found_for_a:
+            break
+
+if alpha_min is not None:
+    print(f"Minimum α found: {alpha_min:.3f}")
+else:
+    print("No α found satisfying the conditions with given discretization.")
+```

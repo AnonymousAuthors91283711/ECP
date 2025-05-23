@@ -1,0 +1,76 @@
+[write_program]
+This problem appears to involve a sequence `a(n)` defined recursively, with a sum of that sequence, and a question about the greatest `k` such that its sum is less than or equal to a given value. The sequence has `a(1) = 2` and `a(n) = a(n-1) + 1/n` for `n ≥ 2`. Recognizing this recursive relation, `a(n)` is:
+
+```
+a(n) = 2 + ∑_{k=2}^{n} 1/k
+```
+
+which simplifies to:
+
+```
+a(n) = 2 + (H_n - 1) = 1 + H_n
+```
+
+where `H_n` is the nth harmonic number.
+
+The sum of the `a(n)` sequence up to infinity is:
+
+```
+∑_{n=1}^{∞} a(n) = ∑_{n=1}^{∞} (1 + H_n)
+```
+
+This diverges as harmonic numbers grow unbounded. However, the problem states a sum `∑' n, a n` converges to `338551 + 1/2`, which suggests the partial sum stops at some finite `k`.
+
+Our goal is to find the greatest `k` such that:
+
+```
+∑_{n=1}^{k} a(n) ≤ 338551 + 1/2
+```
+
+Approach:
+- Use approximate harmonic number values for large `n`.
+- Sum `a(n)` = `1 + H_n`.
+- Sum of `a(n)` up to `k`:
+
+```
+S(k) = ∑_{n=1}^{k} (1 + H_n) = ∑_{n=1}^{k} 1 + ∑_{n=1}^{k} H_n = k + ∑_{n=1}^{k} H_n
+```
+
+- The sum of harmonic numbers, `∑_{n=1}^{k} H_n`, can be approximated:
+
+```
+∑_{n=1}^{k} H_n ≈ (k+1) H_k - k
+```
+
+which is an asymptotic approximation but suitable for large `k`.
+
+I'll implement an enumeration to find the largest `k` for which `S(k) ≤ 338551.5`.
+
+```python
+import math
+
+def harmonic(n):
+    # Approximate harmonic number
+    if n < 1:
+        return 0
+    return math.log(n) + 0.5772156649 + 1/(2*n) - 1/(12*n**2)
+
+target = 338551 + 0.5
+
+# Initialize
+k = 1
+current_sum = 0
+
+# Enumerate until exceeding target
+while True:
+    H_k = harmonic(k)
+    sum_H = (k + 1) * H_k - k  # approximation of ∑_{n=1}^k H_n
+    total = k + sum_H
+    print(f"k={k}, sum={total}")
+    if total > target:
+        break
+    k += 1
+
+# The previous k-1 is the greatest k satisfying the inequality
+print(f"Greatest k with sum ≤ {target}: {k-1}")
+```

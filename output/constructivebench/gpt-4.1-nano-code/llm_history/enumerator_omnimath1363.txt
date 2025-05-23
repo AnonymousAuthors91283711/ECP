@@ -1,0 +1,55 @@
+[write_program]
+The goal is to find the greatest possible integer \(k\) such that there exists a real polynomial \(p\) with degree 2010 (since \(\coeff p 2010 = 1\)), all coefficients either \(-1\) or 1 for indices \(0 \leq i < 2010\), and such that \(p(x) \neq 0\) for all real \(x\). Furthermore, \(k\) counts how many coefficients less than 2010 are equal to \(-1\).
+
+Since direct formal proof is complex, we will empirically construct candidate polynomials with various patterns of coefficients \(-1, 1\) and check the non-vanishing condition numerically. We aim to find configurations that maximize the number of \(-1\) coefficients, especially focusing on the first 2010 coefficients, with the leading coefficient fixed at 1.
+
+For efficiency, we will:
+- Fix the highest coefficient as 1
+- Vary the number and positions of \(-1\) coefficients among the lower degrees
+- Use a polynomial evaluation at several points to verify the non-zero condition
+
+We only print solutions when the polynomial appears to be non-zero at sampled points.
+
+```python
+import numpy as np
+
+# Polynomial degree
+degree = 2010
+max_candidates = 50  # Limit attempts for efficiency
+
+# Function to evaluate polynomial given coefficients
+def evaluate_poly(coeffs, x):
+    return sum(c * x**i for i, c in enumerate(coeffs))
+
+# Generate candidate coefficient patterns
+# Fixed leading coefficient
+leading_coeff = 1
+
+# Store best found count and pattern
+best_k = -1
+best_pattern = None
+
+np.random.seed(42)
+
+for num_neg in range(0, min(degree, max_candidates) + 1):
+    # Try multiple random patterns with num_neg negatives
+    for _ in range(10):  # 10 tries per count
+        coeffs = [1] * degree
+        # Choose random positions for -1
+        neg_positions = np.random.choice(range(degree), size=num_neg, replace=False)
+        for pos in neg_positions:
+            coeffs[pos] = -1
+        coeffs.append(leading_coeff)  # degree 2010 term at the end
+        # Check non-vanishing at several points
+        xs = np.linspace(-10, 10, 5)
+        if all(abs(evaluate_poly(coeffs, x)) > 1e-3 for x in xs):
+            k = num_neg
+            print(f"Candidate with {k} negatives: positions {sorted(neg_positions)}")
+            # Keep track if it better than previous
+            if k > best_k:
+                best_k = k
+                best_pattern = coeffs
+
+# Output the best found pattern's count
+print(f"Maximum negatives encountered: {best_k}")
+```

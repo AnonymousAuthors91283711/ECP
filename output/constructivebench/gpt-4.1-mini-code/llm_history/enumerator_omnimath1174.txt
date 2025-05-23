@@ -1,0 +1,67 @@
+[write_program]
+The problem models a process moving along positions with coins showing true (heads) or false (tails) or none, updating states according to rules. We want to find the smallest number n of steps such that after n steps, the tailsCount reaches 20.
+
+We'll simulate the step process starting from the initial state, track tailsCount, and print all step counts when tailsCount first reaches values from 1 to 20, focusing especially on 20 as requested.
+
+```python
+# Simulate the coin flipping process until tailsCount reaches 20
+
+class State:
+    def __init__(self, pos=0, dir=1, coins=None, steps=0, tailsCount=0):
+        self.pos = pos
+        self.dir = dir
+        self.coins = dict() if coins is None else coins.copy()
+        self.steps = steps
+        self.tailsCount = tailsCount
+
+def step(s):
+    c = s.coins.get(s.pos, None)
+    new_coins = s.coins.copy()
+    if c is True:
+        # coin is true -> flip to false, reverse direction, tailsCount +1
+        new_coins[s.pos] = False
+        new_s = State(
+            pos = s.pos + s.dir,
+            dir = -s.dir,
+            coins = new_coins,
+            steps = s.steps + 1,
+            tailsCount = s.tailsCount + 1
+        )
+    elif c is False:
+        # coin is false -> remove coin, same direction, tailsCount -1
+        new_coins.pop(s.pos)
+        new_s = State(
+            pos = s.pos + s.dir,
+            dir = s.dir,
+            coins = new_coins,
+            steps = s.steps + 1,
+            tailsCount = s.tailsCount - 1
+        )
+    else: # c is None
+        # no coin -> place true, same direction, tailsCount unchanged
+        new_coins[s.pos] = True
+        new_s = State(
+            pos = s.pos + s.dir,
+            dir = s.dir,
+            coins = new_coins,
+            steps = s.steps + 1,
+            tailsCount = s.tailsCount
+        )
+    return new_s
+
+def main():
+    s = State()
+    found = dict()  # tailsCount -> step count when first reached
+    # Since tailsCount can vary, run until tailsCount=20 or steps limit
+    while s.steps < 10**6:
+        if s.tailsCount > 0 and s.tailsCount not in found:
+            found[s.tailsCount] = s.steps
+            print(f"tailsCount={s.tailsCount} first at step={s.steps}")
+            if s.tailsCount == 20:
+                print(f"Minimum steps to reach tailsCount=20: {s.steps}")
+                break
+        s = step(s)
+
+if __name__ == "__main__":
+    main()
+```

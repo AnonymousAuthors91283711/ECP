@@ -1,0 +1,92 @@
+[write_program]
+The problem involves finding all real numbers \(a\) such that there exists a function \(f:\mathbb{R}\to\mathbb{R}\) with:
+- \(f\) not the identity (exists \(x\) with \(f(x) \neq x\)),
+- \(f(ax) = a^2 f(x)\) for all real \(x\),
+- \(f(f(x)) = a f(x)\) for all real \(x\).
+
+We want to enumerate possible values of \(a\) and check if the conditions can hold for some \(f\).
+
+Key observations:
+- Trying small integer values of \(a\).
+- For each \(a\), we try simple plausible functions \(f\) (e.g., linear \(f(x) = kx\)) and check the conditions.
+- The functional equations are algebraic; linear functions are a starting point.
+- We print values \(a\) where such \(f\) is constructible.
+
+```python
+# Enumerate candidate real values a and check possible f satisfying the conditions.
+# We'll limit to small integers and rational fractions for demonstration.
+# Check linear functions f(x) = kx, which lend themselves to easy algebraic checks.
+
+def test_a(a):
+    # f(x) = kx
+    # Condition 1: exists x with f(x)!=x => k != 1
+    # Condition 2: f(a x) = a^2 f(x) => k a x = a^2 k x => k a = a^2 k => k a = a^2 k
+    # Trivially holds for all x (if k=0 or a=0), but let's solve precisely:
+    # Actually this simplifies to no condition since both sides equal k a x.
+    # Wait, careful:
+    # f(a x) = k a x
+    # a^2 f(x) = a^2 k x
+    # So k a x = a^2 k x => k a = a^2 k => k a - a^2 k = 0 => k a (1 - a) = 0
+    # So either k=0 or a=1  (Note: if a=0 then both sides zero)
+    # Condition 3: f(f(x)) = a f(x)
+    # f(f(x)) = f(k x) = k k x = k^2 x
+    # a f(x) = a k x
+    # So for all x: k^2 x = a k x => k^2 = a k => k^2 - a k = 0 => k(k - a) = 0
+    # So k=0 or k=a
+
+    # Combine:
+    # From cond 2: k=0 or a=1
+    # From cond 3: k=0 or k=a
+    # Also k != 1 (to avoid f(x)=x)
+    # Explore cases:
+
+    results = []
+
+    # Case a=0
+    if abs(a) < 1e-12:
+        # cond 2: k a = a^2 k always true as all zero
+        # cond 3: k^2 = a k => k^2 = 0 => k=0
+        # k=0 trivial f(x)=0, f(f(x))=0 = a f(x)=0, holds
+        # But k=0 means f(x)=0. Is f(x)=x? No, unless x=0
+        # So f differs from identity whenever x != 0
+        # Thus a=0 works with f=0
+        results.append((a, 0))
+    else:
+        # a !=0
+        if abs(a - 1.0) < 1e-12:
+            # a=1
+            # cond2: k a (1 - a) = 0 -> always true (a=1)
+            # cond3: k(k - a)=0 -> k=0 or k=1
+            # k=1 ruled out since f(x)=x disallowed
+            # So k=0 possible
+            # f=0
+            results.append((a,0))
+        else:
+            # a !=0 and a !=1
+            # cond2: k a (1 - a) =0 => either k=0 or a=1(not)
+            # So k=0
+            # cond3 k=0 or k=a, so k=0
+            # k=0 allowed, f(x)=0
+            results.append((a,0))
+
+    # Analyze k values found and print viable a and k !=1 cases
+    # To be "not identity", k !=1
+    valid = []
+    for (aval,k) in results:
+        if abs(k - 1) > 1e-12:  # f different from x
+            valid.append(aval)
+
+    for v in valid:
+        print("Possible a with linear f: ", v)
+
+def main():
+    import math
+    print("Testing candidate a values and checking for suitable f:")
+    candidates = [-2, -1, -0.5, 0, 0.5, 1, 2]
+    for a in candidates:
+        print(f"Testing a = {a}")
+        test_a(a)
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,46 @@
+[write_program]
+This problem is about finding the minimum number of guesses needed to uniquely identify a secret binary string of length `n`, given that any guess differs from the secret in exactly `k` positions. We'll write a Python program to enumerate possible values for small `n` and `k` to help conjecture the general formula.
+
+The approach:
+1. For small values of `n` and `k` (with `k < n`), we'll generate all possible binary strings of length `n`
+2. For each possible set of guesses, we'll check if it satisfies the uniqueness condition
+3. We'll find the minimal size of such guess sets
+
+```python
+from itertools import combinations, product
+
+def solve(n, k):
+    # Generate all possible binary strings of length n
+    all_strings = list(product([0,1], repeat=n))
+    
+    # Try increasing guess set sizes until we find one that works
+    for m in range(1, 2**n + 1):
+        # Try all possible combinations of m guesses
+        for guesses in combinations(all_strings, m):
+            valid = True
+            for s in all_strings:
+                # Check if s is uniquely determined by the guesses
+                possible = []
+                for t in all_strings:
+                    match = True
+                    for u in guesses:
+                        if sum(a != b for a, b in zip(u, t)) != k:
+                            match = False
+                            break
+                    if match:
+                        possible.append(t)
+                if len(possible) != 1 or possible[0] != s:
+                    valid = False
+                    break
+            if valid:
+                print(f"For n={n}, k={k}, found solution with m={m}")
+                return m
+    return None
+
+# Test small cases
+for n in range(2, 6):
+    for k in range(1, n):
+        solve(n, k)
+```
+
+Note: This brute-force approach will only work for very small values of `n` (up to about 4) due to combinatorial explosion. For larger values, we'd need a more sophisticated approach or mathematical insight. The output will show the minimal `m` for each tested pair (n,k), helping to identify patterns that might lead to a general formula.

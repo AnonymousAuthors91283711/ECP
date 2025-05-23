@@ -1,0 +1,64 @@
+[write_program]
+This problem is about counting bijections \( f : (3 \times 3) \to \{1, \ldots, 9\} \) such that for every pair of grid neighbors (either horizontally or vertically adjacent), the assigned values are coprime. The domain is a \(3 \times 3\) grid, and the codomain is \(\{1, \ldots, 9\}\). We want to count bijections \(f\) with the given coprimality constraints on neighbors.
+
+We will:
+- Enumerate all permutations from 0..8 to 0..8 representing bijections \((i,j) \mapsto f(i,j)\).
+- Only consider the grid neighbors, i.e., pairs \(((r,c),(r, c+1))\) and \(((r,c),(r+1, c))\) inside the \(3 \times 3\) grid.
+- Check if the values assigned to these neighbors plus 1 are coprime (add 1 because of `.val.succ`).
+- Print each valid permutation as soon as found.
+- Print the total count at the end.
+
+This brute-force approach is feasible because \(9! = 362,880\) permutations are enumerable in reasonable time for a script. We rely on fast coprimality checking and early pruning.
+
+```python
+from math import gcd
+from itertools import permutations
+
+# Grid size
+n = 3
+# All positions in the grid as list of indices from 0 to 8
+positions = [(r, c) for r in range(n) for c in range(n)]
+
+# Neighbors: pairs of indices connected horizontally or vertically
+neighbors = []
+for r in range(n):
+    for c in range(n):
+        idx = r * n + c
+        if c + 1 < n:
+            neighbors.append((idx, r * n + (c + 1)))
+        if r + 1 < n:
+            neighbors.append((idx, (r + 1) * n + c))
+
+count = 0
+# For efficiency, precompute neighbor pairs
+def neighbors_for(idx):
+    r, c = divmod(idx, n)
+    for dr, dc in [(0, 1), (1, 0)]:
+        nr, nc = r + dr, c + dc
+        if 0 <= nr < n and 0 <= nc < n:
+            yield nr * n + nc
+
+print("Enumerating valid bijections f : (3x3) -> {1..9} with coprime neighbor values...")
+
+for perm in permutations(range(9)):
+    # perm maps i to perm[i], values zero-based (0..8), need +1 for values 1..9
+    # Check coprimality of neighbors
+    valid = True
+    for i in range(9):
+        vi = perm[i] + 1
+        for j in neighbors_for(i):
+            vj = perm[j] + 1
+            if gcd(vi, vj) != 1:
+                valid = False
+                break
+        if not valid:
+            break
+    if valid:
+        count += 1
+        # Print the solution as a 3x3 matrix, values 1..9
+        print(f"Solution #{count}:")
+        for r in range(n):
+            row = [perm[r*n + c] + 1 for c in range(n)]
+            print(row)
+print(f"Total number of valid bijections: {count}")
+```

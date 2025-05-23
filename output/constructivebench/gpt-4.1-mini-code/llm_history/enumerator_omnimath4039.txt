@@ -1,0 +1,90 @@
+[write_program]
+The problem involves finding the largest integer \( n \) for which there exists a family of \( n \) subsets ("companies") of a set of 9 girls and 15 boys, satisfying some compatibility and maximality conditions related to the "likes" relation between boys and girls.
+
+To start, we will enumerate configurations with smaller sets of girls and boys, generate possible "likes" relations, and try to find large families of subsets satisfying the given properties. For efficiency, the initial enumeration will consider very small examples (e.g., 2 girls, 3 boys) and gradually try to find the size \( n \) of such families. We will print candidate values for \( n \), and record parameters used.
+
+```python
+# enumerator.py
+from itertools import combinations, chain, product
+
+def powerset(iterable):
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+def is_company(c, girls, boys, likes):
+    # Check if for every boy-girl pair in c, boy likes girl
+    c_girls = set(c) & girls
+    c_boys = set(c) & boys
+    for b in c_boys:
+        for g in c_girls:
+            if (b, g) not in likes:
+                return False
+    return True
+
+def maximality_check(c, girls, boys, likes):
+    universe = girls | boys
+    # Every strict superset s of c fails the condition of likes for some boy-girl
+    # Check every superset s of c with size = len(c)+1 for efficiency
+    c_set = set(c)
+    universe = list(universe)
+    for add in universe:
+        if add in c_set:
+            continue
+        s = c_set | {add}
+        s_girls = s & girls
+        s_boys = s & boys
+        # If s satisfies that all boy-girl pairs are liked, then c not maximal
+        if all((b,g) in likes for b in s_boys for g in s_girls):
+            return False
+    return True
+
+def main():
+    # Sample parameters: 2 girls, 3 boys
+    girls = set(['g1', 'g2'])
+    boys = set(['b1', 'b2', 'b3'])
+
+    # Enumerate some likes relations - use all (b,g) pairs to maximize size
+    # Try smaller subsets of likes to reduce complexity
+    all_pairs = list(product(boys, girls))
+
+    print(f"Parameters: #girls={len(girls)}, #boys={len(boys)}")
+
+    # Let's try with full likes (all pairs)
+    likes = set(all_pairs)
+
+    universe = girls | boys
+    # Candidates companies: all subsets of universe
+    candidates = []
+    for c in powerset(universe):
+        if len(c) == 0:
+            continue
+        if is_company(c, girls, boys, likes) and maximality_check(c, girls, boys, likes):
+            candidates.append(frozenset(c))
+            print(f"Company found: {set(c)}")
+
+    # Now find largest 'n' for which there is a family of n such companies
+    # We'll look for mutually distinct companies
+    # By definition, companies are sets, so distinct means distinct sets
+
+    # For simplicity, print the total count of companies
+    print(f"Total companies found: {len(candidates)}")
+
+    # Now enumerate families of size n for n from total down to 1
+    # Families are finite sets of companies
+    # Condition: for every company c in family, c subset of girls ∪ boys (always true here)
+    # conditions already checked for each company, so family condition reduces to size
+
+    max_n = 0
+    for n in range(len(candidates), 0, -1):
+        # Simply check if we can pick n companies (all distinct)
+        if len(candidates) >= n:
+            max_n = n
+            # print the family size found
+            print(f"Candidate family size n = {n}")
+            break
+
+    print(f"Max family size found: {max_n}")
+
+if __name__ == "__main__":
+    main()
+```

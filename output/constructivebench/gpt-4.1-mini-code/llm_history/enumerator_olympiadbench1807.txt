@@ -1,0 +1,61 @@
+[write_program]
+The problem setup involves:
+- A set \(L_1 \subset \mathbb{R}\) with cardinality 10.
+- \(L_2 = \{ q \cdot a \cdot b \mid a,b \in L_1 \}\).
+- \(L_3 = \{ a^2 + b^2 - c^2 - d^2 \mid a,b,c,d \in L_1 \}\).
+- The question is characterizing all real \(q\) such that \(L_2 \subseteq L_3\).
+
+To explore this, we will:
+- Enumerate some small finite sets \(L_1\) with 10 distinct reals,
+- Choose various \(q\) from a small sample (e.g., integers or rationals),
+- Check if for all \(a,b \in L_1\), \( q a b \in L_3 \),
+- Print \(q\) values that satisfy this condition for each \(L_1\),
+- Aim to observe a pattern.
+
+```python
+from itertools import combinations_with_replacement, product
+import math
+
+def main():
+    # Sample sets L1 of size 10; use simple sets to keep computations feasible
+    samples = [
+        list(range(1,11)),             # 1..10
+        [i/2 for i in range(1,21)],   # 0.5..10 in steps of 0.5
+        [(-1)**i * i for i in range(1,11)],  # alternating signs: -1,2,-3,4,...
+    ]
+    # q candidates to test (small integers and fractions)
+    q_candidates = [1, 2, 0.5, -1, -0.5]
+
+    for L1 in samples:
+        print(f"L1 = {L1}")
+        # Precompute L3 = {a^2 + b^2 - c^2 - d^2 | a,b,c,d in L1}
+        L1_sq = [x*x for x in L1]
+        L3 = set()
+        for a_sq in L1_sq:
+            for b_sq in L1_sq:
+                for c_sq in L1_sq:
+                    for d_sq in L1_sq:
+                        val = a_sq + b_sq - c_sq - d_sq
+                        if val == int(val):
+                            val = int(val)
+                        L3.add(val)
+
+        for q in q_candidates:
+            # Check if for all a,b in L1, q*a*b in L3
+            all_in = True
+            for a in L1:
+                for b in L1:
+                    val = q*a*b
+                    # Accept exact matches only
+                    if val not in L3:
+                        all_in = False
+                        break
+                if not all_in:
+                    break
+            if all_in:
+                print(f"q = {q} satisfies L2 ⊆ L3")
+        print("-"*30)
+
+if __name__ == "__main__":
+    main()
+```

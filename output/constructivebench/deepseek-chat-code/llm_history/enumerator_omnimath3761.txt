@@ -1,0 +1,58 @@
+[write_program]
+This problem involves finding the value of a polynomial Q evaluated at x=-1/2, given certain conditions about polynomials P and Q. We'll write a Python program to enumerate possible values for small n and look for patterns.
+
+The key observations:
+1. We need to find P and Q of degree ≤n satisfying the given equation
+2. The equation must hold for all x, so coefficients must match
+3. We'll use symbolic computation to find Q(-1/2) for small n
+
+```python
+from sympy import symbols, Poly, binomial, expand, solve
+
+def compute_q_minus_half(n_max=5):
+    x = symbols('x')
+    for n in range(n_max + 1):
+        print(f"\nn = {n}")
+        
+        # Create general polynomials P and Q of degree <=n
+        p_coeffs = symbols([f'a{i}' for i in range(n+1)])
+        q_coeffs = symbols([f'b{i}' for i in range(n+1)])
+        
+        P = Poly(sum(p_coeffs[i]*x**i for i in range(n+1)), x)
+        Q = Poly(sum(q_coeffs[i]*x**i for i in range(n+1)), x)
+        
+        # Construct the equation P*x^(n+1) + Q*(x+1)^(n+1) = 1
+        lhs = P * x**(n+1) + Q * (x + 1)**(n+1)
+        expanded_lhs = expand(lhs)
+        
+        # Get coefficients of the expanded polynomial
+        coeff_eqs = []
+        for k in range(2*n + 2):
+            if k == 0:
+                # Constant term must be 1
+                coeff_eqs.append(expanded_lhs.coeff(x, k) - 1)
+            else:
+                # Other coefficients must be 0
+                coeff_eqs.append(expanded_lhs.coeff(x, k))
+        
+        # Solve the system of equations
+        solution = solve(coeff_eqs, p_coeffs + q_coeffs)
+        
+        if not solution:
+            print("No solution found")
+            continue
+            
+        # Evaluate Q(-1/2) using the solution
+        Q_solved = Q.subs(solution)
+        q_value = Q_solved.subs(x, -1/2)
+        
+        # Simplify and print exact form if possible
+        from sympy import simplify, fraction, Rational
+        simplified = simplify(q_value)
+        num, den = fraction(simplified)
+        if den != 1:
+            simplified = Rational(num, den)
+        print(f"Q(-1/2) = {simplified}")
+
+compute_q_minus_half()
+```

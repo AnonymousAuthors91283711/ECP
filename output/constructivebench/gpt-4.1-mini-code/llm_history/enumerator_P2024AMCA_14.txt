@@ -1,0 +1,126 @@
+[write_program]
+The problem involves a 5x5 integer matrix A where each row and each column forms an arithmetic progression (AP). Given some matrix entries, we want to find the value at A(0,1).
+
+We have these conditions:
+
+- For each row r, there exist integers a_r, d_r so that A[r,i] = a_r + i * d_r for i=0..4
+- For each column c, there exist integers a'_c, d'_c so that A[i,c] = a'_c + i * d'_c for i=0..4
+- A[4,4] = 0
+- A[1,3] = 48
+- A[3,2] = 16
+- A[2,0] = 12
+
+We want to find A[0,1].
+
+We can try to enumerate all integer arithmetic progressions (with integer terms) for rows and columns consistent with these conditions. The key is that the position (r,c) must satisfy:
+
+a_r + c * d_r = a'_c + r * d'_c
+
+So the grid is defined by both sets of parameters (a_r, d_r) and (a'_c, d'_c) with coherence conditions.
+
+Given known values, we'd try small integer values for these parameters to find consistent solutions, then output A[0,1].
+
+We try small ranges for the differences and initial terms, considering the given constraints.
+
+Below is a Python program to enumerate possibilities and print found values of A[0,1] consistent with the problem.
+
+```python
+# Enumerate integer 5x5 matrices A with arithmetic progressions in rows and columns,
+# satisfying given points and print possible values at A[0,1].
+
+def main():
+    # To limit search, try arithmetic progressions with integer start and step in range [-50..50]
+    vals = set()
+    # We store row params: a_r and d_r for rows: 0..4
+    # Similarly column params: a_c and d_c for cols: 0..4
+    # Use the key equations to reduce search:
+    # A[4][4] = a_4 + 4*d_4 = a'_4 + 4*d'_4 = 0
+    # A[1][3] = a_1 + 3*d_1 = a'_3 + 1*d'_3 = 48
+    # A[3][2] = a_3 + 2*d_3 = a'_2 + 3*d'_2 =16
+    # A[2][0] = a_2 + 0*d_2 = a'_0 + 2*d'_0 =12
+
+    # We loop over possible integer difference terms for rows and columns
+    rng = range(-20, 21)  # smaller range to keep output small
+    
+    # We'll try all combinations for row diffs d_r and column diffs d'_c
+    for d0 in rng:
+        for d1 in rng:
+            for d2 in rng:
+                for d3 in rng:
+                    for d4 in rng:
+                        for D0 in rng:
+                            for D1 in rng:
+                                for D2 in rng:
+                                    for D3 in rng:
+                                        for D4 in rng:
+                                            # From A[4][4] = 0:
+                                            # a_4 + 4 d4 = a'_4 + 4 D4 =0
+                                            # So a_4 = -4 d4; a'_4 = -4 D4
+                                            a4 = -4*d4
+                                            a4p = -4*D4
+                                            # They must be equal by matrix equality at (4,4)
+                                            if a4 != a4p:
+                                                continue
+                                            # From A[1][3] = 48
+                                            # a_1 +3 d1 = a'_3 +1 D3 =48
+                                            # a_1 unknown; a'_3 unknown
+                                            # => a_1 - a'_3 = 48 -3 d1 + D3
+                                            # But need more to fix a_1 and a'_3
+
+                                            # From A[3][2] =16
+                                            # a_3 +2 d3 = a'_2 +3 D2 =16
+                                            # a_3 - a'_2 =16 - 2 d3 +3 D2
+
+                                            # From A[2][0] =12
+                                            # a_2 + 0 d2 = a'_0 + 2 D0 =12
+                                            # a_2 - a'_0 =12 - 2 D0
+
+                                            # For rows a_r : a0, a1, a2, a3, a4 (a4 known)
+                                            # For cols a'_c: a'_0, a'_1, a'_2, a'_3, a'_4 (a'_4 known)
+
+                                            # We can express a_0, a_1, a_2, a_3; a'_0, a'_1, a'_2, a'_3
+
+                                            # We'll choose integer a'_0, a'_1, a'_2, a'_3 in some range,
+                                            # then determine a_r from the equalities:
+                                            # a_r + c*d_r = a'_c + r*D_c for all c,r
+
+                                            # Try a'_0 in range
+                                            for a0p in rng:
+                                                # From A[2][0]:
+                                                a2 = 12 - 2*D0 + a0p
+                                                # From A[1][3]:
+                                                # a_1 - a'_3 = 48 - 3 d1 + D3
+                                                # We'll try a'_3
+                                                for a3p in rng:
+                                                    a1 = 48 - 3*d1 + D3 + a3p
+                                                    # From A[3][2]:
+                                                    # a_3 - a'_2 = 16 - 2 d3 + 3 D2
+                                                    for a2p in rng:
+                                                        a3 = 16 - 2*d3 + 3*D2 + a2p
+                                                        # Column a'_1 is free:
+                                                        for a1p in rng:
+                                                            # Column a'_4 and row a4 known above
+                                                            # Check consistency for all points:
+                                                            # For all r,c: a_r + c d_r = a'_c + r D_c
+                                                            # We can check for (0,0): a0 + 0 * d0 == a0p + 0*D0
+                                                            a0 = a0p  # From (0,0)
+                                                            # a0 already assigned
+                                                            # Check all points quickly:
+                                                            valid = True
+                                                            for r,d_r,a_r in [(0,d0,a0), (1,d1,a1), (2,d2,a2), (3,d3,a3), (4,d4,a4)]:
+                                                                for c,D_c,a_cp in [(0,D0,a0p), (1,D1,a1p), (2,D2,a2p), (3,D3,a3p), (4,D4,a4p)]:
+                                                                    if a_r + c*d_r != a_cp + r*D_c:
+                                                                        valid = False
+                                                                        break
+                                                                if not valid:
+                                                                    break
+                                                            if valid:
+                                                                # If valid, output the result at (0,1): a_0 + 1*d_0
+                                                                ans = a0 + d0
+                                                                if ans not in vals:
+                                                                    vals.add(ans)
+                                                                    print(f"Possible A[0,1]={ans}")
+
+if __name__ == "__main__":
+    main()
+```

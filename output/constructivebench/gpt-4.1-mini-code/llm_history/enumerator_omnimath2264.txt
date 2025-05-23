@@ -1,0 +1,56 @@
+[write_program]
+The problem involves sequences of black and white "steps" applied to cube labelings, and we want to find the greatest value \(n\) that can appear at some vertex after applying any sequence of length 8 with exactly 4 black and 4 white steps. To gain insight, we enumerate all such sequences, simulate the steps starting from a chosen initial labeling, and report possible values encountered.
+
+Below, the program uses a simplified numeric model representing vertex labels as integers indexed from 0 to 7 (the cube vertices). We define black_step and white_step operations as per the problem, generate all sequences with 4 True (black) and 4 False (white), apply them, and print out the values found at any vertex. The highest encountered value is printed at the end.
+
+```python
+from itertools import combinations, permutations, product
+
+# Vertices indexed 0..7 representing cube vertices
+VERTICES = list(range(8))
+
+# Initial labeling: assign all vertices 1 to start
+initial = {v: 1 for v in VERTICES}
+
+# Helper to get neighbors for black and white steps according to problem
+def black_neighbors(v):
+    # neighbors: v±1 and v±2 mod 8, excluding v itself
+    return {(v+1)%8, (v-1)%8, (v+2)%8, (v-2)%8}
+
+def white_neighbors(v):
+    # neighbors: v±3 and v±4 mod 8, excluding v itself
+    return {(v+3)%8, (v-3)%8, (v+4)%8, (v-4)%8}
+
+def black_step(f):
+    return {v: sum(f[u] for u in black_neighbors(v)) for v in VERTICES}
+
+def white_step(f):
+    return {v: sum(f[u] for u in white_neighbors(v)) for v in VERTICES}
+
+# Generate all sequences with 4 True and 4 False (black and white)
+def generate_sequences():
+    base = [True]*4 + [False]*4
+    seen = set()
+    for seq in set(permutations(base)):
+        if seq not in seen:
+            seen.add(seq)
+            yield seq
+
+def main():
+    max_value = -1
+    print("Enumerating sequences with 4 black (True) and 4 white (False) steps...")
+    for seq in generate_sequences():
+        f = initial
+        for step in seq:
+            f = black_step(f) if step else white_step(f)
+        # Collect max value among vertices after last step
+        seq_max = max(f.values())
+        # Print the sequence and max found for each sequence
+        print("Sequence:", ''.join('B' if b else 'W' for b in seq), "Max value:", seq_max)
+        if seq_max > max_value:
+            max_value = seq_max
+    print("Overall maximum value n found:", max_value)
+
+if __name__ == "__main__":
+    main()
+```

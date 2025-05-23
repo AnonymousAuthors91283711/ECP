@@ -1,0 +1,40 @@
+[write_program]
+Let's enumerate triples \((a, b, c)\) of positive integers (and possibly rationals with denominators > 1) such that \(a + b + c = 10\), and check when \(a*b + b*c + c*a = 25\), then output the minimal product among \(\{ab, bc, ca\}\).
+
+Since the problem involves real numbers and continuous conditions, we'll discretize \(a, b, c\) over a fine grid on \((0,10)\) with step 0.1 to approximate and enumerate candidates. We'll print candidate minimal products for valid triples, showing progressively better approximations as we find them.
+
+```python
+import math
+
+def close(x, y, tol=1e-6):
+    return abs(x - y) < tol
+
+step = 0.1
+found_min = None
+candidates = set()
+
+print("Enumerating (a,b,c) with a,b,c>0, a+b+c=10, a*b + b*c + c*a=25")
+print("Discrete steps: 0.1")
+
+for i in range(1, 100):  # a from 0.1 to 9.9
+    a = i * step
+    for j in range(1, 100):  # b from 0.1 to 9.9
+        b = j * step
+        c = 10 - a - b
+        if c <= 0:
+            continue
+        s = a*b + b*c + c*a
+        if close(s, 25, tol=0.05):  # relaxed tolerance for step=0.1
+            m = min(a*b, b*c, c*a)
+            print(f"a={a:.1f}, b={b:.1f}, c={c:.1f}, min_product={m:.4f}")
+            candidates.add(round(m,4))
+            if (found_min is None) or (m > found_min):
+                found_min = m
+
+if candidates:
+    max_m = max(candidates)
+    print(f"Maximum minimal product found (approx) = {max_m}")
+else:
+    print("No candidates found.")
+```
+This program will print on the fly candidates and at the end print the approximate maximum minimal product among those candidates. It uses a grid search with step 0.1 for speed and control output size.

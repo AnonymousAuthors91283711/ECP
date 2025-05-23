@@ -1,0 +1,49 @@
+[write_program]
+This problem involves finding the greatest `k` where `N` is a three-digit number between 100 and 999, with a special property on its divisors: for any two distinct divisors `a` and `b` of `N`, the difference `(a - b)` is divisible by 3. The value of `k` is determined by `N * (number of divisors of N)`.
+
+The key mathematical insight:
+- For the property `(∀ a, b | N, a ≠ b → 3 | (a - b))`, the divisors of `N` are all congruent modulo 3.
+- This is true if and only if *all* divisors of `N` are congruent modulo 3, meaning either:
+  - All divisors are divisible by 3, or
+  - All divisors are not divisible by 3 (but then differences of divisors could differ mod 3, contradicting the property unless trivial).
+
+Since the divisors of `N` are either all congruent to 0 mod 3 (meaning `3 | N`) or all ±1 mod 3 (which is unlikely for divisors of a composite), the most consistent case is when *all divisors* are divisible by 3, which occurs when `N` itself is divisible by 3, and, in particular, when divisors are all multiples of 3.
+
+Thus, likely `N` is divisible by 3, and possibly 3 divides the product of its divisors in a way that all divisors are identical modulo 3.
+
+**Approach:**
+- Enumerate `N` from 100 to 999.
+- For each `N` divisible by 3, check divisibility conditions.
+- Count divisors of `N`.
+- Compute `k = N * number_of_divisors(N)`.
+- Track the maximum `k`.
+- Print each candidate answer immediately when found.
+
+The search space is small enough for enumeration since only 300 numbers are checked (from 100 to 999 divisible by 3).
+
+Here's the implementation:
+
+```python
+# Enumerate N between 100 and 999 divisible by 3
+max_k = -1
+max_N = None
+for N in range(102, 1000, 3):
+    divisors = []
+    for d in range(1, int(N**0.5) + 1):
+        if N % d == 0:
+            divisors.append(d)
+            if d != N // d:
+                divisors.append(N // d)
+    # Check the divisor difference divisibility condition
+    # For all pairs of divisors, their difference should be divisible by 3
+    # To optimize, check that all divisors are congruent mod 3
+    if all(d % 3 == divisors[0] % 3 for d in divisors):
+        k = N * len(divisors)
+        print(k)  # stream each answer
+        if k > max_k:
+            max_k = k
+            max_N = N
+print("Maximum k:", max_k)
+```
+
+This code enumerates over all three-digit multiples of 3, computes their divisors, and verifies the divisibility condition efficiently by checking the divisors' congruence modulo 3. It prints each valid `k` immediately and finally outputs the maximum found.

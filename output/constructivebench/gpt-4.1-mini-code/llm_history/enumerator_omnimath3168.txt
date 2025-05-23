@@ -1,0 +1,55 @@
+[write_program]
+The problem involves two positive real numbers x and y meeting certain multiplication constraints, and asks for the value of (x+1)(y+1). We will enumerate rational candidates for x and y that satisfy the equations approximately, then compute (x+1)(y+1). We'll sample x and y based on the constraints and print candidates satisfying all constraints closely.
+
+```python
+# Enumerate positive rationals approximating given constraints,
+# print (x+1)*(y+1) for candidates satisfying equations roughly.
+
+def close(a, b, tol=1e-6):
+    return abs(a - b) < tol
+
+# Given x*y = 1/9, so y = 1/(9x)
+# We also require x*(y+1) = 7/9 and y*(x+1) = 5/18.
+# Substitute y = 1/(9x) into other equations:
+# Check which x > 0 satisfy both equations closely.
+
+def main():
+    from fractions import Fraction
+    from math import isclose
+
+    target_xy = Fraction(1, 9)
+    target_x_yplus1 = Fraction(7, 9)
+    target_y_xplus1 = Fraction(5, 18)
+
+    # Check x in (0, 2] with small enough step for rationals
+    # We'll generate fractions with denominators up to 50 for manageability.
+    denominators = range(1, 51)
+    numerators = range(1, 101)
+
+    printed = set()
+
+    for d in denominators:
+        for n in numerators:
+            x = Fraction(n, d)
+            if x <= 0:
+                continue
+            y = target_xy / x  # y = 1/(9x)
+            if y <= 0:
+                continue
+            # Compute x*(y+1)
+            val1 = x * (y + 1)
+            if not close(val1, target_x_yplus1, tol=1e-6):
+                continue
+            # Compute y*(x+1)
+            val2 = y * (x + 1)
+            if not close(val2, target_y_xplus1, tol=1e-6):
+                continue
+
+            ans = (x + 1) * (y + 1)
+            if ans not in printed:
+                printed.add(ans)
+                print(f"x = {x}, y = {y}, (x+1)(y+1) = {ans} ≈ {float(ans):.6f}")
+
+if __name__ == "__main__":
+    main()
+```

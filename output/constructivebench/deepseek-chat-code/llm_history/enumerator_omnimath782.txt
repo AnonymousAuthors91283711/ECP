@@ -1,0 +1,58 @@
+[write_program]
+This problem involves counting the number of ways to tile a 12x12 grid using four specific pentomino shapes (L, T, P, and N). We'll write a Python program to enumerate possible tilings for smaller grid sizes first to identify a pattern.
+
+```python
+from itertools import product
+
+# Define the four pentomino shapes
+shapes = [
+    # L-shape
+    lambda x, y: {(x, y), (x+1, y), (x+2, y), (x, y+1), (x+1, y+1)},
+    # T-shape
+    lambda x, y: {(x, y), (x+1, y), (x, y+1), (x, y+2), (x+1, y+2)},
+    # P-shape
+    lambda x, y: {(x, y), (x+1, y), (x+2, y), (x+1, y+1), (x+2, y+1)},
+    # N-shape
+    lambda x, y: {(x, y), (x+1, y), (x+1, y+1), (x+1, y+2), (x+2, y+2)}
+]
+
+def is_valid(grid_size, cells):
+    """Check if all cells are within grid bounds"""
+    return all(0 <= x < grid_size and 0 <= y < grid_size for x, y in cells)
+
+def count_tilings(grid_size, shapes, used=None, covered=None):
+    if used is None:
+        used = set()
+    if covered is None:
+        covered = set()
+    
+    if len(covered) == grid_size * grid_size:
+        return 1
+    
+    count = 0
+    # Find first empty cell
+    for y in range(grid_size):
+        for x in range(grid_size):
+            if (x, y) not in covered:
+                # Try placing each shape here
+                for i, shape in enumerate(shapes):
+                    if i in used:
+                        continue
+                    cells = shape(x, y)
+                    if is_valid(grid_size, cells) and covered.isdisjoint(cells):
+                        new_used = used.copy()
+                        new_used.add(i)
+                        new_covered = covered.copy()
+                        new_covered.update(cells)
+                        count += count_tilings(grid_size, shapes, new_used, new_covered)
+                return count  # Only need to place at first empty cell
+    return count
+
+# Test for small grid sizes where computation is feasible
+for size in [5, 6, 7]:
+    print(f"Testing grid size {size}x{size}")
+    result = count_tilings(size, shapes)
+    print(f"Number of tilings: {result}")
+```
+
+Note: This program only works for very small grid sizes (up to 7x7) due to the exponential complexity of the problem. For the actual 12x12 grid, more sophisticated algorithms like exact cover or dancing links would be needed, but those are beyond the scope of this simple enumerator. The output shows the pattern for smaller grids to help conjecture the answer for 12x12.

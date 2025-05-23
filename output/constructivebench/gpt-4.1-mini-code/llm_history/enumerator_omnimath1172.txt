@@ -1,0 +1,65 @@
+[write_program]
+The problem asks to evaluate a sum over all functions \( f: \{0,1,\ldots,2020\} \to \{0,1,\ldots,2020\} \), summing the size of the image of iterating \( f \) 2021 times starting from every point, modulo 2017. This is huge to compute directly, so we'll consider smaller \( n \) to try to detect a pattern or conjecture the result. We'll enumerate all functions \( f: \{0,\ldots,n-1\} \to \{0,\ldots,n-1\} \) for small \( n \), compute sums of sizes of images of the  \( n \)-th iterate, and print the results mod corresponding primes (e.g., \( n \), or another modulus).
+
+The essential insight is to:
+- Pick small \( n \), say \( n=2,3,4 \).
+- For each function, compute the set of points reached by applying \( f \) \( n \) times starting at each element.
+- Sum their cardinalities.
+- Output the sum mod some prime like \( n \), and print \( n \) and sum modulo.
+
+We print partial results to assist conjecturing.
+
+```python
+# Enumerate all functions f: [0..n-1] -> [0..n-1]
+# For each f, compute sum over x of |{f^n(x)}| since iterate(n, x) is applying f n times.
+# Actually the problem sums the size of the image of the set {iterate f n x | x in univ}
+# i.e., the number of distinct points after applying f n times starting from all x.
+# So for each f, compute the size of { f^n(x) for x in [0..n-1] } and sum over all f.
+# Then output sum % mod.
+
+def iterate_f_n(f, n, x):
+    for _ in range(n):
+        x = f[x]
+    return x
+
+def sum_images(n, mod=None):
+    # list all functions f: [0..n-1] -> [0..n-1]
+    # total n^n functions
+    from itertools import product
+
+    domain = list(range(n))
+    total_sum = 0
+    count = 0
+    for f_tuple in product(domain, repeat=n):
+        # f as a list, index i maps to f[i]
+        f = f_tuple
+        # compute image of iterate f n times starting from each x
+        img = set(iterate_f_n(f, n, x) for x in domain)
+        sz = len(img)
+        total_sum += sz
+        if mod is not None and total_sum >= mod:
+            total_sum %= mod
+        count +=1
+        # print progress every 10%
+        if count % max(1, (len(f_tuple)**n // 10)) == 0:
+            pass  # no progress print to save tokens
+    if mod is not None:
+        total_sum %= mod
+    return total_sum
+
+def main():
+    # Try small n and mod
+    # The original problem uses n=2021 and mod=2017 (a prime)
+    # to save time, try n=2,3,4 with mod n or small primes
+
+    test_values = [2,3,4]
+    for n in test_values:
+        mod = n  # mod n to check
+        s = sum_images(n, mod)
+        print(f"n={n}, sum of |image(f^n)| over f mod {mod} = {s}")
+
+if __name__ == "__main__":
+    main()
+```
+
+This program helps to spot patterns or guess omnimath1172_answer from smaller cases.

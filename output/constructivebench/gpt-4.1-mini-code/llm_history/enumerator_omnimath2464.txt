@@ -1,0 +1,61 @@
+[write_program]
+The problem involves evaluating a piecewise linear integral over the interval \([0,2]\). The function to integrate is zero beyond \(t=0.5\), so effectively the integral over \([0,2]\) reduces to the integral over \([0,0.5]\).
+
+The integrand is:
+- \(50 \times \frac{1}{2}\) for \(0 \leq t \leq 0.25\),
+- \(\left(50 - 60(t - 0.25)\right) \times \frac{1}{2}\) for \(0.25 < t \leq 0.5\),
+- 0 otherwise.
+
+We'll numerically and symbolically compute the integral in Python by:
+- symbolically computing exact integral values in fractions,
+- numerically verifying the answer with floating points,
+- printing out all partial results.
+
+```python
+from fractions import Fraction
+
+# Define intervals and corresponding function values
+# Integral over [0,0.25]:
+a1, b1 = Fraction(0), Fraction(1,4)
+# f(t) = 50 * (1/2) = 25
+val1 = 25
+
+# Integral over [0.25, 0.5]:
+a2, b2 = Fraction(1,4), Fraction(1,2)
+# f(t) = (50 - 60*(t - 0.25)) * (1/2) = (50 - 60*(t-0.25))/2
+
+def integrand(t):
+    # t is Fraction
+    return (50 - 60*(t - Fraction(1,4))) / 2
+
+# Compute integral over [a1,b1] of f(t) dt = val1 * (b1 - a1)
+integral1 = val1 * (b1 - a1)
+
+# For integral2, integrate linearly:
+# ∫ (50 - 60(t - 0.25))/2 dt from 0.25 to 0.5
+# = ∫ (50/2 - 60/2 * (t-0.25)) dt
+# = ∫ (25 - 30*(t-0.25)) dt
+# = ∫ 25 dt - ∫ 30*(t-0.25) dt
+# = 25*(b2 - a2) - 30 * ∫(t - 0.25) dt
+
+delta = b2 - a2  # 0.25
+
+from sympy import symbols, integrate, Rational, nsimplify
+
+t = symbols('t', real=True)
+
+expr = 25 - 30*(t - Rational(1,4))
+integral2_exact = integrate(expr, (t, a2, b2))  # symbolic exact
+
+print(f"Integral over [{float(a1)} , {float(b1)}] = {float(integral1)} (Exact Fraction: {integral1})")
+print(f"Integral over [{float(a2)} , {float(b2)}] (symbolic) = {integral2_exact} (Approx ~ {float(integral2_exact):.6f})")
+
+total_integral = integral1 + integral2_exact
+print(f"Total integral over [0,0.5] = {total_integral} (Approx ~ {float(total_integral):.6f})")
+print(f"Integral over [0,2] same as above since f=0 beyond 0.5.")
+
+# Also provide floating value of the answer
+print(f"Final answer (approximate float): {float(total_integral):.6f}")
+```
+
+This code prints exact and approximate values for each piece, helping conjecture the integral value the theorem is supposed to prove.

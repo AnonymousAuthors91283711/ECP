@@ -1,0 +1,49 @@
+[write_program]
+The given code snippet defines some Lean theorem involving polynomial evaluation and the greatest element of a certain set. The key structure is that it considers all real polynomials P(x) satisfying a particular recurrence relation where the polynomial evaluated at t equals a quadratic form involving the evaluations of P at 1, Eval(1, P), and Eval(Eval(1, P), P). The set looks for the maximum value of recursions based on the polynomial's evaluations.
+
+Our goal is to write a Python program that enumerates candidate solutions modeling the constraints, especially focusing on the possible explicit polynomial forms satisfying the given recurrence relation, and compute their 'y' values as defined. Since the problem is complex, we'll simplify by fixing small polynomial degrees and parameters, and systematically explore candidate polynomials.
+
+Our approach:
+- Focus on quadratic polynomials (since the recurrence involves t²).
+- Parameterize P(x) with coefficients a, b, c.
+- For each candidate (a, b, c), verify if the polynomial satisfies the recurrence relation for some initial data.
+- Compute the 'y' value as provided.
+- Since finding an exact maximum is the key, we'll list candidate 'y's and attempt to find the maximum.
+
+Here's the Python code:
+
+```python
+# Enumerate quadratic polynomials P(x) = a x^2 + b x + c with small coefficients
+# and check if they satisfy the recurrence relation:
+# P(t) = (Eval(1, P)) * t^2 + (Eval(Eval(1, P), P)) * t + Eval(Eval(Eval(1, P), P), P)
+# We then compute y = Eval(Eval(Eval(Eval(1, P), P), P), P)
+
+def eval_polynomial(p_coeffs, x):
+    return sum(coef * (x ** i) for i, coef in enumerate(p_coeffs))
+
+max_y = float('-inf')
+max_poly = None
+
+for a in range(-3, 4):
+    for b in range(-3, 4):
+        for c in range(-3, 4):
+            P_coeffs = [c, b, a]  # constant, x, x^2
+            p1 = eval_polynomial(P_coeffs, 1)
+            p2 = eval_polynomial(P_coeffs, p1)
+            p3 = eval_polynomial(P_coeffs, p2)
+            # Check if P(t) matches the quadratic form
+            # For simplicity, verify for t=1 and general t:
+            # P(t) ?= p1 * t^2 + p2 * t + p3
+            # For our purpose, check if P(t) ≈ the RHS for a sample t
+            # Let's pick t=2 for verification
+            t = 2
+            P_t = eval_polynomial(P_coeffs, t)
+            RHS = p1 * t**2 + p2 * t + p3
+            if abs(P_t - RHS) < 1e-6:
+                y = eval_polynomial(P_coeffs, p3)
+                print(f"Polynomial coefficients: {P_coeffs}, y: {y}")
+                if y > max_y:
+                    max_y = y
+                    max_poly = P_coeffs
+print(f"Maximum y found: {max_y} with polynomial coefficients: {max_poly}")
+```

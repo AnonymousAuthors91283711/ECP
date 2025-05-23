@@ -1,0 +1,99 @@
+[write_program]
+The problem involves analyzing a polynomial \(P\) in two integer variables, conjectured to represent a double sum \(\sum_{i=1}^m \sum_{j=1}^n (i+j)^7\). The goal is to find the exact value when evaluated at (3, -3), i.e.,
+
+\[
+\sum_{i=1}^3 \sum_{j=1}^{-3} (i+j)^7
+\]
+
+Since \(n = -3 < 1\), directly summing from 1 to -3 isn't standard. The polynomial \(P\) is defined over all integers (including negative), so the evaluation at (3,-3) requires understanding how the given polynomial behaves for negative inputs—possibly involving extending the sums properly or using polynomial formulas.
+
+We enumerate values of the polynomial sum for small positive and negative n to observe the pattern or verify the polynomial evaluation. We'll compute \(\sum_{i=1}^m \sum_{j=1}^n (i+j)^7\) explicitly for positive \(m,n\) and attempt negative \(n\) values via polynomial extension (using Faulhaber's formula for sums of powers and polynomiality of the double sum) to guess the polynomial value at \(n=-3\). 
+
+We will:
+- For sample positive \(m,n\): print sum exactly.
+- For negative \(n\), compute polynomial values by interpolating sums at positive values, then evaluating polynomial at negative \(n\).
+- Finally, print the guessed polynomial evaluation at (3, -3).
+
+Due to complexity, the code will:
+- Use symbolic manipulation with `sympy`.
+- Compute and print sums for some positive \(m,n\).
+- Interpolate polynomial (symbolically) for 7th powers sums.
+- Evaluate at (3,-3) for the answer.
+
+```python
+# enumerator.py
+from sympy import symbols, summation, expand, binomial, simplify
+
+# Define variables m,n as integers
+m, n = symbols('m n', integer=True)
+
+# The double sum: S(m,n) = sum_{i=1}^m sum_{j=1}^n (i+j)^7
+# For positive m,n, compute and expand
+def double_sum_expr(m_val, n_val):
+    i, j = symbols('i j', integer=True)
+    if m_val > 0 and n_val > 0:
+        s = 0
+        for ii in range(1,m_val+1):
+            for jj in range(1,n_val+1):
+                s += (ii+jj)**7
+        return s
+    else:
+        return None  # undefined or to be handled differently
+
+# Using Faulhaber's formula: sum_{k=1}^N k^7 = N^8/8 + ... polynomial in N
+# We use sympy to express sum of k^7
+def sum_k_pow7(N):
+    k = symbols('k', integer=True)
+    # sum_{k=1}^N k^7 as sympy expression
+    S7 = summation(k**7, (k,1,N))
+    return S7
+
+# Express S(m,n) by changing order: sum_{s=2}^{m+n} (number of (i,j) with i+j=s)*s^7
+# number of pairs (i,j): max(1, s-n) <= i <= min(m, s-1)
+# count = max(0, min(m,s-1) - max(1,s-n) +1)
+def pair_count(s, m_val, n_val):
+    low = max(1, s - n_val)
+    high = min(m_val, s - 1)
+    return max(0, high - low + 1)
+
+# Compute sum via pair counts
+def double_sum_via_pair(m_val, n_val):
+    if m_val <=0 or n_val <=0:
+        return None
+    smin = 2
+    smax = m_val + n_val
+    total = 0
+    for s in range(smin, smax+1):
+        c = pair_count(s, m_val, n_val)
+        total += c * s**7
+    return total
+
+def main():
+    print("Enumerate sums for small positive (m,n):")
+    for m_val in range(1,5):
+        for n_val in range(1,5):
+            val = double_sum_via_pair(m_val, n_val)
+            print(f"S({m_val},{n_val}) = {val}")
+
+    print("\nAttempt to find polynomial expression in m,n for S(m,n)")
+    # Using sympy symbolic summation (may be slow for large)
+    i,j = symbols('i j', integer=True)
+    # Symbolic sum expression:
+    expr = summation(summation((i+j)**7, (j,1,n)), (i,1,m))
+    expr = expand(expr)
+
+    print("Symbolic double sum expression (expanded):")
+    print(expr)
+
+    # Now evaluate at m=3, n=-3 if possible
+    print("\nEvaluate at (m,n) = (3,-3):")
+
+    # Since summation limits invalid for negative n, we treat as polynomial eval:
+    # substitute m=3, n=-3 in expr
+    val_eval = expr.subs({m:3, n:-3})
+    print(f"P.eval at (3,-3) = {val_eval}")
+
+if __name__ == "__main__":
+    main()
+```
+This enumerates values for positive m,n, prints a symbolic polynomial of the double sum, then evaluates at (3,-3) as required for the problem.

@@ -1,0 +1,75 @@
+[write_program]
+This problem involves finding rational pairs (r,s) for which the cubic polynomial P(x) = x³ + 10x² + rx + s has infinitely many primes p where P evaluates to integers divisible by p at three distinct integer points a < b < c < p/3.
+
+We'll approach this by:
+1. Enumerating small integer values for a, b, c to find patterns
+2. Checking when P(a), P(b), P(c) are all divisible by p
+3. Looking for (r,s) pairs that satisfy these conditions for multiple p
+
+The key observation is that for P to evaluate to integers at three points, it must be integer-valued at all integers (since third differences are constant). This requires r and s to be integers.
+
+```python
+from itertools import combinations
+from math import gcd
+from sympy import isprime
+
+def find_rs_candidates(max_abc=5, max_p=100):
+    # We'll search for a,b,c up to max_abc and primes up to max_p
+    results = set()
+    
+    for a, b, c in combinations(range(max_abc + 1), 3):
+        if a >= b or b >= c:
+            continue
+            
+        # The polynomial must be integer-valued at a, b, c
+        # So we solve for r and s in:
+        # a³ + 10a² + r*a + s = k (integer)
+        # b³ + 10b² + r*b + s = m (integer)
+        # c³ + 10c² + r*c + s = n (integer)
+        
+        # Solving the first two equations for r and s:
+        # r = (m - k - (b³ - a³) - 10(b² - a²))/(b - a)
+        # s = k - a³ - 10a² - r*a
+        
+        # For simplicity, we'll set k=m=n=0 first
+        denominator = (b - a)
+        if denominator == 0:
+            continue
+            
+        numerator_r = -( (b**3 - a**3) + 10*(b**2 - a**2) )
+        if numerator_r % denominator != 0:
+            continue
+            
+        r = numerator_r // denominator
+        
+        s = - (a**3 + 10*a**2 + r*a)
+        
+        # Verify the third point
+        if (c**3 + 10*c**2 + r*c + s) != 0:
+            continue
+            
+        # Now check if there are primes p dividing all three evaluations
+        # with c < p/3
+        valid_primes = set()
+        
+        # Check primes up to max_p
+        for p in range(2, max_p + 1):
+            if not isprime(p):
+                continue
+            if c >= p / 3:
+                continue
+                
+            # Check if p divides all three evaluations (which are 0 here)
+            # Since evaluations are 0, p divides them all
+            valid_primes.add(p)
+            
+        if len(valid_primes) >= 3:  # Require at least 3 primes as evidence
+            results.add((r, s))
+            print(f"Found candidate (r,s) = ({r}, {s})")
+    
+    print("\nFinal candidates:")
+    for r, s in sorted(results):
+        print(f"(r,s) = ({r}, {s})")
+
+find_rs_candidates()
+```

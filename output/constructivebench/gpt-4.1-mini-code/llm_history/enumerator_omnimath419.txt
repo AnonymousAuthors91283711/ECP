@@ -1,0 +1,81 @@
+[write_program]
+The problem involves figuring out the expression for (r*s)^2 + (s*t)^2 + (r*t)^2 in terms of the coefficients a, b, c of a cubic polynomial with roots r, s, t.
+
+Recall:
+- r + s + t = -a
+- rs + rt + st = b
+- rst = -c
+
+We want to enumerate values of
+(r s)^2 + (s t)^2 + (r t)^2
+over small sample triples (r,s,t) consistent with the cubic and print candidate expressions in terms of (a,b,c) by testing numeric instances.
+
+The goal: Given any triple of rational roots r,s,t, the polynomial X³ + a X² + b X + c = (X - r)(X - s)(X - t),
+compute and print (r*s)^2 + (s*t)^2 + (r*t)^2, the parameters a,b,c used, and check the pattern.
+
+We try random small rational roots triples (r,s,t) and calculate a,b,c by the relation,
+print (a,b,c), the value, and attempt some algebraic observations.
+
+We won't guess the exact formula in code, but generate outputs to observe.
+
+```python
+# Enumerate (r,s,t) rational triples with small integers in [-3..3], r,s,t distinct
+# Compute coefficients a,b,c from roots: a=-(r+s+t), b=rs+rt+st, c=-(rst)
+# Compute (r*s)^2 + (s*t)^2 + (r*t)^2
+# Print a,b,c and that value with exact fractions (using fractions.Fraction)
+
+from fractions import Fraction as F
+
+def fraction_triple_iterator(low, high):
+    for r_num in range(low, high+1):
+        for r_den in [1,2]:
+            r = F(r_num, r_den)
+            for s_num in range(low, high+1):
+                for s_den in [1,2]:
+                    s = F(s_num, s_den)
+                    for t_num in range(low, high+1):
+                        for t_den in [1,2]:
+                            t = F(t_num, t_den)
+                            # skip if any denominator=0 or roots not distinct
+                            if r_den == 0 or s_den == 0 or t_den == 0:
+                                continue
+                            roots = (r,s,t)
+                            # check for distinctness (if all equal, skip)
+                            if len(set(roots))<3:
+                                continue
+                            yield roots
+
+def main():
+    print("a,b,c,(r*s)^2+(s*t)^2+(r*t)^2")
+    # limit tries for output size:
+    count = 0
+    for r,s,t in fraction_triple_iterator(-2,2):
+        a = -(r+s+t)
+        b = r*s + r*t + s*t
+        c = -(r*s*t)
+        val = (r*s)**2 + (s*t)**2 + (r*t)**2
+        print(f"a={a}, b={b}, c={c}, val={val}")
+        count +=1
+        if count>=20:
+            break
+    # Try to print a possible formula candidate for the sum of squares product:
+    # (r*s)^2 + (s*t)^2 + (r*t)^2 in terms of a,b,c
+    # Just print a conjecture form (not definitive)
+    # We can print that (rs+rt+st)^2 - 2 r s t (r+s+t) = b^2 - 2 c (-a) = b^2 + 2 a c
+    # We'll print this for sample comparison:
+    print("\nTesting formula candidate: (r*s)^2 + (s*t)^2 + (r*t)^2 ?= b^2 + 2 * a * c")
+    for r,s,t in fraction_triple_iterator(-2,2):
+        a = -(r+s+t)
+        b = r*s + r*t + s*t
+        c = -(r*s*t)
+        lhs = (r*s)**2 + (s*t)**2 + (r*t)**2
+        rhs = b**2 + 2*a*c
+        if lhs == rhs:
+            print(f"Match for a={a}, b={b}, c={c}, value={lhs}")
+        else:
+            print(f"Mismatch for a={a}, b={b}, c={c}, lhs={lhs}, rhs={rhs}")
+        break  # just test once here, to fit output size
+
+if __name__ == "__main__":
+    main()
+```

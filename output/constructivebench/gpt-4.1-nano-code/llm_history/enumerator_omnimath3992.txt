@@ -1,0 +1,83 @@
+[write_program]
+The problem appears to involve finding the size of the largest subset of {0, 1, ..., n-1} (or n, in general) where you can injectively assign elements into {0, 1, ..., 54} such that for any two distinct elements, their images do not differ by 4. The goal is to find the greatest such n, i.e., the maximum size of that subset satisfying the restrictions.
+
+This corresponds to a combinatorial problem with constraints: selecting the largest subset of indices such that no two are mapped into numbers differing by 4.
+
+The constraints imply that if two f(i) and f(j) are assigned to positions i and j, then their values must differ from 4, avoiding differences of exactly 4. This is analogous to a packing problem in an interval with forbidden difference.
+
+Let's analyze small n:
+
+- For small n, enumeration is feasible.
+- The maximum subset size likely relates to the independence number of a graph where edges connect numbers differing by 4.
+
+We can attempt to find maximum independent set size in this graph for increasing n, up to a modest threshold (say, 10), print the maximum encountered, and derive the greatest n.
+
+Here's a Python code that attempts to do this by checking all subsets up to size 10:
+
+```python
+from itertools import combinations
+
+# Parameters
+max_n = 20
+max_value = 54
+
+# Function to check if subset is valid
+def is_valid(subset):
+    for i in range(len(subset)):
+        for j in range(i + 1, len(subset)):
+            if abs(subset[i] - subset[j]) == 4:
+                return False
+    return True
+
+# Find maximum subset size for each n
+max_sizes = []
+for n in range(1, max_n + 1):
+    elements = list(range(n))
+    max_subset_len = 0
+    # Check all possible subsets
+    for size in range(n, 0, -1):
+        found = False
+        for subset in combinations(elements, size):
+            if is_valid(subset):
+                max_subset_len = size
+                found = True
+                break
+        if found:
+            break
+    max_sizes.append((n, max_subset_len))
+    print(f"n={n}, max subset size={max_subset_len}")
+
+# Find the largest n where subset size equals n (i.e., full injective mapping)
+max_n_with_full_injective = max(n for n, size in max_sizes if size == n)
+print(f"The maximum n with an injective mapping avoiding differences of 4 is {max_n_with_full_injective}.")
+```
+
+This enumerates subsets up to size 20, prints maximum sizes, and identifies the largest n where an injective assignment avoiding difference 4 exists.
+
+```python
+from itertools import combinations
+
+# Parameters
+max_n = 20
+
+def is_valid(subset):
+    for i in range(len(subset)):
+        for j in range(i + 1, len(subset)):
+            if abs(subset[i] - subset[j]) == 4:
+                return False
+    return True
+
+for n in range(1, max_n + 1):
+    elements = list(range(n))
+    max_subset_size = 0
+    for size in range(n, 0, -1):
+        # Check all subsets of current size
+        for subset in combinations(elements, size):
+            if is_valid(subset):
+                max_subset_size = size
+                break
+        if max_subset_size == size:
+            # Found the largest subset for this n
+            print(f"n={n}, max subset size={max_subset_size}")
+            break
+```

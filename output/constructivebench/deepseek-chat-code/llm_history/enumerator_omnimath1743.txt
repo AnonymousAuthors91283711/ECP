@@ -1,0 +1,61 @@
+[write_program]
+The problem asks to compute the rounded natural logarithm of the number of divisors of 2014 factorial. Since 2014! is extremely large, we need an efficient way to compute its number of divisors without calculating the factorial directly. The number of divisors can be found using the prime factorization and the divisor function formula.
+
+Here's a Python program that:
+1. Computes the prime factorization of 2014! using Legendre's formula
+2. Calculates the number of divisors using the divisor function formula
+3. Computes the natural logarithm and rounds it
+4. Outputs the result
+
+```python
+import math
+
+def count_primes_up_to(n):
+    """Count primes up to n using sieve of Eratosthenes"""
+    sieve = [True] * (n + 1)
+    sieve[0] = sieve[1] = False
+    for i in range(2, int(math.sqrt(n)) + 1):
+        if sieve[i]:
+            sieve[i*i::i] = [False] * len(sieve[i*i::i])
+    return sum(sieve)
+
+def legendre_exponent(p, n):
+    """Compute exponent of prime p in factorization of n!"""
+    e = 0
+    power = p
+    while power <= n:
+        e += n // power
+        power *= p
+    return e
+
+def compute_divisor_count(n):
+    """Compute number of divisors of n!"""
+    # First find all primes ≤ n
+    primes = []
+    sieve = [True] * (n + 1)
+    sieve[0] = sieve[1] = False
+    for i in range(2, n + 1):
+        if sieve[i]:
+            primes.append(i)
+            for j in range(i*i, n+1, i):
+                sieve[j] = False
+    
+    # Compute exponents for each prime using Legendre's formula
+    exponents = [legendre_exponent(p, n) for p in primes]
+    
+    # Calculate number of divisors: product of (exponent + 1)
+    divisor_count = 1
+    for e in exponents:
+        divisor_count *= (e + 1)
+    
+    return divisor_count
+
+n = 2014
+divisor_count = compute_divisor_count(n)
+log_divisor_count = math.log(divisor_count)
+rounded_log = round(log_divisor_count)
+
+print(f"Number of divisors of {n}!: {divisor_count}")
+print(f"Natural logarithm: {log_divisor_count}")
+print(f"Rounded logarithm: {rounded_log}")
+```

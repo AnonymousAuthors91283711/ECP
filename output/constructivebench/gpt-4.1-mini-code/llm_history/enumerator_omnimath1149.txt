@@ -1,0 +1,81 @@
+[write_program]
+Problem analysis:
+We want to find the maximum length n of an arithmetic progression of primes all less than 1,000,000. The progression is defined by a starting prime a > 0 and a positive difference d > 0, such that each term a + k*d (for k in 0..n-1) is prime and less than 1,000,000.
+
+We have to:
+- For sample values of n (lengths), check if there exists such (a,d).
+- Enumerate some candidates (a,d) efficiently.
+- Print lengths n for which such an arithmetic progression is found (starting with small n).
+- Try to find the maximum length found for prime arithmetic progression under 1,000,000.
+
+Key points:
+- The known longest prime arithmetic progression under 1,000,000 is length 10 (for example).
+- We can sample n from 1 to 12 maybe.
+- For each n, try some small d (up to 1000?), and for each d find primes a such that a + (n-1)d < 1,000,000 and all terms are prime.
+- We must print each found n immediately.
+- To speed up primality checks, use a sieve of primes under 1,000,000.
+
+Code details:
+- We implement a sieve for primes under 1,000,000.
+- For fixed n and d, iterate over prime a such that a + (n-1)*d < 1,000,000
+- Check if all a + k*d for k=0..n-1 are prime.
+- Print n and the first such progression (a, d).
+- After enumerating all n in some range, print the maximum n found.
+
+Limit output to fit within the token limit.
+
+```python
+# Enumerate prime arithmetic progressions under 1,000,000
+# Find lengths n having prime AP a + k*d (k=0..n-1), a,d>0, all terms prime < 1e6
+
+def sieve(n):
+    sieve = [True]*(n+1)
+    sieve[0]=sieve[1]=False
+    for i in range(2,int(n**0.5)+1):
+        if sieve[i]:
+            for j in range(i*i,n+1,i):
+                sieve[j]=False
+    return sieve
+
+def main():
+    LIMIT=10**6
+    primes_sieve = sieve(LIMIT)
+    primes = [i for i, p in enumerate(primes_sieve) if p]
+    prime_set = set(primes)  # For quick membership
+
+    max_n_found = 0
+    # We'll try lengths n from 3 to 11 (known longest is around 10)
+    print("Enumerating prime arithmetic progressions with length n and difference d:")
+    # Limit differences for speed
+    for n in range(3,12):
+        found_for_n = False
+        max_d = 1000  # check differences up to 1000
+        for d in range(1, max_d+1):
+            # a + (n-1)*d < LIMIT => a < LIMIT - (n-1)*d
+            max_a = LIMIT - (n-1)*d
+            # Try primes a < max_a
+            # For each a check if all terms are prime
+            for a in primes:
+                if a > max_a:
+                    break
+                # Check AP primality
+                ok = True
+                for k in range(n):
+                    term = a + k*d
+                    if term >= LIMIT or not primes_sieve[term]:
+                        ok = False
+                        break
+                if ok:
+                    print(f"Found length {n} progression: start={a}, diff={d}")
+                    found_for_n = True
+                    # Found one for this n, break d loop to avoid flooding output
+                    break
+            if found_for_n:
+                break
+        if found_for_n:
+            max_n_found = max(max_n_found, n)
+    print(f"Maximum length found: {max_n_found}")
+
+if __name__=="__main__":
+    main()
+```

@@ -1,0 +1,75 @@
+[write_program]
+The problem revolves around counting polynomials \( q \) such that for the given cubic polynomial 
+\[ P(x) = (x-1)(x-2)(x-3) \]
+there exists a cubic polynomial \( R \) satisfying
+\[ P(q(x)) = P(x) \cdot R(x) \]
+for all real \( x \).
+
+This property means \( P(q(x)) \) has roots at \( x=1,2,3 \), hence \( P(x) \) divides \( P(q(x)) \). Note \( P \) is degree 3, so \( P(q(x)) \) has degree \( 3 \deg(q) \). Since \( P(x) R(x) \) has degree \(3 + 3 = 6\), this forces \(\deg(q) = 2\) in order for degrees to match (because \(3 \deg(q) = 6\)).
+
+We want to find all quadratic polynomials \( q(x) = a x^2 + b x + c \) such that \( P(q(x)) \) is divisible by \( P(x) \), i.e., \( P(q(r)) = 0 \) for \( r = 1,2,3 \).
+
+Since \( P(t) = 0 \iff t \in \{1,2,3\} \), it means \( q(r) \in \{1,2,3\} \) for \( r=1,2,3 \).
+
+Hence, find all quadratics \( q \) that map the set \(\{1,2,3\}\) into itself.
+
+We enumerate all maps \(\{1,2,3\} \to \{1,2,3\}\) inside \(\mathbb{R}\), then solve \(q(r) = q_r\) for \(r=1,2,3\), where each \(q_r \in \{1,2,3\}\).
+
+Check if the quadratic polynomial \(q\) thus defined satisfies all three equations exactly. Count the number of such \(q\).
+
+We only need to loop over all \(3^3=27\) images and solve linear systems for each to check existence.
+
+Below is the Python program enumerating these possibilities and printing each valid polynomial immediately.
+
+```python
+# Enumerate quadratic polynomials q over reals with q({1,2,3}) ⊆ {1,2,3}.
+# For each tuple (q(1), q(2), q(3)) with values in {1,2,3},
+# solve for quadratic q(x)=a x^2 + b x + c satisfying q(r)=q_r,
+# check solution existence and count.
+
+import numpy as np
+from itertools import product
+
+def solve_q(vals):
+    # vals: (q1, q2, q3), values where q(1)=q1, q(2)=q2, q(3)=q3
+    A = np.array([[1,1,1],
+                  [4,2,1],
+                  [9,3,1]], dtype=float)  # columns: a,b,c for q(x)=a x^2 + b x + c
+    y = np.array(vals, dtype=float)
+    try:
+        sol = np.linalg.solve(A, y)
+        a,b,c = sol
+        # Check that q is quadratic: degree exactly 2 means a != 0
+        if abs(a) < 1e-12:
+            return None
+        # Check integer images exactly in {1,2,3} (already given)
+        # But due to numerical solve, verify q(r) approx equals q_r
+        for r,val in zip([1,2,3], vals):
+            if abs(a*r*r + b*r + c - val) > 1e-9:
+                return None
+        return (a,b,c)
+    except np.linalg.LinAlgError:
+        return None
+
+answers = []
+print("Enumerating q with q({1,2,3}) ⊆ {1,2,3} and deg(q)=2:")
+for vals in product([1,2,3], repeat=3):
+    qpoly = solve_q(vals)
+    if qpoly is not None:
+        a,b,c = qpoly
+        # Print polynomial in readable form
+        def fmt(x):
+            # format coefficient nicely
+            if abs(x) < 1e-12:
+                return "0"
+            elif abs(round(x)-x) < 1e-12:
+                return str(int(round(x)))
+            else:
+                return f"{x:.3f}"
+        poly_str = f"{fmt(a)}x^2 + {fmt(b)}x + {fmt(c)}"
+        print(f"q maps (1,2,3) to {vals} => q(x) = {poly_str}")
+        answers.append(qpoly)
+
+print(f"\nTotal number of such q: {len(answers)}")
+```
+This enumerates all candidates, prints each immediately, and finally prints the count. This matches the problem requirement and helps conjecture the size of the solution set.

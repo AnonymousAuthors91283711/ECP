@@ -1,0 +1,50 @@
+[write_program]
+This problem asks us to find the greatest possible sum \( s \) of indices \( k \leq 100 \) where a function \( f: \mathbb{N} \to \text{Bool} \) satisfies:
+- \( f(k) = \text{true} \) implies \( k \leq 100 \),
+- For every \( k \) with \( f(k) = \text{true} \), all \( i \) in the interval \( (k, 2k) \) (from \( k+1 \) up to \( 2k - 1 \)) satisfy \( f(i) = \text{false} \),
+- \( s \) is the sum of all \( k \) with \( f(k) = \text{true} \).
+
+Our goal: maximize \( s \) subject to these constraints.
+
+Analysis:
+- We want to pick as many large \( k \) values as possible, since they contribute to the sum.
+- However, choosing a large \( k \) prevents choosing any \( i \) in \( (k, 2k) \), which may block larger candidates.
+
+Key insight:
+- To maximize the sum, pick large \( k \) first, then exclude their forbidden intervals before considering smaller \( k \).
+
+Approach:
+- We'll try a greedy algorithm from the largest \( k \) down to 1.
+- If \( k \) is not blocked by previously chosen intervals, pick it.
+- This method tries to pick the largest \( k \) possible first, then smaller ones, respecting the exclusion constraints.
+
+Implementation:
+- Use a list or boolean array to mark blocked numbers.
+- Iterate \( k \) from 100 down to 1:
+  - If \( k \) is not blocked, select it and mark forbidden interval \( (k+1, 2k - 1) \).
+
+Let's implement this in Python:
+
+```python
+# Enumerate from 100 down to 1 to maximize sum
+blocked = [False] * 102  # index 0..101 for convenience
+sum_k = 0
+chosen = []
+
+for k in range(100, 0, -1):
+    if not blocked[k]:
+        # Choose k
+        sum_k += k
+        chosen.append(k)
+        # Mark forbidden interval (k+1) to (2k - 1)
+        start = k + 1
+        end = 2 * k - 1
+        for i in range(start, end + 1):
+            if i <= 101:
+                blocked[i] = True
+        print(f"Chosen k={k}, sum so far={sum_k}")
+
+print(f"Maximum sum: {sum_k}")
+```
+
+This script efficiently finds the maximal sum by greedily choosing largest possible \( k \)s, respecting the exclusion intervals, and streams partial results with each selected \( k \).

@@ -1,0 +1,49 @@
+[write_program]
+This problem asks for the maximum possible value of e given the constraints on the sum and sum of squares of five real numbers. We'll approach this by:
+
+1. Using the method of Lagrange multipliers or Cauchy-Schwarz inequality to find the theoretical maximum
+2. Implementing a program to verify the maximum by checking possible distributions of values
+
+The theoretical maximum occurs when four variables are equal (minimizing their contribution to the sum of squares) and one variable (e) is maximized. We'll implement this verification.
+
+```python
+def find_max_e():
+    # We'll search for the maximum e where:
+    # a = b = c = d = x (since making them equal minimizes their squared sum)
+    # Then we have:
+    # 4x + e = 8 => x = (8 - e)/4
+    # 4x² + e² = 16
+    
+    # Solve the equation: 4*((8-e)/4)^2 + e^2 = 16
+    # Which simplifies to: (8-e)^2/4 + e^2 = 16
+    
+    # We'll find exact solution first
+    from sympy import symbols, Eq, solve
+    e = symbols('e')
+    equation = Eq((8-e)**2/4 + e**2, 16)
+    solutions = solve(equation, e)
+    exact_solutions = [sol.evalf() for sol in solutions]
+    
+    # Filter real solutions and find maximum
+    max_e = max([sol for sol in exact_solutions if sol.is_real])
+    
+    # Verification by enumeration around the solution
+    print("Exact solutions found:", exact_solutions)
+    print("Maximum e:", max_e)
+    
+    # Numerical verification
+    best_e = 0
+    step = 0.0001
+    for trial in range(160000):
+        e_test = trial * step
+        x = (8 - e_test)/4
+        sum_sq = 4*x*x + e_test*e_test
+        if abs(sum_sq - 16) < 1e-6:
+            if e_test > best_e:
+                best_e = e_test
+                print(f"Found valid e: {e_test:.6f}")
+    
+    print(f"Numerically verified maximum e: {best_e:.6f}")
+
+find_max_e()
+```

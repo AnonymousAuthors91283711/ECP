@@ -1,0 +1,57 @@
+[write_program]
+The problem is about characterizing all rational functions \( f: \mathbb{Q} \to \mathbb{Q} \) satisfying the property that for any strictly increasing 4-term arithmetic progression \( x < y < z < t \) with equal differences, the equation \( f(x) + f(t) = f(y) + f(z) \) holds.
+
+This is a strong functional equation condition; we suspect functions in the answer set \( \text{omnimath3715\_answer} \) are affine-linear (or at least quadratic) functions.
+
+To gather insight, we will enumerate some candidate rational functions of simple types (constant, linear, quadratic) and test them on small arithmetic progressions with integer rational points and differences. This will help conjecture the explicit description of \( \text{omnimath3715\_answer} \).
+
+```python
+# Enumerate rational functions f on ℚ: test f(x)=c, f(x)=a*x+b, f(x)=a*x^2+b*x+c 
+# on quadruples (x,y,z,t) with x<y<z<t and equal differences.
+
+def check_ap_condition(f, points):
+    # points = (x,y,z,t) with equal differences
+    x,y,z,t = points
+    lhs = f(x) + f(t)
+    rhs = f(y) + f(z)
+    return lhs == rhs
+
+def generate_arithmetic_progressions(limit=5):
+    # Generate arithmetic progressions x<y<z<t with small integers
+    # Differences d from 1 to limit
+    for x in range(-limit, limit):
+        for d in range(1, limit):
+            y = x + d
+            z = y + d
+            t = z + d
+            yield (x,y,z,t)
+
+def test_function(f, name):
+    print(f"Testing {name}")
+    # Test on all generated arithmetic progressions
+    for ap in generate_arithmetic_progressions(4):
+        if not check_ap_condition(f, ap):
+            print(f"Fails at AP {ap}")
+            return
+    print("Satisfies the condition for all tested APs\n")
+
+# Constant functions
+for c in range(-2,3):
+    f = lambda x, c=c: c
+    test_function(f, f"f(x)={c}")
+
+# Linear functions f(x) = a*x + b
+for a in range(-2,3):
+    for b in range(-2,3):
+        f = lambda x, a=a, b=b: a*x + b
+        test_function(f, f"f(x)={a}*x + {b}")
+
+# Quadratic functions f(x) = a*x^2 + b*x + c 
+# Test only a few as this grows quickly
+for a in range(-1,2):
+    for b in range(-1,2):
+        for c in range(-1,2):
+            f = lambda x, a=a, b=b, c=c: a*x*x + b*x + c
+            test_function(f, f"f(x)={a}*x^2 + {b}*x + {c}")
+```
+

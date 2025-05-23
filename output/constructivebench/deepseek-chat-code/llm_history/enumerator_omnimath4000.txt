@@ -1,0 +1,51 @@
+[write_program]
+This problem asks to find all real-valued functions f: ℝ → ℝ that satisfy the functional equation:
+∀x,y ∈ ℝ, (x + y²) * f(y * f(x)) = x * y * f(y² + f(x))
+
+We'll write a Python program to enumerate possible simple functions (polynomials, constants, etc.) that satisfy this equation for small integer values of x and y. The program will test candidate functions against the equation.
+
+```python
+def test_function(f, x_vals, y_vals):
+    """Test if function f satisfies the functional equation for given x,y values"""
+    for x in x_vals:
+        for y in y_vals:
+            if y == 0:  # avoid division by zero in some cases
+                continue
+            left = (x + y**2) * f(y * f(x))
+            right = x * y * f(y**2 + f(x))
+            if not abs(left - right) < 1e-6:  # account for floating point errors
+                return False
+    return True
+
+def enumerate_functions():
+    # Test small integer values
+    test_values = range(-3, 4)
+    
+    # Test constant functions f(x) = c
+    print("Testing constant functions...")
+    for c in [0, 1, -1, 2, -2]:
+        f = lambda x, c=c: c
+        if test_function(f, test_values, test_values):
+            print(f"Found constant solution: f(x) = {c}")
+    
+    # Test linear functions f(x) = kx
+    print("\nTesting linear functions...")
+    for k in [0, 1, -1, 0.5, -0.5]:
+        f = lambda x, k=k: k*x
+        if test_function(f, test_values, test_values):
+            print(f"Found linear solution: f(x) = {k}x")
+    
+    # Test rational functions f(x) = c/x
+    print("\nTesting rational functions...")
+    for c in [0, 1, -1]:
+        def f(x, c=c):
+            if x == 0:
+                return float('inf')  # undefined, but we skip x=0 in tests
+            return c/x
+        # Skip x=0 in tests for this case
+        if test_function(f, [v for v in test_values if v != 0], test_values):
+            print(f"Found rational solution: f(x) = {c}/x")
+
+if __name__ == "__main__":
+    enumerate_functions()
+```

@@ -1,0 +1,55 @@
+[write_program]
+This problem involves finding the number of solutions θ in (0, 2π] satisfying the equation:
+
+\[ 5 \cos(3\theta) = 3 \sin \theta - 1 \]
+
+Given the trigonometric complexity, we can test θ in small increments over the interval (0, 2π], and check for solutions using approximate numerical methods. To avoid missing solutions, we'll choose a sufficiently fine step size (e.g., 0.01 radians) and count how many solutions satisfy the equation within a small numerical tolerance.
+
+Here's a Python program that enumerates possible solutions by discretization, then counts the approximate solutions matching the equation:
+
+```python
+import math
+
+# Define the function to check
+def f(theta):
+    return 5 * math.cos(3 * theta) - (3 * math.sin(theta) - 1)
+
+# Parameters
+start = 0.0001  # just above 0 to avoid boundary issues
+end = 2 * math.pi
+step = 0.01   # discretization step size
+tolerance = 1e-4
+
+count_solutions = 0
+prev_value = f(start - step)
+
+# Enumerate solutions
+theta_values = []
+theta = start
+while theta <= end:
+    current_value = f(theta)
+    # Check for sign change indicating a root in [theta - step, theta]
+    if prev_value * current_value <= 0:
+        # Approximate root location by bisection or midpoint
+        low, high = theta - step, theta
+        for _ in range(20):
+            mid = (low + high) / 2
+            f_mid = f(mid)
+            if abs(f_mid) < tolerance:
+                theta_solution = mid
+                break
+            if prev_value * f_mid <= 0:
+                high = mid
+                current_value = f_mid
+            else:
+                low = mid
+        else:
+            theta_solution = (low + high) / 2
+        # Record solution
+        print(f"Solution at θ ≈ {theta_solution:.4f}")
+        count_solutions += 1
+    prev_value = current_value
+    theta += step
+
+print(f"Total approximate solutions: {count_solutions}")
+```

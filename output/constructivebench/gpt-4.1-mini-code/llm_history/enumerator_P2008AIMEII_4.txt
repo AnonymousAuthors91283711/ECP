@@ -1,0 +1,49 @@
+[write_program]
+The problem is about expressing 2008 as a signed sum of distinct powers of two, with coefficients ±1, and the sum of the exponents (the ns) being minimal or specific. We want to find all such representations and particularly the sum of the exponents. The program enumerates candidate sets of exponents and sign patterns to find these sums.
+
+```python
+# Enumerate representations of 2008 as sum of ± 2^n with distinct n,
+# outputting n-lists and signs satisfying sum of coefficients * 2^n = 2008.
+# Also output the sum of exponents for each representation found.
+
+def powers_of_two_up_to(n):
+    p = []
+    i = 0
+    while (1 << i) <= n:
+        p.append(1 << i)
+        i += 1
+    return p
+
+target = 2008
+p2 = powers_of_two_up_to(target * 2)  # powers of two up to > 2008
+
+max_len = 12  # heuristic limit on size of ns for speed
+from itertools import combinations, product
+
+found_sums = set()
+
+print(f"Target: {target}")
+print(f"Powers up to 2^{len(p2)-1}: {p2}")
+
+# Enumerate subsets of powers up to max_len elements
+for r in range(1, max_len + 1):
+    # combinations of indices that choose distinct exponents in descending order
+    for ns_indices in combinations(range(len(p2)), r):
+        ns = sorted(ns_indices, reverse=True)
+        # Try all sign assignments ±1
+        for signs in product([1,-1], repeat=r):
+            s = sum(sign * (1 << n) for sign, n in zip(signs, ns))
+            if s == target:
+                sum_ns = sum(ns)
+                if sum_ns not in found_sums:
+                    found_sums.add(sum_ns)
+                    # output the result with exact exponents and signs
+                    signs_str = ['+' if x==1 else '-' for x in signs]
+                    print(f"r={r}, ns={ns}, signs={signs_str}, sum(ns)={sum_ns}")
+# Output minimal sum of exponents found
+if found_sums:
+    min_sum = min(found_sums)
+    print(f"Minimal sum of exponents: {min_sum}")
+else:
+    print("No representations found")
+```

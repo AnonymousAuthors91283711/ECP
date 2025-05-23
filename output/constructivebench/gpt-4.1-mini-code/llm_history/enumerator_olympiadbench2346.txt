@@ -1,0 +1,69 @@
+[write_program]
+The problem involves solving \((\log x)^{\log(\log x)} = 10000\) for \(x > 0\). We want to enumerate possible values of \(x\) satisfying this, focusing on exact or numeric solutions when \(\log\) is natural logarithm.
+
+We can rewrite it as:
+\[
+(\log x)^{\log(\log x)} = 10^4
+\]
+
+It is tricky to solve algebraically, so let's try to:
+1. Enumerate values of \(\log x = y\) over some range \(y>0\) numerically.
+2. Check when \(y^{\log y} = 10000\) approximately.
+3. For matches, recover \(x = e^y\).
+
+We will print these \(x\) values for small increments to guess solutions and verify any extrema.
+
+```python
+import math
+
+target = 10000
+log_target = math.log(target)  # ln(10000)
+
+print("Enumerating approximate solutions to (log x)^(log (log x)) = 10000")
+
+# We want to find y = log x > 0 with y^(log y) = 10000
+# Define function f(y) = y^{ln(y)} = exp(ln(y)*ln(y)) = exp((ln y)^2)
+# So f(y) = exp((ln y)^2) = 10000 => (ln y)^2 = ln(10000) => ln y = ± sqrt(ln(10000))
+
+sqrt_log_target = math.sqrt(log_target)
+
+# Candidate 1: ln y = +sqrt_log_target => y = exp(sqrt_log_target)
+y1 = math.exp(sqrt_log_target)
+x1 = math.exp(y1)
+print(f"Candidate 1: y = log x = {y1:.6f}, so x = exp(y) = {x1:.6f}")
+
+# Candidate 2: ln y = -sqrt_log_target => y = exp(-sqrt_log_target)
+y2 = math.exp(-sqrt_log_target)
+x2 = math.exp(y2)
+print(f"Candidate 2: y = log x = {y2:.6f}, so x = exp(y) = {x2:.6f}")
+
+# Verify these candidates numerically:
+def check(x):
+    if x <= 0:
+        return None
+    try:
+        y = math.log(x)
+        val = (y) ** (math.log(y))
+        return val
+    except ValueError:
+        return None
+
+for i, x in enumerate([x1, x2], start=1):
+    val = check(x)
+    print(f"Verification Candidate {i}: (log x)^(log(log x)) = {val:.6f} (target 10000)")
+
+# Scan a small range around candidates to see possible numeric neighbors:
+print("\nScanning y in [0.01,5] with step 0.1 for rough solutions:")
+
+step = 0.1
+y = 0.01
+while y <= 5:
+    try:
+        val = math.exp((math.log(y))**2)  # y^{ln y} = exp((ln y)^2)
+        if abs(val - target) < 100:
+            x = math.exp(y)
+            print(f"y={y:.2f}, (log x)^(log(log x)) ~ {val:.1f}, x=exp(y)={x:.4f}")
+    except (ValueError, OverflowError):
+        pass
+    y += step
+```

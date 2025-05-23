@@ -1,0 +1,58 @@
+[write_program]
+The problem involves matrices \( M \) of size \( n \times n \) with integer entries, indexed by \( \text{Fin } n \). For each row vector \( M_i \), the dot product of \( M_i \) with itself is even mod 2, and the dot product of distinct rows is odd mod 2. The goal is to find for which \( n > 0 \) such a matrix exists, i.e., to explore values of \( n \) and check existence of such matrices.
+
+To assist, I will:
+- Interpret the matrix \( M \) modulo 2 (entries 0 or 1) since only parity matters for dot products mod 2.
+- For small \( n \), generate all \( n \times n \) matrices over \(\{0,1\}\).
+- Check the dot product conditions on rows.
+- Print \( n \) and any matrices found.
+
+This brute-force for \( n \) up to 5 is feasible. I'll print matrices immediately when found, and finalize with whether any exists for each \( n \).
+
+```python
+import itertools
+
+def dot(v, w):
+    return sum(x*y for x,y in zip(v,w)) % 2
+
+def check_matrix(M):
+    n = len(M)
+    # For all i, dot(M[i], M[i]) % 2 == 0
+    for i in range(n):
+        if dot(M[i], M[i]) != 0:
+            return False
+    # For all i != j, dot(M[i], M[j]) % 2 == 1
+    for i in range(n):
+        for j in range(n):
+            if i != j and dot(M[i], M[j]) != 1:
+                return False
+    return True
+
+def print_matrix(M):
+    for row in M:
+        print(''.join(str(x) for x in row))
+    print()
+
+# Enumerate for n = 1 to 5
+for n in range(1, 6):
+    print(f"n = {n}")
+    rows_poss = list(itertools.product([0,1], repeat=n))
+    found_any = False
+    # Enumerate all matrices as n-tuple of rows
+    # To reduce computation, consider unique rows only to ensure rows are distinct (not strictly necessary)
+    # But problem doesn't say rows should be distinct, only conditions on dot products hold.
+    # So just try all possible n-tuples of rows (can be large!)
+    # We'll do a heuristic: since dot product of distinct rows =1, no vector can appear twice.
+    # So rows must be distinct. So generate permutations of rows_poss of length n with no repetition.
+    # To limit output size, only the first few matrices per n are printed.
+    for M in itertools.permutations(rows_poss, n):
+        if check_matrix(M):
+            found_any = True
+            print("Matrix found:")
+            print_matrix(M)
+            # After printing one matrix, break to limit output size
+            break
+    if not found_any:
+        print("No matrix found\n")
+```
+

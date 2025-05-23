@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for the largest subset S of {1, 2, ..., 1000} where no two distinct elements sum to another element in S. This is similar to sum-free set problems. We'll enumerate possible candidates by checking subsets of increasing size.
+
+The approach:
+1. Start with the largest possible subset size (500) and check downwards
+2. For each size k, check if a sum-free subset exists
+3. The first k where such a subset exists is the answer
+
+We'll use the probabilistic method heuristic that the largest sum-free subset is likely the largest odd numbers up to 1000 (which gives 500 elements), but we'll verify smaller cases to be sure.
+
+```python
+def is_sum_free(subset):
+    elements = set(subset)
+    n = len(subset)
+    for i in range(n):
+        for j in range(i+1, n):
+            if subset[i] + subset[j] in elements:
+                return False
+    return True
+
+def find_largest_sum_free():
+    max_n = 1000
+    # Check the obvious candidate first: all odd numbers
+    odd_candidate = list(range(1, max_n+1, 2))
+    if is_sum_free(odd_candidate):
+        print(f"Found candidate with size {len(odd_candidate)}: all odd numbers")
+        return len(odd_candidate)
+    
+    # If that fails, check decreasing sizes
+    for k in range(max_n//2, 0, -1):
+        # Try simple arithmetic progression candidates
+        for step in [2, 3, 4, 5]:
+            candidate = list(range(1, 1 + step*k, step))
+            if len(candidate) == k and is_sum_free(candidate):
+                print(f"Found candidate with size {k}: {candidate[:10]}...")
+                return k
+        # Try largest numbers
+        candidate = list(range(max_n - k + 1, max_n + 1))
+        if is_sum_free(candidate):
+            print(f"Found candidate with size {k}: largest numbers")
+            return k
+    
+    return 0
+
+if __name__ == "__main__":
+    result = find_largest_sum_free()
+    print(f"Final answer: {result}")
+```

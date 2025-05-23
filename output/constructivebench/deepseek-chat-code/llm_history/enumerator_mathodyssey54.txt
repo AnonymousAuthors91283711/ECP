@@ -1,0 +1,53 @@
+[write_program]
+This problem involves finding the minimum value of z = 2a² + b² under the constraint a³ + b³ + 6ab = 8 with a,b ≥ 0. We'll enumerate possible (a,b) pairs that satisfy the constraint and compute z for each, tracking the minimum.
+
+The approach:
+1. Sample a values from 0 to 2 (since a³ ≤ 8)
+2. For each a, solve for b using the constraint equation
+3. Keep only real, non-negative b solutions
+4. Compute z = 2a² + b² for valid pairs
+5. Track the minimum z encountered
+
+```python
+import math
+
+def find_min_z():
+    min_z = float('inf')
+    best_pair = None
+    
+    # Sample a values with small step size for accuracy
+    for a in [x/1000 for x in range(0, 2001)]:
+        # Coefficients for cubic equation in b: b³ + (6a)b + (a³ - 8) = 0
+        coeffs = [1, 0, 6*a, a**3 - 8]
+        
+        # Find real roots
+        roots = []
+        # Using numpy's roots function for simplicity (though we could implement our own)
+        try:
+            import numpy as np
+            all_roots = np.roots(coeffs)
+            roots = [r.real for r in all_roots if abs(r.imag) < 1e-9 and r.real >= 0]
+        except:
+            # Fallback for when numpy isn't available - less accurate but works for small samples
+            # This is a simplified approach that might miss some roots
+            if a == 0:
+                b = 2.0
+                roots.append(b)
+            else:
+                # Try to find approximate solution
+                for b in [x/1000 for x in range(0, 2001)]:
+                    if abs(b**3 + 6*a*b + a**3 - 8) < 0.01:
+                        roots.append(b)
+        
+        for b in roots:
+            if b >= 0:
+                z = 2*a**2 + b**2
+                if z < min_z:
+                    min_z = z
+                    best_pair = (a, b)
+                    print(f"New minimum z={z:.6f} at (a,b)=({a:.6f},{b:.6f})")
+    
+    print(f"\nFinal minimum z={min_z:.6f} at (a,b)=({best_pair[0]:.6f},{best_pair[1]:.6f})")
+
+find_min_z()
+```

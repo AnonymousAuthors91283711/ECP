@@ -1,0 +1,55 @@
+[write_program]
+The problem is about finding the smallest nonnegative integer \( n \) such that there exist positive integers \( a, b, c \) with \( a+b+c=2006 \) for which \( a! b! c! \) is divisible by \( 10^n \) but not by \( 10^{n+1} \); equivalently, \( a! b! c! = m \cdot 10^n \) with \( 10 \nmid m \).
+
+The exponent \( n \) is the sum of the number of factors 2 and 5 in the prime factorization of \( a! b! c! \). Since 5s are scarcer, the limiting factor is generally the number of 5s.
+
+To explore this, we write a Python program that:
+- Iterates over triplets \( (a,b,c) \) with \( a,b,c>0 \) and \( a+b+c=2006 \).
+- Computes the minimum exponent of 5 and 2 in \( a! b! c! \).
+- Prints candidates for \( n \).
+- After scanning, prints the minimal \( n \) found.
+
+We optimize by fixing two variables \( a,b \) and deducing \( c=2006 - a - b \), and skipping invalid ones. Also, counting the power of 5 and 2 in factorials is efficient with Legendre's formula.
+
+We limit the search to \( a,b,c \ge 1 \) and \( a,b \le 2006 \).
+
+```python
+# Enumerate n such that for some positive a,b,c with a+b+c=2006,
+# a! b! c! divisible by 10^n but not 10^{n+1}.
+# Print all encountered n values immediately, then print minimal n.
+
+def v_factor(n, p):
+    # Count exponent of prime p in n!
+    count = 0
+    power = p
+    while power <= n:
+        count += n // power
+        power *= p
+    return count
+
+LIMIT = 2006
+
+min_n = None
+
+# We'll check a,b from 1 to 100 (heuristic limit to reduce runtime),
+# c = 2006 - a - b positive.
+for a in range(1, 102):
+    v5a = v_factor(a,5)
+    v2a = v_factor(a,2)
+    for b in range(1, 102):
+        c = LIMIT - a - b
+        if c < 1:
+            continue
+        v5b = v_factor(b,5)
+        v2b = v_factor(b,2)
+        v5c = v_factor(c,5)
+        v2c = v_factor(c,2)
+        v5 = v5a + v5b + v5c
+        v2 = v2a + v2b + v2c
+        n = min(v5,v2)
+        print(f"n={n} for a={a},b={b},c={c}")
+        if min_n is None or n < min_n:
+            min_n = n
+
+print("Minimal n found:", min_n)
+```

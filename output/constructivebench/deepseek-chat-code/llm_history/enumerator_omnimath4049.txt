@@ -1,0 +1,66 @@
+[write_program]
+This problem asks whether there exists a function F from natural numbers to natural numbers satisfying three conditions:
+1. Surjective: every natural number k has some n with F(n)=k
+2. Infinite fibers: for every k>0, infinitely many n satisfy F(n)=k
+3. Functional equation: for n≥2, F(F(n^163)) = F(F(n)) + F(F(361))
+
+We'll write a Python program to search for such functions by testing small candidate functions and checking these conditions. Since the problem is abstract, we'll focus on simple patterns that might satisfy the conditions.
+
+```python
+def test_function(F, max_n=1000):
+    """Test if function F satisfies the three conditions up to max_n."""
+    # Check surjectivity and infinite fibers (partial check)
+    seen_values = set()
+    value_counts = {}
+    for n in range(1, max_n + 1):
+        k = F(n)
+        seen_values.add(k)
+        value_counts[k] = value_counts.get(k, 0) + 1
+    
+    # Check functional equation for n >= 2
+    functional_holds = True
+    for n in range(2, min(20, max_n)):  # Check small n due to n^163 growth
+        try:
+            lhs = F(F(n ** 163))
+            rhs = F(F(n)) + F(F(361))
+            if lhs != rhs:
+                functional_holds = False
+                break
+        except (OverflowError, RecursionError):
+            break
+    
+    return {
+        'surjective': len(seen_values) >= min(max_n, 100),  # Approximate check
+        'infinite_fibers': all(v > 10 for v in value_counts.values()),  # Approximate
+        'functional_eq': functional_holds
+    }
+
+# Test constant functions (fail surjectivity)
+print("Testing constant functions:")
+for c in [1, 2, 3]:
+    F = lambda n, c=c: c
+    result = test_function(F)
+    print(f"F(n)={c}:", result)
+
+# Test identity function (fails functional equation)
+print("\nTesting identity function:")
+F = lambda n: n
+print("F(n)=n:", test_function(F))
+
+# Test floor(log(n)) functions (fail various conditions)
+print("\nTesting logarithmic functions:")
+import math
+for base in [2, 10]:
+    F = lambda n, base=base: math.floor(math.log(n, base)) if n >= 1 else 0
+    result = test_function(F)
+    print(f"F(n)=floor(log_{base}(n)):", result)
+
+# Test prime counting function approximation (likely fails)
+print("\nTesting prime-related functions:")
+def prime_count(n):
+    if n < 2: return 0
+    return len([i for i in range(2, n+1) if all(i % d != 0 for d in range(2, int(math.sqrt(i))+1))])
+print("F(n)=π(n):", test_function(prime_count))
+
+# Note: The actual solution likely involves a more sophisticated construction
+```

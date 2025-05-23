@@ -1,0 +1,48 @@
+[write_program]
+This problem asks for the smallest natural number n > 1729 that can be expressed as the sum of two cubes in two different ways (a³+b³ = c³+d³ = n with distinct pairs). We'll write a Python program to find this by enumerating sums of cubes and checking for multiple representations.
+
+The approach:
+1. Iterate n from 1730 upwards
+2. For each n, find all pairs (a,b) where a³ + b³ = n and a ≤ b
+3. If we find at least two distinct pairs, print n and the pairs
+4. Stop after finding the smallest such n
+
+```python
+def find_min_taxicab_number():
+    max_n = 50000  # Reasonable upper bound based on known taxicab numbers
+    cube_roots = {}
+    
+    # Precompute cubes up to cube root of max_n
+    max_k = int((max_n)**(1/3)) + 2
+    cubes = [k**3 for k in range(max_k)]
+    
+    # Build dictionary of sums
+    sum_counts = {}
+    for a in range(1, max_k):
+        a_cubed = cubes[a]
+        for b in range(a, max_k):
+            n = a_cubed + cubes[b]
+            if n > max_n:
+                break
+            if n not in sum_counts:
+                sum_counts[n] = []
+            sum_counts[n].append((a, b))
+    
+    # Check sums in order
+    for n in sorted(sum_counts.keys()):
+        if n <= 1729:
+            continue
+        pairs = sum_counts[n]
+        if len(pairs) >= 2:
+            # Verify distinct pairs (not just permutations)
+            unique_pairs = set((min(a,b), max(a,b)) for a,b in pairs)
+            if len(unique_pairs) >= 2:
+                print(f"Found {n} with representations:")
+                for a, b in pairs:
+                    print(f"  {a}^3 + {b}^3 = {n}")
+                return
+    
+    print("No solution found below", max_n)
+
+find_min_taxicab_number()
+```

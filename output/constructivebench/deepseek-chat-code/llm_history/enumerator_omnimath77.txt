@@ -1,0 +1,65 @@
+[write_program]
+This problem involves finding all functions f: ℕ → ℕ that satisfy a multiplicative condition involving Euler's totient function φ. The condition relates f(m * φ(n³)) to f(m) * φ(n³) for certain m,n. We'll enumerate possible functions f by testing small values and looking for patterns.
+
+The approach:
+1. Test constant functions f(n) = c
+2. Test identity-like functions f(n) = n^k
+3. Check if combinations work
+4. Output candidates that satisfy the condition for small m,n
+
+```python
+from math import gcd
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def phi(n):
+    """Euler's totient function"""
+    result = n
+    p = 2
+    while p * p <= n:
+        if n % p == 0:
+            while n % p == 0:
+                n = n // p
+            result -= result // p
+        p += 1
+    if n > 1:
+        result -= result // n
+    return result
+
+def test_function(f, max_m=5, max_n=5):
+    """Test if function f satisfies the condition for small m,n"""
+    for m in range(1, max_m+1):
+        for n in range(1, max_n+1):
+            if m >= n:
+                lhs = f(m * phi(n**3))
+                rhs = f(m) * phi(n**3)
+                if lhs != rhs:
+                    return False
+    return True
+
+def enumerate_functions():
+    """Enumerate possible functions that might satisfy the condition"""
+    # Test constant functions f(n) = c
+    for c in [0, 1, 2]:
+        f = lambda n, c=c: c
+        if test_function(f):
+            print(f"Constant function f(n) = {c} works")
+    
+    # Test identity function and powers
+    for k in [1, 2, 3]:
+        f = lambda n, k=k: n**k
+        if test_function(f):
+            print(f"Power function f(n) = n^{k} works")
+    
+    # Test multiplicative functions
+    def f_id(n): return n
+    def f_zero(n): return 0
+    def f_phi(n): return phi(n)
+    
+    for name, f in [("Identity", f_id), ("Zero", f_zero), ("Euler's phi", f_phi)]:
+        if test_function(f):
+            print(f"Function {name} works")
+
+if __name__ == "__main__":
+    enumerate_functions()
+```

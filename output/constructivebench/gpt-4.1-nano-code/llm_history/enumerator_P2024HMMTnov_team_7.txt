@@ -1,0 +1,51 @@
+[write_program]
+The problem involves counting configurations of 8x8 grids with certain coloring rules based on "cuts" defined by vertical and horizontal lines. The goal is to determine the number of valid grid configurations where black and white areas are equal, considering specific cut arrangements.
+
+Since the problem's combinatorial nature can be complex, we'll approach it by enumerating small cases:
+- Fix small values for vertical and horizontal cuts (say, 0 to 7 cuts each).
+- For each configuration, determine the valid cut positions and compute the resulting black/white areas.
+- We only consider configurations where the areas are equal.
+
+This brute-force enumeration will produce partial answers streaming real counts, focusing on straightforward computation.
+
+```python
+# Enumerate small vertical and horizontal cuts configurations
+# For each, determine the coloring pattern, count black and white cells, and check equality
+# Since the problem involves symmetry and combinatorics, we'll limit cuts to small samples
+
+def main():
+    results = []
+    max_cuts = 3  # limit to small number of cuts for efficiency
+    for v_cuts in range(max_cuts + 1):
+        for h_cuts in range(max_cuts + 1):
+            # Generate all cut positions (combinations of positions where cuts occur)
+            v_positions = list(range(1, 7))
+            h_positions = list(range(1, 7))
+            from itertools import combinations
+            for v_cuts_positions in combinations(v_positions, v_cuts):
+                for h_cuts_positions in combinations(h_positions, h_cuts):
+                    # Compute segments lengths
+                    v_segments = [v_cuts_positions[0]] if v_cuts_positions else [7]
+                    v_segments += [v_cuts_positions[i+1] - v_cuts_positions[i] for i in range(len(v_cuts_positions)-1)]
+                    v_segments += [7 - v_cuts_positions[-1]] if v_cuts_positions else [7]
+                    
+                    h_segments = [h_cuts_positions[0]] if h_cuts_positions else [7]
+                    h_segments += [h_cuts_positions[i+1] - h_cuts_positions[i] for i in range(len(h_cuts_positions)-1)]
+                    h_segments += [7 - h_cuts_positions[-1]] if h_cuts_positions else [7]
+                    
+                    # Calculate total black cells
+                    black_cells = 0
+                    for i, v_len in enumerate(v_segments):
+                        for j, h_len in enumerate(h_segments):
+                            # Determine color based on (i + j) parity
+                            color = (i + j) % 2
+                            count = v_len * h_len
+                            if color == 0:
+                                black_cells += count
+                    white_cells = 64 - black_cells
+                    if black_cells == white_cells:
+                        print(f"v_cuts={v_cuts_positions} h_cuts={h_cuts_positions} black={black_cells}")
+                        
+if __name__ == "__main__":
+    main()
+```

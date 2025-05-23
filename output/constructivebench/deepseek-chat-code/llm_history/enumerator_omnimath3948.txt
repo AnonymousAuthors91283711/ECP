@@ -1,0 +1,44 @@
+[write_program]
+This problem asks for all real-valued functions f:ℝ→ℝ that satisfy:
+1. f(0) ≠ 0
+2. The functional equation: f(f(x)) + f(f(y)) = f(x+y) * f(x*y) for all x,y ∈ ℝ
+
+We'll write a Python program to enumerate possible polynomial solutions, as polynomials are often good candidates for functional equations. We'll test polynomial forms up to degree 4.
+
+```python
+import numpy as np
+from itertools import product
+
+def test_polynomial(coeffs):
+    """Test if polynomial with given coefficients satisfies the functional equation."""
+    def f(x):
+        return sum(c * (x**i) for i, c in enumerate(coeffs))
+    
+    # Test random points to check if equation holds
+    test_points = [0.5, 1.0, 2.0, -1.0, 3.0]
+    for x, y in product(test_points, repeat=2):
+        lhs = f(f(x)) + f(f(y))
+        rhs = f(x + y) * f(x * y)
+        if not np.isclose(lhs, rhs, rtol=1e-6):
+            return False
+    
+    # Check f(0) != 0 condition
+    if np.isclose(f(0), 0):
+        return False
+    
+    return True
+
+def enumerate_polynomials(max_degree=4):
+    """Enumerate polynomials up to given degree that satisfy the conditions."""
+    print("Searching for polynomial solutions...")
+    print("Format: [a0, a1, a2, ...] where f(x) = a0 + a1*x + a2*x^2 + ...")
+    
+    for degree in range(1, max_degree + 1):
+        # Generate coefficient combinations (-5 to 5 range)
+        for coeffs in product(range(-5, 6), repeat=degree + 1):
+            if test_polynomial(coeffs):
+                print(f"Found solution: {list(coeffs)}")
+
+if __name__ == "__main__":
+    enumerate_polynomials()
+```

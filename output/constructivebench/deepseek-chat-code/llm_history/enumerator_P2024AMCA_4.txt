@@ -1,0 +1,61 @@
+[write_program]
+This problem asks for the smallest natural number n such that 2024 divides n!. We'll write a Python program to find this minimal n by checking factorials incrementally until we find one divisible by 2024.
+
+The approach:
+1. Factorize 2024 to understand its prime components (2024 = 2³ × 11 × 23)
+2. For each candidate n, check if its factorial contains at least these prime factors with sufficient exponents
+3. The minimal n will be the maximum of the minimal numbers needed for each prime power factor
+
+```python
+def min_n_factorial_divisible_by(m):
+    # Factorize m into prime powers
+    def factorize(num):
+        factors = {}
+        if num == 1:
+            return factors
+        # Check for 2 separately
+        while num % 2 == 0:
+            factors[2] = factors.get(2, 0) + 1
+            num = num // 2
+        # Check odd divisors up to sqrt(num)
+        i = 3
+        while i * i <= num:
+            while num % i == 0:
+                factors[i] = factors.get(i, 0) + 1
+                num = num // i
+            i += 2
+        if num > 1:
+            factors[num] = factors.get(num, 0) + 1
+        return factors
+    
+    factors = factorize(m)
+    if not factors:
+        return 0  # m=1 case
+    
+    # For each prime p, find minimal n where n! has at least exponent e of p
+    def min_n_for_prime(p, e):
+        n = 0
+        total = 0
+        while total < e:
+            n += 1
+            num = n
+            count = 0
+            while num % p == 0:
+                num = num // p
+                count += 1
+            total += count
+        return n
+    
+    max_n = 0
+    for p, e in factors.items():
+        current_n = min_n_for_prime(p, e)
+        if current_n > max_n:
+            max_n = current_n
+        print(f"For prime {p}^{e}, minimal n is {current_n}")
+    
+    print(f"\nFinal answer (minimal n where {m} divides n!): {max_n}")
+    return max_n
+
+# Solve for 2024
+min_n_factorial_divisible_by(2024)
+```

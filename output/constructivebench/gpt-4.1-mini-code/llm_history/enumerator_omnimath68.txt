@@ -1,0 +1,72 @@
+[write_program]
+The problem involves a polynomial \( f \) with integer coefficients of degree \( n \), and the ratio:
+
+\[
+\frac{|f(a) - f(b)|}{|a-b|}
+\]
+
+where \( a \neq b \) are integers.
+
+We want to find the exact minimum positive lower bound \( c \) over all such polynomials and integer inputs, and then confirm for any \( d > c \), there exists some polynomial \( f \) and integers \( a, b \) such that the ratio is less than \( d \) but above \( c \).
+
+To explore this numerically with Python, I'll enumerate polynomials of degree \( n \) with small integer coefficients, evaluate the ratio for distinct integer pairs \( (a,b) \), store the minimal ratio found, and attempt to conjecture the minimal value \( c \) for small \( n \). We will do this for a few small degrees \( n=1,2,3 \) and with coefficient ranges small enough to keep computations reasonable.
+
+```python
+# enumerator.py
+from itertools import product
+from math import gcd
+from fractions import Fraction
+
+def polynomial_eval(coeffs, x):
+    # coeffs: [a_0, a_1, ..., a_n], a_i integers
+    # evaluates polynomial at integer x
+    return sum(c * x**i for i, c in enumerate(coeffs))
+
+def minimal_ratio_for_degree(n, coef_range=range(-3,4), a_range=range(-3,4)):
+    # Enumerate polynomials of degree exactly n with integer coefficients in coef_range
+    # coeffs length = n+1, highest degree coeff != 0
+    min_rat = None
+    candidates = []
+    
+    # highest degree coeff != 0
+    for coeffs in product(coef_range, repeat=n+1):
+        if coeffs[-1] == 0:
+            continue  # degree not equal n
+        # avoid zero polynomial
+        if all(c == 0 for c in coeffs):
+            continue
+        
+        # test pairs (a,b), a != b in a_range
+        for a in a_range:
+            for b in a_range:
+                if a == b:
+                    continue
+                f_a = polynomial_eval(coeffs, a)
+                f_b = polynomial_eval(coeffs, b)
+                if f_a == f_b:
+                    continue
+                num = abs(f_a - f_b)
+                den = abs(a - b)
+                frac = Fraction(num, den)
+                if min_rat is None or frac < min_rat:
+                    min_rat = frac
+                    candidates = [(coeffs, a, b, frac)]
+                    print(f"New min for n={n}: ratio {frac} with poly coeffs {coeffs}, points {a}, {b}")
+                elif frac == min_rat:
+                    candidates.append((coeffs, a, b, frac))
+    return min_rat, candidates
+
+def main():
+    for n in range(1,4):
+        print(f"=== Degree n={n} ===")
+        min_ratio, cands = minimal_ratio_for_degree(n)
+        if min_ratio is not None:
+            print(f"Minimal ratio for degree {n}: {min_ratio} ≈ {float(min_ratio):.6f}")
+        else:
+            print(f"No valid ratio found for degree {n}")
+
+if __name__ == "__main__":
+    main()
+```
+
+This program prints minimal such ratios for degree \( n=1,2,3 \) polynomials with coefficients in \(-3,\ldots,3\) and input integers in \(-3,\ldots,3\). New minimal values and their polynomials and pairs are printed immediately when found. This aids in conjecturing the minimal constant \( c \) in the problem statement.

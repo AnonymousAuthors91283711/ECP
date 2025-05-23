@@ -1,0 +1,50 @@
+[write_program]
+This problem involves finding numbers n between 1 and 1000 where the difference between a(n,1000) and a(n,1) is divisible by 100. The sequence a(n,i) is defined recursively with a(n,i+1) = 2^(a(n,i)). We'll write a program to enumerate these numbers n.
+
+The key observation is that a(n,1000) is an extremely large tower of exponents (2^2^...^n), so we need to find when this difference is divisible by 100. We'll use modular arithmetic properties to make this tractable.
+
+```python
+def main():
+    # We'll compute a(n,k) mod 100 for various k
+    # Since a(n,k) mod 100 depends only on a(n,k-1) mod lambda(100)=20
+    # where lambda is Carmichael's function
+    # We can compute the sequence modulo 20 first, then modulo 100
+    
+    count = 0
+    for n in range(1, 1001):
+        # Compute a(n,1) mod 100
+        a1 = n % 100
+        
+        # Compute a(n,1000) mod 100 via exponentiation cycles
+        # First compute a(n,2) mod 20 since 2^a(n,1) mod 100 depends on a(n,1) mod 20
+        current_mod20 = n % 20
+        for _ in range(999):  # from a(n,2) to a(n,1000)
+            # Compute 2^current_mod20 mod 20
+            # The powers of 2 modulo 20 cycle through [2,4,8,16,12,4,8,16,12,...]
+            if current_mod20 == 0:
+                next_mod20 = 1
+            else:
+                exponent = current_mod20
+                if exponent >= 4:
+                    exponent = (exponent - 4) % 4 + 4
+                next_mod20 = pow(2, exponent, 20)
+            current_mod20 = next_mod20
+        
+        # Now compute 2^current_mod20 mod 100
+        if current_mod20 == 0:
+            a1000_mod100 = 1
+        else:
+            exponent = current_mod20
+            if exponent >= 20:
+                exponent = (exponent - 20) % 20 + 20
+            a1000_mod100 = pow(2, exponent, 100)
+        
+        if (a1000_mod100 - a1) % 100 == 0:
+            print(n)
+            count += 1
+    
+    print(f"Total count: {count}")
+
+if __name__ == "__main__":
+    main()
+```

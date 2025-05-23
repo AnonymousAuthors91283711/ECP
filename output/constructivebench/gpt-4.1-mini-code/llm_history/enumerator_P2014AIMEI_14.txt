@@ -1,0 +1,103 @@
+[write_program]
+The problem suggests finding all real solutions \(x\) (not equal to 3, 5, 17, or 19) of the equation
+\[
+\frac{3}{x-3} + \frac{5}{x-5} + \frac{17}{x-17} + \frac{19}{x-19} = x^2 - 11x - 4
+\]
+then identifying the greatest solution which can be expressed as \(a + \sqrt{b + \sqrt{c}}\) with \(a,b,c \in \mathbb{N}\), positive, and \(a+b+c=263.\)
+
+We will enumerate real solutions numerically on a grid excluding singularities, then test if the values match the nested radical form approximately, and display candidates found.
+
+```python
+import math
+
+# Function defines the equation's left minus right side, roots where it equals zero.
+def f(x):
+    if x in {3, 5, 17, 19}:
+        return None
+    try:
+        return 3/(x-3)+5/(x-5)+17/(x-17)+19/(x-19) - (x**2 - 11*x -4)
+    except ZeroDivisionError:
+        return None
+
+# Find roots by checking sign changes on intervals away from singularities
+singularities = [3,5,17,19]
+intervals = [(-10,3-1e-4),(3+1e-4,5-1e-4),(5+1e-4,17-1e-4),(17+1e-4,19-1e-4),(19+1e-4,30)]
+
+roots = []
+
+def bisect_root(a,b):
+    fa = f(a)
+    fb = f(b)
+    if fa is None or fb is None or fa*fb > 0:
+        return None
+    for _ in range(50):
+        c = (a+b)/2
+        fc = f(c)
+        if fc is None: 
+            a=c+1e-6
+            continue
+        if abs(fc) < 1e-12:
+            return c
+        if fa*fc < 0:
+            b = c
+            fb = fc
+        else:
+            a = c
+            fa = fc
+    return (a+b)/2
+
+for (a,b) in intervals:
+    # sample subintervals to detect sign change
+    samples = 100
+    xs = [a + i*(b - a)/samples for i in range(samples+1)]
+    for i in range(samples):
+        x0, x1 = xs[i], xs[i+1]
+        v0, v1 = f(x0), f(x1)
+        if v0 is None or v1 is None:
+            continue
+        if v0*v1 <= 0:
+            r = bisect_root(x0,x1)
+            if r is not None and all(abs(r - root) > 1e-7 for root in roots):
+                roots.append(r)
+                print(f"Root found: x = {r:.12f}")
+
+# Check nested square root form candidates for the greatest root found
+roots.sort()
+max_root = roots[-1]
+print(f"Greatest root approx: {max_root:.12f}")
+
+# Try to represent max_root as a + sqrt(b + sqrt(c)) with integers a,b,c and a+b+c=263
+# a chosen near integer part of max_root
+a = int(round(max_root))
+# We search b and c so that val = a + sqrt(b + sqrt(c)) approx max_root
+from math import sqrt, isclose
+
+tol = 1e-8
+found = False
+for a_cand in range(a-2, a+3):
+    residual = max_root - a_cand
+    if residual <= 0:
+        continue
+    for b in range(1, 264):
+        inner = (residual**2 - b)
+        if inner < 0:
+            continue
+        c = inner**2
+        c_int = round(c)
+        if c_int <= 0:
+            continue
+        val = a_cand + sqrt(b + sqrt(c_int))
+        if isclose(val, max_root, abs_tol=tol) and a_cand + b + c_int == 263:
+            print(f"Match found: a={a_cand}, b={b}, c={c_int}")
+            print(f"Check a+b+c={a_cand+b+c_int}")
+            found = True
+            break
+    if found:
+        break
+```
+This program:
+- Finds approximations of all roots avoiding singularities,
+- Prints roots when found,
+- Identifies the greatest root,
+- Searches a small range of integers for \(a,b,c\) matching the greatest root's nested radical form and \(a+b+c=263\),
+- Prints the matching triple if found.

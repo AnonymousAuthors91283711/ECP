@@ -1,0 +1,58 @@
+[write_program]
+This problem involves finding complex numbers \(k\) that satisfy two polynomial equations simultaneously, involving parameters \(a, b, c, d\), each nonzero. It appears to be a problem of solving a system of polynomial equations with constraints.
+
+Given the symmetry, the key idea is to analyze the two equations:
+
+\[
+a k^3 + b k^2 + c k + d = 0
+\]
+\[
+b k^3 + c k^2 + d k + a = 0
+\]
+
+and find all possible complex \(k\) satisfying at least one such set of parameters with the nonzero condition.
+
+Because the problem is highly symmetric, a reasonable approach is to:
+- Fix small sample values for parameters \(a, b, c, d\), all nonzero,
+- For each such sample, compute the roots of the corresponding polynomial,
+- Do this exhaustively over small integers (e.g., \(\pm 1, \pm 2\)) for parameters,
+- Collect all \(k\) that are solutions, and stream outputs as soon as they are found.
+
+No specific ground-truth answer is hardcoded, and the algorithm avoids unnecessary computations by limiting the parameter ranges.
+
+Below is a Python program implementing this enumeration:
+
+```python
+import numpy as np
+
+# Set small sample parameter values for a, b, c, d
+param_values = [-2, -1, 1, 2]
+# To avoid duplicates, store solutions in a set
+solutions = set()
+
+for a in param_values:
+    for b in param_values:
+        for c in param_values:
+            for d in param_values:
+                if a != 0 and b != 0 and c != 0 and d != 0:
+                    # Polynomial equations can be represented as:
+                    # Eq1: a*k^3 + b*k^2 + c*k + d = 0
+                    # Eq2: b*k^3 + c*k^2 + d*k + a = 0
+                    # Note: Given the symmetry, we find common roots of these two polynomials.
+                    # One approach: solve Eq1 and check if the root satisfies Eq2.
+                    # We'll find roots of Eq1 for current parameters.
+                    coeffs_eq1 = [a, b, c, d]
+                    roots_eq1 = np.roots(coeffs_eq1)
+                    for k in roots_eq1:
+                        # Verify if root satisfies Eq2
+                        val2 = b * k**3 + c * k**2 + d * k + a
+                        # Use a numerical tolerance for complex roots
+                        if np.isclose(val2, 0, atol=1e-8):
+                            k_real = complex(k)
+                            if k_real not in solutions:
+                                solutions.add(k_real)
+                                print(k_real)
+
+# Note: This code attempts to find roots for small parameter ranges.
+# It prints each solution as soon as it is verified, streaming partial results.
+```

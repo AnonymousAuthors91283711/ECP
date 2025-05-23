@@ -1,0 +1,72 @@
+[write_program]
+The problem involves finding a real-valued function on 8 points where each value is the average of values at "adjacent" points (adjacent defined by a parity condition on indices), repeated 10 times, and checking if a non-constant fixed point exists.
+
+We can enumerate functions on `Fin 8`, iteratively apply the averaging operator 10 times, and check if the function returns to itself without being constant. Since there are infinitely many functions \(f: \{0, \ldots, 7\} \to \mathbb{R}\), we can't brute force all real functions but can try vectors with integer or rational values in a small range and observe behavior.
+
+We'll:
+- Define adjacency for each node.
+- Define a function to compute one averaging step.
+- Iterate 10 times and check if \(average\_adjacent^{10}(f) = f\) and if \(f\) is non-constant.
+- Enumerate integer-valued functions with values in a small range (e.g., \{-2,...,2\}) to find any approximate fixed points.
+
+We'll print every candidate fixed point found and finally print if non-constant fixed points exist for these samples.
+
+```python
+# Python program to explore the fixed points of the average_adjacent operator on Fin 8
+
+def adjacent(k):
+    # Adjacent nodes j to k satisfy j != k and (j + k) is odd
+    return [j for j in range(8) if j != k and (j + k) % 2 == 1]
+
+def average_adjacent(f):
+    # Compute f' where f'(k) = average of f(i) for i in adjacent(k)
+    f_new = []
+    for k in range(8):
+        neighbors = adjacent(k)
+        total = sum(f[i] for i in neighbors)
+        f_new.append(total / 3)  # each node has exactly 3 neighbors
+    return f_new
+
+def is_close(f1, f2, tol=1e-9):
+    return all(abs(a - b) < tol for a, b in zip(f1, f2))
+
+def is_constant(f):
+    return all(abs(x - f[0]) < 1e-9 for x in f)
+
+def print_vector(f):
+    print("f =", [round(x,5) for x in f])
+
+def explore():
+    # Enumerate integer-valued functions with each value in -2,..,2 (5^8 = 390625 possibilities)
+    # To keep output small, limit range to -1..1 (3^8=6561)
+    from itertools import product
+
+    candidates = 0
+    found_nonconstant = 0
+    values = [-1, 0, 1]
+    print("Enumerating candidate functions f: Fin8->{-1,0,1}")
+    for f_int in product(values, repeat=8):
+        f = list(f_int)
+        f_orig = f
+        # Apply average_adjacent 10 times
+        for _ in range(10):
+            f = average_adjacent(f)
+
+        # Check if average_adjacent^10(f_orig) == f_orig (within tolerance)
+        if is_close(f, f_orig):
+            candidates += 1
+            if not is_constant(f):
+                found_nonconstant += 1
+                print_vector(f_orig)
+
+    print(f"Total fixed points found with values in {-1,0,1}: {candidates}")
+    print(f"Non-constant fixed points count: {found_nonconstant}")
+
+    if found_nonconstant > 0:
+        print("Non-constant fixed points exist (candidate for omnimath4292_answer = True)")
+    else:
+        print("All fixed points found are constant (candidate for omnimath4292_answer = False)")
+
+if __name__ == "__main__":
+    explore()
+```

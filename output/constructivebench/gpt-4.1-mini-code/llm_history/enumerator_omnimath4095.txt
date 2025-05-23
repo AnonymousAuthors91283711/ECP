@@ -1,0 +1,73 @@
+[write_program]
+The problem involves finding the minimum integer \(k\) such that every \(k\)-regular simple graph on \(n \geq 3\) vertices contains a triangle (a 3-clique). We want to experiment with small values of \(n\) and enumerate possible \(k\) values, then check if there exists a \(k\)-regular triangle-free graph to help conjecture the minimal \(k\).
+
+I'll write a Python program that, for each \(n\) from 3 to 6:
+- Enumerates possible \(k\) values from 0 to \(n-1\) (possible degrees).
+- Searches for a \(k\)-regular graph on \(n\) vertices with no triangles.
+- Immediately prints \(n, k\) with whether such a triangle-free \(k\)-regular graph exists.
+This will produce partial results and help guess the "omnimath4095_answer".
+
+For the graph generation and checks:
+- I will use a combinatorial approach to construct \(k\)-regular graphs (or approximate by filtering).
+- I will enumerate graphs as edge subsets and check degree and triangle conditions.
+- To keep runtime and output short, I’ll prune impossible cases, and break early when found.
+
+```python
+# enumerator.py
+from itertools import combinations
+import sys
+
+def is_triangle(edges, n):
+    adj = [set() for _ in range(n)]
+    for u, v in edges:
+        adj[u].add(v)
+        adj[v].add(u)
+    for u in range(n):
+        for v in adj[u]:
+            if v <= u: continue
+            for w in adj[u]:
+                if w <= v: continue
+                if w in adj[v]:
+                    return True
+    return False
+
+def degree_valid(edges, n, k):
+    deg = [0]*n
+    for u,v in edges:
+        deg[u]+=1; deg[v]+=1
+    return all(d == k for d in deg)
+
+def enumerate_k_regular_triangle_free(n, k):
+    # All edges in a complete graph of n vertices (0-based)
+    all_edges = list(combinations(range(n), 2))
+    # To have degree k each, total edges = n*k/2 (must be integer)
+    if (n*k) % 2 != 0:
+        return False
+    edges_needed = (n*k)//2
+    # Enumerate all subsets of edges with edges_needed edges,
+    # stop early if found a triangle-free k-regular graph.
+    # Due to large combinations, limit n to <=6
+    max_checks = 10**6  # avoid too long runs
+    count = 0
+    for candidate_edges in combinations(all_edges, edges_needed):
+        count += 1
+        if count > max_checks:
+            return False
+        if not degree_valid(candidate_edges, n, k):
+            continue
+        if not is_triangle(candidate_edges, n):
+            return True
+    return False
+
+def main():
+    for n in range(3,7):  # small n to be feasible
+        print(f"n={n}")
+        for k in range(n):
+            has_tri_free = enumerate_k_regular_triangle_free(n,k)
+            print(f"  k={k}: triangle-free k-regular graph exists? {has_tri_free}")
+            sys.stdout.flush()
+
+if __name__ == "__main__":
+    main()
+```
+This program enumerates for small \(n\) the existence of triangle-free \(k\)-regular graphs and prints the partial pattern, helping to conjecture the minimal \(k\).

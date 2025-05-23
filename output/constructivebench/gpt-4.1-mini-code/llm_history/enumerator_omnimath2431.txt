@@ -1,0 +1,49 @@
+[write_program]
+The problem involves a right triangle with sides AB = 8, BC = 15, AC = 17, and asks for the expected area of a triangle formed by three random points, each chosen uniformly and independently on the sides AB, BC, and AC respectively.
+
+This is a classical problem related to the expected area of a triangle inside another triangle when points are chosen randomly on the edges. Here, let's enumerate many triples of points on the sides and compute the triangle area to see if we approach the expected value stated (60/4=15).
+
+We'll discretize the parameter t on each side from 0 to 1 and calculate the area of the small triangles.
+
+```python
+import math
+
+def length(p1, p2):
+    return math.hypot(p1[0]-p2[0], p1[1]-p2[1])
+
+def point_on_segment(p1, p2, t):
+    return (p1[0] + t*(p2[0]-p1[0]), p1[1] + t*(p2[1]-p1[1]))
+
+def area_triangle(p1, p2, p3):
+    return abs( (p1[0]*(p2[1]-p3[1]) + p2[0]*(p3[1]-p1[1]) + p3[0]*(p1[1]-p2[1])) / 2 )
+
+def main():
+    AB = (0,0), (8,0)
+    BC = (8,0), (0,15)
+    AC = (0,0), (0,15)
+
+    # To speed up and limit output, sample t in steps of 0.5
+    steps = [0, 0.5, 1]
+
+    total_area = 0
+    count = 0
+
+    print("Sampling points (t_AB, t_BC, t_AC) and computed area:")
+
+    for tAB in steps:
+        pAB = point_on_segment(*AB, tAB)
+        for tBC in steps:
+            pBC = point_on_segment(*BC, tBC)
+            for tAC in steps:
+                pAC = point_on_segment(*AC, tAC)
+                a = area_triangle(pAB, pBC, pAC)
+                print(f"tAB={tAB:.1f}, tBC={tBC:.1f}, tAC={tAC:.1f} => area={a:.3f}")
+                total_area += a
+                count += 1
+
+    print(f"Average area of sampled triangles: {total_area/count:.3f}")
+    print("Expected area according to problem is 15")
+
+if __name__ == "__main__":
+    main()
+```

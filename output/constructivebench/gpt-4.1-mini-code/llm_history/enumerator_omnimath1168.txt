@@ -1,0 +1,123 @@
+[write_program]
+The problem defines a recursive function \( f:\{ n \geq 2 \} \to \mathbb{Q} \) by:
+- \( f(2) = 2 \),
+- \( f(n+3) = (n+3) + \frac{1}{2} f(n+2) \).
+
+We want to find \( f(2002) \).
+
+To assist in conjecturing a closed form or properties of \( f(n) \), let's enumerate values of \( f(n) \) for small \( n \geq 2 \), printing exact rational results as fractions when possible.
+
+```python
+from fractions import Fraction
+
+def f(n, memo={}):
+    # memoized to prevent recomputation
+    if n < 2:
+        raise ValueError("n must be >= 2")
+    if n == 2:
+        return Fraction(2)
+    # compute f(n) = n + 1/2 * f(n-1), where n = m + 3, so per problem n+3 step is f(n+3) in terms of f(n+2)
+    # But problem gives f(n+3) = (n+3) + 1/2 f(n+2).
+    # We'll adjust indices to compute as f(k), k>=2:
+    # To compute f(n), we use:
+    # f(n) = n + 1/2 * f(n - 1), valid for n >= 5?
+    # Wait, the problem definition is f(n+3) = (n+3) + 1/2 f(n+2) for n≥? with base f(2)=2.
+    # Let's rewrite to express f(k):
+    # For k≥5, f(k) = k + 1/2 * f(k - 1)
+    # because: letting k = n+3, then n = k -3, so f(k) = k + 1/2 * f(k-1)
+    # Yes, just a shift index.
+    if n in memo:
+        return memo[n]
+    if n < 5:
+        raise ValueError("recursive definition applies for n >=5")
+    val = Fraction(n) + Fraction(1, 2) * f(n-1)
+    memo[n] = val
+    return val
+
+print("Enumerating f(n) for n=2..20 to conjecture pattern:")
+print("n : f(n) exact fraction and float")
+print("2 :", Fraction(2), float(Fraction(2)))
+
+# We know f(2)=2
+memo = {2: Fraction(2)}
+# Compute f(3), f(4) using the pattern if possible:
+# The recursion only valid from n≥5 as above. So f(3) and f(4) not defined through recursion?
+# Let's see if we can compute f(3), f(4) via recursion:
+# From problem: f(2) = 2
+# f(5) = 5 + 1/2 f(4)
+# But we don't have f(4), so need base values or to compute f(3), f(4).
+# Let's try to extend assuming f(3) and f(4) as unknowns to find.
+
+# Instead, let's attempt to use direct recursive calls with memo initialized to {2: 2}
+# We will extend f with manual base cases f(3) and f(4).
+
+# Define f(3) and f(4) to try some values or to recursively compute:
+# Let's try computing f(3):
+# Since n=3 < 5, recursive formula not given.
+# But problem definition only defines f(2) base and f(n+3) in terms of f(n+2).
+# Let's implement the problem's formula directly: f(n+3) = n+3 + (1/2)f(n+2)
+
+def f_direct(n, memo={}):
+    if n < 2:
+        raise ValueError("n must be >= 2")
+    if n == 2:
+        return Fraction(2)
+    if n in memo:
+        return memo[n]
+    # find f(n): since formula is defined as f(n+3) in terms of f(n+2)
+    # so f(k) depends on f(k-1) for k >= 5
+    # For n < 5, unknown, fill by recursion?
+    if n < 5:
+        # Try to compute f(n) by solving linear system if needed
+        # But to keep code simple, just treat it as no value and return None
+        return None
+    val = Fraction(n) + Fraction(1, 2) * f_direct(n - 1, memo)
+    memo[n] = val
+    return val
+
+memo = {}
+print()
+for n in range(2, 21):
+    val = f_direct(n, memo)
+    if val is not None:
+        print(f"{n} : {val} ≈ {float(val):.5f}")
+    else:
+        print(f"{n} : undefined by recursion")
+
+# Now let's compute f(2002) if possible and print the result fraction and float.
+# The recursion applies for n>=5, so f(2), f(3), f(4) undefined except f(2)=2.
+# Let's assign temporary values for f(3), f(4) based on guess:
+# From recurrence:
+# f(5) = 5 + 1/2 f(4)
+# f(4) undefined, but needed. Let's guess f(3), f(4) to get f(5)
+
+# Try brute force over small integers for f(3), f(4) to see if any consistent pattern emerges.
+
+# Instead, since problem states domain {n ≥ 2}, and recurrence for n+3 in terms of n+2,
+# the function is actually defined only starting at 2 and for arguments ≥5 by recursive formula.
+# So, code shows values for n ≥5 can be computed given f(k) for k=2,3,4.
+
+# Our goal: enumerate f(n) for 2 ≤ n ≤ 20 to conjecture closed form or behavior.
+
+# Print last known computed values:
+print()
+print("Enumerating values with initial guess f(3)=x and f(4)=y skipped as undefined")
+print("Focus on f(n) for n from 5 to 20 only, assuming f(2)=2")
+
+# We'll just output f(n) for n=5..20 with current recursive formula and memo (this skips n=3,4)
+
+# Fix: to compute f(5), need f(4). f(4) = None currently.
+# So we cannot compute f(5) without f(4).
+
+# For now print f(2) only and partial values:
+print("Only f(2) known exactly (2).")
+
+# Conclusion: The recursion requires initial values f(2), f(3), f(4) to cascade; we only know f(2)=2.
+# The problem to solve for f(2002) appears more complex and benefit might come from closed formula or linear algebra.
+
+# For now, print only f(2)=2 to keep output within limits.
+print("f(2) =", Fraction(2), "=", float(Fraction(2)))
+
+# To assist, one could extend code to solve linear recurrence or system symbolically.
+```
+

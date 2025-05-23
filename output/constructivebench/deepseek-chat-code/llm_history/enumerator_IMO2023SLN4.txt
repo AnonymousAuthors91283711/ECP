@@ -1,0 +1,65 @@
+[write_program]
+This problem is from IMO 2023 Shortlist N4, asking for the minimal positive integer d such that there exist sequences a and b of positive integers satisfying certain product conditions for all k ≤ n. We'll write a Python program to enumerate possible d values for small n and observe patterns.
+
+The program will:
+1. Iterate through small values of n (1 to 5)
+2. For each n, try small d values in increasing order
+3. For each d, attempt to find valid sequences a and b
+4. Print the first valid d found for each n (which must be minimal)
+
+```python
+import math
+from itertools import product
+
+def find_min_d(n_max=5):
+    for n in range(1, n_max+1):
+        print(f"n = {n}:")
+        found = False
+        d = 1
+        while not found and d <= 1000:  # Reasonable upper bound
+            # Try to find sequences a and b of length n
+            # We'll limit the search space for a_i and b_i to small integers
+            max_val = 5  # Try small values first
+            for a_vals in product(range(1, max_val+1), repeat=n):
+                for b_vals in product(range(1, max_val+1), repeat=n):
+                    valid = True
+                    for k in range(n):
+                        # Compute left product
+                        left = 1
+                        for i in range(k):
+                            left *= b_vals[i]
+                        for i in range(k, n):
+                            left *= a_vals[i]
+                        
+                        # Compute right expression
+                        right = 1
+                        for i in range(n):
+                            right *= a_vals[i]
+                        right += k * d
+                        
+                        if left != right:
+                            valid = False
+                            break
+                        
+                        if k < n-1:
+                            # Compute next left for inequality
+                            next_left = 1
+                            for i in range(k+1):
+                                next_left *= b_vals[i]
+                            for i in range(k+1, n):
+                                next_left *= a_vals[i]
+                            
+                            if left >= next_left:
+                                valid = False
+                                break
+                    
+                    if valid:
+                        print(f"Found d = {d} with a = {a_vals}, b = {b_vals}")
+                        found = True
+                        break
+                if found:
+                    break
+            d += 1
+
+find_min_d()
+```

@@ -1,0 +1,51 @@
+[write_program]
+The problem deals with finite sets \( V \) and \( E \), where \( |V|=10 \) and \( |E|=40 \), and edges \( E \) are pairs of distinct vertices from \( V \). The task involves finding the number \( k \) of vertices in \( V \) that are connected to every other vertex (i.e., vertex with edges to all other vertices), under the given constraints. The goal is to examine possible values of \( k \).
+
+We will generate subsets \( V \) of size 10 (just labeled 0 to 9), and find sets \( E \) of size 40 with edges among them that conform to the constraints. We especially want to identify how many vertices have edges to every other vertex. Due to combinatorial explosion, we can simplify and consider the complete graph on 10 vertices, which has 45 edges, then remove 5 edges to get 40 edges. We will enumerate possible ways to remove 5 edges to get different configurations and count the number of vertices connected to all others.
+
+We print each candidate \( k \) as found, then print the maximum \( k \) observed.
+
+```python
+from itertools import combinations
+
+# Vertices labeled 0..9
+V = set(range(10))
+n_vertices = len(V)
+complete_edges = set(combinations(V, 2))
+total_edges = len(complete_edges)  # 45 edges in complete graph K10
+
+# We want |E| = 40, so remove 5 edges from the complete graph
+edges_to_remove_count = total_edges - 40  # 5
+
+seen_k_values = set()
+
+def count_universal_vertices(edges):
+    # For each vertex, check if it connects to all others (degree = 9)
+    adjacency = {v: set() for v in V}
+    for (a,b) in edges:
+        adjacency[a].add(b)
+        adjacency[b].add(a)
+    count = 0
+    for v in V:
+        if len(adjacency[v]) == n_vertices - 1:
+            count += 1
+    return count
+
+print("Enumerating possible numbers of universal vertices k in graphs with 10 vertices and 40 edges:")
+
+max_k = 0
+# Choose which 5 edges to remove
+for removed_edges in combinations(complete_edges, edges_to_remove_count):
+    edges = complete_edges.difference(removed_edges)
+    k = count_universal_vertices(edges)
+    if k not in seen_k_values:
+        seen_k_values.add(k)
+        print(f"k = {k}")
+        if k > max_k:
+            max_k = k
+    # Limit output to avoid too much printing (break early if comprehensive)
+    if len(seen_k_values) >= 6:
+        break
+
+print(f"Maximum k found: {max_k}")
+```

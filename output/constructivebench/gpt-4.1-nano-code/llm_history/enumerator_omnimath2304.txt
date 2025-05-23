@@ -1,0 +1,142 @@
+[write_program]
+This problem involves finding the greatest possible value of \( y \) such that there exists a quadratic polynomial \( P(x) \) satisfying specified conditions. The key constraints are:
+
+- \( P \) is degree ≤ 2
+- \( P(1) = 20 \)
+- \( P(-1) = 22 \)
+- \( P(P(0)) = 400 \)
+- \( P(10) = y \)
+
+Since \( P \) is quadratic, it can be written as \( P(x) = a x^2 + b x + c \). The constraints give us:
+
+\[
+\begin{cases}
+a(1)^2 + b(1) + c = 20 \\
+a(-1)^2 + b(-1) + c = 22 \\
+a P(0)^2 + b P(0) + c = 400 \\
+P(10) = 100a + 10b + c = y
+\end{cases}
+\]
+
+Note that \( P(0) = c \), so the third condition simplifies to 
+
+\[
+a c^2 + b c + c = 400
+\]
+and \( P(1) \) and \( P(-1) \) give:
+
+\[
+\begin{cases}
+a + b + c = 20 \\
+a - b + c = 22
+\end{cases}
+\]
+
+Subtracting these:
+
+\[
+(a + b + c) - (a - b + c) = 20 - 22 \Rightarrow 2b = -2 \Rightarrow b = -1
+\]
+
+Adding the two:
+
+\[
+(a + b + c) + (a - b + c) = 20 + 22 \Rightarrow 2a + 2c = 42 \Rightarrow a + c = 21
+\]
+
+From this, \( c = 21 - a \).
+
+The \( P(0) = c \), the third condition becomes:
+
+\[
+a c^2 + b c + c = 400
+\]
+
+Substituting \( b = -1 \) and \( c = 21 - a \):
+
+\[
+a (21 - a)^2 - 1 (21 - a) + (21 - a) = 400
+\]
+
+Simplify:
+
+\[
+a (441 - 42a + a^2) - (21 - a) + (21 - a) = 400
+\]
+
+Note \( - (21 - a) + (21 - a) = 0 \), so they cancel out. The expression reduces to:
+
+\[
+a (441 - 42a + a^2) = 400
+\]
+
+Expand:
+
+\[
+441a - 42a^2 + a^3 = 400
+\]
+
+Rearranged:
+
+\[
+a^3 - 42a^2 + 441a - 400 = 0
+\]
+
+We need to find real solutions \( a \) of this cubic, then compute \( c = 21 - a \), and finally \( y = P(10) = 100a + 10b + c \).
+
+Since \( a \) is real, and the polynomial is cubic, we can attempt rational root testing or numerical methods to find candidate roots efficiently.
+
+Now, implement a Python code to:
+
+- Find rational roots of the cubic polynomial (using rational root theorem candidates),
+- For each root \( a \), compute \( c \),
+- Compute \( y = 100a + 10b + c \),
+- Track and print each candidate y as found, then identify the maximum.
+
+```python
+import sympy as sp
+
+# Define the variable
+a = sp.symbols('a')
+
+# Cubic polynomial: a^3 -42a^2 + 441a - 400 = 0
+polynomial = a**3 - 42 * a**2 + 441 * a - 400
+
+# Rational root candidates (factors of constant term over factors of leading coefficient)
+# factors of 400: ±1, ±2, ±4, ±5, ±8, ±10, ±20, ±25, ±40, ±50, ±80, ±100, ±200, ±400
+# Since leading coefficient is 1, roots are among factors of -400
+candidates = [sp.Rational(d, 1) for d in [1, 2, 4, 5, 8, 10, 20, 25, 40, 50, 80, 100, 200, 400,
+                                                 -1, -2, -4, -5, -8, -10, -20, -25, -40, -50, -80, -100, -200, -400]]
+
+roots_found = set()
+
+for candidate in candidates:
+    # Check if candidate satisfies the polynomial
+    val = polynomial.subs(a, candidate)
+    if abs(sp.N(val)) < 1e-6:
+        # Exact root
+        a_sol = float(candidate)
+        c = 21 - a_sol
+        b = -1
+        y = 100 * a_sol + 10 * b + c
+        print(f'Found root a = {a_sol}, c = {c}, y = {y}')
+        roots_found.add(y)
+
+# Additionally, find real roots numerically if no rational roots found
+# and check each
+if not roots_found:
+    real_roots = sp.solve(polynomial, a)
+    for a_sol in real_roots:
+        if a_sol.is_real:
+            a_num = float(a_sol)
+            c = 21 - a_num
+            b = -1
+            y = 100 * a_num + 10 * b + c
+            print(f'Numerical root a = {a_num}, c = {c}, y = {y}')
+            roots_found.add(y)
+
+# Output the maximum y found
+if roots_found:
+    max_y = max(roots_found)
+    print(f'Maximum y achievable: {max_y}')
+```

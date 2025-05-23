@@ -1,0 +1,62 @@
+[write_program]
+This problem involves solving a system of equations with complex numbers. We'll approach it by selecting small integer values for x, y, z that satisfy the given constraints (x*y + y*z + z*x = 67 and x + y + z = 2010), then check if they lead to consistent values for a, b, c.
+
+Since 2010 is large, we'll first find possible (x,y,z) triples by solving the system:
+1. x + y + z = 2010
+2. xy + yz + zx = 67
+
+We can compute z from the first equation and substitute into the second to find possible integer solutions.
+
+```python
+def find_xyz_combinations():
+    target_sum = 2010
+    target_sum_products = 67
+    
+    # We'll iterate x and y, then compute z
+    # Since x,y,z are symmetric, we can assume x <= y <= z to avoid duplicates
+    solutions = []
+    
+    # Estimate bounds: for x <= y <= z, x can't be too large
+    max_x = int((target_sum)/3) + 2
+    
+    for x in range(-100, 100):  # Try small integers first
+        # After substituting z = 2010 - x - y into xy + yz + zx = 67
+        # We get: xy + y(2010-x-y) + x(2010-x-y) = 67
+        # Simplify to: xy + 2010y - xy - y² + 2010x - x² - xy = 67
+        # Further simplify: -x² - y² + 2010x + 2010y - xy = 67
+        # This is a quadratic in y: y² + (x - 2010)y + (x² - 2010x + 67) = 0
+        
+        # For each x, solve the quadratic for y
+        a_coeff = 1
+        b_coeff = x - 2010
+        c_coeff = x*x - 2010*x + 67
+        
+        discriminant = b_coeff*b_coeff - 4*a_coeff*c_coeff
+        if discriminant < 0:
+            continue
+        
+        sqrt_discriminant = int(discriminant**0.5)
+        if sqrt_discriminant * sqrt_discriminant != discriminant:
+            continue
+        
+        for sign in [-1, 1]:
+            numerator = -b_coeff + sign * sqrt_discriminant
+            if numerator % (2*a_coeff) != 0:
+                continue
+            y = numerator // (2*a_coeff)
+            z = target_sum - x - y
+            
+            # Check if x <= y <= z
+            if x <= y <= z:
+                solutions.append((x, y, z))
+    
+    return solutions
+
+# Find and print all valid (x,y,z) combinations
+solutions = find_xyz_combinations()
+print("Possible (x,y,z) combinations satisfying the constraints:")
+for sol in solutions:
+    print(sol)
+    x, y, z = sol
+    print(f"Product x*y*z = {x*y*z}")
+```

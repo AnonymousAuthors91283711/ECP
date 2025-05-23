@@ -1,0 +1,55 @@
+[write_program]
+The problem asks to find the smallest integers n (greater than 6) for which there exist positive integers a, b, c dividing n such that 1/a + 1/b + 1/c = 1. We need to enumerate possible solutions to identify these numbers.
+
+The approach is:
+1. Iterate through possible n values starting from 7 upwards
+2. For each n, find all divisors (a,b,c) where a ≤ b ≤ c to avoid duplicates
+3. Check if 1/a + 1/b + 1/c = 1
+4. The first such n found will be the answer
+
+```python
+from fractions import Fraction
+from math import gcd
+from functools import reduce
+
+def get_divisors(n):
+    factors = {}
+    temp = n
+    i = 2
+    while i*i <= temp:
+        while temp % i == 0:
+            factors[i] = factors.get(i, 0) + 1
+            temp //= i
+        i += 1
+    if temp > 1:
+        factors[temp] = 1
+    
+    divisors = [1]
+    for p, exp in factors.items():
+        divisors = [d * p**e for d in divisors for e in range(exp + 1)]
+    return sorted(divisors)
+
+def find_solutions(max_n=20):
+    for n in range(7, max_n + 1):
+        divisors = get_divisors(n)
+        found = False
+        # Iterate through all possible a <= b <= c to avoid duplicates
+        for i in range(len(divisors)):
+            a = divisors[i]
+            for j in range(i, len(divisors)):
+                b = divisors[j]
+                for k in range(j, len(divisors)):
+                    c = divisors[k]
+                    if Fraction(1,a) + Fraction(1,b) + Fraction(1,c) == 1:
+                        print(f"Found solution for n={n}: ({a}, {b}, {c})")
+                        found = True
+                        break
+                if found:
+                    break
+            if found:
+                break
+        if found:
+            continue
+
+find_solutions()
+```

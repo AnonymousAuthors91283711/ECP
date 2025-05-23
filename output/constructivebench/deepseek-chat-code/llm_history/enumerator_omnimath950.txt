@@ -1,0 +1,51 @@
+[write_program]
+This problem involves counting the number of injective functions from Fin 100 to Fin 2 × Fin 50 with specific adjacency conditions. We'll approach it by enumerating smaller cases to identify a pattern.
+
+The key constraints are:
+1. Injective mapping from 100 elements to 2×50 grid
+2. For each non-zero element, there exists a previous element in the sequence that's either:
+   - In the same column (Fin 2 component matches)
+   - Adjacent in the row (Fin 50 components differ by ±1)
+
+This resembles counting valid paths in a grid with certain connectivity rules. We'll implement a dynamic programming approach for smaller grid sizes to observe the pattern.
+
+```python
+def count_injective_functions(n_rows, n_cols, max_size):
+    # DP table: dp[used_rows_mask][last_col][length] = count
+    # Initialize for length 1
+    dp = {}
+    for row in range(n_rows):
+        for col in range(n_cols):
+            dp[(1 << row, col, 1)] = 1
+    
+    total = 0
+    for length in range(1, max_size + 1):
+        new_dp = {}
+        for (mask, last_col, _), count in dp.items():
+            if length == max_size:
+                total += count
+                continue
+                
+            # Try adding a new element in same row but adjacent column
+            for delta in [-1, 1]:
+                new_col = last_col + delta
+                if 0 <= new_col < n_cols:
+                    key = (mask, new_col, length + 1)
+                    new_dp[key] = new_dp.get(key, 0) + count
+            
+            # Try adding a new element in different row but same column
+            for row in range(n_rows):
+                if not (mask & (1 << row)):
+                    new_mask = mask | (1 << row)
+                    key = (new_mask, last_col, length + 1)
+                    new_dp[key] = new_dp.get(key, 0) + count
+        
+        dp = new_dp
+    
+    return total
+
+# Test small cases to observe pattern
+for n in range(1, 5):
+    for k in range(1, 4):
+        print(f"n_rows={2}, n_cols={k}, max_size={n}:", count_injective_functions(2, k, n))
+```

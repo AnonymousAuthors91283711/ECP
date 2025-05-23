@@ -1,0 +1,53 @@
+[write_program]
+We want to explore real triples (p, q, r) with \(0 < p < q < r\) such that the cubic polynomial with roots p, q, r equals \(X^3 - aX^2 + bX - 48\). The product of the roots \(pqr = 48\).
+
+We want to enumerate candidates for \(s = \frac{1}{p} + \frac{2}{q} + \frac{3}{r}\).
+
+Approach:
+- Fix \(p, q, r\) rational such that \(0 < p < q < r\) and \(pqr = 48\)
+- Compute s and print all such s found
+- Explore denominators and numerator in small ranges (like p=1..6, q>p, r=48/(p*q))
+- Since roots are positive and ordered, filter accordingly
+- We do not know if a,b must be real numbers or rational, just enforce root relations
+- We employ small denominators for enumeration
+
+```python
+# Enumerate triples (p,q,r) positive with p<q<r and p*q*r=48, compute s = 1/p + 2/q + 3/r
+# Since roots are positive reals, we sample rationals with denominator <=6 for quick enumeration
+# Print s immediately when found
+
+from fractions import Fraction
+
+def main():
+    target_product = 48
+    max_den = 6
+    seen_s = set()
+    print("Enumerating triples (p,q,r) with p<q<r, p*q*r=48, s=1/p + 2/q + 3/r")
+    for pd in range(1, max_den+1):
+        for pn in range(1, target_product*pd+1):
+            p = Fraction(pn, pd)
+            if p <= 0:
+                continue
+            # q must be > p
+            for qd in range(1, max_den+1):
+                for qn in range(pn+1, target_product*qd+1):
+                    q = Fraction(qn, qd)
+                    if q <= p:
+                        continue
+                    # Compute r = 48/(p*q)
+                    prod_pq = p * q
+                    if prod_pq == 0:
+                        continue
+                    r = Fraction(target_product,1) / prod_pq
+                    if r <= q:
+                        continue
+                    # s = 1/p + 2/q + 3/r
+                    s = Fraction(1,p) + 2*Fraction(1,q) + 3*Fraction(1,r)
+                    if s not in seen_s:
+                        seen_s.add(s)
+                        # Print fraction as fraction and float approx
+                        print(f"s = {s} ≈ {float(s):.5f} with p={p}, q={q}, r={r}")
+
+if __name__ == "__main__":
+    main()
+```

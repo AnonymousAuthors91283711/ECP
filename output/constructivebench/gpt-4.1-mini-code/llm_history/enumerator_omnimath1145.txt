@@ -1,0 +1,105 @@
+[write_program]
+The problem defines a strictly increasing function f on natural numbers with f(1)=1 and a recursive relation involving f(2n) and f(2n+1). We aim to find f(137).
+
+We can enumerate f(n) for small n using the recurrence if we assume f is integer-valued and strictly increasing. The relation allows computing f(2n+1) if f(2n) and f(n) are known. Similarly, from the relation:
+
+f(2n) * f(2n+1) = 9*(f(n))^2 + 3*f(n)
+
+Given the strict monotonicity and f(1)=1, we can start with n=1, f(1)=1, try to find f(2), f(3), etc. by guessing values that satisfy the relation, ensuring f is strictly increasing.
+
+We will attempt to find f(n) for powers of two and intermediate points by iterating through n up to 137 (or smaller to stay within output limits). Enumerate candidate f values for f(2n) and f(2n+1) solving the formula (for integers).
+
+We'll output f(n) as soon as determined and look for f(137) after computing the needed values.
+
+```python
+# Enumerate values of f satisfying the recurrence up to n=137.
+# Using that f is strictly increasing, f(1)=1, and
+# f(2n)*f(2n+1) = 9*(f(n))^2 + 3*f(n)
+# We will store computed f(n) and try possible integer fits.
+
+def main():
+    f = {1: 1}  # Given
+    max_n = 137
+
+    # We will build f from 1 up to max_n by breadth-first approach on n
+    # For each n, when f(n) is known, try to find possible f(2n), f(2n+1)
+    # values that satisfy the identity f(2n)*f(2n+1) = 9*f(n)^2 + 3*f(n)
+    # and are consistent with strict monotonicity
+
+    # We need to guess f(2n). For given f(n), product = 9*f(n)^2 + 3*f(n)
+    # f(2n) divides product, f(2n+1) = product // f(2n)
+    # both must be greater than f(n), f strictly increasing
+    from math import isqrt
+
+    def valid_candidates(prod, lower_bound):
+        # Return integer divisors d of prod with d > lower_bound, and
+        # prod//d > d and prod//d > lower_bound (to maintain strict increase)
+        res = []
+        limit = isqrt(prod)
+        for d in range(lower_bound + 1, limit + 1):
+            if prod % d == 0:
+                x = d
+                y = prod // d
+                if y > x and x > lower_bound and y > lower_bound:
+                    res.append((x,y))
+        return res
+
+    # Since at start only f(1)=1, and f is strictly increasing,
+    # we process in BFS manner
+    from collections import deque
+    q = deque([1])
+    computed = set([1])
+
+    while q:
+        n = q.popleft()
+        fn = f[n]
+        prod = 9 * fn * fn + 3 * fn
+        # compute f(2n), f(2n+1) candidates
+        # check if 2n and 2n+1 <= max_n
+        for m in [2*n, 2*n+1]:
+            if m > max_n:
+                continue
+            if m in f:
+                continue
+            # we look for divisor d of prod > f[n] such that prod/d > d > f[n]
+            # But f(2n)*f(2n+1) = prod, so for n, f(2n) and f(2n+1) are paired
+            # So only compute when processing n, assign to f(2n) and f(2n+1)
+        # So for n, try all divisors > f[n] to assign to f(2n), f(2n+1)
+        # then assign f(2n) = d, f(2n+1) = prod//d
+        # check strict monotonicity: f(2n) > f(n), f(2n+1) > f(2n)
+        lower_bound = fn
+        candidates = valid_candidates(prod, lower_bound)
+        for d1,d2 in candidates:
+            # Assign f(2n)=d1 and f(2n+1)=d2
+            # But maybe f(2n) or f(2n+1) already set with conflicting? Skip
+            if 2*n <= max_n and ((2*n in f and f[2*n] != d1) or (2*n not in f)):
+                if 2*n in f and f[2*n] != d1:
+                    continue
+            if 2*n+1 <= max_n and ((2*n+1 in f and f[2*n+1] != d2) or (2*n+1 not in f)):
+                if 2*n+1 in f and f[2*n+1] != d2:
+                    continue
+
+            # Assign
+            if 2*n <= max_n and 2*n not in f:
+                f[2*n] = d1
+                q.append(2*n)
+                computed.add(2*n)
+                print(f"f({2*n}) = {d1}")
+            if 2*n+1 <= max_n and 2*n+1 not in f:
+                f[2*n+1] = d2
+                q.append(2*n+1)
+                computed.add(2*n+1)
+                print(f"f({2*n+1}) = {d2}")
+
+            # We only take first candidate since function must be strictly monotone and unique?
+            break
+
+        # Stop early if f(137) computed
+        if 137 in f:
+            print(f"f(137) = {f[137]}")
+            break
+
+
+if __name__ == "__main__":
+    main()
+```

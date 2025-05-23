@@ -1,0 +1,49 @@
+[write_program]
+The problem appears to involve placing points ("red points") on a 20x20 grid such that no two red points are exactly a distance of √5 apart (the distance corresponding to a knight's move in chess). For each set B of black points, there's a function f defining a set R of red points that must satisfy certain constraints (no two reds √5 apart, etc.).
+
+We want to explore and enumerate possible valid placements of red points on a 20x20 grid avoiding the √5 distance between any two red points. Since the exact problem is quite complex, we generate all candidate placements with small parameters, validating the distance condition, and enumerate sets of placements. We print any valid sets found, focusing on maximizing the size (cardinality) of these red point sets to conjecture the greatest possible cardinality.
+
+Because of complexity and performance, we begin by enumerating red points one by one, ensuring no pair lies at distance √5. The distance √5 corresponds to differences of (±1, ±2) or (±2, ±1) between points' coordinates.
+
+Below is the Python program that tries to generate maximal sets of points on a 4x4 grid (a small sample) with no two points at knight-move distance (√5). It incrementally builds sets and prints them as it finds larger ones. This helps conjecture maximal size on small grids before attempting 20x20.
+
+```python
+# Enumerate largest subsets of points in an n x n grid with no two points at distance sqrt(5)
+# Distance sqrt(5) corresponds to moves like a chess knight: (±1, ±2) or (±2, ±1).
+# The program tries to build large independent sets avoiding such pairs.
+
+from itertools import combinations
+
+def knight_moves():
+    return [(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1),(-2,1),(-1,2)]
+
+def no_knight_distance(points_set):
+    points = list(points_set)
+    points_set = set(points)
+    for p in points:
+        for dm in knight_moves():
+            q = (p[0]+dm[0], p[1]+dm[1])
+            if q in points_set:
+                return False
+    return True
+
+def main():
+    n = 4
+    grid_points = [(x,y) for x in range(1,n+1) for y in range(1,n+1)]
+    max_size = 0
+    max_sets = []
+    # We iterate from largest possible subset size down to 1 to find maximal sets quickly
+    for size in range(n*n, 0, -1):
+        found = False
+        for subset in combinations(grid_points, size):
+            if no_knight_distance(subset):
+                print(f"Valid set of size {size}: {subset}")
+                found = True
+        if found:
+            max_size = size
+            break
+    print(f"Max size found on {n}x{n} grid avoiding sqrt(5) distance: {max_size}")
+
+if __name__=="__main__":
+    main()
+```

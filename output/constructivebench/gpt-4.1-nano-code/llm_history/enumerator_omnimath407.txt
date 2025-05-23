@@ -1,0 +1,46 @@
+[write_program]
+The problem involves finding the number of real solutions to the equation arctan(x) = x^2 - 1.6, which is a continuous function problem. To assist in conjecturing the answer, I will implement a numerical enumeration over the real line within a reasonable interval—say, from -10 to 10—sampling points densely, checking where the function crosses zero, and counting the solutions. Given that solutions can be isolated roots, I will use binary search to refine their locations. This approach is efficient for a high school level problem.
+
+```python
+import math
+
+# Define the function f(x) = arctan(x) - (x^2 - 1.6)
+def f(x):
+    return math.atan(x) - (x**2 - 1.6)
+
+# Parameters for sampling
+xmin, xmax = -10, 10
+samples = 10000  # high density for accuracy
+delta = (xmax - xmin) / samples
+tolerance = 1e-6  # for root refinement
+
+# List to hold roots
+roots = []
+
+# Sample and find sign changes to locate roots
+x_values = [xmin + i * delta for i in range(samples + 1)]
+f_values = [f(x) for x in x_values]
+
+for i in range(samples):
+    if f_values[i] * f_values[i + 1] <= 0:
+        # Sign change indicates a root between x[i] and x[i+1]
+        a, b = x_values[i], x_values[i + 1]
+        # Binary search to refine root
+        for _ in range(100):
+            c = (a + b) / 2
+            fc = f(c)
+            if abs(fc) < tolerance:
+                break
+            if f(a) * fc < 0:
+                b = c
+            else:
+                a = c
+        root = (a + b) / 2
+        # Avoid duplicates: check if close to existing roots
+        if not roots or all(abs(root - r) > 1e-4 for r in roots):
+            roots.append(root)
+            print(f"Found root at x ≈ {root}")
+
+# Output the total number of solutions
+print("Total solutions:", len(roots))
+```

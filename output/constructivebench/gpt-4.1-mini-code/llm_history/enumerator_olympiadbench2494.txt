@@ -1,0 +1,62 @@
+[write_program]
+The problem is to find all real numbers \(a\) such that there exist real numbers \(x, y\) satisfying the system:
+\[
+\begin{cases}
+\sin^2(x) + \cos^2(y) = \frac{3}{2} a \\
+\cos^2(x) + \sin^2(y) = \frac{1}{2} a^2
+\end{cases}
+\]
+
+We want to enumerate possible \(a\) values by scanning over \(a\) and \(x,y\) sampled appropriately. Since \(\sin^2 + \cos^2\) and \(\cos^2 + \sin^2\) are always between 0 and 2, \(a\) and \(a^2\) must be compatible.
+
+I will try small \(a\) values and scan \(x,y\) over a grid to check approximate equalities with some tolerance. Print all found candidates for \(a\) with some rounding for clarity.
+
+```python
+import math
+
+# We enumerate a in a small range, from 0 to 3 step 0.1 (since a^2 appears, a likely positive)
+# for each a, we search x,y in a grid [0,2pi] with step pi/12 (15 degrees)
+# check if the equations hold approximately.
+# print a immediately when a suitable (x,y) found.
+
+def approx_eq(v1, v2, tol=1e-4):
+    return abs(v1 - v2) < tol
+
+def main():
+    print("Enumerating possible values of a:")
+    two_pi = 2 * math.pi
+    for a_mul in range(0, 31):  # a from 0 to 3.0 by 0.1
+        a = a_mul * 0.1
+        rhs1 = 1.5 * a
+        rhs2 = 0.5 * a * a
+
+        # Quick bounds check based on equation ranges
+        # Left sides must be in [0,2], if rhs out of [0,2], skip
+        if rhs1 < 0 or rhs1 > 2:
+            continue
+        if rhs2 < 0 or rhs2 > 2:
+            continue
+
+        found = False
+        for ix in range(0, 25):  # x in [0, 2pi] step pi/12
+            x = ix * math.pi / 12
+            sinx2 = math.sin(x)**2
+            cosx2 = math.cos(x)**2
+            for iy in range(0, 25):
+                y = iy * math.pi / 12
+                cosy2 = math.cos(y)**2
+                siny2 = math.sin(y)**2
+
+                lhs1 = sinx2 + cosy2
+                lhs2 = cosx2 + siny2
+
+                if approx_eq(lhs1, rhs1) and approx_eq(lhs2, rhs2):
+                    print(f"a = {a:.2f} with x = {x:.3f}, y = {y:.3f}")
+                    found = True
+                    break
+            if found:
+                break
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,53 @@
+[write_program]
+The problem is to find the greatest natural number \( k \in \{1,2,3,4\} \) such that for every \( n \in \{1,2,3,4\} \),
+\[
+\sum_{i=1}^4 |i-k| + |i-n| \leq \sum_{i=1}^4 |i-n| + |i-k|.
+\]
+Because addition is commutative, both sides are equal for each \(k,n\), so this inequality always holds. The problem might be misstated or require a condition I misunderstood, but I'll interpret the problem as finding the greatest \(k\) in \(\{1,2,3,4\}\) that minimizes the expression
+\[
+\sum_{i=1}^4 (|i-k| + |i-n|).
+\]
+
+To assist, the Python code will enumerate \(k,n\in \{1,2,3,4\}\) and compute these sums, printing those \(k\) where the sums are minimized. This enumeration may assist in conjecturing the correct answer.
+
+```python
+# Enumerate sums S(k,n) = sum_{i=1}^4 |i-k| + |i-n| for k,n in {1,...,4}
+# Print all values, note minimal sums for each n, then find the max k minimizing sums.
+
+def abs_dist(a, b):
+    return abs(a - b)
+
+def sum_abs_dist(k, n):
+    return sum(abs_dist(i, k) + abs_dist(i, n) for i in range(1, 5))
+
+# Store minimal sums per n
+min_sums = {}
+
+print("Enumerating sums S(k,n) = sum_{i=1}^4 (|i-k| + |i-n|) for k,n in {1..4}:")
+
+for n in range(1, 5):
+    min_sum = None
+    candidates = []
+    for k in range(1, 5):
+        s = sum_abs_dist(k, n)
+        print(f"k={k}, n={n} => sum = {s}")
+        if (min_sum is None) or (s < min_sum):
+            min_sum = s
+            candidates = [k]
+        elif s == min_sum:
+            candidates.append(k)
+    min_sums[n] = (min_sum, candidates)
+    print(f"Minimum sum for n={n}: {min_sum} achieved by k={candidates}")
+
+# Find k which appears as minimizer for all n
+from collections import Counter
+
+all_min_k = [k for n in min_sums for k in min_sums[n][1]]
+count_k = Counter(all_min_k)
+print("\nCounts of k appearing as minimal sum achievers across all n:")
+for k in range(1,5):
+    print(f"k={k}: {count_k[k]}")
+
+max_k = max(k for k in range(1,5) if count_k[k]==4)
+print(f"\nGreatest k achieving minimal sums for all n in [1..4] is {max_k}")
+```

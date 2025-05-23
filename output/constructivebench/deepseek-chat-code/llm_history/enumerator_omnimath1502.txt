@@ -1,0 +1,45 @@
+[write_program]
+This problem asks for the minimal degree `d` of a polynomial `f` with integer coefficients, content 1, such that `f(n)` is divisible by 85 for all integers `n`. We'll write a Python program to search for such polynomials by checking possible degrees and verifying the divisibility condition.
+
+The approach:
+1. For each degree `d` starting from 1, generate possible polynomials with content 1.
+2. Check if 85 divides `f(n)` for several consecutive `n` values (since 85 = 5×17, we can use Chinese Remainder Theorem).
+3. Stop when we find the smallest `d` that satisfies the condition.
+
+```python
+from itertools import product
+from math import gcd
+from functools import reduce
+
+def compute_content(coeffs):
+    return reduce(gcd, coeffs)
+
+def check_divisibility(f, mod, test_range=10):
+    """Check if f(n) ≡ 0 mod mod for n in 0..test_range-1"""
+    for n in range(test_range):
+        val = sum(c * (n**i) for i, c in enumerate(f))
+        if val % mod != 0:
+            return False
+    return True
+
+def find_min_degree(max_degree=10, max_coeff=2):
+    for d in range(1, max_degree + 1):
+        print(f"Checking degree {d}...")
+        # Generate all monic polynomials of degree d with coefficients in [-max_coeff, max_coeff]
+        for coeffs in product(range(-max_coeff, max_coeff + 1), repeat=d):
+            f = (1,) + coeffs  # monic polynomial
+            if compute_content(f) != 1:
+                continue
+            # Check divisibility by 5 and 17 separately
+            if check_divisibility(f, 5) and check_divisibility(f, 17):
+                print(f"Found polynomial with degree {d}: {f}")
+                return d
+    return None
+
+if __name__ == "__main__":
+    min_degree = find_min_degree()
+    if min_degree is not None:
+        print(f"\nThe minimal degree is: {min_degree}")
+    else:
+        print("No polynomial found within the search range")
+```

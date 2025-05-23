@@ -1,0 +1,52 @@
+[write_program]
+The problem involves finding the smallest natural number \( n > 0 \) such that
+
+\[
+\underbrace{2^{2^{\cdot^{\cdot^{2}}}}}_{n \text{ times}} > \underbrace{3^{3^{3^{3}}}}_{4 \text{ times}}
+\]
+
+where the power tower of height 4 with base 3 is fixed, and the power tower height with base 2 varies.
+
+The program below enumerates values of \( n \) starting from 1 upward, computes (or rather estimates, since these numbers become huge) whether
+
+\[
+2 \uparrow\uparrow n > 3 \uparrow\uparrow 4
+\]
+
+and prints the partial results. To avoid huge number computations, the code uses logarithmic comparisons (via the "power tower" structure and logarithm properties) to determine when one tower exceeds the other.
+
+```python
+# Enumerate the smallest n: 2^^n > 3^^4 where ^^ is power tower
+
+import math
+
+def power_tower(base, height):
+    # Compute power tower using floating logs for large heights
+    # Return approx log of tower value to avoid huge numbers
+    # For height=0, tower=1, else tower=base^(tower of height-1)
+    if height == 0:
+        return 0  # log(1) == 0
+    if height == 1:
+        return math.log(base)
+    # recursive: log(tower(base,height)) = log(base^(tower(base,height-1))) = tower(base,height-1)*log(base)
+    return power_tower(base, height-1) * math.log(base)
+
+print("Compute log(value) to compare towers without overflow:")
+# Fixed tower for base=3 and height=4
+log_3_4 = power_tower(3,4)
+print(f"log(3^^4) approx = {log_3_4:.6e}")
+
+# Enumerate n and compare log(2^^n) with log(3^^4)
+# Start from 1 and go upward
+# We only print candidates where power tower for 2 exceeds or approaches
+
+for n in range(1, 10):
+    log_2_n = power_tower(2, n)
+    print(f"n={n}, log(2^^{n}) = {log_2_n:.6e}")
+    if log_2_n > log_3_4:
+        print(f"Found n={n} with 2^^n > 3^^4")
+        print(f"Minimum such n is {n}")
+        break
+```
+
+This prints approximate logarithms of towers, compares them safely, prints each candidate, and outputs the minimal \( n \).

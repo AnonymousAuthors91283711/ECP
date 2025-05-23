@@ -1,0 +1,173 @@
+[write_program]
+Let's analyze the problem:
+
+Given variables \( a_1, a_{2,1}, a_{2,2} \) (with the original notation \( a.1, a.2.1, a.2.2 \)), satisfying the following equations and inequalities:
+
+1. \( a_1 > 0 \)
+2. \( a_{2,1} > 0 \)
+3. \( a_{2,2} > 0 \)
+
+and the equations:
+
+- \( 2(a_1^2 + 1) = 3(a_{2,1}^2 + 1) \)
+- \( 3(a_{2,1}^2 + 1) = 4(a_{2,2}^2 + 1) \)
+- \( a_1 a_{2,1} + a_{2,1} a_{2,2} + a_{2,2} a_1 = 1 \)
+
+and the goal is to find the sum \( S = a_1 + a_{2,1} + a_{2,2} \).
+
+---
+
+Step-by-step:
+
+- From the first two equations:
+
+\[
+2(a_1^2 +1) = 3(a_{2,1}^2 + 1) \Rightarrow 2a_1^2 + 2 = 3a_{2,1}^2 + 3
+\]
+\[
+\Rightarrow 2a_1^2 - 3a_{2,1}^2 = 1
+\tag{A}
+\]
+
+- The second and third:
+
+\[
+3(a_{2,1}^2 +1) = 4(a_{2,2}^2 + 1) \Rightarrow 3a_{2,1}^2 + 3 = 4a_{2,2}^2 + 4
+\]
+\[
+\Rightarrow 3a_{2,1}^2 - 4a_{2,2}^2 = 1
+\tag{B}
+\]
+
+Now, the inequalities:
+
+\[
+a_1 > 0, \quad a_{2,1} > 0, \quad a_{2,2} > 0
+\]
+
+We can parameterize \(a_1, a_{2,1}\) in terms of \(a_{2,1}\), then find \(a_{2,2}\) accordingly.
+
+From (A):
+
+\[
+2a_1^2 = 3a_{2,1}^2 + 1 \Rightarrow a_1^2 = \frac{3a_{2,1}^2 + 1}{2}
+\]
+
+Since \(a_1 > 0\):
+
+\[
+a_1 = \sqrt{\frac{3a_{2,1}^2 + 1}{2}}
+\]
+
+From (B):
+
+\[
+3a_{2,1}^2 - 4a_{2,2}^2 = 1 \Rightarrow 4a_{2,2}^2 = 3a_{2,1}^2 - 1
+\]
+\[
+a_{2,2} = \sqrt{\frac{3a_{2,1}^2 - 1}{4}}
+\]
+
+\[ a_{2,2} \text{ is real and positive} \implies 3a_{2,1}^2 - 1 \ge 0 \Rightarrow a_{2,1}^2 \ge \frac{1}{3} \]
+
+Because \(a_{2,1} > 0\):
+
+\[
+a_{2,1} \ge \frac{1}{\sqrt{3}}
+\]
+
+---
+
+Now, the key constraint:
+
+\[
+a_1 a_{2,1} + a_{2,1} a_{2,2} + a_{2,2} a_1 = 1
+\]
+
+Expressed as:
+
+\[
+a_1 a_{2,1} + a_{2,1} a_{2,2} + a_{2,2} a_1 = 1
+\]
+
+Substitute \( a_1, a_{2,2} \):
+
+\[
+a_1 = \sqrt{\frac{3a_{2,1}^2 + 1}{2}}
+\]
+\[
+a_{2,2} = \sqrt{\frac{3a_{2,1}^2 - 1}{4}}
+\]
+
+Compute:
+
+\[
+S(a_{2,1}) = a_1 a_{2,1} + a_{2,1} a_{2,2} + a_{2,2} a_1
+\]
+
+Let \(x = a_{2,1} \ge 1/\sqrt{3}\). Then:
+
+\[
+a_1 = \sqrt{\frac{3x^2 + 1}{2}}
+\]
+\[
+a_{2,2} = \sqrt{\frac{3x^2 - 1}{4}}
+\]
+
+Calculate the sum:
+
+\[
+S(x) = a_1 x + x a_{2,2} + a_{2,2} a_1
+\]
+
+which simplifies to:
+
+\[
+S(x) = x a_1 + a_{2,2}(x + a_1)
+\]
+
+---
+
+Now, code the numerical search over feasible \(x\) values, starting at \(x = 1/\sqrt{3}\), increasing with small steps, checking when \(S(x)\) reaches 1.
+
+Here's the implementation:
+
+```python
+import math
+
+# Search parameters
+start_x = 1 / math.sqrt(3)  # lower bound based on square root condition
+max_x = 3  # arbitrary upper limit for search
+step = 0.001
+
+# List to store solutions
+solutions = []
+
+x = start_x
+while x <= max_x:
+    a1_squared = (3 * x**2 + 1) / 2
+    a2_2_squared = (3 * x**2 - 1) / 4
+    if a1_squared <= 0 or a2_2_squared <= 0:
+        x += step
+        continue
+    a1 = math.sqrt(a1_squared)
+    a2_2 = math.sqrt(a2_2_squared)
+    sum_value = a1 * x + a2_2 * (x + a1)
+    if abs(sum_value - 1) < 0.01:
+        answer_sum = a1 + x + a2_2
+        print(f"Found near solution at x={x:.3f}: sum={answer_sum:.3f}")
+        solutions.append(answer_sum)
+    x += step
+
+# output approximate solutions
+for s in solutions:
+    print(f"Approximate total sum: {s:.3f}")
+```
+
+---
+
+This code searches for feasible \(a_{2,1}\), computes corresponding \(a_1, a_{2,2}\), checks the sum condition close to 1, and streams solutions as it finds them. It provides approximate sums, which can be refined or used for conjecturing the exact value.
+
+---
+
+**Note:** For an exact symbolic solution, further algebraic manipulations could be done in a CAS, but for the enumeration purpose, this numeric exploratory approach suffices.

@@ -1,0 +1,76 @@
+[write_program]
+This problem involves solving a system of 5 equations with 4 variables \(w, x, y, z\), but the last equation's right side is unknown (the answer to find). The first 4 equations fix \((w,x,y,z)\) uniquely, so we can solve them first, then compute the left side of the 5th equation to find the answer.
+
+We enumerate rational candidates for \(w,x,y,z\) by solving the 4 equations (linear system) and then compute the 5th. The problem suggests real numbers; using exact fractions is ideal.
+
+```python
+# Solve the first 4 equations for w,x,y,z exactly and compute the 5th value.
+from fractions import Fraction
+
+def solve_4_eqs():
+    # Equations:
+    # 1) w + x + y + z = 5
+    # 2) 2w + 4x + 8y + 16z = 7
+    # 3) 3w + 9x + 27y + 81z = 11
+    # 4) 4w + 16x + 64y + 256z = 1
+    
+    # Set up the matrix A and vector b for first 4 eqs:
+    A = [
+        [1, 1, 1, 1],
+        [2, 4, 8, 16],
+        [3, 9, 27, 81],
+        [4, 16, 64, 256]
+    ]
+    b = [5, 7, 11, 1]
+
+    # Convert to fractions for exact arithmetic
+    A = [[Fraction(x) for x in row] for row in A]
+    b = [Fraction(x) for x in b]
+
+    # Use Gaussian elimination to solve
+    n = 4
+    for i in range(n):
+        # Find pivot
+        pivot = i
+        for r in range(i+1, n):
+            if abs(A[r][i]) > abs(A[pivot][i]):
+                pivot = r
+        if pivot != i:
+            A[i], A[pivot] = A[pivot], A[i]
+            b[i], b[pivot] = b[pivot], b[i]
+
+        # Normalize pivot row
+        pivot_val = A[i][i]
+        for c in range(i, n):
+            A[i][c] /= pivot_val
+        b[i] /= pivot_val
+
+        # Eliminate below
+        for r in range(i+1, n):
+            factor = A[r][i]
+            for c in range(i, n):
+                A[r][c] -= factor * A[i][c]
+            b[r] -= factor * b[i]
+
+    # Back substitution
+    x = [Fraction(0) for _ in range(n)]
+    for i in reversed(range(n)):
+        x[i] = b[i]
+        for c in range(i+1, n):
+            x[i] -= A[i][c]*x[c]
+
+    # x = [w, x, y, z]
+    return x
+
+def main():
+    w, x, y, z = solve_4_eqs()
+    print("Solution to first 4 equations:")
+    print(f"w = {w}, x = {x}, y = {y}, z = {z}")
+
+    # Compute 5th equation left side
+    lhs_5 = 5*w + 25*x + 125*y + 625*z
+    print("Value of 5*w + 25*x + 125*y + 625*z =", lhs_5)
+
+if __name__ == "__main__":
+    main()
+```

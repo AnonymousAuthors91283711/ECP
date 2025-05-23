@@ -1,0 +1,77 @@
+[write_program]
+The problem involves a finite simple graph \(G\) on 100 vertices with the property that for every vertex \(u\), there exists a vertex \(v\) adjacent to \(u\) such that their neighbor sets are disjoint. The question is to find or bound the maximum number of edges \( |E(G)| \) under this condition.
+
+To assist in conjecturing or bounding the answer, we can try smaller graphs with vertex sets \( \{0, 1, \ldots, n-1\} \) for small \( n \), enumerate all simple graphs, test the condition, and record the numbers of edges satisfying the property.
+
+Since the full enumeration of all graphs on 100 vertices is impossible, we pick small \( n \), like \( n=4 \) or \( n=5 \), and try all graphs or many graphs with random sampling to find maximal edge counts under the condition. The program streams found candidates immediately.
+
+```python
+# Program to enumerate graphs on small n vertices satisfying:
+# For every vertex u, there exists adjacent v such that neighbor sets of u and v are disjoint.
+# We print the number of edges for each satisfying graph and track maximum.
+
+from itertools import combinations
+
+def neighbors(adj_list, u):
+    return {v for v in adj_list[u]}
+
+def condition(adj_list):
+    n = len(adj_list)
+    neighbors_sets = [neighbors(adj_list, u) for u in range(n)]
+    for u in range(n):
+        # For u, check if there is v adjacent to u with neighbors[u] disjoint from neighbors[v]
+        found = False
+        for v in adj_list[u]:
+            if neighbors_sets[u].isdisjoint(neighbors_sets[v]):
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+def edges_to_adj_list(edges, n):
+    adj_list = [[] for _ in range(n)]
+    for (u,v) in edges:
+        adj_list[u].append(v)
+        adj_list[v].append(u)
+    return adj_list
+
+def main():
+    n_values = [4, 5]  # small values to keep computations feasible
+    for n in n_values:
+        print(f"n = {n}")
+        vertices = list(range(n))
+        all_possible_edges = list(combinations(vertices, 2))
+        max_edges = 0
+        max_graph = None
+        # Enumerate all graphs or up to a threshold:
+        # For feasibility, try all graphs with up to a certain number of edges:
+        # We loop over number_of_edges descending to find maximal candidates quickly.
+        from math import comb
+        max_possible_edges = comb(n,2)
+        threshold = max_possible_edges + 1
+        for num_edges in range(max_possible_edges, -1, -1):
+            # Early cutoff if max found at current or higher edges
+            if max_edges >= num_edges:
+                break
+            # Generate combinations of edges of size num_edges
+            from itertools import combinations as comb_edges
+            # To keep output short, limit number of graphs checked per num_edges to 1000
+            checked = 0
+            for edges in comb_edges(all_possible_edges, num_edges):
+                adj_list = edges_to_adj_list(edges, n)
+                if condition(adj_list):
+                    print(f"n={n}, edges={num_edges}, edgeset={sorted(edges)}")
+                    if num_edges > max_edges:
+                        max_edges = num_edges
+                        max_graph = edges
+                    break  # move to next num_edges to find max quickly
+                checked +=1
+                if checked >= 1000:
+                    break
+        print(f"Maximum edges for n={n} with property: {max_edges}")
+        print("-"*40)
+
+if __name__ == "__main__":
+    main()
+```

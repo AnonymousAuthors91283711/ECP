@@ -1,0 +1,78 @@
+[write_program]
+The theorem involves a function \( f: \mathbb{N} \to \mathbb{N} \) such that for all natural numbers \( m, n \), the relation
+\[
+f(m+n) \cdot f(m-n) = f(m^2)
+\]
+holds. We want to conjecture possible candidates for such functions \( f \) by enumerating \( f \) defined on small domains and checking the identity whenever \( m-n \geq 0 \).
+
+Since \( f \) is from \(\mathbb{N}\) (including zero), and given the complexity of the condition, a natural approach is to search for functions that might be polynomial-like or have some known formula. We'll test functions defined on integers 0 to some max value, enumerating all possible function values on these points (limited to small ranges), and check the condition for all valid \( m,n\). To maximize efficiency, we'll try simple forms, such as linear or quadratic forms.
+
+Due to complexity (full search on all functions is huge), I will limit to these forms:
+- \( f(x) = c \) constant
+- \( f(x) = k \) constant; check \( f(m+n)*f(m-n) = f(m^2) \Rightarrow k \cdot k = k \), so \( k=0 \) or \(k=1\)
+- \( f(x) = x^a \) for small \( a \), check if it satisfies the relation.
+
+We can test these and print those satisfying the property for \( m, n \leq 5 \).
+
+```python
+# Enumerate candidate functions f: N -> N for small inputs to satisfy:
+# f(m+n) * f(m-n) = f(m^2) for all m,n with m >= n
+# We'll test f(x) = c (constant), f(x)=x^a, f(x) = a*x + b for small a,b.
+# Print candidates for 0 <= x <= 10 and all m,n <= 5
+
+def check_const(k):
+    # Check f(x)=k constant for m,n<=5
+    for m in range(6):
+        for n in range(m+1):  # n <= m
+            left = k*k
+            right = k
+            if left != right:
+                return False
+    return True
+
+def check_pow(a):
+    # f(x)=x**a with 0**0=1 convention (or 0**0=0)
+    # test 0**0=1 to handle f(0)
+    def f(x):
+        if x==0 and a==0:
+            return 1
+        return x**a
+    for m in range(6):
+        for n in range(m+1):
+            mn = m+n
+            mmn = m-n
+            lhs = f(mn)*f(mmn)
+            rhs = f(m*m)
+            if lhs != rhs:
+                return False
+    return True
+
+def check_linear(a,b):
+    # f(x)=a*x+b
+    def f(x):
+        return a*x + b
+    for m in range(6):
+        for n in range(m+1):
+            lhs = f(m+n)*f(m-n)
+            rhs = f(m*m)
+            if lhs != rhs:
+                return False
+    return True
+
+print("Checking constants:")
+for k in range(3):
+    if check_const(k):
+        print(f"f(x) = {k}")
+
+print("Checking power functions:")
+for a in range(4):
+    if check_pow(a):
+        print(f"f(x) = x^{a}")
+
+print("Checking linear functions:")
+for a in range(-2,3):
+    for b in range(0,4):
+        if check_linear(a,b):
+            print(f"f(x) = {a}*x + {b}")
+```
+

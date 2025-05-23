@@ -1,0 +1,89 @@
+[write_program]
+The functional equation involves a function \(f:\mathbb{R}\to\mathbb{R}\) such that for all real \(x,y,z,t\),
+\[
+(f(x)+f(z))(f(y)+f(t)) = f(xy - zt) + f(xt + yz).
+\]
+We want to explore candidate functions \(f\).
+
+Immediate thoughts:
+- Try constant functions.
+- Try linear functions.
+- Try functions of the form \(f(x) = a x^2 + b\).
+- Try known trigonometric or complex-like structures since the RHS resembles sum of two function values at expressions similar to real and imaginary parts of a product.
+
+We will enumerate candidates by checking the equation numerically on a sample grid and print any functions \(f\) from a small parametric family that satisfy it on these points up to tolerance.
+
+```python
+import math
+
+def check_eq(f, points):
+    # Check the functional equation on sample points
+    for x,y,z,t in points:
+        lhs = (f(x)+f(z))*(f(y)+f(t))
+        rhs = f(x*y - z*t) + f(x*t + y*z)
+        if abs(lhs - rhs) > 1e-8:
+            return False
+    return True
+
+def test_constant():
+    # f(x)=c
+    for c in [-2, -1, 0, 1, 2]:
+        f = lambda x: c
+        if check_eq(f, samples):
+            print(f"Constant function f(x) = {c}")
+
+def test_linear():
+    # f(x) = a x
+    for a in [-2, -1, 0, 1, 2]:
+        f = lambda x: a*x
+        if check_eq(f, samples):
+            print(f"Linear function f(x) = {a} * x")
+
+def test_quadratic():
+    # f(x) = a x^2 + b
+    for a in [-1, 0, 1]:
+        for b in [-1, 0, 1]:
+            f = lambda x, a=a, b=b: a*x*x + b
+            if check_eq(f, samples):
+                print(f"Quadratic function f(x) = {a} * x^2 + {b}")
+
+def test_identity_abs():
+    # f(x) = |x|
+    f = lambda x: abs(x)
+    if check_eq(f, samples):
+        print("Function f(x) = |x|")
+
+def test_f_cos_sin(a):
+    # Inspired by f(x)=cos(kx), sin(kx) etc.
+    # Check f(x) = cos(a x)
+    f = lambda x: math.cos(a*x)
+    if check_eq(f, samples):
+        print(f"Function f(x) = cos({a} * x)")
+
+def test_f_identity():
+    # f(x) = x
+    f = lambda x: x
+    if check_eq(f, samples):
+        print("Identity function f(x) = x")
+
+samples = [
+    (0,0,0,0),
+    (1,1,0,0),
+    (0,1,1,0),
+    (1,0,0,1),
+    (1,-1,1,-1),
+    (2,3,-1,4),
+    (-2,-3,1,-4),
+]
+
+print("Testing candidate functions for the given functional equation:")
+
+test_constant()
+test_linear()
+test_quadratic()
+test_identity_abs()
+test_f_identity()
+for a in [-1, 0, 1, 2]:
+    test_f_cos_sin(a)
+```
+

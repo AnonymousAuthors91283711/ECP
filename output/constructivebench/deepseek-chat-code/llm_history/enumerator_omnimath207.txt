@@ -1,0 +1,76 @@
+[write_program]
+This problem involves finding the largest n such that there exists a complete graph with n vertices where:
+1. Edges are colored with 3 colors (0,1,2)
+2. No vertex has all incident edges of the same color
+3. All three colors appear in the graph
+4. No monochromatic triangle exists
+
+We'll write a Python program to enumerate small cases and find the maximum n satisfying these conditions.
+
+```python
+from itertools import product, combinations
+
+def is_valid(n, edge_colors):
+    # Check all conditions
+    # 1. Symmetry
+    for i in range(n):
+        for j in range(n):
+            if i != j and edge_colors[i][j] != edge_colors[j][i]:
+                return False
+    
+    # 2. No vertex has all incident edges of same color
+    for i in range(n):
+        colors = set()
+        for j in range(n):
+            if i != j:
+                colors.add(edge_colors[i][j])
+        if len(colors) < 2:  # All edges same color
+            return False
+    
+    # 3. All three colors appear
+    all_colors = set()
+    for i in range(n):
+        for j in range(i+1, n):
+            all_colors.add(edge_colors[i][j])
+    if len(all_colors) < 3:
+        return False
+    
+    # 4. No monochromatic triangle
+    for triangle in combinations(range(n), 3):
+        a, b, c = triangle
+        if (edge_colors[a][b] == edge_colors[a][c] == edge_colors[b][c]):
+            return False
+    
+    return True
+
+def enumerate_graphs(max_n=6):
+    for n in range(3, max_n+1):
+        print(f"Checking n = {n}")
+        found = False
+        # Generate all possible edge colorings (symmetric)
+        # This is very inefficient but works for small n
+        for coloring in product(range(3), repeat=n*(n-1)//2):
+            # Build edge color matrix
+            edge_colors = [[0]*n for _ in range(n)]
+            idx = 0
+            for i in range(n):
+                for j in range(i+1, n):
+                    edge_colors[i][j] = coloring[idx]
+                    edge_colors[j][i] = coloring[idx]
+                    idx += 1
+            
+            if is_valid(n, edge_colors):
+                print(f"Found valid coloring for n={n}")
+                found = True
+                break  # Just need one example
+        
+        if not found:
+            print(f"No valid coloring found for n={n}")
+            return n-1
+    return max_n
+
+max_n = enumerate_graphs()
+print(f"Maximum n found: {max_n}")
+```
+
+Note: This program uses brute-force enumeration which becomes impractical for n > 6 due to combinatorial explosion. For n=6, there are 3^15 possible colorings. The program demonstrates the approach but would need optimization for larger cases. The output will show the maximum n where a valid coloring exists before reporting failure for n+1.

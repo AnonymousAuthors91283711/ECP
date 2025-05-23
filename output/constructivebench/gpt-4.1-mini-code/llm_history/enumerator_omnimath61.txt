@@ -1,0 +1,51 @@
+[write_program]
+The problem seems to ask for all functions \( f: \mathbb{R} \to \mathbb{R} \) satisfying the functional equation:
+\[
+f(x \cdot f(y) + y^3) = y \cdot f(x) + (f(y))^3.
+\]
+We want to enumerate potential forms or values of \( f \) on specific inputs to gather insight about the solution set.
+
+The program below tries simple candidate functions of the form \( f(x) = a x^k \) for small \( a \) and \( k \in \{0,1,2,3\} \), and tests the functional equation for some values of \( x,y \in \{ -1,0,1 \} \). This hopefully helps to identify whether linear or polynomial forms can satisfy the equation exactly.
+
+```python
+# Enumerate candidates for f(x) = a * x^k, with small a and k, testing the functional equation:
+# f(x*f(y) + y^3) == y * f(x) + (f(y))^3 for sample x,y in {-1,0,1}.
+# Print exact matches immediately.
+
+def enumerate_candidate_functions():
+    sample_points = [-1, 0, 1]
+    a_values = [-1, 0, 1]
+    k_values = [0, 1, 3]  # Testing constant, linear, cubic powers
+    
+    def f_factory(a, k):
+        if k == 0:
+            return lambda x: a
+        else:
+            return lambda x: a * (x ** k)
+    
+    def check_eq(f):
+        # Check equation on sample points exactly
+        for x in sample_points:
+            for y in sample_points:
+                lhs = f(x * f(y) + y ** 3)
+                rhs = y * f(x) + (f(y)) ** 3
+                if lhs != rhs:
+                    return False
+        return True
+    
+    print("Testing functions f(x) = a * x^k for a in", a_values, "k in", k_values)
+    for a in a_values:
+        for k in k_values:
+            f = f_factory(a, k)
+            if check_eq(f):
+                print(f"Found candidate function: f(x) = {a} * x^{k}")
+                
+            # Also test the negative or zero separately for k=0 since x^0=1
+            # but f(x)=a constant only might satisfy for particular a
+            if k == 0 and a == 0:
+                # f=0 identically
+                print("Found candidate function: f(x)=0")
+
+if __name__ == "__main__":
+    enumerate_candidate_functions()
+```

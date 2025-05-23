@@ -1,0 +1,52 @@
+[write_program]
+This problem involves analyzing polynomials with certain constraints: polynomials are nearly tricky (related to roots at 4) and are tiny (coefficients bounded and degree ≤ 7). The goal is to enumerate all such polynomials satisfying these conditions for small bounds, then find the total count (`omnimath2130_answer`).  
+
+Since the polynomial is evaluated at 4 and must be zero, and the polynomial is decomposed into Q + R with specific bounds, the key is to consider all polynomials that potentially satisfy the constraints, enumerate their coefficients within the small bounds, and check the root condition. We will explore all small coefficient polynomials of degree ≤ 7, with coefficients in [-7,7], and check if they can be written as the sum of a polynomial that vanishes at 4 and a "tiny" polynomial (bounded coefficients).  
+
+We will directly generate candidate polynomials Q and R, verify the tricky condition, and count the total number of valid polynomials P = Q + R. For simplicity, and since the problem references "enumerate all", we focus on small coefficient bounds and polynomial degrees, producing exact counts.  
+
+```python
+from itertools import product
+
+# Degree bound
+degree_bound = 7
+# Coefficient bounds
+coeff_bound = 7
+
+# Generate all polynomials with degree ≤ 7 and coefficients in [-7,7]
+def generate_poly_coeffs():
+    for degree in range(degree_bound + 1):
+        for coeffs in product(range(-coeff_bound, coeff_bound + 1), repeat=degree + 1):
+            yield coeffs
+
+# Evaluate polynomial at a point
+def eval_poly(coeffs, x):
+    return sum(c * (x ** i) for i, c in enumerate(coeffs))
+
+# Check if polynomials are equal
+def poly_add(a, b):
+    length = max(len(a), len(b))
+    return [(a[i] if i < len(a) else 0) + (b[i] if i < len(b) else 0) for i in range(length)]
+
+# Check if polynomial is tricky: evaluates to 0 at 4
+def is_tricky(poly_coeffs):
+    return eval_poly(poly_coeffs, 4) == 0
+
+# Check tiny polynomial
+def is_tiny(poly_coeffs, k):
+    return len(poly_coeffs) - 1 <= 7 and all(-k <= c <= k for c in poly_coeffs)
+
+# Main enumeration
+s_set = set()
+for Q_coeffs in generate_poly_coeffs():
+    if is_tricky(Q_coeffs):
+        for R_coeffs in generate_poly_coeffs():
+            if is_tiny(R_coeffs, 7):
+                P_coeffs = poly_add(Q_coeffs, R_coeffs)
+                # Save polynomial as tuple for set uniqueness
+                s_set.add(tuple(P_coeffs))
+                print(f"Found polynomial P with coefficients {P_coeffs}")
+
+# Output total count
+print(f"Total number of polynomials: {len(s_set)}")
+```

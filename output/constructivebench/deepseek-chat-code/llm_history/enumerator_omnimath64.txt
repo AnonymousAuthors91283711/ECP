@@ -1,0 +1,54 @@
+[write_program]
+The problem asks to find natural numbers n where there exist two disjoint subsets of divisors of n: an arithmetic progression A with at least 3 elements and a geometric progression G with at least 3 elements. We'll write a Python program to enumerate such numbers n.
+
+The approach:
+1. For each n, find all divisors
+2. Check all possible arithmetic progressions (AP) of length ≥3 among divisors
+3. Check all possible geometric progressions (GP) of length ≥3 among divisors
+4. Verify if disjoint AP and GP exist for n
+
+```python
+import math
+from itertools import combinations
+
+def get_divisors(n):
+    divisors = set()
+    for i in range(1, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            divisors.add(i)
+            divisors.add(n // i)
+    return sorted(divisors)
+
+def has_ap(divisors, min_length=3):
+    for triplet in combinations(divisors, 3):
+        a, b, c = sorted(triplet)
+        if 2*b == a + c:  # Check if arithmetic progression
+            d = b - a
+            ap = {a + k*d for k in range((max(divisors)-a)//d + 1) if (a + k*d) in divisors}
+            if len(ap) >= min_length:
+                return True
+    return False
+
+def has_gp(divisors, min_length=3):
+    for triplet in combinations(divisors, 3):
+        a, b, c = sorted(triplet)
+        if b*b == a*c:  # Check if geometric progression
+            r = b // a
+            if r == 1:
+                continue
+            gp = {a * (r**k) for k in range(int(math.log(max(divisors)/a, r)) + 1) if a*(r**k) in divisors}
+            if len(gp) >= min_length:
+                return True
+    return False
+
+def check(n):
+    divisors = get_divisors(n)
+    if len(divisors) < 6:  # Need at least 3 for AP and 3 for GP
+        return False
+    return has_ap(divisors) and has_gp(divisors)
+
+max_n = 1000  # Reasonable upper bound for demonstration
+for n in range(1, max_n + 1):
+    if check(n):
+        print(n)
+```

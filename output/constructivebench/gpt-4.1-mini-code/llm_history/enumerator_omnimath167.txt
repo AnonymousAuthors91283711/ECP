@@ -1,0 +1,52 @@
+[write_program]
+The problem concerns finding a natural number \( n \geq 2 \) for which the congruence 
+\[ 2^{2^n} \mod (2^n - 1) \]
+is not equal to \( 4^k \) modulo \( 2^n - 1 \) for any \( k \). We want to enumerate values of \( n \) starting from 2 upwards, calculating:
+- \( m = 2^n - 1 \)
+- \( a = 2^{2^n} \mod m \)
+and then check whether \( a \equiv 4^k \pmod m \) for some \( k \).
+
+To avoid unnecessary checks, we only consider \( k \) in a reasonable range, since \( 4^k \) modulo \( m \) cycles at length dividing \(\phi(m)\), and \( m = 2^n - 1 \) is fairly small for small \( n \).
+
+We'll try \( n \) from 2 up to some small upper limit (e.g., 10), print each candidate \( n \), the residue \( a \), and whether \( a \) matches any power of 4 mod \( m \). The output will show the first \( n \) that fails the condition, stream results for all \( n \), and finally print the \( n \) found.
+
+```python
+# Enumerate values of n to check the condition:
+# For each n ≥ 2, compute a = 2^{2^n} mod (2^n - 1)
+# Check if a == 4^k mod (2^n - 1) for some k.
+
+def mod_exp(base, exp, mod):
+    """Efficient modular exponentiation."""
+    result = 1
+    cur = base % mod
+    e = exp
+    while e > 0:
+        if e & 1:
+            result = (result * cur) % mod
+        cur = (cur * cur) % mod
+        e >>= 1
+    return result
+
+def check_powers(base, mod, target):
+    """Check if target ≡ base^k mod mod for some k in range."""
+    # Since mod = 2^n - 1, its totient <= mod-1, so cycle length <= mod-1.
+    # We'll check k in range up to mod-1 or a small cutoff.
+    max_k = min(mod - 1, 1000)
+    val = 1
+    for k in range(max_k + 1):
+        if val == target:
+            return True, k
+        val = (val * base) % mod
+    return False, -1
+
+print("Enumerating n from 2 to 10:")
+for n in range(2, 11):
+    modulus = 2**n - 1
+    exp2 = 2**n
+    val = mod_exp(2, exp2, modulus)
+    found, k = check_powers(4, modulus, val)
+    print(f"n={n}, modulus={modulus}, 2^(2^{n}) mod {modulus} = {val}, found 4^{k=} eq? {found}")
+    if not found:
+        print(f"=> Candidate answer: n = {n}")
+        break
+```

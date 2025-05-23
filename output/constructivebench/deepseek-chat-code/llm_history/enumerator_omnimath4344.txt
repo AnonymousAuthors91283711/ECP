@@ -1,0 +1,44 @@
+[write_program]
+This problem is about a hunter trying to catch a rabbit in a 2D plane with certain movement constraints. The rabbit moves 1 unit per step, and the hunter has a tracking device that gives approximate positions (within 1 unit) of the rabbit. The hunter wants to stay within 100 units of the rabbit after 10^9 steps.
+
+We'll write a program to simulate small cases and observe patterns. The key is to see if the hunter can maintain bounded distance from the rabbit under these constraints.
+
+```python
+import math
+
+def simulate(max_steps=20):
+    """Simulate hunter and rabbit movements for small steps."""
+    # Rabbit moves in a fixed direction (east) for simplicity
+    rabbit_path = [(i, 0) for i in range(max_steps + 1)]
+    
+    # Tracking device gives positions within 1 unit of rabbit
+    tracking_device = [(x + math.cos(i), math.sin(i)) for i, (x, y) in enumerate(rabbit_path)]
+    
+    # Hunter strategy: move toward the tracking device's position
+    hunter_pos = [(0, 0)]
+    for k in range(max_steps):
+        tx, ty = tracking_device[k+1]
+        hx, hy = hunter_pos[-1]
+        dx, dy = tx - hx, ty - hy
+        dist = math.hypot(dx, dy)
+        if dist <= 1:
+            # Can reach exact position
+            hunter_pos.append((tx, ty))
+        else:
+            # Move 1 unit in that direction
+            hunter_pos.append((hx + dx/dist, hy + dy/dist))
+    
+    # Calculate distances at each step
+    distances = [math.hypot(hx-rx, hy-ry) for (hx, hy), (rx, ry) in zip(hunter_pos, rabbit_path)]
+    
+    # Print results
+    print("Step | Hunter position | Distance from rabbit")
+    for k in range(min(10, max_steps + 1)):
+        hx, hy = hunter_pos[k]
+        print(f"{k:4} | ({hx:.2f}, {hy:.2f}) | {distances[k]:.2f}")
+    
+    print(f"\nFinal distance after {max_steps} steps: {distances[max_steps]:.2f}")
+
+if __name__ == "__main__":
+    simulate()
+```

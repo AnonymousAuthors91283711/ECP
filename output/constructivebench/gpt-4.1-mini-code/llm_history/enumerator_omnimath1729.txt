@@ -1,0 +1,97 @@
+[write_program]
+This problem defines a sequence \(a_n\) on natural numbers with real values given by:
+\[
+a_0 = \sqrt{2}, \quad a_1 = 2, \quad a_{n+1} = a_n \cdot (a_{n-1})^2.
+\]
+We want to find the smallest positive integer \(p\) such that, for some large \(N\), the sequence \(\lfloor a_m \rfloor \bmod 2014\) becomes periodic with period \(p\) for all \(m \geq N\).
+
+Given the rapid growth of \(a_n\), direct floating-point calculations and modulo operations on \(\lfloor a_n \rfloor\) are tricky. Instead, we will work with the logarithms of \(a_n\) to avoid overflow:
+
+\[
+\log a_0 = \frac{1}{2} \log 2, \quad \log a_1 = \log 2, \quad \log a_{n+1} = \log a_n + 2\log a_{n-1}.
+\]
+
+Then:
+\[
+a_n = \exp(\log a_n).
+\]
+
+We can compute \(\log a_n\) modulo \(\log 2014\) (or keep track of fractional parts) to check the fractional part of \(\log a_n / \log 2014\), because:
+\[
+a_n \mod 2014 \approx \exp(\log a_n) \mod 2014,
+\]
+but modular arithmetic of \(a_n\) is complicated. So instead, we directly compute \(a_n\) approximately with high precision, then floor and mod by 2014 to check periodicity.
+
+We will:
+- Compute \(a_n\) for \(n\) up to some max (like 100),
+- For \(p\) from 1 to 20, check if for all \(m\) from some \(N\) (like 20) to max -
+  \[
+  \lfloor a_m \rfloor \bmod 2014 = \lfloor a_{m+p} \rfloor \bmod 2014,
+  \]
+- Print all candidate \(p\) and finally print the minimal such \(p\).
+
+To keep outputs short, we print a few candidates as we find them.
+
+```python
+import math
+
+# Sequence definition using logs to handle large numbers
+# a_0 = sqrt(2), a_1 = 2, a_{n+1} = a_n * (a_{n-1})^2
+
+def compute_a_logs(max_n):
+    # log a_0 = 0.5 * log(2)
+    logs = [0.5 * math.log(2), math.log(2)]
+    for n in range(1, max_n):
+        logs.append(logs[n] + 2*logs[n-1])
+    return logs
+
+def floor_mod_a(logs, mod):
+    # Compute floor(a_n) mod `mod` using exponentiation
+    # a_n = exp(log a_n), which can be huge
+    # Use math.exp(loga_n - int_part*log_mod) * (mod^int_part) mod mod is complicated
+    # Instead, since modulo is 2014, just compute a_n mod 2014 using fractional exponent part:
+    # We'll compute fractional part: x = logs[n]/log(mod)
+    # a_n = mod^x = mod^{int_part + frac_part} = (mod^{int_part})*(mod^{frac_part}) ≡ (mod^{frac_part}) mod mod
+    # since mod^{int_part} mod mod = 0 unless int_part=0. So approximation:
+    # We extract fractional exponent part and approximate mod^{frac_part}
+    # Finally floor(mod^{frac_part}) mod mod gives some info.
+    result = []
+    log_mod = math.log(mod)
+    for l in logs:
+        x = l / log_mod
+        frac = x - math.floor(x)
+        val = mod ** frac
+        floor_val = int(val)
+        result.append(floor_val % mod)
+    return result
+
+def check_periodicity(arr, p, start):
+    # Check if arr[m] = arr[m+p] for all m >= start
+    for m in range(start, len(arr)-p):
+        if arr[m] != arr[m+p]:
+            return False
+    return True
+
+def main():
+    mod = 2014
+    max_n = 80
+    logs = compute_a_logs(max_n)
+    seq_mod = floor_mod_a(logs, mod)
+
+    # We'll check p from 1 to 20, from N=20 onward
+    start = 20
+    candidates = []
+    print(f"Parameters: mod={mod}, max_n={max_n}, check start={start}")
+    for p in range(1, 21):
+        if check_periodicity(seq_mod, p, start):
+            print(f"Candidate period p = {p} found")
+            candidates.append(p)
+
+    if candidates:
+        print(f"Minimal period candidate: {min(candidates)}")
+    else:
+        print("No period candidate found in range p=1..20")
+
+if __name__ == "__main__":
+    main()
+```

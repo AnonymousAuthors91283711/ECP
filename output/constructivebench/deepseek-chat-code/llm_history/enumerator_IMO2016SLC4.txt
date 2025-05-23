@@ -1,0 +1,75 @@
+[write_program]
+This problem is from IMO 2016 Shortlist C4, asking for which positive integers n there exists an n×n grid filled with numbers from {0,1,2} such that:
+1. Each row contains all three numbers
+2. Each column contains all three numbers
+3. For any set of d positions where:
+   - All positions are distinct
+   - Each position is either on the main diagonal or anti-diagonal
+   - d is divisible by 3
+   - The set of numbers in these positions contains all three numbers
+
+We'll write a Python program to enumerate small values of n where such a grid exists.
+
+```python
+def is_valid_grid(grid, n):
+    # Check rows contain all three numbers
+    for row in grid:
+        if len(set(row)) != 3:
+            return False
+    
+    # Check columns contain all three numbers
+    for j in range(n):
+        if len(set(grid[i][j] for i in range(n))) != 3:
+            return False
+    
+    # Check all possible d positions on diagonals with 3|d
+    # We need to check all subsets of diagonal positions where size is divisible by 3
+    # This is computationally expensive, so we'll limit to small n
+    
+    # Collect all diagonal positions
+    diag_positions = []
+    for i in range(n):
+        diag_positions.append((i, i))  # main diagonal
+        if i != n - 1 - i:
+            diag_positions.append((i, n - 1 - i))  # anti-diagonal
+    
+    # Check all subsets of size divisible by 3
+    from itertools import combinations
+    for d in range(3, len(diag_positions)+1, 3):
+        for subset in combinations(diag_positions, d):
+            values = [grid[i][j] for (i,j) in subset]
+            if len(set(values)) != 3:
+                return False
+    
+    return True
+
+def generate_grids(n):
+    # Generate all possible n×n grids with values 0,1,2
+    # This is very slow for n>3, so we'll only try n=3
+    if n != 3:
+        return
+    
+    from itertools import product
+    numbers = [0,1,2]
+    
+    # Generate all possible rows
+    all_rows = [p for p in product(numbers, repeat=n) if len(set(p)) == 3]
+    
+    # Try to build valid grids
+    # For n=3, we can brute-force all possibilities
+    for rows in product(all_rows, repeat=n):
+        grid = [list(row) for row in rows]
+        if is_valid_grid(grid, n):
+            print(f"Valid grid found for n={n}:")
+            for row in grid:
+                print(row)
+            print()
+            return  # Just find one example
+
+# Test small values of n
+for n in range(1, 5):
+    print(f"Testing n = {n}")
+    if n == 3:  # Only n=3 is feasible to check
+        generate_grids(n)
+    print()
+```

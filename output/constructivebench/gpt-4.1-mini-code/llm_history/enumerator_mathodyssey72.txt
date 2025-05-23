@@ -1,0 +1,61 @@
+[write_program]
+The problem counts the number of involutions \(f\) on \(\{0,\ldots,9\}\) such that for every \(i\), \(|f(i)-i|=2\). Such \(f\) satisfy \(f(f(i))=i\), so \(f\) is an involution; and each output differs from its input by exactly 2.
+
+We enumerate all such functions \(f\), checking involution and distance conditions.
+
+```python
+# Enumerate involutions f: {0,...,9} -> {0,...,9} with |f(i)-i|=2 and f(f(i))=i
+
+def main():
+    n = 10
+    candidates = []
+    # Each i can map only to i+2 or i-2 (if they are in range)
+    # Let's denote possible images for each point
+    possible = []
+    for i in range(n):
+        opts = []
+        if i - 2 >= 0:
+            opts.append(i - 2)
+        if i + 2 < n:
+            opts.append(i + 2)
+        possible.append(opts)
+
+    # We'll build f as a list of length n
+    # Backtracking to assign f[i], keeping involution constraints
+    # We'll keep track of assigned f and require f[f[i]] = i
+
+    f = [-1]*n
+    used = [False]*n  # to avoid conflicting mappings
+
+    def backtrack(i):
+        if i == n:
+            # Check involution: already guaranteed by construction, print f
+            candidates.append(f[:])
+            print(f)
+            return
+        if f[i] != -1:
+            backtrack(i+1)
+            return
+        for x in possible[i]:
+            # f[i] = x implies f[x] = i for involution
+            # Check if f[x] is consistent
+            if 0 <= x < n:
+                if f[x] == -1:
+                    # assign f[i]=x and f[x]=i
+                    f[i] = x
+                    f[x] = i
+                    backtrack(i+1)
+                    f[i] = -1
+                    f[x] = -1
+                elif f[x] == i:
+                    # consistent with previously assigned, assign f[i]=x
+                    f[i] = x
+                    backtrack(i+1)
+                    f[i] = -1
+
+    backtrack(0)
+    print(f"Total involutions found: {len(candidates)}")
+
+if __name__ == "__main__":
+    main()
+```

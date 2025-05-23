@@ -1,0 +1,46 @@
+[write_program]
+The problem involves finding a sequence of positive integers \( n(k) \) for \( k = 1, \ldots, 2022 \) such that the product
+\[
+\prod_{i=1}^{2022} \left( n(i)^{2020} + n\big((i+1) \mod 2022 + 1\big)^{2019} \right)
+\]
+is a perfect power of 11, i.e., equals \( 11^m \) for some \( m \in \mathbb{N} \).
+
+Since the full size (2022) is large and complicated, I will experiment with smaller values of \( N \) similar to 2022, trying sequences with some patterns to gain insights. The program tries \( N = 2,3,4,5 \) and generates sequences of positive integers bounded by a small max to evaluate the product defined analogously, then checks if the product is a pure power of 11, printing exact solutions directly.
+
+```python
+from itertools import product
+from math import gcd
+
+def is_power_of_11(x):
+    if x < 1:
+        return False
+    while x % 11 == 0:
+        x //= 11
+    return x == 1
+
+def mod_index(i, n):
+    # Compute (i+1) mod n with 1-based indexing
+    return ((i) % n) + 1
+
+def try_small_N():
+    # Try small N analogous to 2022, small sequences n(k) in range 1..3
+    for N in [2, 3, 4, 5]:
+        print(f"N = {N}")
+        max_val = 3
+        # Generate all sequences n: {1..N} -> {1..max_val}
+        for seq in product(range(1, max_val+1), repeat=N):
+            # Compute product
+            prod = 1
+            for i in range(1, N+1):
+                a = seq[i-1] ** 2020
+                j = mod_index(i+1, N) - 1
+                b = seq[j] ** 2019
+                sum_val = a + b
+                prod *= sum_val
+                if prod == 0:
+                    break
+            if prod > 0 and is_power_of_11(prod):
+                print("Sequence:", seq, "product = 11^m for some m")
+
+try_small_N()
+```

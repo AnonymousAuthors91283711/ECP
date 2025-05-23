@@ -1,0 +1,105 @@
+[write_program]
+The problem asks to find the cardinality of the set of integers n between 1 and 1,000,000 such that n mod 1000 > n mod 1001. To approach this, we need to analyze the behavior of the remainders.
+
+Since 1000 and 1001 are consecutive integers:
+
+- For all n, n mod 1000 ranges from 0 to 999.
+- n mod 1001 ranges from 0 to 1000.
+
+When n mod 1000 and n mod 1001 are compared, the key is whether the remainder modulo the larger base (1001) exceeds the one modulo 1000.
+
+Because 1001 > 1000:
+
+- For n, n mod 1000 < 1000 always.
+- n mod 1001 can be 0 to 1000.
+
+Note that for each n, the value of n mod 1001 determines whether n mod 1000 > n mod 1001:
+
+- When n mod 1001 is 0, no.
+- When n mod 1001 is ≥ 1, then compare to n mod 1000 (which is between 0 and 999).
+
+For fixed n, define:
+
+r1 = n mod 1000  
+r2 = n mod 1001
+
+We want r1 > r2.
+
+Observation:
+
+- If r2 = 0, then r1 > 0 always, provided r1 ≥ 1, which is always true unless r1=0.
+- For r2 ≥ 1, r1 can be 0..999.
+
+But more straightforwardly, let's analyze the behavior in terms of n:
+
+- Since the remainders depend on n mod 1000 and 1001, and these are relatively prime, we can model the possible pairs (r1, r2). 
+
+Simulating all n from 1 to 1,000,000 would be inefficient, but because the pattern is periodic with respect to the least common multiple of 1000 and 1001 (which is 1000*1001=1,001,000), we can leverage the periodic structure.
+
+- The pattern repeats every 1,001,000, two ranges covering all residue combinations.
+- For each residue of n mod 1,001,000, the pair (n mod 1000, n mod 1001) cycles through all possible pairs.
+
+Let's reason about the counts:
+
+Within one full cycle (when n runs from 0 to 1,000,000 - 1), the full pattern repeats:
+
+- For n mod 1,001,000 in [0, 1,001,000), the counts are similar and symmetric.
+
+Key insight: Because the sum over the entire cycle repeats, the total count of n for which r1 > r2 will be proportional.
+
+We will write a program to compute how many numbers between 1 and 1,000,000 satisfy n mod 1000 > n mod 1001.
+
+Here's a direct simulation approach for all n in [1..1,000,000], using modular calculations:
+
+```python
+# Efficiently count how many n in [1, 1,000,000] satisfy n % 1000 > n % 1001
+# We leverage the periodicity and properties of modular arithmetic.
+
+def main():
+    count = 0
+    for n in range(1, 1_000_001):
+        r1 = n % 1000
+        r2 = n % 1001
+        if r1 > r2:
+            print(n)
+            count += 1
+    print("Count:", count)
+
+if __name__ == "__main__":
+    main()
+```
+
+Due to efficiency, this code directly enumerates all n, counting and printing each satisfying n.
+
+---
+
+Alternatively, to get an explicit formula or estimate, we could analyze the density:
+
+- For fixed r2, r1 ranges from 0 to 999.
+- r1 > r2 when r1 ∈ (r2, 999], i.e., from r2+1 to 999.
+- For each r2 in 0..1000, the number of r1 satisfying r1 > r2 is 999 - r2.
+
+Number of n with remainder r1 mod 1000 = r1 and r2 mod 1001 = r2:
+
+- For each pair (r1, r2), the count of n in [1..1,000,000] with n ≡ r1 mod 1000 and n ≡ r2 mod 1001 can be computed using Chinese Remainder Theorem.
+
+But for simplicity, direct enumeration is feasible and meets the requirement.
+
+---
+
+Here is the final code to output:
+
+```python
+# Enumerate n from 1 up to 1,000,000 and count where n % 1000 > n % 1001,
+# printing each such n immediately.
+
+def main():
+    for n in range(1, 1_000_001):
+        r1 = n % 1000
+        r2 = n % 1001
+        if r1 > r2:
+            print(n)
+
+if __name__ == "__main__":
+    main()
+```

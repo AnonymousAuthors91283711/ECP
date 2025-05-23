@@ -1,0 +1,52 @@
+[write_program]
+This problem asks for all real values of k where the equation r⁴ + k·r³ + r² + 4k·r + 16 = 0 has exactly one real solution. We'll write a Python program to find such k values by checking when the quartic equation has exactly one real root (which occurs when it has a triple root or a single root plus a complex conjugate pair).
+
+The approach will be:
+1. Find when the equation has a triple root (which requires both the function and its first two derivatives to be zero at some point)
+2. Check for cases with one real root and a complex conjugate pair
+3. Output any found k values
+
+```python
+import numpy as np
+from sympy import symbols, Eq, solve, diff, real_roots
+
+def find_k_values():
+    r = symbols('r')
+    k_values = set()
+    
+    # Case 1: Triple root condition (r-a)³*(r-b) = 0
+    # We solve system where f(a)=f'(a)=f''(a)=0
+    for a in np.linspace(-5, 5, 1000):  # Sample potential roots
+        a = round(a, 3)  # Reduce precision for numerical stability
+        if a == 0:
+            continue  # Avoid division by zero in later steps
+            
+        # Coefficients for triple root condition
+        k1 = -(4*a**2 + a + 4)/(a*(a + 4))
+        k2 = -(2*a + 1)/(3*a + 4)
+        k3 = -(8*a + 1)/(12*a + 3)
+        
+        # Find k where all conditions are approximately equal
+        if abs(k1 - k2) < 1e-4 and abs(k1 - k3) < 1e-4:
+            k = round(float(k1), 5)
+            # Verify by counting real roots
+            poly = r**4 + k*r**3 + r**2 + 4*k*r + 16
+            roots = real_roots(poly)
+            if len(roots) == 1:
+                print(f"Found k with triple root: {k}")
+                k_values.add(k)
+    
+    # Case 2: Single real root plus complex conjugate pair
+    # We'll sample k values and count real roots
+    for k in np.linspace(-10, 10, 2000):
+        k = round(k, 3)
+        poly = r**4 + k*r**3 + r**2 + 4*k*r + 16
+        roots = real_roots(poly)
+        if len(roots) == 1:
+            print(f"Found k with single real root: {k}")
+            k_values.add(k)
+    
+    print("\nAll found k values:", sorted(k_values))
+
+find_k_values()
+```

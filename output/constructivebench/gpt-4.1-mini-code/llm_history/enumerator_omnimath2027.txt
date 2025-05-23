@@ -1,0 +1,66 @@
+[write_program]
+The problem defines a polynomial \( p(x) = x^2 - x + 1 \) and a real number \(\alpha\) such that applying \(p\) four times returns \(\alpha\):
+\[
+p(p(p(p(\alpha)))) = \alpha.
+\]
+We want to find the value of
+\[
+(p(\alpha) - 1) \cdot p(\alpha) \cdot p(p(\alpha)) \cdot p(p(p(\alpha))).
+\]
+
+The program will:
+- Enumerate possible real \(\alpha\) values and compute the four iterates under \(p\).
+- Check which \(\alpha\) satisfy \(p^4(\alpha) = \alpha\) approximately.
+- Compute the product \((p(\alpha)-1) \cdot p(\alpha) \cdot p(p(\alpha)) \cdot p(p(p(\alpha)))\) for these \(\alpha\).
+- Print exact expressions if possible and numeric approximations otherwise.
+
+Since exact roots might be complicated, we numerically scan \(\alpha\) values.
+
+```python
+# Enumerate real numbers alpha satisfying p^4(alpha)=alpha for p(x)=x^2-x+1,
+# then compute product (p(alpha)-1)*p(alpha)*p(p(alpha))*p(p(p(alpha))).
+
+def p(x):
+    return x**2 - x + 1
+
+def iterations(alpha, n=4):
+    vals = []
+    x = alpha
+    for _ in range(n):
+        x = p(x)
+        vals.append(x)
+    return vals
+
+def approx_eq(a, b, tol=1e-8):
+    return abs(a - b) < tol
+
+def main():
+    # Search range for alpha
+    # Since p(x) >= 3/4 for x in R (minimum at x=0.5), we try in a reasonable range
+    candidates = []
+    step = 0.001
+    x = -2.0
+    while x <= 3.0:
+        vals = iterations(x)
+        if approx_eq(vals[-1], x):
+            product = (vals[0] - 1) * vals[0] * vals[1] * vals[2]
+            print(f"alpha ~ {x:.3f}: product = {product}")
+            candidates.append(product)
+        x += step
+    # Output distinct approximate values found
+    unique = []
+    for v in candidates:
+        if not any(abs(v - u) < 1e-5 for u in unique):
+            unique.append(v)
+    print("\nDistinct product values found (approx):")
+    for v in unique:
+        print(v)
+    if unique:
+        print("\nPossible exact answer (numerical):")
+        # Note the values appear close to 1 - try printing rounded
+        for v in unique:
+            print(f"~ {round(v, 6)}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,120 @@
+[write_program]
+The problem involves sequences \(a\) and \(b\) with the relations:
+- \(a\) is non-decreasing,
+- \(b(m) = \inf \{ n : a(n) \ge m \}\),
+- \(a(19) = 85\),
+- and \(s = \sum_{i=1}^{19} a(i) + \sum_{j=1}^{85} b(j)\).
+
+We want to find the greatest possible \(s\) with these constraints.
+
+Key observations:
+- \(b(m)\) gives the smallest index \(n\) such that \(a(n) \ge m\).
+- \(a(19) = 85\), so \(a(n) \le 85\) at \(n=19\) (and since \(a\) is non-decreasing, \(a(19)\) is max at index 19).
+- Our task is to find a sequence \(a\) with 19 terms, non-decreasing, ending at 85, to maximize \(s\).
+
+Strategy for enumeration:
+1. Enumerate non-decreasing sequences \(a\) of length 19 with \(a(19) = 85\).
+2. For each sequence, compute sums of \(a\) and \(b\).
+3. Print each computed total.
+4. Keep track of maximum sum and print it at the end.
+
+To reduce combinatorial explosion:
+- Restrict search to sequences that only change a few times and values only increasing.
+- Enumerate possible step points in \(a\) to generate candidate sequences quickly.
+- We try values on a coarse grid to fit in output limit.
+
+```python
+# Enumerate candidate non-decreasing sequences a(1..19) with a(19)=85, compute sums and print results.
+# Compute b(m)=min{n : a(n)>=m}, sum b(m) for m=1..85, sum a(i) for i=1..19.
+# Print s for each candidate and max.
+
+def b_from_a(a, max_m=85):
+    # For each m=1..max_m find minimal n with a[n]>=m
+    b = []
+    n = len(a)
+    for m in range(1, max_m + 1):
+        # Binary search minimal index with a[n] >= m
+        lo, hi = 0, n-1
+        pos = n
+        while lo <= hi:
+            mid = (lo+hi)//2
+            if a[mid] >= m:
+                pos = mid
+                hi = mid - 1
+            else:
+                lo = mid + 1
+        # pos is minimal index such that a[pos]>=m
+        b.append(pos+1 if pos < n else n+1)  # if never found, pos=n, so n+1
+    return b
+
+def sum_sequence(seq):
+    return sum(seq)
+
+def enum_candidates():
+    # Enumerate sequences with few breakpoints to limit output
+    # Let's divide 19 indices into up to 4 blocks:
+    max_val = 85
+    max_print = 40  # Limit number of prints to avoid huge output
+    count_printed = 0
+    max_s = -1
+    max_seq = None
+
+    # Blocks partition indices: (break1, break2, break3)
+    # 0 < break1 < break2 < break3 < 19
+    # To limit complexity let's try breakpoints at positions multiples of 5
+    breaks_options = [0,5,10,15,19]
+    for b1 in breaks_options:
+        for b2 in breaks_options:
+            if b2 > b1:
+                for b3 in breaks_options:
+                    if b3 > b2:
+                        # blocks: indices 0..b1-1, b1..b2-1, b2..b3-1, b3..18
+                        # assign values v1<=v2<=v3<=v4=85
+                        for v1 in range(1, max_val+1):
+                            for v2 in range(v1, max_val+1):
+                                for v3 in range(v2, max_val+1):
+                                    v4 = max_val
+                                    a = []
+                                    a += [v1]*(b1)
+                                    a += [v2]*(b2 - b1)
+                                    a += [v3]*(b3 - b2)
+                                    a += [v4]*(19 - b3)
+                                    # Validate length
+                                    if len(a) != 19:
+                                        continue
+                                    # Compute sums
+                                    sum_a = sum_sequence(a)
+                                    b = b_from_a(a, max_val)
+                                    sum_b = sum_sequence(b)
+                                    s = sum_a + sum_b
+                                    print(f"s={s} a={a} b={b}")
+                                    count_printed += 1
+                                    if s > max_s:
+                                        max_s = s
+                                        max_seq = (list(a), list(b))
+                                    if count_printed >= max_print:
+                                        return max_s, max_seq
+    # Less breakpoints case: monotone increasing sequence from 1 to 85 evenly
+    a = [max(1, min(max_val, (i*max_val)//18)) for i in range(19)]
+    sum_a = sum_sequence(a)
+    b = b_from_a(a, max_val)
+    sum_b = sum_sequence(b)
+    s = sum_a + sum_b
+    print(f"s={s} a={a} b={b}")
+    if s > max_s:
+        max_s = s
+        max_seq = (list(a), list(b))
+
+    return max_s, max_seq
+
+def main():
+    max_s, max_seq = enum_candidates()
+    print(f"Maximum s found: {max_s}")
+    if max_seq:
+        a,b = max_seq
+        print(f"Sequence a (length 19): {a}")
+        print(f"Sequence b (length 85): {b}")
+
+if __name__ == "__main__":
+    main()
+```

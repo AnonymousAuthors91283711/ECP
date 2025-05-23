@@ -1,0 +1,58 @@
+[write_program]
+This problem involves constructing functions on edges of the complete graph with vertex set Fin n, assigning natural numbers to edges under certain adjacency and minimality conditions. We want to explore these assignments for small n > 4, to conjecture about the value of the maximum possible k in the set described.
+
+We will:
+- Take small n, say from 5 to 8.
+- Generate all edges from Fin n.
+- Consider possible assignments f: edges → ℕ with constraints:
+  * f(e) ≥ 1
+  * f is injective
+  * f(e) ≤ k
+  * For each edge e, f(e) = minimal natural number not assigned to any edge adjacent to e.
+
+This last condition means f is a "Greedy Coloring" of the line graph of Kn, i.e., edges colored by minimum excluded color relative to neighbors (edges sharing a vertex).
+
+We want to enumerate max k possible values, i.e., chromatic number of edges with greedy condition.
+
+To keep computation feasible, we will try a greedy coloring of edges and print results (colors assigned) and k = max color used for n=5..8.
+
+```python
+# Enumerate greedy edge colorings for complete graphs on n=5..8 vertices
+# Edges are unordered pairs of vertices
+# Two edges adjacent if they share one vertex
+# Color edges with minimal excluded natural number different from neighbors (Greedy coloring of line graph of Kn)
+# Print max color used (k), and assignments for edges.
+
+from itertools import combinations
+
+def edges(n):
+    return list(combinations(range(n), 2))
+
+def adjacent(e1, e2):
+    return len(set(e1).intersection(set(e2))) == 1
+
+def mex(used):
+    m = 1
+    while m in used:
+        m += 1
+    return m
+
+def greedy_edge_coloring(n):
+    E = edges(n)
+    color = dict()
+    for e in E:
+        neighbor_colors = set()
+        for e2 in E:
+            if e2 != e and adjacent(e, e2) and e2 in color:
+                neighbor_colors.add(color[e2])
+        c = mex(neighbor_colors)
+        color[e] = c
+        print(f"n={n} edge={e} color={c}")
+    max_color = max(color.values())
+    print(f"n={n} max color k={max_color}\n")
+
+for n in range(5, 9):
+    print(f"=== Results for n={n} ===")
+    greedy_edge_coloring(n)
+```
+

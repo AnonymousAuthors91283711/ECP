@@ -1,0 +1,69 @@
+[write_program]
+The problem is about finding the greatest number \( n \) such that there exists a pairwise disjoint set \( p \) of pairs \((x, y)\) with \(x, y \in \{0,\ldots,100\}\), \(x \neq y\), satisfying certain inequalities: \(x \geq y/2 + 7\) and \(y \geq x/2 + 7\). Our task is to enumerate possible candidate values for \(n = |p|\), i.e., the size of such sets.
+
+We interpret the problem as finding the largest size of a family of disjoint pairs (no shared elements), each pair obeying the inequalities. We'll enumerate all valid pairs, then try to find largest matchings of such pairs without overlapping elements from \(\{0,\ldots,100\}\).
+
+We can:
+1. Generate all pairs \((x,y)\) with \(0 \leq x,y \leq 100\), \(x \neq y\), satisfying the inequalities.
+2. For each pair, represent it as a 2-element set of numbers.
+3. We want to select as many pairs as possible with disjoint elements (no number appears in more than one pair).
+4. We try to find maximum matchings in this graph where edges are pairs and vertices are the numbers \(0..100\).
+
+We try a simple greedy and backtracking approach on small subsets or random orderings to get candidate values for \(n\).
+
+Below is a Python program to output candidate sizes \(n\) for such families.
+
+```python
+# Enumerate pairs (x,y) in range 0..100, x!=y, satisfying constraints:
+# x >= y/2 + 7 and y >= x/2 + 7
+# Then find max sets of pairwise disjoint pairs, print candidate sizes.
+
+from itertools import combinations
+
+def valid_pair(x,y):
+    return (x >= y/2 +7) and (y >= x/2 +7)
+
+N = 101
+# Generate all valid pairs (x,y) with x<y to avoid duplicates
+valid_pairs = []
+for x in range(N):
+    for y in range(x+1, N):
+        if valid_pair(x,y) and valid_pair(y,x): # inequalities symmetric
+            valid_pairs.append((x,y))
+
+print(f"Total valid pairs: {len(valid_pairs)}")
+
+# We'll try to greedily construct large sets of disjoint pairs:
+# Use a simple backtracking with pruning to find large matchings.
+
+max_size = 0
+found_sizes = set()
+
+def backtrack(start, used, pairs, current_size):
+    global max_size
+    if current_size > max_size:
+        max_size = current_size
+        print(f"Found matching size: {max_size}")
+        found_sizes.add(max_size)
+        if max_size == len(used)//2:
+            return True  # perfect matching impossible, but early stop
+    
+    for i in range(start, len(valid_pairs)):
+        x,y = valid_pairs[i]
+        if x in used or y in used:
+            continue
+        used.add(x)
+        used.add(y)
+        if backtrack(i+1, used, pairs, current_size+1):
+            return True
+        used.remove(x)
+        used.remove(y)
+    return False
+
+# Run backtracking with pruning
+# Limit recursion depth or runtime to keep output concise
+used_set = set()
+backtrack(0, used_set, valid_pairs, 0)
+
+print(f"Maximum matching size found: {max_size}")
+```

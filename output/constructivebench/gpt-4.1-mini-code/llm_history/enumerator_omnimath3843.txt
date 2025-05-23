@@ -1,0 +1,63 @@
+[write_program]
+The problem is to find the greatest natural number \( d \) that divides the product \(\prod_{k=0}^{16} (n \cdot k + 1)\) for every integer \( n \) from 1 to 2016.
+
+A direct approach is to:
+- Enumerate divisors \( d \).
+- For each candidate divisor, check if it divides the product for all \( n \).
+- Optimize by focusing on prime factors that appear in every such product.
+
+We will:
+- Print encountered divisors during enumeration.
+- Use primes up to a reasonable limit for factor checks.
+- Output all candidates up to a certain threshold, then output the maximum found.
+
+```python
+from math import gcd
+from sympy import primerange
+
+MAX_N = 2016
+K = 17  # Number of terms: k = 0 to 16
+
+def product_sequence(n):
+    prod = 1
+    for k in range(K):
+        prod *= (n * k + 1)
+    return prod
+
+def common_divisor_candidates():
+    # Initialize gcd_candidate as product for n=1
+    gcd_candidate = product_sequence(1)
+    # Compute gcd with products for n=2..MAX_N to find common divisor
+    for n in range(2, MAX_N+1):
+        p = product_sequence(n)
+        gcd_candidate = gcd(gcd_candidate, p)
+        if gcd_candidate == 1:
+            # No common divisor greater than 1
+            break
+    return gcd_candidate
+
+def divisors(n):
+    divs = set()
+    for i in range(1, int(n**0.5)+1):
+        if n % i == 0:
+            divs.add(i)
+            divs.add(n//i)
+    return sorted(divs)
+
+def main():
+    print(f"Parameters: n from 1 to {MAX_N}, product over k=0..{K-1}: (n*k+1)")
+    gcd_candidate = common_divisor_candidates()
+    print(f"Common gcd after checking all n: {gcd_candidate}")
+
+    divs = divisors(gcd_candidate)
+    print(f"Divisors of common gcd (up to 40 displayed):")
+    for d in divs[:40]:
+        print(d)
+    if len(divs) > 40:
+        print("...")
+
+    print(f"Maximum divisor dividing all products: {gcd_candidate}")
+
+if __name__ == "__main__":
+    main()
+```

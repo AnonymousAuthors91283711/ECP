@@ -1,0 +1,122 @@
+[write_program]
+The problem describes a set \( S \subseteq \mathbb{Z} \) containing integers 0 and 10 initially (S0), then extends to \( S_1 = S_{\text{step}}(S_0) \) where elements are roots of integer polynomials with coefficients from \( S_0 \), and then again \( S_2 = S_{\text{step}}(S_0 \cup S_1) \). The final set is \( S_0 \cup S_1 \cup S_2 \).
+
+Your task is to enumerate elements in the closure, i.e., \( S_0 \cup S_1 \cup S_2 \).
+
+We do this by:
+- Starting with \( S_0 = \{0,10\} \).
+- For \( S_1 \), consider all nonzero integer polynomials with coefficients in \( S_0 \), find all integer roots.
+- \( S_0 \cup S_1 \) forms the new set of coefficients for \( S_2 \), repeat root finding.
+- Print all found roots immediately.
+
+We limit to small degree polynomials (degrees 1 and 2) because enumerating all polynomials is impossible. Use polynomial root formulae and simple divisor root checking to find integer roots.
+
+```python
+# Enumerate elements in S0, S1, S2 as per problem description.
+# Polynomials have integer coefficients from the set S.
+# We seek integer roots x with p(x)=0.
+# Start S0={0,10}.
+# S1: roots of polynomials with coeffs in S0.
+# S2: roots of polynomials with coeffs in S0∪S1.
+# Print roots immediately as found.
+
+def integer_roots(poly_coeffs, coeff_set):
+    # poly_coeffs: list of coefficients from highest degree to constant term
+    # Return integer roots if any.
+    deg = len(poly_coeffs)-1
+    # If leading coeff 0, invalid polynomial.
+    if poly_coeffs[0] == 0:
+        return []
+    # All coeffs must be in coeff_set
+    if any(c not in coeff_set for c in poly_coeffs):
+        return []
+    # Try integer roots dividing constant term
+    c = poly_coeffs[-1]
+    if c == 0:
+        # If constant=0 then 0 is root
+        # simplify polynomial dividing by x
+        roots = {0}
+        # Remove last coeff (degree reduced)
+        new_poly = poly_coeffs[:-1]
+        # recurse to find roots of new_poly
+        roots.update(integer_roots(new_poly, coeff_set))
+        return roots
+    # Find divisors of c
+    def divisors(n):
+        n=abs(n)
+        divs = set()
+        for i in range(1,n+1):
+            if n%i==0:
+                divs.add(i); divs.add(-i)
+        return divs
+    divs = divisors(c)
+    roots = set()
+    for r in divs:
+        val = 0
+        for coeff in poly_coeffs:
+            val = val*r + coeff
+        if val == 0:
+            roots.add(r)
+    return roots
+
+def main():
+    S0 = {0,10}
+    print("S0:", S0)
+    # Enumerate degree 1 and 2 polynomials for S1 with coeffs in S0
+    S1 = set()
+    coeffs_S0 = list(S0)
+    # degree 1: ax+b=0, a in S0\{0}, b in S0
+    for a in coeffs_S0:
+        if a == 0:
+            continue
+        for b in coeffs_S0:
+            roots = integer_roots([a,b], S0)
+            for r in roots:
+                if r not in S0 and r not in S1:
+                    S1.add(r)
+                    print("S1 found root:", r)
+    # degree 2: ax^2+bx+c=0, a,b,c in S0, a!=0
+    for a in coeffs_S0:
+        if a==0:
+            continue
+        for b in coeffs_S0:
+            for c in coeffs_S0:
+                roots = integer_roots([a,b,c], S0)
+                for r in roots:
+                    if r not in S0 and r not in S1:
+                        S1.add(r)
+                        print("S1 found root:", r)
+    print("S1:", S1)
+
+    # S2 step: coeffs in S0∪S1
+    S01 = S0.union(S1)
+    coeffs_S01 = list(S01)
+    S2 = set()
+    # degree 1:
+    for a in coeffs_S01:
+        if a == 0:
+            continue
+        for b in coeffs_S01:
+            roots = integer_roots([a,b], S01)
+            for r in roots:
+                if r not in S01 and r not in S2:
+                    S2.add(r)
+                    print("S2 found root:", r)
+    # degree 2:
+    for a in coeffs_S01:
+        if a == 0:
+            continue
+        for b in coeffs_S01:
+            for c in coeffs_S01:
+                roots = integer_roots([a,b,c], S01)
+                for r in roots:
+                    if r not in S01 and r not in S2:
+                        S2.add(r)
+                        print("S2 found root:", r)
+    print("S2:", S2)
+    print("Final set S0∪S1∪S2:", S01.union(S2))
+    print("Cardinality:", len(S01.union(S2)))
+
+if __name__ == "__main__":
+    main()
+```

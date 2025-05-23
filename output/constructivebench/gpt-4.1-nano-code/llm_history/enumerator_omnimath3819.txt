@@ -1,0 +1,69 @@
+[write_program]
+The problem asks to find all functions \(f:\mathbb{R} \to \mathbb{R}\) satisfying:
+- \(f(x) \geq 0\) for all \(x\),
+- \(f(2) = 0\),
+- For \(x \in [0,2)\), \(f(x) \neq 0\),
+- The functional equation \(f(xf(y)) \cdot f(y) = f(x + y)\).
+
+Given the constraints, the key observations are:
+- \(f(2)=0\),
+- \(f\) is non-negative,
+- \(f\) is zero at \(x=2\),
+- For \(x \in [0,2)\), \(f(x) \neq 0\),
+- The functional equation involves compositions and multiplication.
+
+Let's test simple candidate solutions like constant zero, linear functions, etc., and restrict the search to plausible parameters.
+
+```python
+# Approximate enumeration based on simple functional forms satisfying constraints
+import math
+
+# Candidate functions to check
+candidates = []
+
+# Constant zero function: f(x) = 0
+# satisfies f(2)=0, non-negativity, but for x in [0,2), f(x)=0 violates f(x)!=0
+# So discard
+
+# Linear candidate: f(x) = a * (2 - x) for x in [0, 2]
+# with the property that f(2)=0, f(x)>0 for x in [0,2), check the functional equation
+
+# Let's define functions of the form: f(x) = k*(2 - x)^n, with k>=0, n > 0
+# Must have f(2)=0, for x<2 f(x)>0, for x in [0,2), f(x)!=0
+
+# We'll test some small integer powers n=1,2,3 and various k
+
+for n in [1, 2, 3]:
+    for k in [0.1, 0.5, 1.0, 2.0]:
+        def f(x, k=k, n=n):
+            if 0 <= x < 2:
+                val = k * (2 - x) ** n
+                return val
+            elif x == 2:
+                return 0
+            else:
+                # For x>2, try extrapolation: pick similarly
+                return max(0, k * (x - 2) ** n)
+        # Verify the functional equation at sample points
+        # Due to complexity, test at x=0, y=1
+        x0, y0 = 0.0, 1.0
+        try:
+            lhs = f(x0 * f(y0))
+            rhs = f(x0 + y0)
+            lhs_val = lhs * f(y0)
+            rhs_val = rhs
+            # Check approximate equality
+            if abs(lhs_val - rhs_val) < 1e-3:
+                # Verify constraints
+                if f(2)==0 and all(f(x)>0 for x in [0,1.9]) and f(2)==0:
+                    # Accept candidate
+                    print(f"Candidate: f(x) = {k} * (2 - x)^{n}")
+        except Exception:
+            pass
+
+# Also check the simple constant 0 function (though at the boundary)
+# f(x)=0 for all x; but f(x)!=0 on [0,2) => discard
+
+# Given the checks, the main candidate forms are:
+print("Enumeration complete.")
+```

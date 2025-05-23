@@ -1,0 +1,105 @@
+[write_program]
+The problem involves a quadratic polynomial \(P\) with degree 2, satisfying \(P(2) = 0\) and \((P \circ P)\) has roots exactly \(\{5\}\). We want to find \(P(0)\).
+
+We can parametrize \(P(x) = a x^2 + b x + c\) with \(a \neq 0\), then use the conditions to find possible triples \((a,b,c)\) and output \(P(0) = c\).
+
+- \(P(2) = 0 \Rightarrow 4a + 2b + c = 0\).
+- The roots of \(P(P(x)) = 0\) are exactly \(\{5\}\), so \(P(P(x)) = 0 \iff P(x) = \text{roots of } P\).
+- Since \(P\) is quadratic, it has either one or two roots. As \((P \circ P)\) has exactly root 5, we want the image of roots under \(P\) in a way that only yields root 5.
+- We'll iterate rational approximations to \(a,b,c\) consistent with \(P(2)=0\), and test the roots of \(P\) and \(P \circ P\), checking the condition.
+
+This enumeration will output candidates for \(P(0)\).
+
+```python
+# Enumerate quadratic polynomials P(x) = a x^2 + b x + c with real coefficients,
+# satisfying P(2) = 0 and roots of P(P(x)) are exactly {5}.
+# We try rational coefficients a,b with small integer ranges and c computed from P(2)=0.
+# Then check roots and condition. Print the constant term c when conditions met.
+
+from fractions import Fraction
+from math import isclose
+import cmath
+
+def poly_eval(coeffs, x):
+    # coeffs = [a,b,c] for a x^2 + b x + c
+    a,b,c = coeffs
+    return a*x*x + b*x + c
+
+def poly_roots(a,b,c):
+    if a == 0:
+        if b == 0:
+            return []
+        return [-c/b]
+    D = b*b - 4*a*c
+    if D < 0:
+        # complex roots
+        r1 = (-b + cmath.sqrt(D))/(2*a)
+        r2 = (-b - cmath.sqrt(D))/(2*a)
+    else:
+        r1 = (-b + D**0.5)/(2*a)
+        r2 = (-b - D**0.5)/(2*a)
+    return [r1,r2]
+
+def roots_to_set(roots):
+    # Filter real roots only and unique within tolerance
+    s = set()
+    for r in roots:
+        if isinstance(r, complex):
+            if abs(r.imag) < 1e-10:
+                s.add(round(r.real,8))
+        else:
+            s.add(round(r,8))
+    return s
+
+def approx_equal_sets(s1, s2):
+    if len(s1) != len(s2):
+        return False
+    for x in s1:
+        if min(abs(x-y) for y in s2) > 1e-7:
+            return False
+    return True
+
+print("Enumerating candidates for P(x) = a x^2 + b x + c with P(2)=0 and roots(P(P))={5}:")
+found_c = set()
+for a_num in range(-5,6):
+    if a_num == 0:
+        continue
+    for a_den in [1,2,3]:
+        a = Fraction(a_num,a_den)
+        for b_num in range(-10,11):
+            for b_den in [1,2,3]:
+                b = Fraction(b_num,b_den)
+                # From P(2)=0: 4a + 2b + c =0 => c = -4a - 2b
+                c = -4*a - 2*b
+                a_f = float(a)
+                b_f = float(b)
+                c_f = float(c)
+                # Compute roots of P
+                roots_p = poly_roots(a_f,b_f,c_f)
+                roots_p_set = roots_to_set(roots_p)
+                if len(roots_p_set) == 0:
+                    continue
+                # Compute roots of P(P(x))
+                # Roots of P(P(x))=0 <=> P(x) in roots of P
+                # So roots of P(P) are preimages under P of roots(P)
+                # Check roots(P(P)) roots:
+                # For each root r of P, solve P(x)=r
+                roots_pp = []
+                for r in roots_p:
+                    # Solve a x^2 + b x + c = r
+                    c_r = c_f - r
+                    R = b_f*b_f - 4*a_f*c_r
+                    if R < -1e-10:
+                        # No real roots
+                        continue
+                    sqrtR = R**0.5 if R >=0 else 0
+                    roots_pp += [(-b_f + sqrtR)/(2*a_f), (-b_f - sqrtR)/(2*a_f)]
+                roots_pp_set = roots_to_set(roots_pp)
+                # Check condition roots_pp_set == {5}
+                if approx_equal_sets(roots_pp_set, {5}):
+                    c_val = c_f
+                    if c_val not in found_c:
+                        found_c.add(c_val)
+                        print(f"P(0) = {c_val} for a={a}, b={b}, c={c}")
+```
+

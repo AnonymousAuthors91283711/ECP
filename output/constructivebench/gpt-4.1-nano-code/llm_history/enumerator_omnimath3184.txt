@@ -1,0 +1,86 @@
+[write_program]
+This problem involves analyzing the behavior of a sequence \( M(n) \) defined in terms of a supremum over certain \( m \), where the condition involves binomial coefficients. The goal is to find the asymptotic limit of \(\frac{M(n)}{n}\). From the condition:
+
+\[
+M(n) = \sup \left\{ m \mid m \ge n, \text{ and } (m \ge 1 \Rightarrow \binom{m}{n-1} > \binom{m-1}{n}) \right\}
+\]
+
+Since \(\binom{m}{n-1}\) and \(\binom{m-1}{n}\) are standard binomial coefficients, the key is to analyze when \(\binom{m}{n-1} > \binom{m-1}{n}\).
+
+Recall the identity:
+
+\[
+\binom{m}{n-1} = \frac{m}{n-1} \binom{m-1}{n-1}
+\]
+and
+\[
+\binom{m-1}{n} = \frac{m-n}{n} \binom{m-1}{n-1}
+\]
+
+which leads to the comparison:
+
+\[
+\binom{m}{n-1} > \binom{m-1}{n} \iff \frac{m}{n-1} > \frac{m - n}{n}
+\]
+
+After algebraic manipulation, this tells us that the inequality
+
+\[
+\frac{m}{n-1} > \frac{m - n}{n}
+\]
+
+is equivalent to the approximate threshold:
+
+\[
+m > n
+\]
+
+meaning for large \( m \), the inequality holds when \( m \) exceeds some multiple of \( n \). To explore numerically, we sample small \( n \), compute the \( m \) thresholds where the inequality switches, and then see the asymptotic behavior of the supremum of such \( m \).
+
+The core idea:
+
+- For each small \( n \), find the minimal \( m \ge n \) satisfying the inequality.
+- The supremum \( M(n) \) is then just above that minimal \( m \), i.e., approximately that minimal \( m \).
+
+The ratio \( M(n)/n \) should approach a limit as \( n \to \infty \). Because the inequality roughly holds for \( m > n \), the supremum should scale proportionally with \( n \), at least asymptotically approaching some constant.
+
+The code below estimates \(\lim_{n \to \infty} M(n)/n\) by numerically evaluating for small \( n \).
+
+```python
+import math
+
+def binom(m, k):
+    # Efficient calculation of binomial coefficient
+    if k < 0 or k > m:
+        return 0
+    return math.comb(m, k)
+
+# For small n, find the minimal m >= n such that
+# binom(m, n-1) > binom(m-1, n)
+# essentially find the smallest m ≥ n satisfying the inequality.
+
+max_n = 30  # sample size for small n
+results = []
+
+for n in range(1, max_n + 1):
+    m = n
+    # Since the inequality is approximately true when m > n,
+    # we search upward to find where it holds
+    while True:
+        left = binom(m, n - 1)
+        right = binom(m - 1, n)
+        if left > right:
+            results.append((n, m, m / n))
+            break
+        m += 1
+
+# Find the asymptotic limit estimate as average ratio
+ratios = [m_over_n for _, _, m_over_n in results]
+average_ratio = sum(ratios) / len(ratios)
+
+# Print all results
+for n, m, ratio in results:
+    print(f"n={n}, M(n)≈{m}, M(n)/n≈{ratio:.2f}")
+
+print(f"\nEstimated limit of M(n)/n as n→∞: {average_ratio:.2f}")
+```

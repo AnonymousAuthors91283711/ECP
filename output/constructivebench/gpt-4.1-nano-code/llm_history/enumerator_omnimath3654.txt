@@ -1,0 +1,71 @@
+[write_program]
+The problem involves identifying the greatest possible value of `k` such that there exists a set `C` with `k` elements, and a unique subset `T` of `C` with size `n`, satisfying some conditions about distinctness of coordinates. To help analyze this, I will generate small sample sets and explore how many maximum elements `k` can be while maintaining the existence of such a subset `T`. 
+
+I will:
+- Fix small values of `n`, such as 1, 2, 3.
+- Enumerate potential sets `C` with increasing size `k`.
+- Check if there exists a unique subset `T` of `C`, with size `n`, and with the specified properties.
+- Stream possible `k` values directly upon discovery.
+
+Since the problem is combinational and constraints are complex, we'll brute-force small cases for illustration.
+
+```python
+# Enumerate possible values of k for small n
+def test_case(n, max_k=10):
+    results = []
+    for k in range(n, max_k+1):  # k must be at least n
+        found = False
+        # Generate all sets C with size k (simulate by generating tuples)
+        # For small exploration, generate C as a set of points with small coordinates
+        # For simplicity, set coordinate ranges
+        for i in range(1, 4):
+            for j in range(1, 4):
+                C = {(i, j)}
+                # Continue expanding C until size k
+                # For small cases, manually create or extend sets
+                # Here, just a heuristic to generate C of size k
+                # For illustration, assume C contains points with varying coordinates
+                # For simplicity, just pick the first k points in a grid
+                C_points = {(x // 2 + 1, y // 2 + 1) for x in range(k*2) for y in range(k*2)}
+                C_points = list(C_points)[:k]
+                # Now, check existence of a unique subset T with size n
+                from itertools import combinations
+                valid_Ts = []
+                for T in combinations(C_points, n):
+                    # Verify properties:
+                    # 1. T has size n
+                    # 2. All elements in T are distinct points
+                    # 3. Elements differ either in first coordinate or second coordinate
+                    if all(i != j for idx1, i in enumerate(T) for idx2, j in enumerate(T) if idx1 != idx2):
+                        continue
+                    # Check the condition in the problem:
+                    # ∀ (i, j) in T, i ≠ j → i.1 ≠ j.1 ∧ i.2 ≠ j.2
+                    # i.e., elements are mutually distinct in at least one coordinate
+                    def pairwise_condition(points):
+                        for p1 in points:
+                            for p2 in points:
+                                if p1 != p2:
+                                    if p1[0] == p2[0] and p1[1] == p2[1]:
+                                        return False
+                        return True
+                    if pairwise_condition(T):
+                        valid_Ts.append(T)
+                # Check if exactly one such T
+                if len(valid_Ts) == 1:
+                    print(f"Found k={k} with a unique T for n={n}")
+                    results.append(k)
+                    found = True
+                    break
+        if not found:
+            print(f"No suitable set found for k={k} and n={n}")
+    # Output maximum k found
+    if results:
+        print(f"Maximum k for n={n} is {max(results)}")
+    else:
+        print(f"No valid k found for n={n}")
+
+# Run sample exploration for n=1,2,3
+for n in range(1,4):
+    print(f"Exploring for n={n}")
+    test_case(n)
+```

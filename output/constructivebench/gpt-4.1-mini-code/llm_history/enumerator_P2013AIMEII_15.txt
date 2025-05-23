@@ -1,0 +1,59 @@
+[write_program]
+The problem is about finding positive angles \(A, B, C\) summing to \(\pi\) with \( \cos A = \frac{p + q \sqrt{r}}{s} \), where \(p, q, r, s\) satisfy certain properties including coprimality, \(r\) is squarefree and not a perfect square, and \(p+q+r+s\) gives the desired answer. To assist conjecturing the answer, I'll enumerate small values for \(p, q, r, s\) with \(r\) squarefree (up to a small limit), check that \(\frac{p + q \sqrt{r}}{s}\) lies in \([-1,1]\), and print candidates along with \(p+q+r+s\).
+
+This will print possible quadruples and their sums. This data may suggest the true \(p+q+r+s\). We only pick small values for enumeration feasibility.
+
+```python
+import math
+
+# Check if n is squarefree: no square prime factors.
+def is_squarefree(n):
+    if n < 1:
+        return False
+    i = 2
+    while i*i <= n:
+        count = 0
+        while n % (i*i) == 0:
+            return False  # divisible by square >1
+        i += 1
+    return True
+
+# Check if two integers are coprime
+def gcd(a,b):
+    while b:
+        a,b = b, a%b
+    return a
+
+def is_coprime(a,b):
+    return gcd(a,b) == 1
+
+def enumerate_candidates(max_val=10):
+    # We'll search over p,q,s up to max_val and r squarefree up to max_val
+    # p,q can be zero or positive, but q != 0 since sqrt(r) term is required
+    for r in range(2, max_val+1):
+        if not is_squarefree(r):
+            continue
+        # r should not be a perfect square: check that
+        root = int(round(math.sqrt(r)))
+        if root*root == r:
+            continue
+        for s in range(1, max_val+1):
+            for p in range(-max_val, max_val+1):
+                for q in range(-max_val, max_val+1):
+                    # skip q=0 since no sqrt term
+                    if q == 0:
+                        continue
+                    # Check coprimality of (p+q) and s as per problem
+                    if not is_coprime(p+q, s):
+                        continue
+                    val = (p + q*math.sqrt(r))/s
+                    if -1 <= val <= 1:
+                        # compute sum line p+q+r+s
+                        ssum = p + q + r + s
+                        print(f"p={p}, q={q}, r={r}, s={s}, cosA={val:.5f}, sum={ssum}")
+
+if __name__ == "__main__":
+    print("Enumerating candidates for p,q,r,s with squarefree r, |cos A|<=1")
+    enumerate_candidates(10)
+```
+

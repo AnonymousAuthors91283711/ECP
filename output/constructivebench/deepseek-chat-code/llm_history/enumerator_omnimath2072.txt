@@ -1,0 +1,52 @@
+[write_program]
+This problem involves computing the volume of a set in 3D space defined by distance constraints to 4 points forming a regular tetrahedron. We'll write a Python program to estimate this volume numerically by sampling points and checking the condition.
+
+The approach:
+1. Generate points forming a regular tetrahedron (4 points where each pair is distance 1 apart)
+2. Sample points in a bounding box around the tetrahedron
+3. Check if each point satisfies the given condition (sum of squared distances ≤ 15)
+4. Count valid points and estimate volume based on sampling density
+
+```python
+import numpy as np
+from itertools import product
+
+def generate_tetrahedron():
+    # Generate 4 points forming a regular tetrahedron with edge length 1
+    points = np.zeros((4, 3))
+    points[1, 0] = 1
+    points[2, 0] = 0.5
+    points[2, 1] = np.sqrt(3)/2
+    points[3, 0] = 0.5
+    points[3, 1] = np.sqrt(3)/6
+    points[3, 2] = np.sqrt(6)/3
+    return points
+
+def is_in_region(p, tetra_points):
+    # Check if sum of squared distances to tetrahedron points ≤ 15
+    return sum(np.sum((p - q)**2) for q in tetra_points) <= 15
+
+def estimate_volume(samples_per_dim=50):
+    tetra_points = generate_tetrahedron()
+    
+    # Bounding box that contains the region (empirically determined)
+    min_coord, max_coord = -2, 3
+    total_samples = samples_per_dim**3
+    count = 0
+    
+    for i, j, k in product(range(samples_per_dim), repeat=3):
+        x = min_coord + (max_coord - min_coord) * i / (samples_per_dim - 1)
+        y = min_coord + (max_coord - min_coord) * j / (samples_per_dim - 1)
+        z = min_coord + (max_coord - min_coord) * k / (samples_per_dim - 1)
+        p = np.array([x, y, z])
+        
+        if is_in_region(p, tetra_points):
+            count += 1
+            print(f"Found valid point: {p}")  # Stream partial results
+    
+    volume = (count / total_samples) * (max_coord - min_coord)**3
+    print(f"\nEstimated volume: {volume}")
+
+if __name__ == "__main__":
+    estimate_volume(samples_per_dim=30)
+```

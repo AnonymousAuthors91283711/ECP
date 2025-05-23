@@ -1,0 +1,122 @@
+[write_program]
+This problem involves a quartic polynomial with roots in arithmetic progression: specifically roots a-3d, a-d, a+d, and a+3d, all distinct, and its expansion is X^4 + bX^2 + kX + 225 for some integers b and k (b is olympiadbench2791_answer, which we want to find). We want to find those integer values b (and k) that fit this factorization exactly with these roots.
+
+To approach this numerically and conjecture the integer values "b" and "k", we can:
+- Iterate over integer b candidates,
+- For each b, we form the quartic X^4 + bX^2 + kX + 225,
+- Equate this to the expanded polynomial from roots (a-3d), (a-d), (a+d), (a+3d),
+- Use that the roots form a symmetric pattern around a, with spacing d,
+- Express the coefficients in terms of a and d,
+- Solve for k, a, d given b and the constant term 225,
+- Check if a and d satisfy constraints (d ≠ 0, distinct roots),
+- Print candidate b and k (since k is an integer parameter in the problem).
+
+Because k, b, a, d might be integers or rational, we search over small integer b and k, then compute a and d from the system. 
+
+Let's implement the equations accordingly:
+
+The expanded polynomial from roots r_i:
+(X - (a-3d)) (X - (a-d)) (X - (a+d)) (X - (a+3d))
+
+Calculate its expanded form coefficient by coefficient and match it to:
+X^4 + b X^2 + k X + 225.
+
+From the polynomial root relations:
+
+Sum of roots = 4a = 0 => The problem polynomial has no cubic term => sum of roots = 0 => a=0
+
+Next,
+
+Sum of products of roots two at a time:
+S2 = (a-3d)(a-d)+(a-3d)(a+d)+(a-3d)(a+3d)+(a-d)(a+d)+(a-d)(a+3d)+(a+d)(a+3d)
+Given that a=0:
+S2 = (-3d)(-d) + (-3d)(d) + (-3d)(3d) + (-d)(d) + (-d)(3d) + (d)(3d)
+= 3d^2 -3d^2 -9d^2 - d^2 -3d^2 + 3d^2 = -10 d^2
+
+So coefficient of X^2 = S2 = -10 d^2 = b → b = -10 d^2
+
+Sum of products of roots three at a time:
+S3 = sum of triple products of roots with a=0:
+(-3d)(-d)(d) + (-3d)(-d)(3d) + (-3d)(d)(3d) + (-d)(d)(3d)
+= (-3d)(-d)(d) + (-3d)(-d)(3d) + (-3d)(d)(3d) + (-d)(d)(3d)
+= 3 d^3 + 9 d^3 - 27 d^3 - 3 d^3 = -18 d^3
+
+Coefficient of X is -S3 = -(-18 d^3) = 18 d^3 = k
+
+Constant term: product of roots
+(-3d)(-d)(d)(3d) = 9 d^4 = 225 → so d^4 = 25
+
+d^4=25 → d^2=±5 (but d^2≥0, so d^2=5), so d = ± sqrt(5)
+
+Then:
+
+b = -10 d^2 = -10*5 = -50  
+k = 18 d^3 = 18 * d * d^2 = 18 * d * 5 = 90 d
+
+d is ± sqrt(5), so k is ±90 * sqrt(5), irrational, so no integer k.
+
+Probably problem accepts real k.
+
+Since the problem states a,d ∈ ℝ, and k ∈ ℤ, it doesn't explicitly say k is integer, but in the code k is ℤ, so maybe we consider integer k only.
+
+We will enumerate integer b and k over small ranges, attempt to solve for a,d rational matching the equations and check roots distinctness.
+
+We proceed by enumerating b= -50 only (from derived formula) and find suitable k.
+
+Let's write code to confirm these deductions.
+
+```python
+# enumerator.py
+from math import isclose, sqrt
+
+# We know roots are a-3d, a-d, a+d, a+3d
+# polynomial: X^4 + b X^2 + k X + 225 = (X - (a-3d))...(X-(a+3d))
+
+# Relations:
+# sum roots = 4a = 0 => a=0
+# sum products two at a time = b
+# sum products three at a time = -k (since polynomial is X^4 + bX^2 + kX + 225)
+# product roots = 225
+
+# For a=0:
+# sum two prod = -10 d^2 = b
+# sum triple prod = -18 d^3 = -k => k = 18 d^3
+# product roots = 9 d^4 = 225 => d^4 = 25 => d^2 = 5 or -5 (only 5 valid)
+
+def approx_int(x, tol=1e-9):
+    # Return nearest integer if close enough, else None
+    n = round(x)
+    if isclose(x, n, abs_tol=tol):
+        return n
+    return None
+
+def roots_distinct(a, d):
+    # roots: a-3d, a-d, a+d, a+3d
+    r = [a -3*d, a-d, a+d, a+3*d]
+    return len(set(r)) == 4
+
+def main():
+    # fixed a=0 from sum roots zero
+    a = 0
+
+    # from d^4=25
+    d_abs = 25**0.25
+    # both positive and negative d
+    for d in (d_abs, -d_abs):
+        b = -10 * d**2
+        # Check b integer
+        b_int = approx_int(b)
+        if b_int is None:
+            continue
+        k = 18 * (d**3)
+        k_int = approx_int(k)
+        # print even if k not integer to show info
+        print(f"Trying d={d:.6f}, a={a}, b={b} (approx int: {b_int}), k={k} (approx int: {k_int})")
+        if roots_distinct(a,d):
+            print(f"Roots distinct with a={a}, d={d:.6f}")
+            print(f"Candidate b = {b_int}, k = {k_int if k_int is not None else k}")
+
+if __name__ == "__main__":
+    main()
+```
+This code tests the known solution from analysis and prints possible b,k,a,d fitting the conditions.

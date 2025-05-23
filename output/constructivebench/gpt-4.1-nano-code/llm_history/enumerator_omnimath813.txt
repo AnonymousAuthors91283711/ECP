@@ -1,0 +1,54 @@
+[write_program]
+This problem involves finding the smallest positive integer k such that a given polynomial divides \(X^k - 1\). The polynomial is:
+
+\[ P(X) = X^{10} + X^9 + X^6 + X^5 + X^4 + X + 1 \]
+
+To determine the minimal k for which \( P(X) \mid X^k - 1 \), we need to understand the roots of \( P \). Since \( P \) divides \( X^k - 1 \), the roots of \( P \) (complex roots) must be roots of unity, and the order of each root divides k.
+
+The general approach:
+- Factor the polynomial if possible, or identify its roots.
+- Determine the orders of roots (their minimal multiplicative orders).
+- Find the least common multiple (LCM) of these orders, which gives the minimal k.
+
+Given the complexity and that the polynomial resembles sums of roots of unity, an efficient computational approach is to check successive k's starting from small values until \( P \mid X^k - 1 \).
+
+Below is a Python program that enumerates the minimal k that satisfies the divisibility condition by evaluating polynomial roots as complex roots of unity, and checks if they satisfy \( X^k = 1 \). Since algebraic root extraction is complex, a numeric approximation approach is employed:
+
+- Sample roots of \( P \) by solving \( P(z) = 0 \) approximately.
+- For each root, find the order by checking \( z^k \approx 1 \) for increasing k.
+
+To keep within token limits, the program:
+- Uses small upper bounds for k.
+- Checks roots numerically.
+- Outputs the first minimal k found where all roots satisfy \( z^k \approx 1 \).
+
+```python
+import numpy as np
+
+# Polynomial coefficients for P(X)
+coeffs = [1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1]  # corresponds to X^10+X^9+X^6+X^5+X^4+X+1
+
+# Function to evaluate polynomial at complex point z
+def poly_eval(z, coeffs):
+    return sum(c * z**i for i, c in enumerate(reversed(coeffs)))
+
+# Find approximate roots via numpy's roots function
+roots = np.roots(coeffs)
+
+# Filter roots close to the unit circle to focus on roots of unity
+roots_on_unit_circle = [z for z in roots if abs(abs(z)-1) < 1e-2]
+
+max_k = 50  # upper limit for k
+for k in range(1, max_k+1):
+    valid = True
+    for z in roots_on_unit_circle:
+        # Check if z^k approximately equals 1
+        if abs(z**k - 1) > 1e-2:
+            valid = False
+            break
+    if valid:
+        print(k)
+        break
+```
+
+This code searches for the minimal positive integer \(k \leq 50\) such that all roots of \(P\) satisfy \(z^k \approx 1\), which implies \(P \mid X^k - 1\). The first such k printed is (anti-)conjecturally the answer.

@@ -1,0 +1,53 @@
+[write_program]
+The problem asks for the greatest positive integer n such that the sum of floor(log(k+1) + log(n)/log(10)) for k from 0 to 99 is ≤ 300. We need to find the maximum n satisfying this condition.
+
+We'll approach this by:
+1. Understanding that floor(log(k+1) + log(n)/log(10)) is the number of digits in (k+1)*n
+2. The sum represents the total digits when writing n, 2n, 3n, ..., 100n
+3. We'll binary search for the maximum n where this sum ≤ 300
+
+```python
+import math
+
+def calculate_total_digits(n):
+    """Calculate the sum of digits in n, 2n, 3n, ..., 100n"""
+    total = 0
+    log10 = math.log(10)
+    logn = math.log(n)
+    for k in range(100):
+        log_term = math.log(k+1) + logn / log10
+        total += int(log_term)
+    return total
+
+def find_max_n():
+    """Binary search for the maximum n where total digits <= 300"""
+    low = 1
+    high = 10**6  # Start with a reasonable upper bound
+    
+    # First find an upper bound where sum exceeds 300
+    while calculate_total_digits(high) <= 300:
+        high *= 2
+    
+    # Binary search between low and high
+    best_n = 0
+    while low <= high:
+        mid = (low + high) // 2
+        total = calculate_total_digits(mid)
+        if total <= 300:
+            best_n = mid
+            low = mid + 1
+        else:
+            high = mid - 1
+    
+    # Verify nearby values in case of off-by-one
+    for n in range(best_n - 2, best_n + 3):
+        if n > 0:
+            total = calculate_total_digits(n)
+            print(f"n={n}, total={total}")
+    
+    return best_n
+
+if __name__ == "__main__":
+    max_n = find_max_n()
+    print(f"\nThe greatest n is {max_n}")
+```

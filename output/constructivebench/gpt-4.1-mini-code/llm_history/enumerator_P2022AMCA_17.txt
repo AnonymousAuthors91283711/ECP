@@ -1,0 +1,82 @@
+[write_program]
+The problem involves finding values of \(a \in \mathbb{R}\) such that the equation
+\[
+a (\sin x + \sin 2x) = \sin 3x
+\]
+has two distinct solutions \(x_1, x_2 \in (0, \pi)\) with \(x_1 \neq x_2\). The goal in the theorem is to characterize \(a\) as one of three distinct values \(p < q < r\) with \(p + q + r = \text{some constant}\).
+
+This suggests investigating the function
+\[
+f_a(x) := a (\sin x + \sin 2x) - \sin 3x
+\]
+and for fixed values of \(a\), checking the number of distinct solutions in \((0, \pi)\).
+
+We want to enumerate triples \((p, q, r)\) of distinct real numbers, candidates for \(a\), such that each coincides with a root \(a\) corresponding to the condition of two distinct solutions in \((0,\pi)\).
+
+A practical approach: For sample values of \(a\) in some range, find \(x \in (0,\pi)\) solving the equation, then check if multiple distinct solutions exist. Track \(a\)-values for which the number of solutions changes (i.e., multiple roots), collect candidates, and sum triples.
+
+The sine terms suggest the equation is transcendental but manageable for numerical root-finding and counting zeros using a fine grid.
+
+Below is the enumerator program:
+
+- Try sample \(a\) values from -5 to 5 with small step
+- For each \(a\), evaluate \(g_a(x) = a(\sin x + \sin 2x) - \sin 3x\) on a fine grid in (0, π)
+- Count sign changes (indicating zeros)
+- Print the values of \(a\) for which there are at least two distinct zeros
+- Store such \(a\)'s and try to find triples \(p < q < r\)
+- Print such triples and their sums
+
+```python
+import math
+
+def sign_changes(vals):
+    cnt = 0
+    for i in range(len(vals) -1):
+        if vals[i]*vals[i+1] < 0:
+            cnt +=1
+    return cnt
+
+def f(a, x):
+    return a*(math.sin(x) + math.sin(2*x)) - math.sin(3*x)
+
+def main():
+    # sample a values from -5 to 5 step 0.01
+    a_candidates = []
+    step_a = 0.005
+    xs = [i*math.pi/1000 for i in range(1, 1000)] # avoid 0 and pi boundaries
+
+    for i in range(int(-5/step_a), int(5/step_a)+1):
+        a = i*step_a
+        vals = [f(a,x) for x in xs]
+        zeros = sign_changes(vals)
+        if zeros >= 2:
+            print(f"a={a:.5f} has {zeros} distinct zeros in (0,π)")
+            a_candidates.append(a)
+
+    # Extract distinct sorted a values with two or more zeros
+    ac = sorted(set(round(a,5) for a in a_candidates))
+
+    # Enumerate triples p<q<r from ac with spacing at least step_a
+    print("\nTriples (p,q,r) from candidates with p<q<r:")
+    n = len(ac)
+    for i in range(n):
+        p = ac[i]
+        for j in range(i+1,n):
+            q = ac[j]
+            for k in range(j+1,n):
+                r = ac[k]
+                # print only some triples to limit output
+                if r - p > 0.05: # spacing threshold
+                    s = p+q+r
+                    print(f"p={p:.5f}, q={q:.5f}, r={r:.5f}, sum={s:.5f}")
+
+    # print minimal and maximal sum among triples
+    sums = [p+q+r for i,p in enumerate(ac) for j,q in enumerate(ac) if j>i for k,r in enumerate(ac) if k>j]
+    if sums:
+        print(f"\nMinimum sum of triple candidates: {min(sums):.5f}")
+        print(f"Maximum sum of triple candidates: {max(sums):.5f}")
+
+if __name__ == "__main__":
+    main()
+```
+This program outputs values of \(a\) where two or more solutions exist, lists possible triples, and their sums to assist in conjecturing the constant \(P2022AMCA\_17\_answer\).

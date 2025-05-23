@@ -1,0 +1,88 @@
+[write_program]
+The problem relates to two moduli \( m \) and \( n \) and respective remainders \( r \) and \( s \) for certain integers with given conditions. The task is to find possible quadruples \( (m, n, r, s) \) such that:
+- \( r > 0 \),
+- \( 702 \equiv r \pmod{m} \), \( 787 \equiv r \pmod{m} \), \( 855 \equiv r \pmod{m} \),
+- \( s > 0 \),
+- \( 412 \equiv s \pmod{n} \), \( 722 \equiv s \pmod{n} \), \( 815 \equiv s \pmod{n} \),
+- \( s \neq r \).
+
+The answer is \( m + n + r + s \).
+
+To solve, note:
+- The condition \( 702 \equiv r \pmod{m} \), \( 787 \equiv r \pmod{m} \), \( 855 \equiv r \pmod{m} \) means \( m \mid (787-702) \) and \( m \mid (855-702) \).
+- Similarly for \( n \) with the second set.
+
+So \( m \) divides \(\gcd(85,153)=17\), and \( n \) divides \(\gcd(310,403)=1\).
+
+Since \( n=1 \) gives no remainder \(s >0\), re-examining gcd for \(n\) is necessary, or try all divisors up to 1000.
+
+We'll enumerate divisors and possible remainder values to find candidates. Then print all possible sums \(m+n+r+s\).
+
+```python
+# Enumerate all (m,r) with m|gcd(85,153) and r>0 congruent with 702 mod m 
+# and same for (n,s) with n|gcd(310,403) and s>0, s!=r.
+# Output all sums m+n+r+s found and finally minimal sum.
+
+def gcd(a,b):
+    while b:
+        a,b=b,a%b
+    return a
+
+def divisors(x):
+    divs=[]
+    for i in range(1,int(x**0.5)+1):
+        if x%i==0:
+            divs.append(i)
+            if x//i!=i:
+                divs.append(x//i)
+    return sorted(divs)
+
+def valid_m_r():
+    diff1=787-702 #85
+    diff2=855-702 #153
+    g=gcd(diff1,diff2) #17
+
+    candidates=[]
+    for m in divisors(g):
+        r = 702 % m
+        if r>0:
+            # check 787% m == r and 855% m == r
+            if 787 % m == r and 855 % m == r:
+                candidates.append( (m,r) )
+    return candidates
+
+def valid_n_s():
+    diff1=722-412 #310
+    diff2=815-412 #403
+    g=gcd(diff1,diff2) #gcd(310,403)
+    # Let's compute gcd(310,403) explicitly:
+    # 403%310=93
+    # 310%93=31
+    # 93%31=0 , so gcd=31
+    g=31
+
+    candidates=[]
+    for n in divisors(g):
+        s=412 % n
+        if s>0:
+            if 722 % n == s and 815 % n == s:
+                candidates.append( (n,s) )
+    return candidates
+
+mrs=valid_m_r()
+nss=valid_n_s()
+
+results=set()
+for (m,r) in mrs:
+    for (n,s) in nss:
+        if s!=r:
+            total = m + n + r + s
+            print(f"m={m}, r={r}, n={n}, s={s}, sum={total}")
+            results.add(total)
+
+if results:
+    print(f"Minimum sum: {min(results)}")
+else:
+    print("No solutions found")
+```
+This program enumerates all possible tuples and prints their sums as found and finally the minimal sum.

@@ -1,0 +1,81 @@
+[write_program]
+The problem studies the set of complex numbers of the form ((1 + i)/√2)^n for n ∈ ℕ. Since (1 + i)/√2 is a complex number on the unit circle (its magnitude is 1), these numbers correspond to points on the unit circle at angles n·π/4 because (1 + i)/√2 = cis(π/4). The problem asks to confirm the set is finite and find its cardinality (number of distinct elements).
+
+Key insight: (1 + i)^n/ (√2)^n = ((1+i)/√2)^n = exp(i·n·π/4)
+The distinct values correspond to different angles modulo 2π. Since π/4 increments, angles repeat every 8 steps.
+
+So the set has 8 elements corresponding to n=0..7. Let's enumerate and print these values exactly as complex numbers and confirm the cardinality.
+
+```python
+from math import sqrt
+from fractions import Fraction
+from cmath import exp, pi
+
+# (1 + i)/√2 corresponds to exp(iπ/4)
+# We'll enumerate values for n in 0..15 to see repetition, but print only unique
+
+base_angle = pi/4
+vals = {}
+print("Enumerating values of ((1 + i)/sqrt(2))^n:")
+
+for n in range(16):
+    z = exp(1j * base_angle * n)
+    # To express exactly, z = cos(nπ/4) + i sin(nπ/4)
+    # Precompute cos and sin values with sqrt(2)/2 etc. for multiples of 45°
+    # Use known exact values for cos and sin of multiples of π/4
+    angle_mod8 = n % 8
+    # exact cos and sin for multiples of π/4
+    # cos(0)=1, sin(0)=0
+    # cos(π/4)=sin(π/4)=√2/2
+    # cos(π/2)=0, sin(π/2)=1
+    # cos(3π/4)=-√2/2, sin(3π/4)=√2/2
+    # cos(π)=-1, sin(π)=0
+    # cos(5π/4)=-√2/2, sin(5π/4)=-√2/2
+    # cos(3π/2)=0, sin(3π/2)=-1
+    # cos(7π/4)=√2/2, sin(7π/4)=-√2/2
+
+    sqrt2_2 = sqrt(2)/2
+    if angle_mod8 == 0:
+        cos_val, sin_val = 1, 0
+    elif angle_mod8 == 1:
+        cos_val, sin_val = sqrt2_2, sqrt2_2
+    elif angle_mod8 == 2:
+        cos_val, sin_val = 0, 1
+    elif angle_mod8 == 3:
+        cos_val, sin_val = -sqrt2_2, sqrt2_2
+    elif angle_mod8 == 4:
+        cos_val, sin_val = -1, 0
+    elif angle_mod8 == 5:
+        cos_val, sin_val = -sqrt2_2, -sqrt2_2
+    elif angle_mod8 == 6:
+        cos_val, sin_val = 0, -1
+    else: # 7
+        cos_val, sin_val = sqrt2_2, -sqrt2_2
+
+    # Represent the number as a tuple of exact values if possible
+    # Use sqrt(2)/2 as notation to highlight exactness
+    # We'll print as string expressions for exactness:
+    def val_str(x):
+        # Check for 0,1,-1, or ±√2/2
+        if abs(x - 0) < 1e-12:
+            return "0"
+        elif abs(x - 1) < 1e-12:
+            return "1"
+        elif abs(x + 1) < 1e-12:
+            return "-1"
+        elif abs(x - sqrt2_2) < 1e-12:
+            return "√2/2"
+        elif abs(x + sqrt2_2) < 1e-12:
+            return "-√2/2"
+        else:
+            return f"{x:.3f}"
+
+    rep = f"{val_str(cos_val)} + {val_str(sin_val)}i"
+    if rep not in vals:
+        vals[rep] = n
+        print(f"n={n}: {rep}")
+
+print(f"Number of distinct values: {len(vals)}")
+print("Hence, the set is finite with cardinality 8.")
+```
+

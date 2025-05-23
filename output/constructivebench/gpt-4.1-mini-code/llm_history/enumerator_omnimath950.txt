@@ -1,0 +1,55 @@
+[write_program]
+The problem involves counting injective functions f from Fin 100 to Fin 2 × Fin 50 (i.e., pairs of a bit and a number from 0 to 49), with an additional combinatorial condition about adjacent values in the second component among elements with the same first component bit.
+
+To explore this, we'll enumerate small values of n (domain size) and m (range parameters: bit size 2 and number size 50), and try to construct such functions or count them. We'll examine domain sizes up to, say, 6, to keep computation manageable, and check which functions satisfy the property. This might help identify a pattern.
+
+We consider f : [0..n-1] → {0,1} × [0..49], injective, and for all i > 0, there exists j < i with same bit and levels adjacent (difference 1 in second component).
+
+This looks like the function's second components for each bit form chains of consecutive integers covering the domain indexed in order.
+
+We enumerate all such functions for small n and print those counts.
+
+```python
+# Enumerate injective functions f: [0..n-1] -> {0,1} x [0..49]
+# satisfying: for each i > 0, exists j < i with f[j].bit = f[i].bit,
+# and f[j].level = f[i].level ± 1.
+# We'll check n from 1 to 6, print counts of such functions.
+
+from itertools import permutations, product
+
+def valid_chain(f):
+    # f: list of pairs (bit, level)
+    # For i>0, there exists j<i, same bit, and level difference ==1
+    for i in range(1,len(f)):
+        bit_i, level_i = f[i]
+        found = False
+        for j in range(i):
+            bit_j, level_j = f[j]
+            if bit_j == bit_i and abs(level_i - level_j) == 1:
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+def enumerate_functions(n, max_level=10):
+    # We limit max_level to keep runtime short
+    # Domain size n, range bits=2, levels in [0,max_level-1]
+    results = 0
+    all_levels = list(range(max_level))
+    # The range size = 2*max_level, must be >= n (injective)
+    if 2*max_level < n:
+        return 0
+    values = [(b,l) for b in (0,1) for l in all_levels]
+    for f_tup in permutations(values, n):  # injective functions
+        if valid_chain(f_tup):
+            print(f"n={n}, function={f_tup}")
+            results += 1
+    return results
+
+print("Enumerating candidate functions for small n (max_level=6):")
+for n in range(1,7):
+    count = enumerate_functions(n, max_level=6)
+    print(f"n={n}, count={count}")
+```
+

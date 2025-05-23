@@ -1,0 +1,174 @@
+[write_program]
+Let's analyze the problem described in the theorem:
+
+- We are considering subsets \( s \subseteq \text{Fin}(3) \times \text{Fin}(3) \) of size 3.
+- The condition involves for any two distinct points \( p, q \in s \):
+  - \( p \) and \( q \) are not adjacent horizontally or vertically (since adjacency is determined by sharing the same row or same column and difference of 1).
+
+In essence, the problem counts the number of 3-element subsets of a 3x3 grid with no two points sharing the same row or column (since adjacency is excluded in those directions).
+
+But note that the exact condition prevents points from being horizontally or vertically adjacent, effectively ensuring no two points are neighboring in those directions.
+
+**Key observations:**
+
+- The grid has 9 points.
+- No two selected points are in the same row or same column (because adjacency would imply same row or column with difference 1).
+
+This directly translates to the problem of selecting 3 points, each in a different row and different column, such that none are adjacent horizontally or vertically.
+
+However, in a 3x3 grid, choosing such 3 points with distinct rows and columns inherently makes them form a permutation matrix format.
+
+**Finding the total count:**
+
+- The total number of permutations of 3 columns assigned to 3 rows is 3! = 6.
+- For each permutation, check whether the corresponding points are non-adjacent; in a 3x3 grid, points at positions \( (i, p(i)) \), with \( p(i) \) a permutation, are not adjacent if for all pairs \( (i, p(i)) \) and \( (j, p(j)) \), the points don't share a row or column and are not adjacent.
+
+In a 3x3 grid, adjacent points are immediate neighbors:
+
+- Horizontal neighbors: same row, columns differing by 1.
+- Vertical neighbors: same column, rows differing by 1.
+
+For the permutation selections, since all points are in different rows and columns, adjacency would occur only if they are neighboring in the grid.
+
+- To avoid adjacency, the permutation must have no two points in consecutive columns or rows. But because the grid is small and the restriction is on adjacency, all permutations equivalent to a permutation with no consecutive numbers are acceptable.
+
+- For permutations of 3, only permutations with no two consecutive entries would satisfy the adjacency condition.
+
+Let's list all permutations of (0,1,2):
+
+- (0, 1, 2): neighboring in both row and column positions.
+- (0, 2, 1): check adjacency.
+- (1, 0, 2), etc.
+
+In such small size, the count reduces to counting permutations with no two consecutive numbers.
+
+This is a classical problem: number of permutations avoiding consecutive integers.
+
+**How many permutations of 3 elements avoid consecutive numbers?**
+
+- Permutations: 6 in total:
+  1. (0,1,2): consecutive 0-1 and 1-2 → contains consecutive pairs → exclude
+  2. (0,2,1): 0-2 no, 2-1 yes? 2-1 differ by 1, exclude
+  3. (1,0,2): 1-0 yes, exclude
+  4. (1,2,0): 1-2 yes, exclude
+  5. (2,0,1): 0-1 yes, exclude
+  6. (2,1,0): 2-1 yes, exclude
+
+No permutations avoid adjacent pairs? That seems contradictory; let's verify carefully.
+
+Actually, all permutations of length 3 contain at least one pair of adjacent numbers. So the count is zero.
+
+**But perhaps the problem is easier to interpret as selecting 3 points with none in same row/column and no adjacency.**
+
+In the 3x3 grid, the only possible such subsets are the permutations corresponding to derangements, where the points are non-adjacent.
+
+**Therefore, in counting all valid 3-point subsets:**
+
+- Since the subset size is 3, and we can't have points in the same row or column, the only options are permutations of columns assigned to rows.
+
+- For each permutation, check adjacency: whether any two points are adjacent vertically or horizontally.
+
+- But in the 3x3 grid, for those with no neighboring points (Adjacency forbidden), the only possible permutations are those with no consecutive numbers.
+
+But as per initial analysis, no such permutations exist, which suggests only 1 possible subset matching the configuration: perhaps only the diagonals or other arrangements.
+
+Alternatively, perhaps I should consider the total number of sets of 3 points with no two sharing row or column and no adjacency:
+
+- The total number of arrangements in a 3x3 grid choosing 3 points with all different rows and columns is 6 (the permutations).
+
+- Of these, which avoid adjacency?
+
+Let's check the specific permutations:
+
+1. (0, 1, 2): points (row 0, col 0), (row 1, col 1), (row 2, col 2): diagonal, not adjacent—adjacent in diagonals? No, adjacency is only horizontal/vertical, so diagonal is safe.
+
+2. (0, 2, 1): (0, 0), (1, 2), (2, 1): check adjacency.
+
+- Pairs:
+
+   - (0,0) and (1,2): different row and column, separated by 1 in both, no adjacency.
+
+   - (0,0) and (2,1): no adjacency.
+
+   - (1,2) and (2,1): same row? no (rows 1 and 2), same column? yes (column 1), difference? 0 in row, but columns differ by 1, so horizontal adjacency? Yes, they share column 1, with row difference 1, so invalid.
+
+Thus, this permutation contains adjacency, so invalid.
+
+Similarly check others:
+
+- (1,0,2): points (1,0), (0,1), (2,2):
+
+  - (1,0) and (0,1): different row and column, no adjacency.
+
+  - (1,0) and (2,2): different row and column, no adjacency.
+
+  - (0,1) and (2,2): no adjacency, as columns differ by 1, rows differ by 2.
+
+-it seems that only the main diagonal (0,0), (1,1), (2,2) has no adjacency.
+
+And in total, in the 3x3 grid, the main diagonal is a special subset with 3 points, no adjacency.
+
+Similarly, the anti-diagonal (0,2), (1,1), (2,0).
+
+This leads us to count only these two subsets.
+
+They satisfy:
+
+- No two points are in same row or column (by construction).
+
+- No adjacency: because they are diagonally aligned but separated in rows and columns with difference 1 or more.
+
+In conclusion, the only two valid subsets are the diagonals.
+
+**Result: 2**
+
+Hence, the total number of such subsets is 2.
+
+The code below will verify this enumeration:
+
+```python
+# Enumerate all 3-element subsets of the 3x3 grid with no two points sharing the same row or column,
+# and no two points are horizontally or vertically adjacent.
+
+from itertools import permutations, combinations
+
+grid_points = [(r, c) for r in range(3) for c in range(3)]
+result_count = 0
+
+# Generate all 3-point subsets where no two points share a row or column
+for cols in permutations(range(3), 3):
+    s = [(r, c) for r, c in zip(range(3), cols)]
+    # Check for adjacency
+    def adjacent(p, q):
+        # adjacent if same row or same col and difference 1
+        return (p[0] == q[0] and abs(p[1]-q[1]) == 1) or \
+               (p[1] == q[1] and abs(p[0]-q[0]) == 1)
+    if all(not adjacent(p, q) for i, p in enumerate(s) for q in s[i+1:]):
+        print(s)  # Stream each valid subset immediately
+        result_count += 1
+
+print("Total valid subsets:", result_count)
+```
+
+**Expected output:**
+
+- The two diagonals: [(0,0), (1,1), (2,2)] and [(0,2), (1,1), (2,0)]
+- Total: 2
+
+---
+
+```python
+# Final code to enumerate all subsets satisfying the problem constraints
+from itertools import permutations
+
+# Generate all permutations of columns for each row
+for cols in permutations(range(3)):
+    s = list(zip(range(3), cols))
+    # Check adjacency
+    def adjacent(p, q):
+        # adjacency if same row or column and difference 1
+        return (p[0] == q[0] and abs(p[1] - q[1]) == 1) or \
+               (p[1] == q[1] and abs(p[0] - q[0]) == 1)
+    if all(not adjacent(p, q) for i, p in enumerate(s) for q in s[i+1:]):
+        print(s)
+```

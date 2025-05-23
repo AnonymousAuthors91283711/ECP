@@ -1,0 +1,65 @@
+[write_program]
+This problem asks for the minimum value of (a-b)(b-c)(c-d)(d-a) under the constraint a² + b² + c² + d² = 1. We'll write a Python program to numerically explore possible values by sampling symmetric configurations.
+
+The approach:
+1. Consider symmetric cases where variables are repeated (like a=b or a=c)
+2. Sample cases with 2 or 3 distinct values
+3. Use symmetry to reduce the search space
+4. Track the minimum value found
+
+```python
+import numpy as np
+from itertools import combinations
+
+def evaluate(a, b, c, d):
+    norm = np.sqrt(a**2 + b**2 + c**2 + d**2)
+    if abs(norm - 1.0) > 1e-6:
+        a, b, c, d = a/norm, b/norm, c/norm, d/norm
+    return (a-b)*(b-c)*(c-d)*(d-a)
+
+def main():
+    min_val = float('inf')
+    # Case 1: all variables equal (trivial case)
+    val = evaluate(1, 1, 1, 1)
+    print(f"All equal: {val}")
+    if val < min_val:
+        min_val = val
+    
+    # Case 2: three equal, one different (a,a,a,b)
+    for b in np.linspace(-1, 1, 21):
+        a = np.sqrt((1 - b**2)/3)
+        for sign in [-1, 1]:
+            val = evaluate(a, a, a, b)
+            print(f"Three equal: {val} (a={a:.3f}, b={b:.3f})")
+            if val < min_val:
+                min_val = val
+    
+    # Case 3: two pairs (a,a,b,b)
+    for theta in np.linspace(0, np.pi/2, 21):
+        a = np.cos(theta)/np.sqrt(2)
+        b = np.sin(theta)/np.sqrt(2)
+        val = evaluate(a, a, b, b)
+        print(f"Two pairs: {val} (a={a:.3f}, b={b:.3f})")
+        if val < min_val:
+            min_val = val
+    
+    # Case 4: two equal, others distinct (a,a,b,c)
+    for theta in np.linspace(0, 2*np.pi, 21):
+        for phi in np.linspace(0, np.pi, 11):
+            a = np.cos(theta)*np.sin(phi)
+            b = np.sin(theta)*np.sin(phi)
+            c = np.cos(phi)
+            # Make two variables equal
+            val1 = evaluate(a, a, b, c)
+            val2 = evaluate(a, b, a, c)
+            val3 = evaluate(a, b, c, a)
+            for val in [val1, val2, val3]:
+                print(f"Two equal: {val} (a={a:.3f}, b={b:.3f}, c={c:.3f})")
+                if val < min_val:
+                    min_val = val
+    
+    print(f"\nMinimum value found: {min_val}")
+
+if __name__ == "__main__":
+    main()
+```

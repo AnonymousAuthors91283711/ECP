@@ -1,0 +1,56 @@
+[write_program]
+The problem appears to be about finding the largest natural number \( n < 1000 \) such that the sum of certain \( 2 \)-adic valuations over a finite range equals a perfect square. Specifically, for each \( n \), we consider the sum:
+\[
+S_n = \sum_{k=0}^{2^{n-1}-1} v_2(2k),
+\]
+where \( v_2(x) \) is the exponent of 2 in the prime factorization of \( x \). We want to find all such \( n \) with \( n < 1000 \) where \( S_n \) is a perfect square and identify the greatest one.
+
+To assist with conjecturing and proving the answer, the code below enumerates \( n \) from 1 up to a small sample threshold (e.g., 20) because higher values involve very large sums and could be slow. For each \( n \), the code computes the sum \( S_n \) exactly and checks if it's a perfect square, printing \( n \) and \( S_n \) if so.
+
+```python
+import math
+
+def v2(x):
+    # Compute exponent of 2 in x
+    if x == 0:
+        return 0  # or large number, but here no need since k starts at 0
+    count = 0
+    while x % 2 == 0 and x > 0:
+        x //= 2
+        count += 1
+    return count
+
+def is_perfect_square(x):
+    r = int(math.isqrt(x))
+    return r*r == x
+
+print("Enumerating n with sum over k in range(2^(n-1)) of v2(2k) a perfect square")
+
+# Using a smaller range due to computational limits; expand as needed up to 1000
+max_n = 20
+
+for n in range(1, max_n+1):
+    limit = 2**(n-1)
+    # sum v2(2k) for k = 0 to limit-1
+    # Note v2(0) is not well-defined; but since 0*2=0, handle k=0 separately:
+    # 0 has an infinite number of 2 factors; problem likely expects k starts at 1:
+    # We'll start k at 1 to avoid ambiguity.
+    total = 0
+    for k in range(1, limit):
+        total += v2(2*k)
+    if is_perfect_square(total):
+        print(f"n={n} sum={total} (perfect square)")
+
+# After enumeration, print maximum found if any
+found = []
+for n in range(1, max_n+1):
+    limit = 2**(n-1)
+    total = sum(v2(2*k) for k in range(1, limit))
+    if is_perfect_square(total):
+        found.append((n, total))
+if found:
+    max_n, max_total = max(found, key=lambda x: x[0])
+    print(f"Maximum n with perfect square sum under {max_n}: n={max_n} sum={max_total}")
+else:
+    print("No n found with perfect square sum in the tested range")
+```

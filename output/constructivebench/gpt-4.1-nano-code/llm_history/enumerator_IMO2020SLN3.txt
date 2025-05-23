@@ -1,0 +1,54 @@
+[write_program]
+This task involves enumerating sequences to analyze a problem potentially related to a combinatorial or number theory puzzle. Although the exact problem statement isn't fully provided, the structure suggests checking sequences of natural numbers (`a : Fin n → ℕ`) for a certain property related to averages and squares, with constraints on the sequence being non-constant.
+
+Given the problem's nature, the key step is to generate candidate sequences of length `n`, and for each, determine if the stated property holds or fails.
+
+**Approach:**
+- Select small values for `n` (since large `n` would be infeasible).
+- For each sequence of size `n` with elements in a manageable range (e.g., 0 to 3), check the condition:
+  - If the sequence is not constant (`¬∀ i j, a i = a j`),
+  - Then verify that the property involving averages and squares does not hold.
+- Output sequences where the property fails and those where it holds to assist in conjecturing.
+
+Below is a Python program implementing this enumeration.
+
+```python
+# Program to enumerate small sequences for the problem involving averages and squares.
+# Since the sequences are small, we restrict to elements 0..3 for feasibility.
+from itertools import product
+
+def property_holds(seq):
+    n = len(seq)
+    for i in range(n):
+        for j in range(i+1, n):
+            a_i, a_j = seq[i], seq[j]
+            if (a_i + a_j) % 2 != 0:
+                continue  # skip if average isn't integer
+            mid = (a_i + a_j) // 2
+            for k in range(n):
+                if seq[k] == mid:
+                    # Check for some l where seq[l] == seq[k]^2
+                    for l in range(n):
+                        if seq[l] == seq[k] ** 2:
+                            return True
+    return False
+
+def enumerate_sequences(n, max_element=3):
+    # Generate all sequences with elements from 0..max_element
+    for seq in product(range(max_element+1), repeat=n):
+        yield seq
+
+# Choose small n for feasible enumeration
+n = 3
+print(f"Enumerating sequences of length {n} with elements in 0..{3}")
+
+for seq in enumerate_sequences(n):
+    if not all_equal(seq):
+        if property_holds(seq):
+            print(f"Sequence where property holds: {seq}")
+        else:
+            print(f"Sequence where property fails: {seq}")
+
+def all_equal(seq):
+    return all(x == seq[0] for x in seq)
+```

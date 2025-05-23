@@ -1,0 +1,59 @@
+[write_program]
+This problem asks for the smallest positive integer c that can be expressed as a product of two numbers (a and b), each of which is a sum of two cubes, but c itself cannot be expressed as a sum of two cubes. We'll write a Python program to enumerate possible candidates for c by checking products of sums of cubes.
+
+The approach:
+1. Generate sums of two cubes up to a reasonable limit
+2. Check all products of these sums
+3. Verify if the product cannot itself be expressed as a sum of two cubes
+4. Find the smallest such product
+
+```python
+def main():
+    max_limit = 1000  # Reasonable upper bound for initial search
+    cube_sums = set()
+    
+    # Generate all sums of two cubes up to max_limit
+    for x in range(0, int(max_limit ** (1/3)) + 2):
+        for y in range(0, x + 1):
+            s = x**3 + y**3
+            if 0 < s <= max_limit:
+                cube_sums.add(s)
+    
+    cube_sums = sorted(cube_sums)
+    candidates = set()
+    
+    # Check all products of cube sums
+    for i in range(len(cube_sums)):
+        a = cube_sums[i]
+        for j in range(i, len(cube_sums)):
+            b = cube_sums[j]
+            c = a * b
+            if c > max_limit:
+                continue
+            
+            # Check if c can be expressed as sum of two cubes
+            found = False
+            max_k = int(c ** (1/3)) + 2
+            for k in range(0, max_k):
+                remainder = c - k**3
+                if remainder < 0:
+                    continue
+                m = round(remainder ** (1/3))
+                if m**3 == remainder:
+                    found = True
+                    break
+            
+            if not found:
+                candidates.add(c)
+    
+    # Print all found candidates in order
+    for c in sorted(candidates):
+        print(c)
+    
+    # Explicitly output the minimal candidate
+    if candidates:
+        print("Minimal candidate:", min(candidates))
+
+if __name__ == "__main__":
+    main()
+```

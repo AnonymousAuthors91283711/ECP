@@ -1,0 +1,50 @@
+[write_program]
+The problem involves finding the least positive constant \( C \) such that for every 5-tuple of positive real numbers \((a_0, a_1, a_2, a_3, a_4)\), there exist four distinct indices \(i,j,k,l\) for which the difference of ratios \(\left|\frac{a_i}{a_j} - \frac{a_k}{a_l}\right|\) is at most \( C \).
+
+To explore this, the Python program enumerates sample positive 5-tuples with small values, computes all possible values of \(\left|\frac{a_i}{a_j} - \frac{a_k}{a_l}\right|\) for distinct indices, and collects the minimal such difference for each sample. It then prints these minimal differences as candidates for \(C\). This helps conjecture about the smallest such \(C\).
+
+```python
+import itertools
+from fractions import Fraction
+
+def enumerate_a_values(max_val=3):
+    # Generate positive rational tuples with values from 1 to max_val
+    # Using small integers to keep enumeration manageable
+    for a in itertools.product(range(1, max_val + 1), repeat=5):
+        yield a
+
+def distinct_indices(n=5):
+    # Generate all 4-tuples of distinct indices from 0 to n-1
+    return itertools.permutations(range(n), 4)
+
+def compute_min_diff(a):
+    diffs = []
+    for i, j, k, l in distinct_indices():
+        r1 = Fraction(a[i], a[j])
+        r2 = Fraction(a[k], a[l])
+        diff = abs(r1 - r2)
+        diffs.append(diff)
+    min_diff = min(diffs)
+    return min_diff
+
+def main():
+    seen = set()
+    print("Enumerating minimal differences in |a_i/a_j - a_k/a_l| for positive 5-tuples with entries 1..3")
+    threshold = Fraction(5,1)  # arbitrary upper bound for printing minimal diffs found
+    
+    for a in enumerate_a_values(3):
+        # Skip tuples with duplicates is not required
+        min_diff = compute_min_diff(a)
+        # Only print if this min_diff is a new candidate and is less than threshold
+        if min_diff not in seen and min_diff <= threshold:
+            seen.add(min_diff)
+            print(f"Candidate minimal difference: {float(min_diff):.6f} (exact {min_diff}) from a={a}")
+
+    # After enumeration, find minimal candidate
+    if seen:
+        min_c = min(seen)
+        print(f"\nConjectured minimal C (lower bound): {float(min_c):.6f} (exact {min_c})")
+
+if __name__ == "__main__":
+    main()
+```

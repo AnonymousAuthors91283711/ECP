@@ -1,0 +1,74 @@
+[write_program]
+The problem concerns sequences of flips on a 4x4 grid, where each flip toggles a cell and its neighbors. The goal is to find all sequence lengths \( n \) for which there exists a sequence of flips (specified by \( f \)) so that every cell in the final grid is True.
+
+A direct approach is to simulate the toggling on the 4x4 grid for sequences of length \( n \), for \( n \) up to some small number, and print those \( n \) for which the goal is achievable.
+
+We model the grid as a 16-bit integer, where bit 0 corresponds to cell (0,0), bit 1 to (0,1), etc. toggling flips bits. We generate all possible flips (16 in total) and simulate all sequences of flips of length \( n \). To keep complexity manageable, we limit \( n \) up to about 5 or 6 and print \( n \) values where full true grid is reachable.
+
+```python
+# Enumerate all n (sequence lengths) for which there exists a sequence of flips on a 4x4 grid
+# so that every cell is True at the end. Each flip toggles a cell and its neighbors.
+# We print found n immediately.
+
+def neighbors(i,j):
+    for di,dj in [(-1,0),(1,0),(0,-1),(0,1)]:
+        ni,nj = i+di,j+dj
+        if 0 <= ni < 4 and 0 <= nj < 4:
+            yield ni,nj
+
+def cell_index(i,j):
+    return i*4 + j
+
+def flip_mask(i,j):
+    # Bitmask for flipping cell (i,j) and its neighbors
+    mask = 1 << cell_index(i,j)
+    for ni,nj in neighbors(i,j):
+        mask |= 1 << cell_index(ni,nj)
+    return mask
+
+def all_sequences(n, flips):
+    # Generate all sequences of length n with flips selected from flips
+    # To reduce complexity, generate sequences as numbers in base 16 with digits in [0..15]
+    max_seq = 16**n
+    for seq_num in range(max_seq):
+        seq = []
+        x = seq_num
+        for _ in range(n):
+            seq.append(x % 16)
+            x //= 16
+        yield seq[::-1]
+
+def main():
+    goal = (1 << 16) - 1  # All bits set (all True)
+    flips = [flip_mask(i,j) for i in range(4) for j in range(4)]
+
+    from itertools import product
+
+    max_n = 5  # max length sequence to try, higher is too slow
+    for n in range(1, max_n+1):
+        found = False
+        # Instead of generating all sequences (16^n), generate smartly by BFS on grid states to improve efficiency
+        from collections import deque
+        visited = set()
+        q = deque()
+        q.append((0,0)) # state=0 (all False), length=0
+        while q:
+            state, length = q.popleft()
+            if length == n:
+                if state == goal:
+                    print(f"n = {n} achievable")
+                    found = True
+                    break
+                continue
+            for fmask in flips:
+                nstate = state ^ fmask
+                if (nstate,length+1) not in visited:
+                    visited.add((nstate,length+1))
+                    q.append((nstate,length+1))
+        if found:
+            # print immediately, continue to next n to find others if any
+            pass
+
+if __name__ == "__main__":
+    main()
+```

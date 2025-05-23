@@ -1,0 +1,58 @@
+[write_program]
+The problem involves a function \( f:\mathbb{R}\to\mathbb{Z} \) defined piecewise based on the fractional part of reals (a form of rounding function), and rational triples \((a,b,c)\) satisfying inequalities and a linear equation involving infinite sums over integers \(n\).
+
+Our task is to enumerate rational triples \(a>b>c\) for which:
+\[
+\forall n \in \mathbb{Z}, f(n a) + f(n b) + f(n c) = n.
+\]
+
+Since this is quite complex to solve symbolically, we explore some small rational candidates \(a,b,c\), print those that satisfy the identity for several integer values \( n \), thus giving insight or conjectures.
+
+```python
+from fractions import Fraction
+from math import floor
+
+# Define the function f as in the problem
+def f(r):
+    r_floor = floor(r)
+    frac = r - r_floor
+    if frac < 0.5:
+        return r_floor
+    elif frac > 0.5:
+        return r_floor + 1
+    else: # frac == 0.5
+        return r_floor
+
+# Check triple (a,b,c) for given range of n to see if condition seems true
+def check_triple(a, b, c, n_min=-10, n_max=10):
+    for n in range(n_min, n_max+1):
+        if f(n * a) + f(n * b) + f(n * c) != n:
+            return False
+    return True
+
+# We'll try small rationals with denominators up to 5 for manageability
+# Also ensure a > b > c
+denominator_max = 5
+numerator_max = 10
+
+print("Enumerating rational triples a>b>c with denominators ≤ 5:")
+
+for da in range(1, denominator_max+1):
+    for db in range(1, denominator_max+1):
+        for dc in range(1, denominator_max+1):
+            for na in range(-numerator_max, numerator_max+1):
+                for nb in range(-numerator_max, numerator_max+1):
+                    for nc in range(-numerator_max, numerator_max+1):
+                        if da == 0 or db == 0 or dc == 0:
+                            continue
+                        try:
+                            a = Fraction(na, da)
+                            b = Fraction(nb, db)
+                            c = Fraction(nc, dc)
+                        except ZeroDivisionError:
+                            continue
+                        if a > b > c:
+                            # Check condition roughly for n in [-10..10]
+                            if check_triple(float(a), float(b), float(c)):
+                                print(f"Candidate triple found: a={a}, b={b}, c={c}")
+```

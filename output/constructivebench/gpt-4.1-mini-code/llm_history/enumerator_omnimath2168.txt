@@ -1,0 +1,75 @@
+[write_program]
+The problem is about characterizing parameters \( p \in \mathbb{R} \) for which a polynomial \( Q(p) \) has three distinct real roots. To assist, let's enumerate for sample values of \( p \) (small integers) and find the roots of \( Q(p) \), printing only values with three distinct real roots.
+
+Since the exact polynomial \( Q(p) \) is not provided, let's illustrate the approach on an example polynomial family \( Q(p,x) = x^3 - p x + 1 \). This cubic's roots can be found, and we can test when it has three distinct real roots by checking the discriminant \( \Delta = -4 (-p)^3 - 27 \cdot 1^2 \).
+
+We print \( p \) with corresponding roots if there are three distinct real roots, i.e., \( \Delta > 0 \) and roots distinct.
+
+This will illustrate how the answer set depends on \( p \). The user can replace \( Q(p,x) \) accordingly.
+
+```python
+# Enumerate p in a small range to find those for which Q(p,x) = x^3 - p x + 1 has
+# three distinct real roots.
+# Prints immediately each p and roots found.
+# Finally prints the range of p where that holds.
+
+import math
+import cmath
+
+def cubic_roots(a, b, c, d):
+    # Solve ax^3 + bx^2 + cx + d = 0 for roots
+    # Using depressed cubic formula for a=1:
+    # x^3 + px + q = 0
+    p = c/a - (b*b)/(3*a*a)
+    q = (2*b*b*b)/(27*a*a*a) - (b*c)/(3*a*a) + d/a
+    discriminant = (q/2)**2 + (p/3)**3
+
+    if discriminant > 0:
+        # One real root
+        A = (-q/2 + math.sqrt(discriminant))**(1/3)
+        B = (-q/2 - math.sqrt(discriminant))**(1/3)
+        root1 = A + B - b/(3*a)
+        return [root1]
+    elif abs(discriminant) < 1e-15:
+        # Multiple roots
+        if abs(q) < 1e-15:
+            root = - b/(3*a)
+            return [root, root, root]
+        else:
+            A = (-q/2)**(1/3)
+            root1 = 2*A - b/(3*a)
+            root2 = -A - b/(3*a)
+            return [root1, root2, root2]
+    else:
+        # 3 real roots
+        r = math.sqrt(-(p*p*p)/27)
+        phi = math.acos(-q/(2*r))
+        m = 2 * (-p/3)**0.5
+        root1 = m * math.cos(phi/3) - b/(3*a)
+        root2 = m * math.cos((phi + 2*math.pi)/3) - b/(3*a)
+        root3 = m * math.cos((phi + 4*math.pi)/3) - b/(3*a)
+        return [root1, root2, root3]
+
+def distinct_real_roots(roots):
+    # Check if all roots are real and distinct (within a tolerance)
+    if any(abs(root.imag) > 1e-12 for root in roots if isinstance(root, complex)):
+        return False
+    real_roots = [root.real if isinstance(root, complex) else root for root in roots]
+    real_roots = sorted(real_roots)
+    return all(abs(real_roots[i+1] - real_roots[i]) > 1e-7 for i in range(len(real_roots)-1))
+
+print("Enumerating p in [-5..5]:")
+candidates = []
+for p in [-5 + i for i in range(11)]:
+    # Define Q(p,x) = x^3 - p x + 1
+    roots = cubic_roots(1, 0, -p, 1)
+    if len(roots) == 3 and distinct_real_roots(roots):
+        print(f"p={p}, roots=({', '.join(f'{r:.5f}' for r in roots)})")
+        candidates.append(p)
+
+if candidates:
+    print(f"\nValues of p with three distinct real roots in sample: {candidates}")
+    print(f"Minimum p: {min(candidates)}, Maximum p: {max(candidates)}")
+else:
+    print("No values of p found with three distinct real roots in sample range.")
+```

@@ -1,0 +1,62 @@
+[write_program]
+The problem is to find the greatest sum \( s \) over all sets \( A, B \subseteq \{0, \ldots, 20\} \) where \( A \) and \( B \) are disjoint, and for every element \( n \in A \), the value \( 2n + 2 \) is in \( B \).
+
+We want to maximize the sum of the elements in \( A \).
+
+To analyze this, we can enumerate subsets \( A \subseteq \{0,\ldots,20\} \), verify the conditions, and compute the sum \( s \).
+
+Since \( B \) is uniquely determined by \( A \) (it must contain all \( 2n+2 \) for \( n \in A \)), we only need to check:
+- \( A \subseteq \{0,\ldots,20\} \),
+- \( B = \{2n+2 \mid n \in A\} \subseteq \{0,\ldots,20\} \),
+- \( A \cap B = \emptyset \).
+
+In particular, all elements in \( B \) must be between 0 and 20, and \( A \) and \( B \) must be disjoint.
+
+We'll enumerate all subsets \( A \), check feasibility, and track the maximum sum of elements in \( A \).
+
+Since \( 21 \) elements produce \( 2^{21} \approx 2\text{ million} \) subsets, we can optimize by enumerating only subsets where \( 2n + 2 \leq 20 \) for members of \( A \), and prune invalid subsets.
+
+To fit output limits, we'll print all candidates with sums equal or near the current max, then print the max sum found.
+
+```python
+# Enumerate all subsets A of {0,...,20} satisfying:
+# for each n in A, 2n+2 in B subset of {0,...,20} and B disjoint with A
+# B = {2n+2 for n in A}
+# Maximize sum of elements in A
+
+def main():
+    from itertools import combinations
+    max_sum = -1
+    max_sets = []
+    universe = set(range(21))
+    
+    # Elements n in A must satisfy 2n+2 <= 20 => n <= 9
+    candidates = list(range(10))  # A only from 0..9 because 2*9+2=20
+    
+    # enumerate subsets of candidates:
+    # total 2^10=1024 subsets, manageable
+    
+    for r in range(len(candidates)+1):
+        for A in combinations(candidates, r):
+            A_set = set(A)
+            # Compute B
+            B_set = set(2*n + 2 for n in A_set)
+            # Check if B subset of universe and disjoint from A
+            if B_set.issubset(universe) and A_set.isdisjoint(B_set):
+                s = sum(A_set)
+                print(f"Candidate A={sorted(A_set)} sum={s}")
+                if s > max_sum:
+                    max_sum = s
+                    max_sets = [A_set]
+                elif s == max_sum:
+                    max_sets.append(A_set)
+    
+    print("\nMaximum sum of A found:", max_sum)
+    print("Corresponding sets A:")
+    for s in max_sets:
+        print(sorted(s))
+
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,56 @@
+[write_program]
+This problem involves trigonometric identities and algebraic manipulations. We'll write a Python program to numerically explore possible values of x/y + y/x under the given constraints, using small sample values for theta to find patterns.
+
+The approach:
+1. Sample theta values (avoiding multiples of pi/2)
+2. For each theta, compute the ratio k = sin(theta)/cos(theta) from h1
+3. Substitute into h2 to find possible x/y ratios
+4. Compute x/y + y/x for valid solutions
+
+```python
+import numpy as np
+
+def main():
+    # Sample theta values avoiding multiples of pi/2
+    theta_samples = np.linspace(0.1, np.pi-0.1, 20)  # Avoid 0 and pi too
+    
+    for theta in theta_samples:
+        if abs(theta % (np.pi/2)) < 1e-6:  # Skip near pi/2 multiples
+            continue
+            
+        # From h1: sin(theta)/x = cos(theta)/y => y/x = tan(theta)
+        tan_theta = np.tan(theta)
+        
+        # Substitute into h2 and simplify
+        # Let r = x/y, then y/x = 1/r
+        # Equation becomes: cos^4/r^4 + sin^4*r^4 = 97*sin(2theta)/(r^3 + r)
+        # Multiply both sides by r^4*(r^3 + r)
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+        sin2theta = np.sin(2*theta)
+        
+        # Polynomial coefficients for r
+        # After substitution and simplification:
+        # cos^4*(r^3 + r) + sin^4*r^4*(r^3 + r) = 97*sin2theta*r^4
+        # Let's compute numerically for each theta
+        def equation(r):
+            term1 = cos_theta**4 * (r**3 + r)
+            term2 = (sin_theta**4) * (r**7 + r**5)
+            rhs = 97 * sin2theta * r**4
+            return term1 + term2 - rhs
+        
+        # Find roots numerically
+        from scipy.optimize import fsolve
+        initial_guesses = [0.5, 1.0, 2.0]  # Try different starting points
+        for guess in initial_guesses:
+            try:
+                r = fsolve(equation, guess)[0]
+                if r > 0:  # Physical solution
+                    value = r + 1/r
+                    print(f"theta={theta:.3f}, x/y + y/x = {value:.6f}")
+            except:
+                pass
+
+if __name__ == "__main__":
+    main()
+```

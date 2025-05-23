@@ -1,0 +1,108 @@
+[write_program]
+Let's analyze the problem carefully. We have a function \( f:\mathbb{R} \to \mathbb{Z} \) defined based on the fractional part of its argument:
+
+- If \( r - \lfloor r \rfloor < 0.5 \), then \( f(r) = \lfloor r \rfloor \).
+- If \( r - \lfloor r \rfloor > 0.5 \), then \( f(r) = \lfloor r \rfloor + 1 \).
+- If \( r - \lfloor r \rfloor = 0.5 \), then \( f(r) = \lfloor r \rfloor \) or \( \lfloor r \rfloor + 1 \).
+
+The problem asks for triplets \( (a,b,c) \in \mathbb{Q}^3 \), with \( a > b > c \), such that for **all** integers \( n \):
+
+\[
+f(n a) + f(n b) + f(n c) = n
+\]
+
+and additionally, for all such triplets, the triple belongs to a set \( omnimath4381_answer \).
+
+**Key insight:**
+Since \( f(r) \) depends only on the fractional part of \( r \), the condition:
+
+\[
+f(n a) + f(n b) + f(n c) = n
+\]
+
+must hold **for all integers \( n \)**.
+
+- \( n a \), \( n b \), \( n c \) are scaled versions of \( a, b, c \).
+- The values of \( f(n a) \), etc., depend only on fractional parts of \( n a \), etc.
+
+Because \( \lfloor r \rfloor \) changes with \( r \), and the fractional part repeats periodically, **the periodicity** suggests that the fractional parts \( \{ a \}, \{ b \}, \{ c \} \) (mod 1) are critical.
+
+---
+
+### Approach for enumeration:
+
+- We choose small rational candidate values for \( a, b, c \). To ensure \( a > b > c \), and they are rational.
+- For simplicity, select small fractions with small denominators, e.g., fractions with denominators ≤ 4.
+- For each candidate triplet \( (a, b, c) \), verify whether the summation condition holds for \( n = 1, 2, \dots, N \), for some small N (say N=10).
+- Due to the periodic nature, if the sum condition holds for enough small \( n \), it strongly suggests it holds for all \( n \).
+
+---
+
+### Implementation plan:
+- Generate small rational triplets \( (a,b,c) \), with denominator ≤ 4, respecting \( a > b > c \).
+- For each triplet, verify the condition for \( n \in \{1,\dots,10\} \).
+- If it holds, print the triplet.
+
+---
+
+Let's implement this in code!
+
+```python
+from fractions import Fraction
+
+# Generate candidate rationals between certain bounds
+def generate_rationals(max_den=4):
+    rationals = []
+    for denominator in range(1, max_den + 1):
+        for numerator in range(0, denominator + 1):
+            frac = Fraction(numerator, denominator)
+            rationals.append(frac)
+    return sorted(set(rationals))
+
+# Define the function f based on the fractional part
+def f(r):
+    frac_part = r - int(r)
+    if frac_part < 0.5:
+        return int(math.floor(r))
+    elif frac_part > 0.5:
+        return int(math.floor(r) + 1)
+    else:
+        # fractional part exactly 0.5
+        # According to the definition, f(r) can be either floor(r) or floor(r)+1
+        # For testing, choose floor(r), but recognize that both are possible
+        return int(math.floor(r))
+
+import math
+
+# Check if for a given triplet, the sum condition holds for n in 1..max_n
+def check_triplet(a, b, c, max_n=10):
+    for n in range(1, max_n + 1):
+        sum_f = f(n * a) + f(n * b) + f(n * c)
+        # Since the sum should equal n for all n, check if equal
+        if sum_f != n:
+            return False
+    return True
+
+# Main enumeration
+def main():
+    rationals = generate_rationals()
+    answers = []
+    for a in rationals:
+        for b in rationals:
+            for c in rationals:
+                if a > b > c:
+                    if check_triplet(a, b, c):
+                        print(f"Triplet found: a={float(a):.2f}, b={float(b):.2f}, c={float(c):.2f}")
+                        answers.append((a, b, c))
+
+if __name__ == "__main__":
+    main()
+```
+
+**Notes:**
+- The code generates candidate rationals with small denominators.
+- It tests triplets for the sum condition up to \( n=10 \).
+- Triplets satisfying this are printed immediately.
+- This exploration can help in conjecturing the structure of solutions.
+
+*This program can be extended or refined further if needed.*

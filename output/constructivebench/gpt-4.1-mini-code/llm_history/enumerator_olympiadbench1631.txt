@@ -1,0 +1,54 @@
+[write_program]
+The problem involves finding the greatest integer \( k \) such that for some positive integer \( a \), all numbers \( 2^{x(a,n)} - 1 \) are prime for \( n \in [1, k] \), where
+\[
+x(a,1) = a, \quad x(a, n+1) = 2 \cdot x(a,n) + 1.
+\]
+We want to enumerate possible values of \( k \) and \( a \) verifying primality for \( 2^{x(a,n)} - 1 \) for \( n=1..k \).
+
+The key is the prime test for numbers \( M = 2^m - 1 \) (Mersenne numbers). Since these can grow huge, we'll try small \( a \) and moderate \( k \) values, and print out primes found.
+
+The program will:
+- Iterate over small \( a \) (1 to 10)
+- For each \( a \), compute \( x(a,n) \) for increasing \( n \)
+- Check if \( 2^{x(a,n)} - 1 \) is prime (using a fast prime test, sympy's isprime)
+- Print the primes found
+- Track the max \( k \) for each \( a \)
+- Print candidate maximal \( k \) found
+
+```python
+# enumerator.py
+from sympy import isprime
+
+def x(a,n):
+    if n==0: return 0
+    if n==1: return a
+    return 2*x(a, n-1)+1
+
+def mersenne_exp_chain(a, max_k=10):
+    # Try n=1..max_k and check primality of 2^{x(a,n)}-1
+    for k in range(1, max_k+1):
+        e = x(a,k)
+        M = (1 << e) - 1  # 2^e - 1
+        # Check primality:
+        if isprime(M):
+            print(f"a={a}, n={k}, exponent={e}, M=2^{e}-1 is prime")
+        else:
+            print(f"a={a}, n={k}, exponent={e}, 2^{e}-1 is composite")
+            return k-1  # max k passing prime test for this a
+    return max_k
+
+max_k_overall = 0
+candidates = []
+for a in range(1, 11):
+    print(f"Testing a={a}")
+    max_k = mersenne_exp_chain(a, max_k=10)
+    print(f"Max k for a={a} is {max_k}\n")
+    if max_k > max_k_overall:
+        max_k_overall = max_k
+        candidates = [a]
+    elif max_k == max_k_overall:
+        candidates.append(a)
+
+print(f"Largest k found is {max_k_overall}, achieved at a in {candidates}")
+```
+This outputs information about candidate primes, compositeness, and maximal run length \( k \) for each \( a \) tested. From output, one can conjecture the exact greatest \( k \).

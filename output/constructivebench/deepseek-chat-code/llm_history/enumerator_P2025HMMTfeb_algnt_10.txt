@@ -1,0 +1,61 @@
+[write_program]
+This problem involves finding complex numbers a, b, c that satisfy a system of equations with cyclic symmetry. We'll enumerate possible solutions by:
+1. Expressing everything in terms of a single variable
+2. Finding roots of the resulting polynomial
+3. Checking all permutations of roots to find valid triples (a,b,c)
+
+The approach will:
+- Derive the 8th degree polynomial in a
+- Find its roots numerically
+- Generate all permutations to find valid triples
+- Sum them to find possible values of a+b+c
+
+```python
+import cmath
+import itertools
+
+# Define the polynomial coefficients: a^8 + 5a^6 + 12a^4 - 11a^2 - a + 6 = 0
+coeffs = [1, 0, 5, 0, 12, 0, -11, -1, 6]
+
+# Find roots of the polynomial
+roots = []
+# We'll use numpy's roots function for numerical stability
+try:
+    import numpy as np
+    roots = np.roots(coeffs)
+except ImportError:
+    # Fallback to simpler method if numpy not available
+    def f(a):
+        return sum(c * (a ** (8 - i)) for i, c in enumerate(coeffs))
+    # Sample points on complex plane to find approximate roots
+    for real in range(-2, 3):
+        for imag in range(-2, 3):
+            z = complex(real, imag)
+            for _ in range(20):  # Simple Newton's method iterations
+                dz = (f(z + 1e-6) - f(z)) / 1e-6  # Numerical derivative
+                if abs(dz) < 1e-6: break
+                z -= f(z)/dz
+            if abs(f(z)) < 1e-6:
+                roots.append(z)
+
+# Remove duplicates (considering floating point precision)
+unique_roots = []
+tol = 1e-6
+for r in roots:
+    if not any(abs(r - ur) < tol for ur in unique_roots):
+        unique_roots.append(r)
+
+# Generate all possible triples and check conditions
+valid_sums = set()
+for a in unique_roots:
+    b = a**2 - 6
+    c = b**2 - 6
+    if abs(c**2 - a - 6) < tol and abs(a - b) > tol and abs(b - c) > tol and abs(c - a) > tol:
+        s = a + b + c
+        valid_sums.add(round(s.real, 6) + round(s.imag, 6)*1j)
+
+# Print all valid sums
+print("Possible values of a+b+c:")
+for s in valid_sums:
+    print(s)
+```

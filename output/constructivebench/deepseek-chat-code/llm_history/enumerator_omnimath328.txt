@@ -1,0 +1,50 @@
+[write_program]
+This problem is about finding all natural numbers n ≥ 3 where for any positive real-valued sequence a of length n with certain bounds, there exist three distinct indices i,j,k such that both a_i + a_j > a_k and a_i² + a_j² > a_k². We'll write a program to enumerate small values of n to find a pattern.
+
+The approach is:
+1. For each n from 3 upwards, generate all possible sequences of positive reals satisfying the conditions
+2. Check if there exists a counterexample where no three indices satisfy both inequalities
+3. If no counterexample is found, n is in the answer set
+
+Since testing all real sequences is impossible, we'll discretize by testing rational approximations and random samples.
+
+```python
+import itertools
+import random
+import math
+
+def test_sequence(a):
+    n = len(a)
+    for i, j, k in itertools.permutations(range(n), 3):
+        if i != j and j != k and i != k:
+            if a[i] + a[j] > a[k] and a[i]**2 + a[j]**2 > a[k]**2:
+                return True
+    return False
+
+def generate_sequences(n, samples=1000):
+    min_a = 1.0  # arbitrary scaling
+    max_a = n * min_a
+    for _ in range(samples):
+        # Generate random sequence satisfying conditions
+        a = [random.uniform(min_a, max_a) for _ in range(n)]
+        min_val = min(a)
+        a = [x * min_a / min_val for x in a]  # normalize to ensure min is min_a
+        if all(x <= max_a for x in a):
+            yield a
+
+def check_n(n):
+    for a in generate_sequences(n):
+        if not test_sequence(a):
+            print(f"Counterexample found for n={n}: {a}")
+            return False
+    print(f"No counterexamples found for n={n} up to samples")
+    return True
+
+def main():
+    for n in range(3, 10):
+        print(f"Testing n={n}")
+        check_n(n)
+
+if __name__ == "__main__":
+    main()
+```

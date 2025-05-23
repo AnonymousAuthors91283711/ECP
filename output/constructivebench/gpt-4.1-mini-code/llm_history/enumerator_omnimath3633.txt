@@ -1,0 +1,57 @@
+[write_program]
+The problem concerns maximizing the number of `true` entries in a boolean matrix \(Q\) of size \((2n+1) \times (2n+1)\) under the constraint that for every \(2 \times 2\) submatrix (top-left index \((i,j)\)) the sum of entries is at most 2.
+
+This is essentially counting the maximum number of `true` cells in a grid so that every \(2 \times 2\) block contains at most two `true`s.
+
+I'll write a program that enumerates (for small \(n\)) boolean matrices \(Q\) satisfying the condition, prints the sizes of such \(Q\), and tracks the maximum number found.
+
+Due to the exponential size, I will search only partial solutions with backtracking and pruning for \(n=1,2\).
+
+```python
+# enumerate maximum number of True in (2n+1)x(2n+1) boolean grids Q
+# so that every 2x2 block sums ≤ 2
+
+def check_block(Q, i, j):
+    s = Q[i][j] + Q[i][j+1] + Q[i+1][j] + Q[i+1][j+1]
+    return s <= 2
+
+def is_valid(Q, n, r, c):
+    # only check blocks involving cell (r,c)
+    for i in (r-1, r):
+        if 0 <= i < 2*n:
+            for j in (c-1, c):
+                if 0 <= j < 2*n:
+                    if not check_block(Q, i, j):
+                        return False
+    return True
+
+def backtrack(n, Q, r, c, current_true, max_so_far):
+    rows = 2*n+1
+    cols = 2*n+1
+    if r == rows:
+        if current_true > max_so_far[0]:
+            max_so_far[0] = current_true
+            print(f"n={n} found configuration with {current_true} True cells")
+        return
+    nr, nc = (r, c+1) if c+1 < cols else (r+1, 0)
+
+    # try False
+    Q[r][c] = 0
+    backtrack(n, Q, nr, nc, current_true, max_so_far)
+    # try True if valid
+    Q[r][c] = 1
+    if is_valid(Q, n, r, c):
+        backtrack(n, Q, nr, nc, current_true+1, max_so_far)
+    Q[r][c] = 0  # reset
+
+def main():
+    for n in [1, 2]:
+        print(f"Enumerating for n={n} (grid size {(2*n+1)}x{(2*n+1)})")
+        Q = [[0]*(2*n+1) for _ in range(2*n+1)]
+        max_so_far = [0]
+        backtrack(n, Q, 0, 0, 0, max_so_far)
+        print(f"Maximum True cells for n={n} is at least {max_so_far[0]}")
+
+if __name__ == "__main__":
+    main()
+```

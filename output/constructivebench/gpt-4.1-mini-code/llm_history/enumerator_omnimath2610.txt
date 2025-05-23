@@ -1,0 +1,76 @@
+[write_program]
+The problem involves functions \( t: \{0,1,2\} \to \mathbb{R} \) with non-negative values summing to 1, called IsSpecial. For any two such functions \( a,b \), \( a \) is "better" than \( b \) if both are nonnegative, and \( a \) is strictly greater than \( b \) in exactly two of the three coordinates. The task is to find the set of natural numbers \( n \) such that there exists a set \( S \) of such special functions of size \( n \), covering all special \( t \) by some \( s \in S \) that is better than \( t \).
+
+We want to enumerate candidate finite sets \( S \subseteq \Delta_2 \) (the 2-simplex in \(\mathbb{R}^3_{\ge0}\)) and check the covering property for a finite discretization.
+
+Given the continuous nature, we try discretizing the simplex at step 0.1 or 0.2, produce candidate sets \( S \) of size \( n \), pick small \( n \), and check coverage.
+
+The program enumerates all candidate points in a discretized simplex of step 0.2, enumerates subsets of size \( n=1,2,3,4 \), and for each, checks if for every point \( t \) in the discretized simplex, there exists some \( s \in S \) with \( s \) better than \( t \).
+
+We print candidate \( n \) and sets \( S \) that cover all points. We output all candidates up to \( n=4 \), then print minimal \( n \) found.
+
+```python
+import itertools
+
+def is_special(t):
+    return all(x >= 0 for x in t) and abs(sum(t) - 1) < 1e-8
+
+def is_better(a, b):
+    # a,b are tuples of length 3, nonnegative
+    # Check condition: a_i >= 0, b_i >= 0 and exactly two indices i have a_i > b_i
+    if any(x < 0 for x in a) or any(x < 0 for x in b):
+        return False
+    greater_count = sum(ai > bi for ai, bi in zip(a,b))
+    return greater_count == 2
+
+def gen_simplex_points(step=0.2):
+    points = []
+    vals = [round(i*step,8) for i in range(int(1/step)+1)]
+    # Generate triples (x,y,z) with x+y+z=1 approx
+    for x in vals:
+        for y in vals:
+            z = 1 - x - y
+            if z < -1e-8 or z > 1+1e-8:
+                continue
+            if abs(z - round(z,8)) < 1e-8 and round(z,8) in vals:
+                z = round(z,8)
+                if z < 0:
+                    continue
+                points.append( (x,y,z) )
+    return points
+
+def main():
+    points = gen_simplex_points(step=0.2)
+    print(f"Discretized {len(points)} IsSpecial points (step=0.2).")
+
+    # We try n from 1 to 4
+    minimal_n = None
+    for n in range(1,5):
+        print(f"Trying sets S of size {n}...")
+        # Enumerate all subsets S of points of size n
+        # To save output tokens, just print when covering set found
+        found_any = False
+        # We'll sample subsets for speed: full enumeration might be large (e.g. comb(21,4))
+        # So pick only first 500 subsets (for efficiency)
+        subsets_iter = itertools.islice(itertools.combinations(points, n), 500)
+        for S in subsets_iter:
+            # Check coverage: For each t in points, exists s in S with s better than t
+            covered = True
+            for t in points:
+                if not any(is_better(s, t) for s in S):
+                    covered = False
+                    break
+            if covered:
+                found_any = True
+                print(f"Covering set of size {n}: {S}")
+        if found_any:
+            minimal_n = n
+            # Continue to find possibly others, or break early if desired
+    if minimal_n:
+        print(f"Minimal n with covering set found: {minimal_n}")
+    else:
+        print("No covering sets found for n in 1..4.")
+
+if __name__ == "__main__":
+    main()
+```

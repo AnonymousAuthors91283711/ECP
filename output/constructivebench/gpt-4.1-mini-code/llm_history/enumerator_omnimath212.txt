@@ -1,0 +1,114 @@
+[write_program]
+The given functional equation is:
+\[ f(x^2 - y) + 2y f(x) = f(f(x)) + f(y) \quad \forall x,y \in \mathbb{R}. \]
+
+We want to find all functions \( f:\mathbb{R} \to \mathbb{R} \) satisfying this. To assist with conjecturing, we enumerate possible simple candidate functions, such as polynomials of low degree or simple forms, and check which satisfy the equation for sample values of \(x,y\).
+
+We implement a Python enumerator that tries:
+- Constant functions \( f(x) = c \).
+- Linear functions \( f(x) = a x + b \).
+- Quadratic functions \( f(x) = a x^2 + b x + c \).
+
+For sample parameters \(a,b,c\) over a small range, we print those functions (exact parameter values) which satisfy the equation numerically on some test points \((x,y) \in \{-2,-1,0,1,2\}^2\) within a small tolerance (to allow for floating point approximations).
+
+This will allow us to conjecture the true form of solutions.
+
+```python
+import math
+
+# Define a small tolerance for floating point comparisons
+TOL = 1e-9
+
+def close(a, b):
+    return abs(a - b) < TOL
+
+# Define test points for x,y
+test_points = [-2, -1, 0, 1, 2]
+
+def check_constant(c):
+    # f(x) = c
+    # Check the functional equation on all test points
+    # Left: f(x^2 - y) + 2*y*f(x) = c + 2*y*c = c*(1+2y)
+    # Right: f(f(x)) + f(y) = f(c) + c = c + c = 2c
+    # For the equation to hold for all y:
+    # c*(1+2y) = 2c
+    # => c*(1+2y) - 2c = 0 => c(2y -1) = 0 => must hold for all y => c=0
+    # So only c=0 constant satisfies exactly
+    if c != 0:
+        return False
+    # Check numerically
+    for x in test_points:
+        for y in test_points:
+            left = c + 2*y*c
+            right = c + c
+            if not close(left, right):
+                return False
+    return True
+
+def check_linear(a, b):
+    # f(x) = a x + b
+    # f(f(x)) = f(a x + b) = a*(a x + b) + b = a^2 x + a b + b
+    # Left: f(x^2 - y) + 2 y f(x) = a(x^2 - y) + b + 2 y (a x + b) = a x^2 - a y + b + 2 a x y + 2 b y
+    # Right: f(f(x)) + f(y) = (a^2 x + a b + b) + (a y + b) = a^2 x + a b + b + a y + b = a^2 x + a b + a y + 2 b
+    # Set Left = Right for all x,y:
+    # Comparing coefficients:
+    # Coef x^2: a on left, 0 on right => a=0
+    # Coef x y: 2 a on left, 0 on right => with a=0 => 0=0 ok
+    # Coef x: 0 on left, a^2 on right => a^2=0 => a=0
+    # Coef y: -a + 2 b on left, a on right => with a=0 => 2 b = 0 => b=0
+    # Constants: b on left, a b + 2 b on right => 0=0
+    # So a=0,b=0 => f(x)=0 function
+    if abs(a) > TOL or abs(b) > TOL:
+        return False
+    # Check numerically
+    for x in test_points:
+        for y in test_points:
+            left = a*(x**2 - y) + b + 2*y*(a*x + b)
+            right = a*(a*x + b) + b + a*y + b
+            if not close(left, right):
+                return False
+    return True
+
+def check_quadratic(a, b, c):
+    # f(x) = a x^2 + b x + c
+    # Compute f(f(x)):
+    # f(x) = q = a x^2 + b x + c
+    # f(f(x)) = a q^2 + b q + c = a (a x^2 + b x + c)^2 + b (a x^2 + b x + c) + c
+    # This is complicated; we check points numerically only
+    for x in test_points:
+        for y in test_points:
+            fx = a*x**2 + b*x + c
+            fy = a*y**2 + b*y + c
+            ffx = a*fx**2 + b*fx + c
+            left = a*(x**2 - y)**2 + b*(x**2 - y) + c + 2*y*fx
+            right = ffx + fy
+            if abs(left - right) > TOL:
+                return False
+    return True
+
+print("Enumerating candidate constant functions f(x)=c (c in [-2..2])")
+for c in range(-2,3):
+    if check_constant(c):
+        print(f"Constant function: f(x) = {c}")
+
+print("\nEnumerating candidate linear functions f(x)=a x + b (a,b in [-1..1])")
+for a in [-1, 0, 1]:
+    for b in [-1,0,1]:
+        if check_linear(a,b):
+            print(f"Linear function: f(x) = {a}*x + {b}")
+
+print("\nEnumerating candidate quadratic functions f(x)=a x^2 + b x + c (a,b,c in [-1,0,1])")
+for a in [-1,0,1]:
+    for b in [-1,0,1]:
+        for c in [-1,0,1]:
+            if check_quadratic(a,b,c):
+                s = f"f(x) = "
+                terms = []
+                if abs(a) > TOL:
+                    terms.append(f"{a}*x^2")
+                if abs(b) > TOL:
+                    terms.append(f"{b}*x")
+                if abs(c) > TOL or (abs(a) < TOL and abs(b) < TOL):
+                    terms.append(f"{c}")
+                print("Quadratic candidate:", " + ".join(terms))
+```

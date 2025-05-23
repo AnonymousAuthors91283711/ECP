@@ -1,0 +1,46 @@
+[write_program]
+This problem asks for the smallest natural number c such that there exist natural numbers a < b < c where the system of equations x² + a² = 2ˣ + 2ᵃ, x² + b² = 2ˣ + 2ᵇ, x² + c² = 2ˣ + 2ᶜ has exactly one real solution x. We'll write a program to search for such triples (a,b,c) and find the minimal c.
+
+The approach:
+1. For small values of c (up to 20), check all possible a < b < c
+2. For each triple, count the number of real solutions x to the system
+3. Track triples with exactly one solution and find the minimal c
+
+```python
+import math
+
+def count_solutions(a, b, c):
+    """Count real solutions x that satisfy all three equations."""
+    # The equations imply: x² + n² = 2ˣ + 2ⁿ for n=a,b,c
+    # So we can look for x where f(x) = x² - 2ˣ is constant for n=a,b,c
+    solutions = set()
+    
+    # We'll check x in [-10,10] with small steps since 2ˣ grows rapidly
+    step = 0.001
+    for x in [i * step for i in range(-10000, 10001)]:
+        fa = x*x + a*a - 2**x - 2**a
+        fb = x*x + b*b - 2**x - 2**b
+        fc = x*x + c*c - 2**x - 2**c
+        if abs(fa) < 0.01 and abs(fb) < 0.01 and abs(fc) < 0.01:
+            rounded_x = round(x, 3)
+            solutions.add(rounded_x)
+    
+    return len(solutions)
+
+def find_min_c(max_c=20):
+    min_c = None
+    for c in range(1, max_c + 1):
+        for b in range(1, c):
+            for a in range(1, b):
+                sol_count = count_solutions(a, b, c)
+                if sol_count == 1:
+                    print(f"Found solution: a={a}, b={b}, c={c}")
+                    if min_c is None or c < min_c:
+                        min_c = c
+    if min_c is not None:
+        print(f"Minimal c found: {min_c}")
+    else:
+        print(f"No solution found for c up to {max_c}")
+
+find_min_c()
+```

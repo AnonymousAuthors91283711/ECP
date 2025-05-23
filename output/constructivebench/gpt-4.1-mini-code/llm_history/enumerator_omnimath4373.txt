@@ -1,0 +1,62 @@
+[write_program]
+The problem involves real positive numbers \(a, b, c, d, e\) satisfying two equalities involving sums of squares and sums of fourth powers. We want to explore possible tuples \((a,b,c,d,e)\) that satisfy:
+
+\[
+a^2 + b^2 + c^2 = d^2 + e^2
+\]
+\[
+a^4 + b^4 + c^4 = d^4 + e^4
+\]
+
+We will try small positive integers for a,b,c,d,e and print those that satisfy both equations (up to some small epsilon tolerance for floating point comparison) to search for patterns or conjectures.
+
+```python
+import math
+
+# tolerance for floating comparisons
+EPS = 1e-9
+
+def eq_approx(x, y):
+    return abs(x - y) < EPS
+
+def squares(x): return x**2
+def fourths(x): return x**4
+
+def check(a,b,c,d,e):
+    sum_sq_left = squares(a)+squares(b)+squares(c)
+    sum_sq_right = squares(d)+squares(e)
+    if not eq_approx(sum_sq_left, sum_sq_right):
+        return False
+    sum_4_left = fourths(a)+fourths(b)+fourths(c)
+    sum_4_right = fourths(d)+fourths(e)
+    if not eq_approx(sum_4_left, sum_4_right):
+        return False
+    return True
+
+print("Enumerating possible (a,b,c,d,e) with 1 <= each <= 10 and a,b,c,d,e positive integers")
+
+count = 0
+max_print = 20
+
+for a in range(1,11):
+    for b in range(a,11):  # a <= b <= c to reduce duplicates
+        for c in range(b,11):
+            sum_sq_left = a*a + b*b + c*c
+            sum_4_left = a**4 + b**4 + c**4
+            # Since d,e are positive reals, search integer pairs (d,e) with d <= e and d^2+e^2 = sum_sq_left
+            # So d and e satisfy d^2 + e^2 = sum_sq_left
+            # For small integers up to 10, try all d,e with d,e >=1 and d^2+e^2 = sum_sq_left
+            for d in range(1,11):
+                for e in range(d,11):
+                    if d*d + e*e != sum_sq_left:
+                        continue
+                    # Check 4th powers
+                    if d**4 + e**4 == sum_4_left:
+                        count += 1
+                        print(f"Found #{count}: a={a}, b={b}, c={c}, d={d}, e={e}")
+                        if count >= max_print:
+                            print("Reached max print limit.")
+                            exit()
+
+print("Done enumerating.")
+```

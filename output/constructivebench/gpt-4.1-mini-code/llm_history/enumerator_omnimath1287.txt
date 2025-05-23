@@ -1,0 +1,58 @@
+[write_program]
+The problem is to count the number of functions \( f: \{0,\ldots,5\} \times \{0,\ldots,5\} \to \{0,1\} \) such that for every row \(i\), exactly 2 entries are 0, and for every column \(j\), exactly 2 entries are 0.
+
+This is equivalent to counting 0-1 matrices of size 6x6 with exactly two 0s in every row and column (and the rest are 1s).
+
+The problem is a classical combinatorial enumeration related to \(6 \times 6\) (0-1)-matrices with prescribed row and column sums equal to 2 (zeros). Since there are six rows and each has 2 zeros, total zeros are \(6 \times 2 = 12\). Similarly, columns have 2 zeros each, consistent.
+
+Such matrices correspond to bi-regular bipartite graphs with degree 2 on each side or equivalently the enumeration of 2-regular bipartite graphs between two sets of size 6.
+
+A 2-regular bipartite graph on \(2 \times 6\) vertices is a disjoint union of cycles covering all vertices, since each vertex degree is 2.
+
+Therefore, the number of such matrices equals the number of 2-factors (2-regular spanning subgraphs) of the complete bipartite graph \(K_{6,6}\).
+
+We will enumerate all possible cycle decompositions of the bipartite graph vertices into even cycles (all cycles in bipartite graphs are even length).
+
+Maximum cycle length is 12 (covering all vertices).
+
+Cycles must have length multiples of 2, minimum 4 since we want degree 2 at every vertex.
+
+We will enumerate partitions of 12 into even parts >=4.
+
+Each such cycle corresponds to a cycle cover block in the bipartite graph; the number of 2-factors equals sum over all cycle decompositions of product of number of ways to realize each cycle.
+
+The count of possible 2-factors in \(K_{n,n}\) with degree 2 is known combinatorially but complicated. Here we pick 6 as a sample.
+
+We use a simplified brute force approach: we generate all 0-1 matrices with row sums=2 zeros and count those with column sums=2 zeros too.
+
+Since this direct enumeration is huge \(\binom{6}{2}^6 = 15^6 = 11390625\), too big to brute force fully, we will generate only some samples and print count estimates or known cycle type enumerations to guess the number.
+
+We'll enumerate tuples of 6 subsets of size 2 (rows), then count how many satisfy column sum 2 zeros.
+
+Let's implement partial enumeration with early pruning to list some answers.
+
+
+```python
+from itertools import combinations, product
+
+n = 6
+row_zero_positions = list(combinations(range(n), 2))  # all ways to pick zero positions per row
+
+count = 0
+max_print = 10  # limit output for brevity
+
+print(f"Enumerating functions f: [6]x[6]->[2] with 2 zeros per row and column...")
+
+for rows in product(row_zero_positions, repeat=n):
+    # Count zero in each column
+    col_counts = [0]*n
+    for r in range(n):
+        for c in rows[r]:
+            col_counts[c] +=1
+    if all(c == 2 for c in col_counts):
+        count += 1
+        if count <= max_print:
+            print(f"Valid matrix zero positions per row: {rows}")
+print(f"Total valid matrices found (up to max_print): {min(count, max_print)}; total count so far: {count}")
+```
+This program enumerates some valid configurations with exact counts for a sample of size 6 and prints early results immediately after found. It is a starting point for conjecturing the total count.

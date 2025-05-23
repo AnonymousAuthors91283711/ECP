@@ -1,0 +1,54 @@
+[write_program]
+The problem involves a 5x5 integer grid and counting certain rectangles with odd sums of corner entries. We want to enumerate the number n of such rectangles for some sample matrices, and see which n appear. We'll print the matrices (or a representation) and n; hopefully we can see a pattern or identify maximum values.
+
+```python
+import itertools
+
+def row_col_pairs(n=5):
+    # All increasing pairs of indices in [0..4]
+    return [(i,j) for i in range(n) for j in range(i+1,n)]
+
+def rectangles_odd_sum(grid):
+    n = len(grid)
+    pairs = list(itertools.product(row_col_pairs(n), row_col_pairs(n)))
+    count = 0
+    for ((r1,r2),(c1,c2)) in pairs:
+        s = grid[r1][c1] + grid[r1][c2] + grid[r2][c1] + grid[r2][c2]
+        if s % 2 == 1:
+            count += 1
+    return count
+
+def print_grid(grid):
+    for row in grid:
+        print("".join(str(x) for x in row))
+
+def all_binary_grids(n=3):
+    # For smaller size due to complexity, generate binary grids
+    from itertools import product
+    for bits in product((0,1), repeat=n*n):
+        yield [list(bits[i*n:(i+1)*n]) for i in range(n)]
+
+def main():
+    # Enumerate on 3x3 grids (to get some insight quickly)
+    n = 3
+    print(f"Enumerating 3x3 binary grids for rectangles with odd corner sums")
+    best = 0
+    best_grid = None
+    seen = set()
+    for grid in all_binary_grids(n):
+        c = rectangles_odd_sum(grid)
+        if c not in seen:
+            seen.add(c)
+            print(f"Count: {c} on grid:")
+            for row in grid:
+                print(" ".join(str(x) for x in row))
+            print()
+        if c > best:
+            best = c
+            best_grid = grid
+    print(f"Maximum count for 3x3 binary grids found: {best}")
+
+if __name__ == "__main__":
+    main()
+```
+

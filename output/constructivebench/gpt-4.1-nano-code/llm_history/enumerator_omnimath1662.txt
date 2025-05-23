@@ -1,0 +1,70 @@
+[write_program]
+The problem appears to involve a grid coloring setup where black and white squares are defined on an n×n grid, with the goal of summing certain neighboring black squares relative to each white square. The theorem asks for the greatest value of a certain sum over all such colorings, under the constraint n > 2.
+
+Given the crystallized structure:
+- For each white cell p, count black cells within the 8 surrounding neighbors (including diagonals).
+- Sum these counts over all white cells.
+- Find the maximum such sum across all possible grid colorings.
+
+This resembles a combinatorial problem about placing black and white cells to maximize boundary interactions, akin to maximum adjacency.
+
+**Key insight:**
+- To maximize the sum, prioritize white cells that have many neighboring black cells.
+- Since each black cell can influence multiple white neighbors and vice versa, a strategic pattern may be to cluster black cells so that as many white neighbors around white cells are also black.
+
+**Approach for enumeration:**
+- Use small values of n, e.g., n=3, n=4, n=5, to explicitly generate all grid colorings.
+- For each coloring, compute the sum.
+- Track the maximum sum found.
+
+Given the requirement for efficiency and the enumeration, we'll:
+- Generate all grid configurations (2^(n*n))
+- For each, compute the sum
+- Stream each maximum found
+
+Let's implement this:
+
+```python
+import itertools
+
+def count_black_neighbors(grid, n, p):
+    # Count black neighbors within 8-directional adjacency
+    count = 0
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            if dx == 0 and dy == 0:
+                continue
+            x, y = p[0] + dx, p[1] + dy
+            if 0 <= x < n and 0 <= y < n:
+                if grid[x][y]:
+                    count += 1
+    return count
+
+# Enumerate all possible grid colorings for small n
+max_total = -1
+max_pattern = None
+n_values = [3, 4]  # small sample sizes
+for n in n_values:
+    total_configs = 2 ** (n * n)
+    for config_index in range(total_configs):
+        # Generate grid from binary pattern
+        pattern_bits = bin(config_index)[2:].zfill(n * n)
+        grid = [list(map(int, pattern_bits[i*n:(i+1)*n])) for i in range(n)]
+        total_sum = 0
+        white_positions = [(i, j) for i in range(n) for j in range(n) if grid[i][j] == 0]
+        for p in white_positions:
+            total_sum += count_black_neighbors(grid, n, p)
+        print(f"n={n}, config={config_index}, sum={total_sum}")
+        if total_sum > max_total:
+            max_total = total_sum
+            max_pattern = (n, pattern_bits)
+print(f"Maximum sum for n=3 or 4: {max_total} (pattern for n={max_pattern[0]}, bits={max_pattern[1]})")
+```
+
+This code:
+- Tries small grid sizes (n=3,4)
+- Enumerates all colorings
+- Calculates total neighboring black squares for white cells
+- Finds and streams the maximum sum discovered
+
+Adjust `n_values` as needed for larger sizes or more exhaustive searches.

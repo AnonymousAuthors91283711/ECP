@@ -1,0 +1,47 @@
+[write_program]
+The problem asks for the smallest positive integer n such that there exists a set of n positive integers where the product of (1 - 1/i) for all i in the set equals 51/2010. We need to enumerate possible sets and find the minimal n that satisfies this condition.
+
+Approach:
+1. Factorize the target fraction: 51/2010 = (3×17)/(2×3×5×67) = 17/(2×5×67)
+2. The product (1-1/i) can be written as ((i-1)/i), so the product becomes a telescoping product where most terms cancel out
+3. We need to find a sequence where the numerator product is 17 and denominator product is 2×5×67
+4. Enumerate possible factorizations by trying different combinations of integers
+
+```python
+import math
+from fractions import Fraction
+
+def find_min_n():
+    target = Fraction(51, 2010)
+    min_n = float('inf')
+    
+    # We'll try sets up to size 10 (can be increased if needed)
+    for n in range(1, 11):
+        # Generate all combinations of n distinct integers > 1
+        # Since 1 would make the product term 0, we skip 1
+        from itertools import combinations
+        
+        # We'll limit the maximum integer to try for efficiency
+        max_i = 100
+        nums = range(2, max_i + 1)
+        
+        for combo in combinations(nums, n):
+            product = Fraction(1, 1)
+            for i in combo:
+                product *= Fraction(i-1, i)
+                # Early exit if product gets too small
+                if product < target:
+                    break
+            
+            if product == target:
+                print(f"Found solution with n={n}: {combo}")
+                if n < min_n:
+                    min_n = n
+    
+    if min_n != float('inf'):
+        print(f"Minimal n found: {min_n}")
+    else:
+        print("No solution found in search space")
+
+find_min_n()
+```

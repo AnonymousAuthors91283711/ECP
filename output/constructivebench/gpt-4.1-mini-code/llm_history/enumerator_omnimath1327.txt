@@ -1,0 +1,45 @@
+[write_program]
+The problem defines a sequence \( a_k \) for \( k \ge 2 \) with positive real terms and a recurrence relation:
+\[
+a_k = \frac{k \cdot a_{k-1}}{a_{k-1} - (k-1)}, \quad k=2,3,\ldots,100,
+\]
+with the additional condition \( a_{20} = a_{23} \).
+
+We want to find \( a_{100} \).
+
+I'll write a Python program to explore sequences defined by initial positive values \(a_1\), compute up to \(a_{100}\), print intermediate values when \(a_{20} \approx a_{23}\), and output the corresponding \(a_{100}\). Since this is a nonlinear recurrence, we'll try several small initial values and observe results.
+
+```python
+# Enumerate candidates for the initial value a_1,
+# compute sequence up to 100, and check when a_20 == a_23 approximately,
+# print all (a_20, a_23, a_100) that meet this condition.
+
+def sequence(a1, tol=1e-8):
+    a = [0, a1]  # 1-based indexing, a[1] = a1
+    for k in range(2, 101):
+        prev = a[k-1]
+        denom = prev - (k-1)
+        if abs(denom) < 1e-14:
+            return None  # avoid division by zero or instability
+        ak = (k * prev) / denom
+        if ak <= 0:
+            return None  # violate positivity
+        a.append(ak)
+    return a
+
+print("Trying initial values a_1 ...")
+for i in range(1, 101):  # try a_1 from 0.1 to 10 by 0.1 steps
+    a1 = i / 10
+    seq = sequence(a1)
+    if seq is None:
+        continue
+    a20 = seq[20]
+    a23 = seq[23]
+    if abs(a20 - a23) < 1e-6:  # condition a_20 = a_23 approx
+        print(f"a_1={a1:.2f}, a_20={a20:.8f}, a_23={a23:.8f}, a_100={seq[100]:.8f}")
+
+# This output will show all candidate initial values that yield a_20 ≈ a_23,
+# from which one can guess the value of a_100.
+```
+
+This will efficiently scan simple positive initial values for \(a_1\), seek when the condition \(a_{20} = a_{23}\) holds approximately, and print the corresponding \(a_{100}\). This approach follows the problem's requirements for streaming partial results and investigating parameter values systematically.

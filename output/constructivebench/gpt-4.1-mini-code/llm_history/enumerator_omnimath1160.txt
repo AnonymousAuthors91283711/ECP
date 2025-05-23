@@ -1,0 +1,64 @@
+[write_program]
+The problem asks for the smallest size \( n \) of a finite set \( s \subseteq \mathbb{N} \) of positive integers such that every pair \( (p,q) \) with \( p+q \leq 2016 \) can be represented as sums of subsets \( t, u \subseteq s \) with sums \( p \) and \( q \), respectively.
+
+To explore this, let's experiment with small values of \( \max(p+q) \) (e.g., 5, 10, 15, 20) and attempt to find minimal sets \( s \) that cover every sum up to that maximum. We consider \( s \) with distinct positive integers and check the subset sums to cover all numbers from 0 up to the sum limit, also ensuring the pairwise representation condition is met.
+
+Here's a Python enumerator to test candidate sets \( s \) for sum limits up to 20, trying small sizes and printing sets that satisfy the conditions. We use powers of 2 and other small combinations to see which sizes can fully represent sums. The code checks all pairs \( (p,q) \) with \( p+q \leq max\_sum \) and verifies subset sums representation.
+
+```python
+from itertools import combinations, chain
+
+# Generate subset sums of a set s
+def subset_sums(s):
+    sums = {0}
+    for x in s:
+        sums |= {x + y for y in sums}
+    return sums
+
+# Generate all subsets represented by their sums
+def all_subset_sums(s):
+    sums = set()
+    s_list = list(s)
+    for r in range(len(s_list)+1):
+        for combo in combinations(s_list, r):
+            sums.add(sum(combo))
+    return sums
+
+# Check if for all pairs p,q with p+q <= max_sum,
+# there exist subsets t,u of s with sums p and q resp.
+def check_set(s, max_sum):
+    sums = all_subset_sums(s)
+    # We map sums to sets of subsets sums for faster lookup, but sets too big, so keep sums only
+    for total in range(max_sum+1):
+        for p in range(total+1):
+            q = total - p
+            if p not in sums or q not in sums:
+                return False
+    return True
+
+def main():
+    max_sum_values = [5, 10, 15, 20]  # sample max sum values to test
+    print("Testing sum limits and minimal set sizes for coverage")
+    for max_sum in max_sum_values:
+        print(f"\nMax sum: {max_sum}")
+        found = False
+        # Try set sizes from 1 up to length 10 (arbitrary cutoff for time)
+        for size in range(1, 11):
+            # Generate candidate sets with elements between 1 and max_sum
+            # Using combinations with repeats is complicated, try distinct sets
+            # To reduce search space, values up to max_sum (small sets)
+            # Generate all combinations of size 'size' in range 1..max_sum
+            candidates = combinations(range(1, max_sum+1), size)
+            for s in candidates:
+                if check_set(set(s), max_sum):
+                    print(f"Size {size} set found: {s}")
+                    found = True
+            if found:
+                print(f"Minimal size for max_sum {max_sum} is at most {size}")
+                break
+        if not found:
+            print(f"No set found up to size 10 for max_sum {max_sum}")
+
+if __name__ == "__main__":
+    main()
+```

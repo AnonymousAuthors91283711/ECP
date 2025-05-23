@@ -1,0 +1,50 @@
+[write_program]
+The problem asks for the smallest integer \( m \geq 3 \) such that for any partition of the set \(\{3, \ldots, m\}\) into two disjoint subsets \(A\) and \(B\), at least one subset contains a triple \((a,b,c)\) with \(a \times b = c\). 
+
+We'll enumerate increasing \(m\), try all possible partitions of \(\{3, \ldots, m\}\) into two subsets, and check if there's any partition avoiding such a triple in both. The first \(m\) where no such partition exists is the answer. To keep things feasible, apply early stopping and only enumerate partitions via bitmasks.
+
+```python
+# Enumerate smallest m ≥ 3 so that any partition of {3..m} forces a triple (a,b,c) with a*b=c in one subset.
+
+def has_product_triple(subset):
+    s = set(subset)
+    for a in s:
+        for b in s:
+            c = a * b
+            if c in s:
+                # triple found
+                return True
+    return False
+
+def main():
+    from itertools import combinations
+    
+    for m in range(3, 22):  # limit search to m ≤ 21 for feasibility
+        elements = list(range(3, m+1))
+        n = len(elements)
+        found_partition_without_triple = False
+        
+        # Enumerate all partitions via bitmask of n elements: A = elements with bit=1; B = rest
+        # Stop if any partition avoids product triples in both subsets
+        limit = 1 << n
+        
+        for mask in range(limit):
+            A = [elements[i] for i in range(n) if (mask & (1 << i))]
+            B = [elements[i] for i in range(n) if not (mask & (1 << i))]
+            if not A or not B:
+                continue  # partitions must cover all elements
+            
+            if (not has_product_triple(A)) and (not has_product_triple(B)):
+                print(f"m={m}, partition without product triple found:")
+                print(f"  A = {A}")
+                print(f"  B = {B}")
+                found_partition_without_triple = True
+                break
+        
+        if not found_partition_without_triple:
+            print(f"Minimum m with forced product triple in one part: {m}")
+            break
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,70 @@
+[write_program]
+This problem involves finding the number of real numbers x in [0,2020] such that f(f(f(x))) = 17, where f(x) = x(x - floor(x)). We'll approach this by:
+
+1. Understanding that f(x) operates on the fractional part of x
+2. Breaking down the nested function applications
+3. Enumerating possible cases where the third application equals 17
+
+We'll implement a program to count valid x values by:
+- Iterating through possible integer parts
+- Solving the fractional equations at each level
+- Checking if the final result equals 17
+
+```python
+import math
+
+def f(x):
+    return x * (x - math.floor(x))
+
+def count_solutions():
+    count = 0
+    # Iterate through all possible integer parts k for x
+    for k in range(2021):
+        # x = k + y where y is fractional part (0 <= y < 1)
+        # First application: f(x) = (k+y)*y
+        # We need to consider ranges where f(x) falls between [n, n+1)
+        # For each possible n, we'll solve f(f(x)) = z where z is in [n, n+1)
+        
+        # The maximum possible f(x) is when y approaches 1: (k+1)*1 = k+1
+        max_n = k
+        for n in range(max_n + 1):
+            # f(x) = n + z where 0 <= z < 1
+            # So (k+y)*y = n + z
+            # Second application: f(f(x)) = (n+z)*z
+            # Again, consider ranges where this falls between [m, m+1)
+            
+            max_m = n
+            for m in range(max_m + 1):
+                # f(f(x)) = m + w where 0 <= w < 1
+                # So (n+z)*z = m + w
+                # Third application: f(f(f(x))) = (m+w)*w = 17
+                
+                # Solve (m+w)*w = 17
+                # Quadratic: w^2 + m*w - 17 = 0
+                discriminant = m*m + 4*17
+                if discriminant < 0:
+                    continue
+                w = (-m + math.sqrt(discriminant))/2
+                if 0 <= w < 1:
+                    # Now back-solve for z: (n+z)*z = m + w
+                    discriminant_z = n*n + 4*(m + w)
+                    if discriminant_z < 0:
+                        continue
+                    z = (-n + math.sqrt(discriminant_z))/2
+                    if 0 <= z < 1:
+                        # Now back-solve for y: (k+y)*y = n + z
+                        discriminant_y = k*k + 4*(n + z)
+                        if discriminant_y < 0:
+                            continue
+                        y = (-k + math.sqrt(discriminant_y))/2
+                        if 0 <= y < 1:
+                            x = k + y
+                            if 0 <= x <= 2020:
+                                count += 1
+                                print(f"Found solution: x = {x}")
+    print(f"Total solutions: {count}")
+    return count
+
+if __name__ == "__main__":
+    count_solutions()
+```

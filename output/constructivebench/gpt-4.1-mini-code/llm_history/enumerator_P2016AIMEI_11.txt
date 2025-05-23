@@ -1,0 +1,61 @@
+[write_program]
+The problem seems to involve a polynomial \(P\) satisfying a functional equation relating \(P(x+1)\) and \(P(x)\), along with a condition on values at specific points. To explore potential answers for \(P\left(\frac{7}{2}\right)\), I will write a Python program that tries small-degree polynomials to find those satisfying the functional equation and the numeric condition, then computes \(P(3.5)\).
+
+```python
+from sympy import symbols, Poly, Eq, solve, Rational
+
+# We use small degrees to find polynomials P(x) satisfying:
+# (x - 1) * P(x + 1) = (x + 2) * P(x),
+# and P(2)^2 == P(3).
+
+x = symbols('x')
+max_degree = 5  # small degrees only for efficiency
+
+def poly_expr(coeffs):
+    # coeffs: list of coefficients [a0, a1, ..., an]
+    return sum(c * x**i for i, c in enumerate(coeffs))
+
+print("Trying polynomials up to degree", max_degree)
+found = []
+
+for deg in range(1, max_degree+1):
+    # coefficients to solve for: a0,...,a_deg with a_deg != 0
+    coeffs = symbols(' '.join(f'a{i}' for i in range(deg+1)))
+    P = sum(c * x**i for i, c in enumerate(coeffs))
+
+    # Form the functional equation (x-1)*P(x+1) - (x+2)*P(x) == 0 polynomial
+    Px1 = P.subs(x, x+1)
+    FE = (x - 1)*Px1 - (x + 2)*P
+
+    # This should be the zero polynomial, so all coefficients 0
+    poly_FE = Poly(FE, x)
+    equations = [Eq(c,0) for c in poly_FE.all_coeffs()]
+
+    # Add condition P(2)**2 == P(3)
+    P2 = P.subs(x, 2)
+    P3 = P.subs(x, 3)
+    equations.append(Eq(P2**2 - P3, 0))
+
+    # Solve the system
+    sol = solve(equations, coeffs, dict=True)
+
+    # filter out zero polynomial (all zeros)
+    sol = [s for s in sol if any(s[c] != 0 for c in coeffs)]
+
+    for s in sol:
+        # Construct polynomial with solution
+        p = poly_expr([s[c] for c in coeffs])
+        val = p.subs(x, Rational(7,2))
+        print(f"Degree {deg} polynomial coefficients: {[s[c] for c in coeffs]}")
+        print(f"P(7/2) = {val}")
+        found.append(val)
+
+if found:
+    # print unique answers found
+    vals = list(set(found))
+    print("\nDistinct candidate values for P(7/2):")
+    for v in vals:
+        print(v)
+else:
+    print("No nonzero polynomials found satisfying the conditions.")
+```

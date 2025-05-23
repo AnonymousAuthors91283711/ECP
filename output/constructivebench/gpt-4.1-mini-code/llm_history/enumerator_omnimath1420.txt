@@ -1,0 +1,84 @@
+[write_program]
+The problem involves a 3-variable polynomial \( P \) of total degree 4, that is cyclically symmetric on its variables, vanishes on inputs where the first two variables are equal, and evaluates to 1 on (1, 2, 3).
+
+We want to find \( P(2,4,8) \).
+
+To assist, we enumerate homogeneous symmetric polynomials of degree 4 in 3 variables and check the given conditions symbolically and numerically. I'll try some basis polynomials (like monomial symmetric polynomials) and see which satisfy the conditions, then print their value at (2,4,8).
+
+```python
+# Enumerate candidate polynomials in x, y, z of total degree 4,
+# symmetric under cyclic permutation, vanish on inputs with x=y,
+# and assume P(1,2,3)=1 to normalize.
+# Then print P(2,4,8) values to conjecture omnimath1420_answer.
+
+from sympy import symbols, Poly, simplify
+from sympy.abc import x,y,z
+
+# Define cyclic permutation function for (x,y,z) -> (y,z,x)
+def cyclic_sub(poly):
+    return poly.subs({x:y, y:z, z:x})
+
+# Check cyclic invariance: P = P(y,z,x)
+def is_cyclic(poly):
+    return simplify(poly - cyclic_sub(poly)) == 0
+
+# Check zero on (a,a,b):
+def zero_on_equal_first_two(poly, a_val, b_val):
+    val = poly.subs({x:a_val, y:a_val, z:b_val})
+    return simplify(val) == 0
+
+# Total degree 4 monomials:
+monomials = [
+    x**4, y**4, z**4,
+    x**3*y, x**3*z, y**3*x, y**3*z, z**3*x, z**3*y,
+    x**2*y**2, x**2*z**2, y**2*z**2,
+    x**2*y*z, y**2*x*z, z**2*x*y,
+    x*y*z*(x + y + z)  # also degree 4
+]
+
+# Generate cyclic symmetric linear combinations of these monomials
+# We'll use basis sets that sum over cyclic permutations.
+
+# For example, cyclic sum of x^4 is x^4 + y^4 + z^4
+def cyclic_sum(m):
+    return m + cyclic_sub(m) + cyclic_sub(cyclic_sub(m))
+
+# Basis polys
+basis = [
+    cyclic_sum(x**4),
+    cyclic_sum(x**3*y),
+    cyclic_sum(x**2*y**2),
+    cyclic_sum(x**2*y*z)
+]
+
+# Variables for coefficients
+from sympy import symbols, Eq, solve
+a,b,c,d = symbols('a b c d')
+
+P = a*basis[0] + b*basis[1] + c*basis[2] + d*basis[3]
+
+# Check P(1,2,3)=1:
+val_123 = P.subs({x:1, y:2, z:3})
+
+# Enforce zero on (a,a,b): try a=1,b=0
+val_equal = P.subs({x:1, y:1, z:0})
+
+# Solve conditions:
+eqs = [
+    Eq(val_equal, 0),
+    Eq(val_123, 1)
+]
+
+# The zero_on_equal_first_two condition must hold for all a,b,
+# but testing for several samples a,b suffices here.
+
+# Also check cyclic invariance - basis polynomials are already cyclic sums, so invariant.
+
+sol = solve(eqs, (a,b,c,d), dict=True)
+
+for s in sol:
+    p = P.subs(s).expand()
+    val_248 = p.subs({x:2,y:4,z:8})
+    print(f'P with coefficients {s}: P(2,4,8) = {val_248}')
+```
+This program prints values of candidate polynomials satisfying the conditions, helping conjecture the answer for \( P(2,4,8) \).

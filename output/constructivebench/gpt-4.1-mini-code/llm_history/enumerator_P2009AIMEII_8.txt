@@ -1,0 +1,35 @@
+[write_program]
+This problem involves two independent geometric random variables \(X, Y\) with \(P(X = k) = (5/6)^{k-1} \cdot (1/6)\). We want the probability \(P(|X-Y| \leq 1) = P(X=Y \lor X=Y+1 \lor Y=X+1)\).
+
+We enumerate pairs \((d, l)\) for \(d, l \in \{1, \dots, N\}\) (since geometric distributions are infinite, we pick \(N=15\) for approximation). We compute exact probabilities as fractions, sum over the valid pairs, and simplify the result.
+
+The program prints each valid pair's probability fraction and partial summations, then the final approximate probability. This should help conjecture the exact answer.
+
+```python
+from fractions import Fraction
+
+def geometric_prob(k):
+    # P(X=k) = (5/6)^{k-1}*(1/6)
+    return Fraction(1,6) * Fraction(5,6)**(k-1)
+
+def main():
+    N = 15  # max for enumeration; geometric tails very small after 15
+    total = Fraction(0,1)
+    print(f"Enumerating probabilities P(X=d)*P(Y=l) for |d-l| ≤ 1, d,l=1..{N}")
+    for d in range(1, N+1):
+        p_d = geometric_prob(d)
+        for l in range(max(1, d-1), min(N, d+1)+1):  # l in [d-1, d, d+1] intersect [1,N]
+            p_l = geometric_prob(l)
+            p = p_d * p_l
+            print(f"P(d={d}, l={l}) = {p}")
+            total += p
+    
+    # upper bound on missing probability due to truncation
+    tail_prob = 1 - sum(geometric_prob(k) for k in range(1, N+1))
+    print(f"Tail probability beyond {N}: {tail_prob:.6f} (each variable)")
+    print(f"Max missed prob: ≈ {2*tail_prob:.6f} to {tail_prob*tail_prob:.6f} (approximation)")
+    print(f"Partial sum for |X-Y| ≤1 up to {N}: {total} ≈ {float(total):.6f}")
+
+if __name__ == "__main__":
+    main()
+```

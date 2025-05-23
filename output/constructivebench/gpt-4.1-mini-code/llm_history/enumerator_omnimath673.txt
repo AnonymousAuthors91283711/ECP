@@ -1,0 +1,44 @@
+[write_program]
+The problem counts 11x11 matrices with entries between 1 and 2^10 such that row n sums are divisible by 2^n and column n sums are divisible by 2^n for n=0,...,10.
+
+We attempt enumeration over smaller sizes n=1..4 to get insight. We'll fix matrix size `N=4` and max entry `max_val=2^10=1024` but reduce max_val for feasibility in samples. We'll enumerate matrices with entries in [1..max_val] meeting the modular sum conditions. Since brute force on 4x4 with entries 1..1024 is impractical, we'll drastically reduce max_val for demonstration and output found matrices.
+
+```python
+# Enumerate small matrices satisfying modular sum constraints for insight.
+
+N = 4        # matrix size (for experimentation, smaller than 11)
+max_val = 4  # max entry value (reduced from 2^10=1024 for speed)
+
+moduli = [2**n for n in range(N)]
+
+from itertools import product
+
+def check_matrix(M):
+    # Check row sums divisible by 2^n
+    for n in range(N):
+        s = sum(M[n])
+        if s % moduli[n] != 0:
+            return False
+    # Check column sums divisible by 2^n
+    for n in range(N):
+        s = sum(M[i][n] for i in range(N))
+        if s % moduli[n] != 0:
+            return False
+    return True
+
+print(f"Enumerating {N}x{N} matrices with entries in [1..{max_val}] meeting modular conditions:")
+
+count = 0
+# Generate matrices row by row
+rows_possibilities = list(product(range(1, max_val+1), repeat=N))
+for matrix_rows in product(rows_possibilities, repeat=N):
+    if check_matrix(matrix_rows):
+        count += 1
+        print(f"Matrix #{count}:")
+        for r in matrix_rows:
+            print(r)
+        print()
+
+print(f"Total count found (N={N}, max_val={max_val}): {count}")
+```
+This program enumerates small candidate matrices and prints each immediately if it satisfies the constraints. Adjust `N` and `max_val` for manageable runtime and to gather conjectures on the problem structure.

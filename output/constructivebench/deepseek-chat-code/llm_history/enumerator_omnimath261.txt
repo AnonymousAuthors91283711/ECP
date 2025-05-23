@@ -1,0 +1,70 @@
+[write_program]
+This problem involves analyzing a recursive sequence `a_n` and finding the least upper bound for a sum involving another sequence `x_k`. To approach this computationally, we'll:
+
+1. Compute the sequence `a_n` up to n=2002
+2. For small values of parameters, try to find patterns in the optimal `x_k` values
+3. Compute the sum for various candidate `x_k` patterns to conjecture the minimal bound
+
+Here's a Python program that computes the `a_n` sequence and explores simple patterns for `x_k`:
+
+```python
+import math
+
+def compute_a_sequence(max_n):
+    """Compute the recursive sequence a_n up to max_n"""
+    a = [0.0] * (max_n + 1)
+    a[1] = 1/4
+    for n in range(2, max_n + 1):
+        a[n] = 0.25 * (1 + a[n-1])**2
+    return a
+
+def compute_sum(x_pattern, a_n, max_k=2002):
+    """Compute the sum for a given x_pattern function"""
+    total = 0.0
+    x_values = [0.0] * (max_k + 1)
+    
+    # Generate x values according to pattern
+    for k in range(1, max_k + 1):
+        x_values[k] = x_pattern(k)
+    
+    for k in range(1, max_k + 1):
+        # Compute denominator components
+        sum_x = sum(x_values[i] for i in range(k, max_k + 1))
+        k_term = (k * (k - 1)) / 2
+        denominator = (x_values[k] + sum_x + k_term + 1)**2
+        
+        # Compute A_k and add to total
+        A_k = (x_values[k] - k) / denominator
+        total += A_k
+    
+    return total
+
+def main():
+    max_n = 2002
+    a = compute_a_sequence(max_n)
+    print(f"a[{max_n}] = {a[max_n]}")
+
+    # Test different x patterns
+    patterns = [
+        ("x_k = k", lambda k: k),
+        ("x_k = k^2", lambda k: k**2),
+        ("x_k = sqrt(k)", lambda k: math.sqrt(k)),
+        ("x_k = 0", lambda k: 0),
+    ]
+    
+    for name, pattern in patterns:
+        total = compute_sum(pattern, a)
+        ratio = total / a[max_n]
+        print(f"{name}: sum = {total}, ratio = {ratio}")
+
+if __name__ == "__main__":
+    main()
+```
+
+The program:
+1. Computes the recursive sequence `a_n` up to n=2002
+2. Tests several simple patterns for `x_k` (linear, quadratic, square root, zero)
+3. For each pattern, computes the sum and the ratio sum/a_2002
+4. Outputs these values to help identify potential minimal bounds
+
+Note that the actual minimal bound would require more sophisticated optimization of the `x_k` sequence, but this provides a starting point for empirical investigation. The recursive nature of `a_n` suggests the bound might involve exponential or doubly exponential growth.

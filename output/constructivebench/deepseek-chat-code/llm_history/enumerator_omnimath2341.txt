@@ -1,0 +1,59 @@
+[write_program]
+This problem asks for the maximum number of white squares (k) that can be placed on an 8x8 chessboard such that:
+1. There are 6 black squares with distinct rows and columns (like non-attacking rooks)
+2. Every white square shares a row or column with every black square
+3. All white squares have distinct rows and columns
+
+We'll model this by:
+1. Generating all possible placements of 6 black squares with distinct rows/columns
+2. For each placement, find the maximum number of white squares that can satisfy the conditions
+3. Track the maximum k found across all placements
+
+```python
+from itertools import combinations
+
+def solve():
+    n = 8
+    black_size = 6
+    max_k = 0
+    
+    # Generate all possible black placements (6 squares with distinct rows/cols)
+    rows = list(range(n))
+    cols = list(range(n))
+    for black_rows in combinations(rows, black_size):
+        for black_cols in combinations(cols, black_size):
+            black = list(zip(black_rows, black_cols))
+            
+            # Find all positions that share row or column with every black square
+            white_candidates = []
+            for r in range(n):
+                for c in range(n):
+                    if (r, c) in black:
+                        continue
+                    valid = True
+                    for (br, bc) in black:
+                        if r != br and c != bc:
+                            valid = False
+                            break
+                    if valid:
+                        white_candidates.append((r, c))
+            
+            # Find maximum subset of white candidates with distinct rows/cols
+            max_white = 0
+            rows_used = set()
+            cols_used = set()
+            white_candidates.sort()  # for deterministic selection
+            for (r, c) in white_candidates:
+                if r not in rows_used and c not in cols_used:
+                    rows_used.add(r)
+                    cols_used.add(c)
+                    max_white += 1
+            
+            if max_white > max_k:
+                max_k = max_white
+                print(f"New max k={max_k} found with black squares {black}")
+    
+    print(f"Final maximum k: {max_k}")
+
+solve()
+```

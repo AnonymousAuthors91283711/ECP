@@ -1,0 +1,81 @@
+[write_program]
+This problem involves finding the minimum value of \( k \) such that there exist non-negative real numbers \( x, y, z \) satisfying the given constraints, including a quadratic equation and a linear one. To approach this, we can parametrically explore possible \( z \) values, then solve for \( x, y \), checking if the constraints are met. Our goal is to identify the smallest \( k \) satisfying these conditions.
+
+We will:
+
+- Limit \( z \) to small, representative values (e.g., \( z = 0, 0.1, 0.2, ..., 1 \))
+- For each \( z \), solve the quadratic in \( x, y \)
+- Check non-negativity constraints
+- Compute corresponding \( k = 5x + 4y + 3z \)
+- Track and output candidate minimal \( k \)
+
+This approach prioritizes efficiency and immediate partial answers.
+
+```python
+import math
+
+# Explore sample z values from 0 to 1
+z_values = [i/10 for i in range(11)]
+min_k = float('inf')
+solutions = []
+
+for z in z_values:
+    # Given equations:
+    # 4*x^2 + 4*y^2 + z^2 + 2z = 3
+    # 5x + 4y + 3z = k
+    # For fixed z, solve for x, y from the quadratic:
+    # 4x^2 + 4y^2 = 3 - z^2 - 2z
+    
+    rhs_quad = 3 - z**2 - 2*z
+    if rhs_quad < 0:
+        continue  # no real solutions for x,y when RHS<0
+    
+    # Express y in terms of x:
+    # y = (k - 5x - 3z)/4
+    # But to find minimal k, set y in terms of x to minimize k = 5x + 4y + 3z
+    # So for fixed x:
+    # y = (k - 5x - 3z)/4
+    # Instead, try to directly find x,y satisfying the quadratic
+    
+    # Rewrite quadratic:
+    # 4x^2 + 4y^2 = rhs_quad
+    # To minimize k, express y:
+    # k = 5x + 4y + 3z
+    # For fixed x, y can be derived from the quadratic constraints
+    
+    # Find x,y such that 4x^2 + 4y^2 = rhs_quad
+    # Minimize k = 5x + 4y + 3z
+    # For fixed x, the maximum/minimum y is when y aligns with constraint:
+    # y = ± sqrt((rhs_quad - 4x^2)/4)
+    # But since y ≥ 0, focus on y ≥ 0 solutions
+    
+    for sign in [-1, 1]:
+        # y = sign * sqrt((rhs_quad - 4x^2)/4)
+        # For y to be real: rhs_quad - 4x^2 ≥ 0
+        def viable_x():
+            # x can range where rhs_quad - 4x^2 ≥ 0
+            max_x = math.sqrt(rhs_quad/4)
+            # Search x from 0 to max_x
+            step = max_x/20
+            for xi in [i*step for i in range(int(20)+1)]:
+                val = rhs_quad - 4*xi**2
+                if val < 0:
+                    continue
+                y = sign * math.sqrt(val/4)
+                if y < 0:
+                    continue
+                k_value = 5*xi + 4*y + 3*z
+                # Check non-negativity
+                if xi >= 0 and y >= 0:
+                    return k_value
+            return None
+    
+        candidate_k = viable_x()
+        if candidate_k is not None and candidate_k < min_k:
+            min_k = candidate_k
+            solutions.append((z, candidate_k))
+            print(f"z={z:.1f}, minimal k candidate={candidate_k:.3f}")
+
+# Output the minimal found k
+print(f"Approximate minimal k: {min_k:.3f}")
+```

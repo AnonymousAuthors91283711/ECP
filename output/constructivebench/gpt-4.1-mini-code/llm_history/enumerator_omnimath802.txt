@@ -1,0 +1,120 @@
+[write_program]
+The problem is about real numbers \(x, y, z\) satisfying two nonlinear equations and deducing a relation for \(x\). To aid in conjecturing the form of \(x\), we can enumerate solutions for small rational values of \(z\), then solve for \(x, y\) and output the values found. This might help us identify patterns or check special cases like \(x = y\), \(x = 0\), or \(z=0\).
+
+The code below tries various \(z\) values from -3 to 3 (excluding values making denominators zero) and attempts to find solutions for \(x, y\) that satisfy the system, printing them immediately.
+
+```python
+# Enumerate possible (x,y,z) satisfying the equations:
+# (1+z)(x+y) = (1 - z + z^2)(x^2 - x y + y^2)
+# (3 - z)(x - y) = (9 + 3 z + z^2)(x^2 + x y + y^2)
+# We vary z over a small sample and solve for x,y numerically,
+# printing exact or close-to-exact values when found to help conjecture x.
+
+import math
+
+def approx_eq(a,b,eps=1e-8):
+    return abs(a-b)<eps
+
+def try_solve(z):
+    # Following substitution to reduce unknowns:
+    # Use symmetric sums:
+    # S = x + y, D = x - y
+    # Equations in terms of S,D would be nonlinear,
+    # but we try some assignments for D or S and solve for the other.
+    A = 1 + z
+    B = 1 - z + z*z
+    C = 3 - z
+    D_coef = 9 + 3*z + z*z
+
+    if B == 0 or D_coef == 0:
+        return # avoid division by zero
+
+    # We know:
+    # (1) A*S = B*(x^2 - x y + y^2)
+    # (2) C*D = D_coef*(x^2 + x y + y^2)
+    # 
+    # Since x,y unknown, try setting y = t*x, then solve for x.
+    # Let t = y/x (x != 0)
+    # Then:
+    # S = x + t x = x(1 + t)
+    # D = x - t x = x(1 - t)
+    # Quadratics:
+    # x^2 - x y + y^2 = x^2 - x t x + t^2 x^2 = x^2 (1 - t + t^2)
+    # x^2 + x y + y^2 = x^2 + x t x + t^2 x^2 = x^2 (1 + t + t^2)
+
+    # From (1):
+    # A * x (1 + t) = B * x^2 (1 - t + t^2)
+    # => A (1 + t) = B x (1 - t + t^2)
+    # 
+    # From (2):
+    # C * x (1 - t) = D_coef * x^2 (1 + t + t^2)
+    # => C (1 - t) = D_coef x (1 + t + t^2)
+
+    # We can combine:
+    # From first: x = A (1 + t) / (B (1 - t + t^2))
+    # From second: x = C (1 - t) / (D_coef (1 + t + t^2))
+    # So:
+    # A (1 + t) / (B (1 - t + t^2)) =  C (1 - t) / (D_coef (1 + t + t^2))
+    # Cross multiply:
+
+    # Solve for t in real numbers:
+
+    numer = lambda t: A * (1 + t) * D_coef * (1 + t + t*t) - C * (1 - t) * B * (1 - t + t*t)
+
+    # t must avoid denominators zero:
+    def denom1(t): return B * (1 - t + t*t)
+    def denom2(t): return D_coef * (1 + t + t*t)
+    # Try t in some grid, search zeros of numer
+
+    ts = []
+    for i in range(-20,21):
+        t = i*0.1
+        if abs(denom1(t))<1e-12 or abs(denom2(t))<1e-12:
+            continue
+        val = numer(t)
+        ts.append((t,val))
+    # Find sign changes
+    sols_t = []
+    for i in range(len(ts)-1):
+        if ts[i][1]*ts[i+1][1]<=0:
+            # root approx between ts[i][0] and ts[i+1][0]
+            t1, v1 = ts[i]
+            t2, v2 = ts[i+1]
+            # bisection
+            for _ in range(30):
+                tm = (t1+t2)/2
+                vm = numer(tm)
+                if abs(vm)<1e-14:
+                    break
+                if vm*v1<0:
+                    t2, v2 = tm, vm
+                else:
+                    t1, v1 = tm, vm
+            sols_t.append((tm, vm))
+
+    for t, val in sols_t:
+        if abs(denom1(t))<1e-12 or abs(denom2(t))<1e-12:
+            continue
+        x1 = A*(1 + t)/(B * (1 - t + t*t))
+        x2 = C*(1 - t)/(D_coef * (1 + t + t*t))
+        # Check consistency
+        if abs(x1 - x2) < 1e-8:
+            x = (x1 + x2)/2
+            y = t * x
+            # Check equations to reduce floating error
+            left1 = (1+z)*(x+y)
+            right1 = (1 - z + z*z)*(x*x - x*y + y*y)
+            left2 = (3 - z)*(x - y)
+            right2 = (9 + 3*z + z*z)*(x*x + x*y + y*y)
+            if abs(left1 - right1)<1e-6 and abs(left2 - right2)<1e-6:
+                print(f"z={z:.2f}, x={x:.6g}, y={y:.6g}, t=y/x={t:.6g}")
+
+def main():
+    zs = [i*0.5 for i in range(-6,7)]  # z from -3 to 3 step 0.5
+    for z in zs:
+        try_solve(z)
+
+if __name__=="__main__":
+    main()
+```
+

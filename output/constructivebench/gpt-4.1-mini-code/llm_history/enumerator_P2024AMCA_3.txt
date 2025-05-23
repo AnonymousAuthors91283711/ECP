@@ -1,0 +1,71 @@
+[write_program]
+The problem is to find the smallest number \( k \) of two-digit numbers \( n \) summing to 2024.
+
+This means: find the minimal size \( k \) of a multiset \( s \) of numbers with \( 10 \le n < 100 \), such that sum of \( s \) is 2024.
+
+We will enumerate possible multisets using a greedy approach (testing sums with different numbers of addends) starting from a small number \( k \) (lower bound on the count) and going up until we find a valid sum.
+
+Because the numbers are between 10 and 99, minimal sum with \( k \) addends is \( 10k \) and maximal sum with \( k \) addends is \( 99k \).
+
+So \( k \) must satisfy \( 10k \le 2024 \le 99k \).
+
+Let's enumerate for \( k \) in this range and check feasibility. We'll implement a simple method for each \( k \):
+
+- The sum of all 99's is \( 99k \).
+- If \( 99k < 2024 \), no solution for \( k \).
+- Otherwise, consider \( k - 1 \) numbers of 99 and see if the last number fits between 10 and 99.
+
+We'll print all \( k \) for which solution exists.
+
+```python
+# enumerator.py
+def main():
+    target = 2024
+    min_digit = 10
+    max_digit = 99
+
+    # k must satisfy 10*k <= 2024 <= 99*k
+    min_k = (target + max_digit - 1) // max_digit  # minimal k to have sum >= target
+    max_k = target // min_digit                     # maximal k to have sum <= target
+
+    print(f"Checking k in range [{min_k}, {max_k}] for sum={target}")
+
+    found_candidates = []
+    for k in range(min_k, max_k + 1):
+        # Check feasibility:
+        # sum_min = 10*k
+        # sum_max = 99*k
+        if 10 * k > target or 99 * k < target:
+            # No possible sum for this k
+            continue
+        
+        # Now test if there exists s with size k sum to target:
+        # Try x numbers of 99, (k-x) numbers of 10 or between
+        # Simplifying: check if (target - 10*k) <= (99-10)*k
+        diff = target - 10 * k
+        if diff <= (max_digit - min_digit) * k:
+            # There exists a combination, print it.
+            print(f"Possible k: {k}")
+
+            # Construct one example combination to confirm:
+            # Start with all 10's
+            s = [min_digit] * k
+            # Add 'diff' by incrementing elements by 1 until diff exhausted or 99 reached
+            for i in range(k):
+                increment = min(diff, max_digit - min_digit)
+                s[i] += increment
+                diff -= increment
+                if diff == 0:
+                    break
+            print("Example multiset:", s)
+            found_candidates.append(k)
+    
+    if found_candidates:
+        answer = min(found_candidates)
+        print(f"\nMinimum k with solution: {answer}")
+    else:
+        print("No solutions found")
+
+if __name__ == "__main__":
+    main()
+```

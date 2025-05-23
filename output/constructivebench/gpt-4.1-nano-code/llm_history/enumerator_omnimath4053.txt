@@ -1,0 +1,64 @@
+[write_program]
+This problem appears to involve analyzing polynomials with integer coefficients with respect to prime factorization properties of evaluated values at natural numbers. The key insight is that for larger `n`, the prime factors count of `n` influences the restrictions on the evaluations of `P`.
+
+Since `sorry` indicates a placeholder, the goal is likely to characterize all such polynomials `P` satisfying the condition for all sufficiently large `n`. Given the context, we can hypothesize that the set `omnimath4053_answer` consists of very specific polynomials, possibly constant or linear, ensuring the prime factors behave as described.
+
+We will:
+- Consider simple polynomials: constant polynomials and linear polynomials with integer coefficients.
+- Enumerate possible candidates up to some small bounds.
+- Recognize that high power prime factors constraints suggest some consistent pattern: the evaluation at large `n` might always produce numbers with prime factors constrained by a given relation.
+
+Here's a Python program that generates candidate polynomials of degree 0 or 1 with small integer coefficients, evaluates their values at small `n`, and checks the prime factor counts to spot patterns. It outputs each candidate polynomial as soon as it is identified as satisfying heuristic constraints, streamlining the candidate exploration.
+
+```python
+import sympy
+from sympy import primerange
+
+# Function to count prime factors with multiplicity
+def prime_factor_count(n):
+    count = 0
+    for p in primerange(2, n+1):
+        while n % p == 0:
+            n //= p
+            count += 1
+        if n == 1:
+            break
+    return count
+
+# Generate candidate polynomials of degree 0 or 1 with small integer coefficients
+# P(x) = c or P(x) = a*x + b
+candidates = []
+
+# Degree 0: constant polynomials with coefficients -3..3
+for c in range(-3, 4):
+    candidates.append((c,))
+
+# Degree 1: linear polynomials with coefficients -3..3
+for a in range(-3, 4):
+    for b in range(-3, 4):
+        candidates.append((a, b))
+
+# Test candidates at small n and check prime factors
+for coeffs in candidates:
+    if len(coeffs) == 1:
+        c = coeffs[0]
+        def P(x): return c
+    else:
+        a, b = coeffs
+        def P(x): return a * x + b
+
+    # Check over small range of n
+    valid = True
+    for n in range(1, 6):
+        val = P(n)
+        abs_val = abs(val)
+        # Count prime factors
+        count_pf = prime_factor_count(abs_val) if abs_val > 1 else 0
+        # Condition: if prime_factor_count > n's prime factor count (rough check)
+        n_pf_count = prime_factor_count(n) if n > 1 else 0
+        if count_pf > n_pf_count + 1:
+            valid = False
+            break
+    if valid:
+        print(f"Candidate polynomial: {coeffs}")
+```

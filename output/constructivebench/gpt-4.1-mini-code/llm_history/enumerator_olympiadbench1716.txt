@@ -1,0 +1,35 @@
+[write_program]
+The problem involves 100 variables \( x_i \geq 0 \) with constraints \( x_i + x_{i+1} + x_{i+2} \leq 1 \) cyclically, and we seek to maximize the sum \(\sum x_i x_{i+2}\).
+
+To assist in conjecturing the maximum, I'll write a Python program to enumerate feasible vectors \(x\) for smaller \(n\) (like \(n=5,6,7\)) with the same cyclic constraints, and print the achieved sums of \(x_i x_{i+2}\). We use a discretization of values from 0 to 1 in steps (like 0.1) for speed.
+
+This enumeration will print all possible sums found and report the maximum sum for each tested \(n\), which helps guessing the pattern for \(n=100\).
+
+```python
+# Enumerate small cases of the problem with parameters n and step
+# For each assignment x_i >= 0 in increments, check constraints:
+#   x_i + x_{i+1} + x_{i+2} <= 1 (indices mod n)
+# Print all sums x_i * x_{i+2} found; also print max sum for each n
+
+import itertools
+
+def enumerate_sums(n, step=0.25):
+    values = [round(i*step, 5) for i in range(int(1/step)+1)]
+    max_sum = -1
+    print(f"n={n}, step={step}")
+    for x in itertools.product(values, repeat=n):
+        # Check constraints
+        if all(x[i] + x[(i+1)%n] + x[(i+2)%n] <= 1 + 1e-9 for i in range(n)):
+            s = sum(x[i] * x[(i+2)%n] for i in range(n))
+            print(f"S = {s:.5f} for x = {x}")
+            if s > max_sum:
+                max_sum = s
+    print(f"Max S for n={n}, step={step} is {max_sum:.5f}\n")
+
+def main():
+    for n in [5, 6, 7]:
+        enumerate_sums(n, step=0.25)
+
+if __name__ == "__main__":
+    main()
+```

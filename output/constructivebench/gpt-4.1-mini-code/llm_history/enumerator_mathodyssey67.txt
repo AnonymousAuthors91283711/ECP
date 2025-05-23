@@ -1,0 +1,59 @@
+[write_program]
+The problem involves four positive angles α, β, γ, δ summing to 2π with a chain of equalities involving expressions of their tangents and cosines multiplied by 3,4,5,6 respectively. We want to investigate the value of the first expression 3*tan(α)/(1+1/cos(α)) given these constraints.
+
+We will try small discrete angles α and numerically solve for β, γ, δ using the equalities and sum, printing feasible sets and their resulting value of 3*tan(α)/(1+1/cos(α)). This can help conjecture the exact constant or approximate value.
+
+```python
+import math
+
+# Simplify expression f(x) = k * tan x / (1 + 1/cos x)
+def f(k, x):
+    c = math.cos(x)
+    if abs(c) < 1e-12 or abs(math.cos(x)) == 0:
+        return None  # avoid division by zero
+    denom = 1 + 1/c
+    if denom == 0:
+        return None
+    return k * math.tan(x) / denom
+
+# Given f(3, a) = C, solve for x = b,c,d with multipliers 4,5,6 and equal f values as C
+# From the problem f(3,a) = f(4,b) = f(5,c) = f(6,d)
+# So for given a, find b,c,d satisfying f(k,x) = C
+
+# We'll try to find angles b,c,d by searching numerically
+
+def find_angle(k, target, start=0.01, end=2*math.pi, step=1e-4):
+    # Search for angle x in [start,end] with f(k,x) close to target
+    x = start
+    while x < end:
+        val = f(k, x)
+        if val is not None and abs(val - target) < 1e-6:
+            return x
+        x += step
+    return None
+
+# Enumerate α from small angles up to near 2π, try to find matching β,γ,δ
+print("Enumerating candidate solutions:")
+for i in range(1, 314):  # α from 0.01 to ~3.14 (pi)
+    a = i * 0.01
+    if a <= 0 or a >= 2*math.pi:
+        continue
+    C = f(3, a)
+    if C is None:
+        continue
+    b = find_angle(4, C, 0.01, 2*math.pi)
+    if b is None:
+        continue
+    c = find_angle(5, C, 0.01, 2*math.pi)
+    if c is None:
+        continue
+    d = find_angle(6, C, 0.01, 2*math.pi)
+    if d is None:
+        continue
+    s = a + b + c + d
+    if abs(s - 2*math.pi) < 1e-3:
+        print(f"α={a:.4f}, β={b:.4f}, γ={c:.4f}, δ={d:.4f}, sum={s:.4f}, value={C:.6f}")
+
+# This prints approximations of the quadruple and value in real numbers.
+# From the output, the constant value can be hypothesized.
+```

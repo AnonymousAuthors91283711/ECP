@@ -1,0 +1,68 @@
+[write_program]
+The problem involves complex numbers \(a, b, c \) satisfying three quadratic equations, and asks for the squared value of the symmetric sum \( (ab + bc + ca)^2 \). To explore possible values, we enumerate triples \((a,b,c)\) over small integer or Gaussian integer candidates, verify the system approximately (since exact symbolic may be challenging), and print the squared sums.
+
+```python
+import cmath
+
+# Enumerate candidates over Gaussian integers with small integer components
+# to find (a,b,c) approx satisfying:
+# a^2 + a b + b^2 = 1 + i
+# b^2 + b c + c^2 = -2
+# c^2 + c a + a^2 = 1
+
+# We try a,b,c with real and imaginary parts between -2 and 2
+def close(z1, z2, tol=1e-6):
+    return abs(z1 - z2) < tol
+
+vals = []
+search_range = range(-2,3)
+target1 = 1 + 1j
+target2 = -2 + 0j
+target3 = 1 + 0j
+tol = 1e-5
+
+print("Enumerating approximate solutions and (a b + b c + c a)^2:")
+
+for ar in search_range:
+    for ai in search_range:
+        a = complex(ar, ai)
+        for br in search_range:
+            for bi in search_range:
+                b = complex(br, bi)
+                # Compute first eq:
+                eq1 = a*a + a*b + b*b
+                if not close(eq1, target1, tol): 
+                    continue
+                for cr in search_range:
+                    for ci in search_range:
+                        c = complex(cr, ci)
+                        eq2 = b*b + b*c + c*c
+                        if not close(eq2, target2, tol):
+                            continue
+                        eq3 = c*c + c*a + a*a
+                        if not close(eq3, target3, tol):
+                            continue
+                        val = a*b + b*c + c*a
+                        val_sq = val*val
+                        # Print found value
+                        print(f"a={a}, b={b}, c={c}")
+                        print(f"(ab+bc+ca)^2 = {val_sq} ≈ ({val_sq.real:.6f} + {val_sq.imag:.6f}i)")
+                        vals.append(val_sq)
+
+if vals:
+    # print unique approximate values found
+    unique_vals = []
+    def approx_in_list(x, lst, tol=1e-6):
+        for y in lst:
+            if abs(x - y) < tol:
+                return True
+        return False
+    for v in vals:
+        if not approx_in_list(v, unique_vals):
+            unique_vals.append(v)
+    print("\nUnique approximate squared sums found:")
+    for uv in unique_vals:
+        print(f"≈ {uv} ≈ ({uv.real:.6f} + {uv.imag:.6f}i)")
+else:
+    print("No approximate solutions found in the given range.")
+```

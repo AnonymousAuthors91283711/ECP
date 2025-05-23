@@ -1,0 +1,71 @@
+[write_program]
+The problem involves characterizing all functions \( f: \mathbb{R} \to \mathbb{R} \) positive on positive arguments and satisfying a functional equation:
+
+\[
+(z + 1) f(x + y) = f(x f(z) + y) + f(y f(z) + x), \quad \forall x,y,z > 0.
+\]
+
+To assist in conjecturing possible solutions, we enumerate candidate functions \( f \) that satisfy this equation for small positive values \( x,y,z \). We will test some known families of functions (constants, linear, power functions) and numeric samples. Each candidate is printed immediately if it satisfies the condition within a small tolerance. We prioritize exact matches and print parameter values used.
+
+```python
+# Enumerate candidate functions f:R+ -> R+ satisfying
+# (z+1)*f(x+y) = f(x*f(z)+y)+f(y*f(z)+x)
+# for sample values x,y,z > 0.
+
+import math
+
+def check_function(f, name):
+    xs = [0.5, 1.0, 2.0]
+    ys = [0.5, 1.0, 2.0]
+    zs = [0.5, 1.0, 2.0]
+    tol = 1e-9
+    for x in xs:
+        for y in ys:
+            for z in zs:
+                L = (z+1)*f(x+y)
+                R = f(x*f(z)+y) + f(y*f(z)+x)
+                if abs(L - R) > tol:
+                    return
+                if f(x) <= 0:
+                    return
+    print(f"Candidate function: {name}")
+
+def f_constant(c):
+    return lambda x: c
+
+def f_linear(a,b):
+    return lambda x: a*x + b
+
+def f_power(p, k=1):
+    return lambda x: k * x**p
+
+def f_identity(x):
+    return x
+
+def f_inverse(x):
+    return 1/x if x>0 else float('inf')
+
+def main():
+    print("Testing constant functions f(x)=c, c>0")
+    for c in [0.5,1,2]:
+        f = f_constant(c)
+        check_function(f,f"f(x)={c}")
+
+    print("Testing linear functions f(x)=a*x + b, a,b>0")
+    candidates = [(1,0),(2,0),(1,1)]
+    for a,b in candidates:
+        f = f_linear(a,b)
+        check_function(f,f"f(x)={a}*x + {b}")
+
+    print("Testing power functions f(x)=k*x^p, k,p>0")
+    for p in [1,2,0.5]:
+        for k in [1,2]:
+            f = f_power(p,k)
+            check_function(f,f"f(x)={k}*x^{p}")
+
+    # Testing f(x)=x (identity)
+    check_function(f_identity,"f(x)=x")
+
+if __name__ == "__main__":
+    main()
+```

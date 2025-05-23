@@ -1,0 +1,54 @@
+[write_program]
+The problem refers to a functional identity on all unit squares in the plane: for any square of side 1, the sum of the function values at its vertices is zero. We aim to explore such functions f on ℝ² satisfying this condition.
+
+Let's try simple polynomial candidates and check the condition on some sample unit squares with vertices on integer lattice points. Functions like linear functions or differences of coordinates may cancel around unit squares. We will enumerate possible simple functions f(x,y) as integer linear combinations of {1, x, y, x*y, x², y²} and print those satisfying the relation for some sampled squares.
+
+This enumeration should suggest the possible form of f, assisting conjecture and proof.
+
+```python
+# Enumerate f(x,y) = a + b*x + c*y + d*x*y + e*x² + g*y² with small integer coefficients
+# Check f on vertices of some unit squares w.r.t. f(A)+f(B)+f(C)+f(D)==0
+# Sample squares with corners at (i,j), (i+1,j), (i+1,j+1), (i,j+1) for i,j in 0..2
+
+from math import sqrt
+
+def vertices(i, j):
+    return [(i,j),(i+1,j),(i+1,j+1),(i,j+1)]
+
+# Evaluate f = a + b*x + c*y + d*x*y + e*x² + g*y²
+def f(x,y,a,b,c,d,e,g):
+    return a + b*x + c*y + d*x*y + e*x*x + g*y*y
+
+def check_fn(a,b,c,d,e,g):
+    # Check all unit squares in 0..2 grid
+    for i in range(3):
+        for j in range(3):
+            pts = vertices(i,j)
+            s = sum(f(x,y,a,b,c,d,e,g) for (x,y) in pts)
+            # Allow small tolerance due to floating point arithmetic
+            if abs(s) > 1e-12:
+                return False
+    return True
+
+print("Functions f(x,y) = a + b x + c y + d x y + e x^2 + g y^2 with sum over unit square vertices = 0:")
+
+# Enumerate coefficients in -2..2
+for a in range(-2,3):
+    for b in range(-2,3):
+        for c in range(-2,3):
+            for d in range(-2,3):
+                for e in range(-2,3):
+                    for g in range(-2,3):
+                        if check_fn(a,b,c,d,e,g):
+                            # Print function data immediately when found (prioritize exact values)
+                            terms = []
+                            if a !=0: terms.append(f"{a}")
+                            if b !=0: terms.append(f"{b}*x")
+                            if c !=0: terms.append(f"{c}*y")
+                            if d !=0: terms.append(f"{d}*x*y")
+                            if e !=0: terms.append(f"{e}*x^2")
+                            if g !=0: terms.append(f"{g}*y^2")
+                            fstr = " + ".join(terms) if terms else "0"
+                            print(f"f(x,y) = {fstr}")
+
+```

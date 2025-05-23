@@ -1,0 +1,103 @@
+[write_program]
+The problem involves finding the least value s = f(1) + f(2) for an integer-valued function f satisfying a functional equation on integers, positivity on positive integers, and a perfect-square condition involving f(2015)*f(2016).
+
+To assist, I'll write a program that:
+- Enumerates candidate functions f defined on a small range (e.g., from -5 to 5).
+- Satisfies the functional equation for those values.
+- Checks positivity on positive inputs.
+- Checks if f(2015)*f(2016) is a perfect square.
+- Prints candidate s = f(1) + f(2).
+
+Because direct enumeration on ℤ → ℤ is infeasible, I'll look for functions that might be linear or quadratic polynomials or functions of the form f(n) = a*n + b. I will parameterize f(n) = a*n + b, with integers a, b. Then check the functional equation for small values, positivity f(n)>0 for n>0, and the square condition.
+
+The program will:
+- Try small integer coefficients a, b in some range.
+- Test the functional equation on small values of x,y ∈ {-3,...,3}.
+- Test positivity of f on n=1..5.
+- Check if f(2015)*f(2016) is a perfect square.
+- Print f(1)+f(2) when all conditions hold.
+
+This may help conjecture possible values of s.
+
+```python
+import math
+
+def is_perfect_square(z):
+    if z < 0:
+        return False
+    r = int(math.isqrt(z))
+    return r*r == z
+
+# Candidate function f(n) = a*n + b, try a,b in range
+a_range = range(-5,6)
+b_range = range(1,11)  # f(n)>0 for n>0, so b positive to help positivity
+
+# The functional equation:
+# f(x^2 - 3 y^2) + f(x^2 + y^2) == 2*(x + y)*f(x - y)
+# For f(n)= a*n + b:
+# a*(x^2 - 3 y^2) + b + a*(x^2 + y^2) + b == 2*(x + y)*(a*(x - y)+b)
+# LHS = a*(2 x^2 - 2 y^2) + 2 b
+# RHS = 2*(x+y)*(a*(x - y) + b)
+# = 2 a (x + y)(x - y) + 2 b (x + y)
+# = 2 a (x^2 - y^2) + 2 b (x + y)
+
+# Comparing LHS and RHS:
+# a*(2 x^2 - 2 y^2) + 2b = 2 a (x^2 - y^2) + 2 b (x + y)
+# Rearranged:
+# 2 b = 2 b (x + y)
+# => b (1 - (x + y)) = 0 for all integers x,y
+# Only possible if b=0 or (x + y) =1 always, impossible
+# So if b!=0, no solution
+# So b=0
+# Then LHS = a*(2 x^2 - 2 y^2), RHS = 2 a (x^2 - y^2)
+# They are equal, so functional equation holds for any a if b=0.
+
+# So functional equation implies b=0.
+
+# Positivity: f(n) = a*n >0 for n>0 => a>0
+# Perfect square: f(2015)*f(2016) = (a*2015)*(a*2016) = a^2 * 2015*2016 must be a perfect square
+# So 2015*2016 * a^2 is a perfect square
+# a^2 is perfect square, so 2015*2016 must be a perfect square times square factors of a^2
+
+# So focus on 2015*2016
+
+# Let's factor 2015 and 2016:
+# 2015 = 5 * 13 * 31
+# 2016 = 2^5 * 3^2 * 7
+
+# So 2015*2016 = 2^5 * 3^2 * 5 * 7 * 13 * 31
+# For this product to become a perfect square multiplied by a^2,
+# a must supply missing primes to make all exponents even.
+
+# Exponents in product:
+# 2:5 (odd)
+# 3:2 (even)
+# 5:1 (odd)
+# 7:1 (odd)
+# 13:1 (odd)
+# 31:1 (odd)
+
+# So a must supply at least 2^1 * 5^1 * 7^1 * 13^1 * 31^1 to even out exponents.
+# minimal a = 2 * 5 * 7 * 13 * 31 = ?
+
+min_a = 2*5*7*13*31
+
+# f(1)+f(2) = a*1 + a*2 = 3 a
+
+print(f"Minimal a to make product perfect square: {min_a}")
+print(f"Minimal s = f(1)+f(2) = 3 * {min_a} = {3*min_a}")
+
+# Let's print all a = k * min_a for k=1..3 for candidates
+for k in range(1,4):
+    a = k * min_a
+    s = 3 * a
+    # Confirm positivity
+    if a <= 0:
+        continue
+    # Confirm that 2015*a *2016*a is perfect square
+    prod = (2015 * a) * (2016 * a)
+    if is_perfect_square(prod):
+        print(f"a={a}, f(n)=a*n")
+        print(f"f(1)+f(2) = {s}")
+```
+

@@ -1,0 +1,90 @@
+[write_program]
+The problem is to find the smallest positive integer \( n \) such that the set of its divisors can be partitioned into three disjoint subsets \( s_1, s_2, s_3 \) each having the same sum.
+
+We will:
+- Enumerate candidate \( n \) from small to moderate values.
+- For each \( n \), find its divisors.
+- Enumerate all ways to split the divisors into 3 disjoint subsets covering all divisors.
+- For partitions where sums are equal, print \( n \) and the partition.
+- Stop or continue depending on results.
+
+This program prints all \( n \) where such a partition exists up to a threshold (e.g., 300). This helps conjecture the minimal \( n \).
+
+```python
+# Enumerate positive integers n up to max_n.
+# For each n, find divisors and check partitions into 3 disjoint subsets covering all divisors,
+# each subset with equal sum.
+# Print immediately when found a valid partition.
+
+from itertools import combinations
+
+def divisors(n):
+    divs = []
+    for i in range(1, int(n**0.5)+1):
+        if n % i == 0:
+            divs.append(i)
+            if i != n // i:
+                divs.append(n//i)
+    return sorted(divs)
+
+def partition_three_equal_sum(divs):
+    total = sum(divs)
+    if total % 3 != 0:
+        return None
+    part_sum = total // 3
+    all_divs_set = set(divs)
+    # Generate all subsets summing to part_sum for first part
+    # To reduce complexity, try subsets of divs sorted descending and prune
+    divs_sorted = sorted(divs, reverse=True)
+    # Precompute subsets of divs summing to part_sum (for s1)
+    s1_candidates = []
+    def search_s1(idx, curr, curr_sum):
+        if curr_sum == part_sum:
+            s1_candidates.append(set(curr))
+            return
+        if curr_sum > part_sum or idx == len(divs_sorted):
+            return
+        # choose divs_sorted[idx]
+        search_s1(idx+1, curr + [divs_sorted[idx]], curr_sum + divs_sorted[idx])
+        # skip divs_sorted[idx]
+        search_s1(idx+1, curr, curr_sum)
+    search_s1(0, [], 0)
+    for s1 in s1_candidates:
+        remain = all_divs_set - s1
+        remain_list = sorted(remain)
+        # Now find s2 subset of remain summing to part_sum
+        # Similar search as before but smaller set
+        s2_candidates = []
+        def search_s2(idx, curr, curr_sum):
+            if curr_sum == part_sum:
+                s2_candidates.append(set(curr))
+                return
+            if curr_sum > part_sum or idx == len(remain_list):
+                return
+            search_s2(idx+1, curr + [remain_list[idx]], curr_sum + remain_list[idx])
+            search_s2(idx+1, curr, curr_sum)
+        search_s2(0, [], 0)
+        for s2 in s2_candidates:
+            s3 = remain - s2
+            if sum(s3) == part_sum:
+                # Found partition
+                return s1, s2, s3
+    return None
+
+max_n = 300  # search up to 300 for efficiency
+
+for n in range(1, max_n+1):
+    divs = divisors(n)
+    if len(divs) < 3:
+        continue
+    partition = partition_three_equal_sum(divs)
+    if partition:
+        s1, s2, s3 = partition
+        print(f"n={n}, divisors={divs}")
+        print(f"Partition sum={sum(s1)}:")
+        print(f"s1={sorted(s1)}")
+        print(f"s2={sorted(s2)}")
+        print(f"s3={sorted(s3)}")
+        print("---")
+```
+

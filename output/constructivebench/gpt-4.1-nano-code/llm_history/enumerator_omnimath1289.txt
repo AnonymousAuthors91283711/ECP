@@ -1,0 +1,47 @@
+[write_program]
+The problem involves calculating the area of the set of points (p.1, p.2) in the unit square, for which there exists an x satisfying a quartic polynomial equation with coefficients depending on p. To explore possible answers in a test-like manner, we can pick sample (p.1, p.2) values in [0,1] and check whether the polynomial has real solutions for those points.
+
+We'll do the following:
+- Loop over discrete p.1 and p.2 values in [0,1].
+- For each pair, determine whether the quartic polynomial has at least one real root.
+- Record the points where a root exists.
+- Approximate the total area by counting these points multiplied by the grid spacing.
+
+Note: Since directly solving quartic equations complicates the code, we'll approximate solutions by checking the polynomial at multiple x values over a range, or use numerical methods like `scipy.optimize`.
+
+```python
+import numpy as np
+from scipy.optimize import brentq
+
+# Set parameters for sampling
+step = 0.05  # granularity of grid
+points_with_solution = []
+
+# Loop over p1 and p2 in [0, 1]
+p_values = np.arange(0, 1 + step, step)
+for p1 in p_values:
+    for p2 in p_values:
+        # Define the polynomial function
+        def poly(x):
+            return x**4 + p1 * x**3 - p2 * x**2 + p1 * x + 1
+        # Check for roots in the interval [-10, 10]
+        # by sampling at multiple points and attempting root bracketings
+        xs = np.linspace(-10, 10, 100)
+        has_solution = False
+        for i in range(len(xs) - 1):
+            y0, y1 = poly(xs[i]), poly(xs[i+1])
+            if y0 * y1 <= 0:
+                try:
+                    # Attempt to find a root in the interval
+                    root = brentq(poly, xs[i], xs[i+1])
+                    has_solution = True
+                    break
+                except ValueError:
+                    continue
+        if has_solution:
+            points_with_solution.append((p1, p2))
+            print(f"p1={p1:.2f}, p2={p2:.2f} -> solution exists")
+# Approximate area
+area = len(points_with_solution) * (step ** 2)
+print(f"Approximate area: {area}")
+```

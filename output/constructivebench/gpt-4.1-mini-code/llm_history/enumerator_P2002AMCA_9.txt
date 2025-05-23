@@ -1,0 +1,96 @@
+[write_program]
+The problem involves finding the least natural number \( d \) such that there exists a function \( f: \{0,\ldots,29\} \to \{4,7,8\} \) with exactly three values 8 and twelve values 7, and the rest 4 (since \(30 - 3 - 12 = 15\) values), and a partition \( g: \{0,\ldots,29\} \to \{0,\ldots,d-1\} \) such that the sum of \( f(i) \) values in each part is at most 144.
+
+We want to enumerate \( d \) starting from a low bound upward, searching for such partitions.
+
+A direct brute force over all possible \( f \) is huge, but the constraint on the numbers limits the search. Still, enumerating all 30 choose 3 subsets for 8s, and 27 choose 12 subsets for 7s is still big, so we reduce enumeration:
+
+- Enumerate only one fixed \( f \) arrangement (since the problem is symmetric in indices).
+- We'll fix positions of 8s as first 3 indices, 7s as next 12, and 4s rest.
+- Then for \( d \) in a reasonable range, try to assign the 30 elements to \( d \) parts so that no part exceeds 144 sum.
+
+This is equivalent to partitioning the multiset \{8,8,8,7...7 (12 times), 4...4 (15 times)\} into \( d \) bins with capacity 144.
+
+This is a bin packing / partition problem with capacity 144.
+
+Sum total:
+
+Sum = 3*8 + 12*7 + 15*4
+= 24 + 84 + 60 = 168.
+
+Minimum number of bins needed at least total_sum / capacity = 168 / 144 = 1.166... so minimum bins at least 2.
+
+Try to find minimal \( d \) with such a feasible packing.
+
+We can attempt a simple backtracking, but 3*8 + 12*7 + 15*4 = 30 items.
+
+Try \( d \) from 2 to 6, say.
+
+Print \( d \) and any found partition immediately.
+
+We'll perform a simple quick heuristic: Since largest value is 8, capacity 144 means up to 18 eights per bin theoretically (much more), so bin arrangement possible for small d.
+
+Let's write the enumerator to output found \( d \) and partitions for the fixed \( f \).
+
+```python
+# Program to enumerate suitable d (number of bins) and possible partitions of the multiset with:
+# 3 times 8, 12 times 7, 15 times 4, into bins of max sum 144
+# The goal is to find minimal d allowing partition.
+
+from itertools import combinations
+import sys
+
+# Define the multiset f
+items = [8]*3 + [7]*12 + [4]*15  # length 30
+total_sum = sum(items)
+
+# We try d from 2 upwards, print results on success.
+
+def can_pack(items, bins, capacity):
+    # bins is a list of current sums of bins, length = d
+    # items is list of items to assign
+    # We'll try to assign items recursively
+    
+    if not items:
+        return True
+    
+    item = items[0]
+    for i in range(len(bins)):
+        if bins[i] + item <= capacity:
+            bins[i] += item
+            if can_pack(items[1:], bins, capacity):
+                return True
+            bins[i] -= item
+        # If bin is empty and item doesn't fit, no need to try other empty bins
+        if bins[i] == 0:
+            break
+    return False
+
+def main():
+    capacity = 144
+    # minimal d at least ceil(total_sum / capacity)
+    from math import ceil
+
+    min_d = ceil(total_sum / capacity)
+    max_d = 10  # cap search at 10 to keep output short
+    
+    print(f"Total sum: {total_sum}, capacity: {capacity}")
+    print("Trying d from", min_d, "to", max_d)
+    
+    for d in range(min_d, max_d+1):
+        bins = [0]*d
+        # Sort items descending for better pruning
+        items_sorted = sorted(items, reverse=True)
+        
+        if can_pack(items_sorted, bins, capacity):
+            print(f"Found feasible partition for d = {d}")
+            # We could print a witness partition but the problem only specifies enumerating candidates
+            # We'll print just d here, as a candidate
+            print(d)
+        else:
+            print(f"No feasible partition for d = {d}")
+
+if __name__ == "__main__":
+    main()
+```
+

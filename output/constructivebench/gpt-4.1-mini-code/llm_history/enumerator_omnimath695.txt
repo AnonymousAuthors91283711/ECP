@@ -1,0 +1,63 @@
+[write_program]
+The problem asks to count pairs \((x, y)\) with \(1 \leq x, y \leq 2020\) such that \(3x^2 + 10xy + 3y^2 = p^k\) for some prime \(p\) and integer \(k \geq 1\). The goal is to enumerate such pairs efficiently.
+
+We will:
+- Iterate \(x,y\) in range 1 to 2020,
+- Compute \(n = 3x^2 + 10xy + 3y^2\),
+- Check if \(n\) is a prime power,
+- Print each such pair along with \(n, p, k\).
+
+To check prime power:
+- For each candidate, try all possible \(k\) such that \(p^k = n\),
+- Factor \(n\) (simple prime check) and verify power form.
+
+We break early when possible for efficiency and print results as found.
+
+```python
+# enumerator.py
+def is_prime(n):
+    if n < 2:
+        return False
+    if n in (2, 3):
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    r = int(n**0.5)
+    f = 5
+    while f <= r:
+        if n % f == 0 or n % (f + 2) == 0:
+            return False
+        f += 6
+    return True
+
+def prime_power(n):
+    # check if n = p^k for some prime p and integer k>0
+    # try k from 1 up to max log base 2 of n
+    from math import log
+    max_k = int(log(n, 2)) + 1
+    for k in range(1, max_k + 1):
+        # nth root approx of n:
+        p = int(round(n ** (1/k)))
+        if p < 2:
+            continue
+        # check exact power
+        val = 1
+        for _ in range(k):
+            val *= p
+        if val == n and is_prime(p):
+            return p, k
+    return None
+
+MAX = 2020
+count = 0
+print(f"Enumerating pairs (x,y) with 1 ≤ x,y ≤ {MAX} where 3x²+10xy+3y² is prime power:\n")
+for x in range(1, MAX + 1):
+    for y in range(1, MAX + 1):
+        val = 3*x*x + 10*x*y + 3*y*y
+        res = prime_power(val)
+        if res is not None:
+            p, k = res
+            count += 1
+            print(f"x={x}, y={y}, value={val} = {p}^{k}")
+print(f"\nTotal count: {count}")
+```

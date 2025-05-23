@@ -1,0 +1,64 @@
+[write_program]
+The problem involves selecting a subset \( s \) of size 5 from \(\{0,\dots,9\}\), defining two sets of edges connecting pairs inside \( s \) and inside its complement, and seeking the smallest number \( n \) such that for every \( s \), the number of these edges is \( \leq n \), and the induced graph on \( s \) is connected (has a path between any two vertices).
+
+We will:
+- Enumerate subsets \( s \subseteq \{0,\dots,9\} \) of size 5.
+- Construct edges inside \( s \) and inside its complement.
+- Count edges.
+- Check connectivity within \( s \) induced by \( edges \).
+- Print all edge counts while checking connectivity.
+- Finally, print the minimum valid \( n \) (maximum edges count over connected cases).
+
+```python
+from itertools import combinations, product
+from collections import deque
+
+def is_connected(s, edges):
+    # Check if the induced graph on s is connected using BFS
+    adj = {x: set() for x in s}
+    for (a,b) in edges:
+        if a in s and b in s:
+            adj[a].add(b)
+            adj[b].add(a)
+    start = next(iter(s))
+    visited = {start}
+    queue = deque([start])
+    while queue:
+        u = queue.popleft()
+        for w in adj[u]:
+            if w not in visited:
+                visited.add(w)
+                queue.append(w)
+    return visited == set(s)
+
+def main():
+    all_nums = set(range(10))
+    counts = []
+    # Enumerate all subsets s of size 5
+    for s in combinations(range(10), 5):
+        s_set = set(s)
+        t = all_nums - s_set
+        # Edges inside s (undirected pairs with a < b)
+        edges_s = {(a,b) for a,b in combinations(s, 2)}
+        # Edges inside t (undirected pairs with a < b)
+        edges_t = {(a,b) for a,b in combinations(t, 2)}
+        edges = edges_s | edges_t
+        c = len(edges)
+        # Check connectivity inside s using edges_s only (edges inside s)
+        # But original problem states edges := edges_s ∪ edges_t, so connectivity
+        # on s only uses edges between s-vertices in edges_s
+        # connectivity must use edges from edges (which includes edges_t also)
+        # but edges connect only within s or within t separately, and 
+        # connectivity among s vertices must come from edges_s only.
+        # So connectivity on s vertices using only edges_s.
+        if is_connected(s_set, edges):
+            print(f"Subset {s} edges count: {c} connected")
+            counts.append(c)
+        else:
+            print(f"Subset {s} edges count: {c} disconnected")
+    if counts:
+        print("Minimal n with connectivity condition (max edges over connected cases):", max(counts))
+
+if __name__ == "__main__":
+    main()
+```

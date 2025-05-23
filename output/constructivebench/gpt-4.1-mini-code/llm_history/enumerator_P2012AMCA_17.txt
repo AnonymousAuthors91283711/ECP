@@ -1,0 +1,54 @@
+[write_program]
+The problem asks for the largest size \( n \) of a subset \( S \) of the integers \(\{1, \ldots, 30\}\) such that for any distinct \(x, y \in S\), \((x+y) \not\equiv 0 \pmod{5}\).
+
+We want to enumerate subsets and find the maximum cardinality \(n\) satisfying the condition. To do this efficiently, consider the elements by their residue modulo 5:
+
+- Numbers modulo 5 can be 0, 1, 2, 3, or 4.
+- The sum of two residues is zero mod 5 if residues sum to 0 mod 5.
+- Pairs to avoid: (0,0), (1,4), (2,3)
+
+So \(S\) cannot have two elements both congruent to 0 modulo 5. Also, \(S\) cannot contain elements both from classes 1 and 4, nor both from classes 2 and 3.
+
+The problem reduces to choosing subsets from these residue classes that obey these constraints and maximizing size.
+
+Enumerate and print filtered results up to max subsets with elements chosen from residue classes 0..4 within 1..30.
+
+```python
+# Enumerate maximum subsets of {1..30} avoiding pairs whose sum ≡ 0 mod 5
+
+def main():
+    # Partition numbers by residues mod 5
+    residues = {r: [] for r in range(5)}
+    for x in range(1, 31):
+        residues[x % 5].append(x)
+
+    # Key restriction:
+    # - No two elements from residue 0 (only one allowed)
+    # - No picking from both residue classes 1 and 4 simultaneously
+    # - No picking from both residue classes 2 and 3 simultaneously
+
+    # We'll try the 4 possible residue class combinations to fulfill conditions:
+    # 1) Pick from residue 0 + 1 + 2
+    # 2) Pick from residue 0 + 1 + 3
+    # 3) Pick from residue 0 + 4 + 2
+    # 4) Pick from residue 0 + 4 + 3
+
+    # At most one element from residue 0 can be chosen
+    max_res0 = min(len(residues[0]), 1)
+
+    candidates = []
+
+    for c1, c2 in [(1, 2), (1, 3), (4, 2), (4, 3)]:
+        # The subset: pick all elements from c1 and c2 and max one from residues 0
+        subset_size = len(residues[c1]) + len(residues[c2]) + max_res0
+        # Print the configuration and size
+        print(f"Residues used: 0({max_res0}), {c1}({len(residues[c1])}), {c2}({len(residues[c2])}) => size = {subset_size}")
+        candidates.append(subset_size)
+
+    # The maximal cardinality found
+    answer = max(candidates)
+    print(f"Maximum subset size without forbidden pairs: {answer}")
+
+if __name__ == "__main__":
+    main()
+```

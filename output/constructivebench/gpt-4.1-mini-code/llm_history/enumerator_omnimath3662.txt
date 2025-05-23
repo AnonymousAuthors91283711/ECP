@@ -1,0 +1,53 @@
+[write_program]
+The problem concerns functions \( f: \mathbb{N} \to \mathbb{N} \) satisfying the inequality
+\[
+f(x) + y \cdot f(f(x)) \leq x(1 + f(y)) \quad \text{for all } x,y > 0.
+\]
+We want to enumerate such functions on small domains to conjecture their form.
+
+The plan:
+- Try \( f \) defined on \(\{1, \ldots, n\}\) for small \( n \) (e.g., 1 to 5).
+- For each candidate \( f \) (from a small range, e.g., \( 0 \) to 10):
+  - Check the inequality for all pairs \( (x,y) \).
+  - Print the function if it satisfies the inequality.
+- This may give insight into the shape of these functions.
+
+```python
+# Enumerate functions f:{1..n}-> {0..max_val} satisfying
+# f(x) + y*f(f(x)) <= x*(1 + f(y)) for all x,y>0 up to n.
+# Print all such functions for small n and max_val to conjecture the solution.
+
+def check_function(f, n):
+    # Check the inequality for all x,y in 1..n
+    for x in range(1, n+1):
+        fx = f[x]
+        # f(f(x)) means f evaluated at f(x), which must be in domain if possible
+        # If f(x) > n, then f(f(x)) is undefined; discard such functions
+        if fx < 1 or fx > n:
+            return False
+        ff_x = f[fx]
+        for y in range(1, n+1):
+            lhs = f[x] + y * ff_x
+            rhs = x * (1 + f[y])
+            if lhs > rhs:
+                return False
+    return True
+
+def print_function(f):
+    # Print function values in one line
+    print("f =", f[1:])
+
+def main():
+    n = 3  # domain size to test
+    max_val = n  # range restricted to [0..n], safe upper bound since f(x) must be in domain
+    from itertools import product
+    # Enumerate candidate functions as lists indexed 1..n (0th ignored)
+    print(f"Enumerating functions f: [1..{n}] -> [1..{max_val}] satisfying the inequality:")
+    for values in product(range(1, max_val+1), repeat=n):
+        f = [0] + list(values)  # 1-based index
+        if check_function(f, n):
+            print_function(f)
+
+if __name__ == "__main__":
+    main()
+```

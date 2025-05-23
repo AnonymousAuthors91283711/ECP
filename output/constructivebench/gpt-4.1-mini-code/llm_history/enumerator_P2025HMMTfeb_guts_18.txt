@@ -1,0 +1,67 @@
+[write_program]
+The problem asks about enumerating subsets \( S \) of \(\{1, \ldots, 2025\}\) such that \(S\) is nonempty and for all \(a,b \in S\), there exists \(c \in S\) with \(2025 \mid (a+b-2c)\).
+
+This condition can be interpreted as \(S\) being an arithmetic progression modulo 2025. Because \(a,b,c\) are in \(S\), and the membership condition can be rephrased as the average (mod 2025) of \(a\) and \(b\) is also in \(S\).
+
+To approach this, check smaller moduli and enumerate subsets of \(\{1,\ldots,n\}\) with this property, to help conjecture the exact count for \(n=2025\).
+
+Note: 2025 = 45^2, so the divisibility condition is strong. The sets \(S\) appear to be arithmetic progressions with difference dividing 2025.
+
+We write a program that:
+- Picks a small sample modulus \(m\), like 5, 9, 15
+- Enumerates subsets \(S \subseteq \{1,\ldots,m\}\), \(S\) nonempty
+- Checks if for all \(a,b \in S\), \(\exists c\in S\) with \(m \mid (a+b-2c) \implies (a+b) \equiv 2c \pmod m\)
+- Prints such sets and tries to find patterns
+
+We'll limit enumeration for small \(m\) to manage complexity.
+
+```python
+# Enumerate subsets S of {1..m} nonempty, satisfying:
+# for all a,b in S, there exists c in S with (a+b - 2c) divisible by m
+# which implies (a+b) ≡ 2c mod m.
+# We want to find all such subsets for sample m to see structure.
+
+def check_cond(S, m):
+    S_set = set(S)
+    for a in S:
+        for b in S:
+            # check existence of c in S with (a+b - 2c) % m == 0
+            valid = False
+            target = (a + b) % m
+            for c in S:
+                if (2 * c) % m == target:
+                    valid = True
+                    break
+            if not valid:
+                return False
+    return True
+
+def mod_repr(x,m):
+    # map x in {1..m} to 0..m-1 modulo m
+    return (x-1) % m
+
+def enum_subsets(m):
+    from itertools import combinations
+    universe = list(range(1,m+1))
+    # Use mod classes 0..m-1 for convenience
+    # We'll map sets to residues modulo m for checking
+    # We'll just consider the elements themselves since the problem uses a.val, b.val, c.val directly
+    print(f"--- Enumerating subsets for m={m} ---")
+    # To reduce output, only consider subsets up to size 4 for demonstration
+    max_size = min(4,m)
+    total_found = 0
+    for size in range(1,max_size+1):
+        for subset in combinations(universe,size):
+            if check_cond(subset,m):
+                total_found += 1
+                print(f"Valid S (size {size}): {subset}")
+    print(f"Total valid subsets found (size ≤ {max_size}): {total_found}")
+
+def main():
+    for m in [3,5,9,15]:
+        enum_subsets(m)
+
+if __name__ == "__main__":
+    main()
+```
+This will enumerate small subsets for small moduli and allow spotting arithmetic progression patterns. This aids forming a conjecture for the original problem.

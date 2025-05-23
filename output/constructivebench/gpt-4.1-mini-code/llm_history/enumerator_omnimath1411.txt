@@ -1,0 +1,95 @@
+[write_program]
+The problem asks for the greatest natural number \(n\) such that \((n!)!\) is divisible by \(2004!\).
+
+Key points:
+- \(2004! \mid ((n!)!)!\)
+- We want the largest \(n\) with this property.
+
+Intuition:
+- Factorials grow fast and their factorials even faster.
+- The divisibility depends on prime factorization and valuations.
+- To simplify enumeration, try small \(n\), check if \(((n!)!)!\) divisible by \(2004!\) by comparing prime valuations.
+- Since 2004! is very large, this is infeasible directly; instead, test smaller values and inspect the growth pattern.
+
+We'll test small \(n\) values, compute \(v_p((n!)!)!\) for primes \(p\) up to 2004, compare to \(v_p(2004!)\).
+
+However, enumerating all primes up to 2004 is heavy; we'll prioritize some key primes or test if \(n\) less than some bounds is plausible.
+
+The program will:
+- Define factorial and prime factors.
+- Define Legendre's formula for valuation of primes in factorial.
+- Implement a function valuation_factorial(n, p) returning \(v_p(n!)\).
+- Implement valuation_factorial_factorial(n, p) for \(v_p((n!)!)!\).
+- For small \(n\) (e.g., from 1 to 10), check if for all primes \(p\) up to 20 (sample primes), \(v_p((n!)!)! \geq v_p(2004!)\).
+- Print the values and the result.
+
+This approach only samples primes up to 20 and small \(n\), based on given constraints and complexity.
+
+```python
+import math
+
+# Legendre's formula: exponent of prime p in n!
+def valuation_factorial(n, p):
+    e = 0
+    x = n
+    while x > 0:
+        x //= p
+        e += x
+    return e
+
+# Exponent of prime p in (n!)!
+# That is, v_p ((n!)!)
+def valuation_factorial_factorial(n, p):
+    # (n!)! = factorial of n!
+    # Number of factors p in (n!)! = sum_{k=1}^∞ floor(n!/p^k)
+    # Use Legendre's formula with n! as the argument
+    N = math.factorial(n)
+    e = 0
+    x = N
+    while x > 0:
+        x //= p
+        e += x
+    return e
+
+# Compute primes up to m using sieve
+def sieve(m):
+    sieve_arr = [True]*(m+1)
+    sieve_arr[0] = False
+    sieve_arr[1] = False
+    for i in range(2, int(m**0.5)+1):
+        if sieve_arr[i]:
+            for j in range(i*i, m+1, i):
+                sieve_arr[j] = False
+    return [i for i in range(2, m+1) if sieve_arr[i]]
+
+def main():
+    # We try n from 1 to 10 (sample small values)
+    ns = range(1,11)
+    # Use small primes up to 20 for sampling
+    primes = sieve(20)
+    # Precompute valuations for 2004!
+    val_2004 = {}
+    for p in primes:
+        val_2004[p] = valuation_factorial(2004, p)
+    # Check for each n if (n!)! divisible by 2004! based on valuations for sampled primes
+    for n in ns:
+        # Compute valuations for (n!)!
+        val_n = {}
+        # n! is large but small for n<=10
+        # For each prime p, v_p((n!)!)!
+        # ((n!)!)! = factorial of factorial of n
+        # We do valuation_factorial_factorial for (factorial(n))
+        # Actually factorial_factorial is big, use valuation_factorial_factorial directly defined above
+        all_ok = True
+        for p in primes:
+            valn = valuation_factorial_factorial(n, p)
+            if valn < val_2004[p]:
+                all_ok = False
+            val_n[p] = valn
+        print(f"n={n}, valuations (sample primes), all≥2004!?: {all_ok}")
+        if all_ok:
+            print("Possible candidate:", n)
+
+if __name__=="__main__":
+    main()
+```

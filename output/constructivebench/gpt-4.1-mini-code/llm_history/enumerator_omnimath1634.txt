@@ -1,0 +1,53 @@
+[write_program]
+The problem defines a set \( S \subseteq \mathbb{Z} \) as the intersection of all sets \( T \) such that \( 0 \in T \) and for any \( x \in T \), \( 3x \in T \) and \( 3x + 1 \in T \). This means \( S \) is the smallest subset of integers containing 0 and closed under the transformations \( x \mapsto 3x \) and \( x \mapsto 3x + 1 \).
+
+The task is to find the number of elements \( x \in S \) with \( 0 \leq x < 2008 \).
+
+We can interpret \( S \) as the set of all integers reachable starting from 0 using the operations \( x \to 3x \) and \( x \to 3x+1 \). Equivalently, any \( x \in S \) can be represented in base 3 using only digits 0 and 1.
+
+Thus, the problem reduces to counting all nonnegative integers less than 2008 whose base-3 representation uses only digits {0,1} (no digit 2).
+
+We can write a Python program that enumerates these numbers by generating all base-3 numbers with digits 0 or 1 and checking if they are less than 2008.
+
+```python
+# Enumerate numbers less than 2008 whose base-3 representation contains only 0s and 1s.
+
+LIMIT = 2008
+
+def from_base_3(digits):
+    """Convert a list of base-3 digits (most significant first) to integer."""
+    val = 0
+    for d in digits:
+        val = val * 3 + d
+    return val
+
+def generate_numbers(max_n):
+    # The maximum length of the base-3 representation for numbers < 2008
+    # 3^7 = 2187 > 2008 > 3^6 = 729, so max length is 7 digits.
+    max_len = 7
+    count = 0
+    # Digits can be 0 or 1, generate all length from 1 to max_len
+    for length in range(1, max_len+1):
+        # Generate all combinations of 0 and 1 digits of given length.
+        # The most significant digit cannot be 0 to avoid leading zeros except for length=1.
+        start = 1 if length > 1 else 0
+        # Each digit is either 0 or 1
+        # We'll use bitmask to generate the digits: length bits, each 0 or 1
+        for bits in range(2**length):
+            # Extract digits from bits
+            digits = []
+            for i in reversed(range(length)):
+                digits.append((bits >> i) & 1)
+            if length > 1 and digits[0] == 0:
+                continue  # Skip leading zero numbers of length >1
+            val = from_base_3(digits)
+            if val < max_n:
+                print(val)
+                count += 1
+    print("Total count:", count)
+
+print("Enumerating numbers with base-3 digits in {0,1} less than 2008:")
+generate_numbers(LIMIT)
+```
+
+The output immediately prints all such numbers (in ascending order because we enumerate systematically), then prints the total count, which conjecturally is the answer to the problem.

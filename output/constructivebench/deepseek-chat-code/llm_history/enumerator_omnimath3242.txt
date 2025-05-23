@@ -1,0 +1,64 @@
+[write_program]
+This problem involves finding all real numbers x such that p(1/x) = x², where p is a monic polynomial of degree 2n (n even) satisfying p(1/k) = k² for all integers k with 1 ≤ |k| ≤ n. The solution involves finding roots beyond just the integer reciprocals.
+
+We'll write a program to:
+1. Construct the polynomial p from the given conditions
+2. Find all real roots of p(1/x) - x² = 0
+3. Verify which roots satisfy the equation
+
+We'll use small even values of n (2,4) to observe patterns.
+
+```python
+import numpy as np
+from numpy.polynomial import Polynomial
+
+def find_solutions(n):
+    # Build the polynomial p that satisfies p(1/k) = k² for k = ±1,...,±n
+    # p is monic of degree 2n
+    points = []
+    for k in range(1, n+1):
+        points.append((1/k, k*k))
+        points.append((-1/k, k*k))
+    
+    # Construct the polynomial using Lagrange interpolation
+    x = [pt[0] for pt in points]
+    y = [pt[1] for pt in points]
+    p = Polynomial.fit(x, y, deg=2*n)
+    
+    # Find roots of p(1/x) - x² = 0
+    # We'll multiply by x^(2n) to get a polynomial equation
+    # p(1/x) = sum_{k=0}^{2n} a_k (1/x)^k => x^(2n) p(1/x) = sum a_k x^(2n-k)
+    # Then equation becomes sum a_k x^(2n-k) - x^(2n+2) = 0
+    coeffs = p.convert().coef
+    poly_eq = np.zeros(2*n + 3)
+    for i in range(len(coeffs)):
+        poly_eq[2*n - i] = coeffs[i]
+    poly_eq[2*n + 2] = -1  # -x^(2n+2) term
+    
+    # Find real roots
+    roots = np.roots(poly_eq[::-1])  # numpy expects highest degree first
+    real_roots = [r.real for r in roots if abs(r.imag) < 1e-10]
+    
+    # Verify and collect solutions
+    solutions = set()
+    for r in real_roots:
+        if abs(r) < 1e-10:
+            continue  # avoid division by zero
+        val = p(1/r) - r*r
+        if abs(val) < 1e-8:
+            solutions.add(round(r, 6))
+    
+    # Also include the known integer solutions
+    for k in range(-n, n+1):
+        if k != 0:
+            solutions.add(k)
+    
+    return sorted(solutions, key=lambda x: (abs(x), x))
+
+# Test for small even n values
+for n in [2, 4]:
+    print(f"\nFor n = {n}:")
+    sols = find_solutions(n)
+    print("Solutions:", sols)
+    print("Additional non-integer solutions:", [x for x in sols if not x.is_integer()])
+```

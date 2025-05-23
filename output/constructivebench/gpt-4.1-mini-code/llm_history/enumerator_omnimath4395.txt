@@ -1,0 +1,52 @@
+[write_program]
+The problem appears to involve understanding for which pairs (n, m) a set S of natural numbers containing m, closed under divisors and sums of nth powers of distinct elements, must be the entire set of natural numbers. The task is to explore small values of n and m, enumerate possible sets S satisfying the closure properties or derive insights by attempting to build counterexamples or confirm universality. 
+
+I will write a Python program that picks small n, m values (e.g. n=1..3, m=1..5), generates sets starting from {m} closed under divisors and sums of nth powers, and checks how large these sets grow or if they stabilize. Printing out these sets will help guess when the closure forces S to be all ℕ.
+
+```python
+# Enumerate sets S ⊆ ℕ with m ∈ S, closed under divisors and sums of nth powers.
+# Checks if closure results in whole ℕ up to a bound (100).
+# Prints intermediate sets for small n, m.
+
+def divisors(x):
+    return {d for d in range(1, x+1) if x % d == 0}
+
+def nth_powers_sum_closure(S, n):
+    # Add all a^n + b^n for distinct a,b in S
+    new_elements = set()
+    S_list = sorted(S)
+    for i, a in enumerate(S_list):
+        an = a**n
+        for b in S_list[i+1:]:
+            bn = b**n
+            new_elements.add(an + bn)
+    return new_elements
+
+def closure(n, m, limit=100):
+    S = {m}
+    changed = True
+    while changed:
+        changed = False
+        # closure under divisors
+        divs = set()
+        for a in S:
+            divs |= divisors(a)
+        # closure under sums of nth powers of distinct elements
+        sums = nth_powers_sum_closure(S, n)
+        newS = S | divs | sums
+        # restrict to numbers <= limit for feasibility
+        newS = {x for x in newS if x <= limit}
+        if newS != S:
+            changed = True
+            S = newS
+    return S
+
+print("Enumerating closure sets for small n,m with limit=50\n")
+for n in range(1, 4):
+    for m in range(1, 6):
+        S = closure(n, m, limit=50)
+        print(f"n={n}, m={m}, closure size={len(S)}")
+        print(sorted(S))
+        print("---")
+```
+

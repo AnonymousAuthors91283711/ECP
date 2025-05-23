@@ -1,0 +1,58 @@
+[write_program]
+The problem appears to focus on expressing a rational number q in a form involving powers of 3 and coprime integers p', q' not divisible by 3, and defining a function olympiadbench2702_answer(q) = 3^{-k} where k is the exponent of 3 in q's prime factorization.
+
+To assist in conjecturing and proving this, the Python program will:
+
+- Enumerate rational numbers q = p/q for small integers p,q (e.g., p,q in [-10..10], q≠0)
+- For each q, factor out powers of 3 from numerator and denominator to find k, p', q'
+- Compute olympiadbench2702_answer(q) = 3^{-k} (a rational number)
+- Print q, k, p', q', and olympiadbench2702_answer(q)
+- Show some example outputs in exact rational form (using fractions module)
+
+This enumeration will provide concrete cases to observe the pattern and validate the theorem.
+
+```python
+from fractions import Fraction
+
+def factor_out_three(n):
+    """Return (k, m) such that n = 3^k * m and 3 does not divide m."""
+    k = 0
+    if n == 0:
+        return 0, 0  # special case, won't be used here
+    while n % 3 == 0:
+        n //= 3
+        k += 1
+    return k, n
+
+def olympiadbench2702_answer(q):
+    p, qd = q.numerator, q.denominator
+    k_p, p_ = factor_out_three(abs(p))
+    k_q, q_ = factor_out_three(qd)
+    k = k_p - k_q
+    # Adjust signs: p' has sign of numerator
+    if p < 0:
+        p_ = -p_
+    # p', q' should not be divisible by 3
+    # Return 3^{-k} as Fraction
+    return Fraction(3) ** (-k), k, p_, q_
+
+def main():
+    # Enumerate q = p/q with p,q in [-10..10], q!=0, q in positive integers
+    # Skip q=0 denominator; note we allow negative numerator and denominator positive
+    seen = set()
+    for denom in range(1, 11):
+        for numer in range(-10, 11):
+            if numer == 0:
+                continue
+            q = Fraction(numer, denom)
+            # Avoid duplicate values (same reduced fraction)
+            if q in seen:
+                continue
+            seen.add(q)
+            ans, k, p_, q_ = olympiadbench2702_answer(q)
+            # print exact rational representation
+            print(f"q = {q}; k = {k}; p' = {p_}; q' = {q_}; olympiadbench2702_answer(q) = {ans}")
+
+if __name__ == "__main__":
+    main()
+```

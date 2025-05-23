@@ -1,0 +1,108 @@
+[write_program]
+The problem is about a function \( P: \mathbb{Z}/268\mathbb{Z} \to \mathbb{Z} \) satisfying certain sum constraints on consecutive blocks of length 20 and some fixed values at three points. We want to find \( P(210) \).
+
+We can attempt to enumerate all candidate integer functions \(P\) satisfying the given conditions on a small sample (e.g., mod 268), but since this is huge (268 elements, many constraints), we will try a simplified approach:
+- Since P is on mod 268, sum over each block of length 20 is 75.
+- We know values at indices 17, 83, 144.
+- We'll attempt to solve the system by walking over the indices and deducing values from overlapping equations.
+- We print candidate values for P[210] when found.
+
+Given the complexity, let's do a constraint propagation approach:
+- The sums impose linear equations on consecutive blocks.
+- The system looks like a cyclic convolution-type system with a window sum constraint.
+
+We can use the difference of sums to find relations between consecutive P[i]:
+- Since sum_{j=i}^{i+19} P[j] = 75 for all i,
+- sum_{j=i+1}^{i+20} P[j] = 75,
+- subtracting these gives P[i] = P[i+20].
+
+Thus P is periodic with period dividing 20.
+
+But since 20 does not divide 268, and the indexing is modulo 268, more careful analysis is needed.
+
+So P(i) satisfies P[i] = P[i+20 (mod 268)] for all i.
+
+Therefore P is periodic with period equal to the gcd of 20 and 268 = 4.
+
+So P[i] = P[i+4].
+
+Thus the function is 4-periodic.
+
+We can check this periodicity constraint:
+
+- P[17] =3,
+- P[17+4] = P[21] =3,
+- P[83] =4,
+- P[83 + 4]= P[87]=4,
+- etc.
+
+Let's enumerate P[0], P[1], P[2], P[3], which define the entire function.
+
+Then sum over 20 terms starting at i is sum over P[(i + j)%4], with each period repeating 5 times (since 20/4=5).
+
+Sum over P[(i + j) mod 4], j=0..19 = 5 * sum P[(i mod 4) to ...], but since the 4 repeats every 4 steps.
+
+The sum over one block is 5 times sum of P over indices in 4 steps, which must be 75.
+
+Therefore, 5 * (P_0 + P_1 + P_2 + P_3) = 75 → (P_0 + P_1 + P_2 + P_3) = 15.
+
+We can then enumerate all integer quadruples with sum 15, consistent with known values.
+
+Known values at indices 17, 83, 144:
+
+- 17 mod 4 = 1 → P_1 = 3,
+- 83 mod 4 = 3 → P_3 = 4,
+- 144 mod 4 = 0 → P_0 = 9.
+
+Sum is P_0 + P_1 + P_2 + P_3 = 9 + 3 + P_2 + 4 = 16 + P_2 = 15 → P_2 = -1.
+
+Hence P_2 = -1.
+
+Now P is fully determined:
+
+P_0=9, P_1=3, P_2=-1, P_3=4.
+
+We want P[210]:
+
+210 mod 4 = 2 → P_2 = -1.
+
+We should write a program reflecting this deduction and enumerating correspondingly, printing the quadruple sums and P[210].
+
+```python
+# The function P satisfies:
+# - sum over any 20 consecutive values = 75
+# - indices mod 268
+# From sum constraints:
+# P[i] = P[i+20 mod 268],
+# so P is periodic with period dividing gcd(20,268)=4.
+
+# So define P_0, P_1, P_2, P_3 integers with:
+# 5*(P_0 + P_1 + P_2 + P_3) =75 → sum=15
+# Given P[17]=3 → 17 mod 4=1 → P_1=3
+# Given P[83]=4 → 83 mod 4=3 → P_3=4
+# Given P[144]=9 → 144 mod 4=0 → P_0=9
+# Then sum: 9 + 3 + P_2 + 4 = 16 + P_2 = 15 ⇒ P_2=-1
+
+# We print the candidate quadruple and the value P[210]=P_2 = -1
+
+def main():
+    P0 = 9
+    P1 = 3
+    P3 = 4
+    sum_target = 15
+
+    # P2 = sum_target - P0 - P1 - P3
+    P2 = sum_target - P0 - P1 - P3
+
+    print(f"P_0 = {P0}")
+    print(f"P_1 = {P1}")
+    print(f"P_2 = {P2}")
+    print(f"P_3 = {P3}")
+    print("---")
+    i = 210 % 4
+    Pi = [P0, P1, P2, P3][i]
+    print(f"P(210) = P_{i} = {Pi}")
+
+if __name__ == "__main__":
+    main()
+```

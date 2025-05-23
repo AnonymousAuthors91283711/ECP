@@ -1,0 +1,58 @@
+[write_program]
+This problem is about finding natural numbers n > 2 where n! divides a product of sums of pairs of primes. We'll write a Python program to enumerate possible values of n that satisfy this condition.
+
+The approach:
+1. Generate primes up to n using sieve
+2. For each prime p, find all larger primes q and compute p+q
+3. Compute the product of all these sums
+4. Check if n! divides this product
+
+We'll test small values of n first since factorials grow rapidly.
+
+```python
+import math
+from itertools import combinations
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def primes_up_to(n):
+    return [p for p in range(2, n+1) if is_prime(p)]
+
+def compute_product(n):
+    primes = primes_up_to(n)
+    product = 1
+    for i, p in enumerate(primes):
+        for q in primes[i+1:]:
+            product *= (p + q)
+    return product
+
+max_n = 20  # Test up to n=20 since factorials grow rapidly
+for n in range(3, max_n + 1):
+    product = compute_product(n)
+    factorial = math.factorial(n)
+    if product % factorial == 0:
+        print(f"n = {n} satisfies the condition")
+```

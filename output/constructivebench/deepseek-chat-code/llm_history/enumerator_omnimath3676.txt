@@ -1,0 +1,47 @@
+[write_program]
+This problem involves finding a function f:ℕ→ℕ such that for all k≥2 and all x∈(Fin k → ℕ), the sum of f(x_i)! divides the sum of x_i!. We'll write a Python program to enumerate possible functions f for small values and look for patterns.
+
+The approach will be:
+1. Test small values of k (2 and 3)
+2. For each possible input n, try to find f(n) that satisfies the divisibility condition
+3. Look for patterns in the resulting function f
+
+```python
+import math
+from itertools import product
+
+def find_f(max_n=5, max_k=3):
+    # We'll build f incrementally, testing each possible value for f(n)
+    f = {}
+    
+    for n in range(max_n + 1):
+        # Try possible values for f(n)
+        for fn in range(n + 1):
+            valid = True
+            # Test for k=2 and k=3
+            for k in range(2, max_k + 1):
+                # Generate all possible x vectors where at least one element is n
+                # and others are ≤n (since we're building f incrementally)
+                for x in product(range(n + 1), repeat=k):
+                    if n not in x:
+                        continue
+                    
+                    sum_x_fact = sum(math.factorial(xi) for xi in x)
+                    sum_f_fact = sum(math.factorial(f.get(xi, 0)) for xi in x)
+                    
+                    if sum_f_fact == 0 or sum_x_fact % sum_f_fact != 0:
+                        valid = False
+                        break
+                if not valid:
+                    break
+            if valid:
+                f[n] = fn
+                print(f"f({n}) = {fn}")
+                break
+        else:
+            print(f"Could not determine f({n})")
+    
+    print("\nCurrent f:", f)
+
+find_f()
+```

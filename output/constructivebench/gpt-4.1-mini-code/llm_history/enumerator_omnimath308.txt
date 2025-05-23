@@ -1,0 +1,54 @@
+[write_program]
+The problem asks for the maximum size of a finite subset s of integers within [-n, n] so that there is no triple (a,b,c) in s with a+b+c=0. We want to compute or enumerate the largest size of such sets for small values of n.
+
+We will:
+- Enumerate candidate subsets s of integers in [-n,n], for small n
+- Check if s has no zero-sum triples a+b+c=0
+- Print sizes of such subsets found, and track the maximum size
+- Do this for a few small n, e.g. n=2,3,4 to conjecture answer
+
+To keep output within 400 tokens, we limit sample n values and subset sizes.
+
+```python
+# Enumerate maximum size of s ⊆ [-n,n], no zero-sum triples a+b+c=0
+# For small n, print set sizes and max size found
+
+from itertools import combinations
+
+def has_zero_sum_triple(s):
+    arr = sorted(s)
+    n = len(arr)
+    # Check all triples for sum=0 (optimized)
+    # Since s is small, brute force is fine
+    for i in range(n):
+        for j in range(i, n):
+            for k in range(j, n):
+                if arr[i] + arr[j] + arr[k] == 0:
+                    return True
+    return False
+
+def max_size_no_zero_triples(n):
+    universe = list(range(-n, n+1))
+    max_k = 0
+    print(f"\nn={n}, universe={universe}")
+    # Enumerate subsets by size descending for efficiency
+    for size in range(len(universe), 0, -1):
+        found = False
+        # Use combinations to avoid duplicates
+        for subset in combinations(universe, size):
+            if not has_zero_sum_triple(subset):
+                print(f"Found size={size} subset without zero-sum triples: {subset}")
+                max_k = max(max_k, size)
+                found = True
+        if found:
+            print(f"Max size for n={n} is at least {max_k}")
+            break
+    if max_k == 0:
+        print(f"No subsets without zero-sum triples found for n={n}")
+    return max_k
+
+# Sample n values for enumeration
+for test_n in [2, 3, 4]:
+    max_size_no_zero_triples(test_n)
+```
+

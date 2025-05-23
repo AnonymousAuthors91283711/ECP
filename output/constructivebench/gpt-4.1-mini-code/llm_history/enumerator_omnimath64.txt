@@ -1,0 +1,80 @@
+[write_program]
+The problem concerns finding integers \( n \) such that there exist two disjoint subsets \( A, G \) of the divisors of \( n \), each of size at least 3, where \( A \) forms an arithmetic progression and \( G \) forms a geometric progression.
+
+We'll write a Python program to explore this for small values of \( n \), enumerate divisors, try to find arithmetic and geometric progressions of length at least 3 that are subsets of the divisor set. We'll print each \( n \) for which such \( A \) and \( G \) exist.
+
+We'll:
+- Loop over small \( n \).
+- Compute divisors.
+- Enumerate arithmetic progressions \( A \) in divisors of length ≥3.
+- For each \( A \), enumerate geometric progressions \( G \) in divisors of length ≥3 disjoint from \( A \).
+- Print \( n, A, G \) when found.
+
+```python
+def divisors(n):
+    divs = []
+    for i in range(1, int(n**0.5)+1):
+        if n % i == 0:
+            divs.append(i)
+            if i*i != n:
+                divs.append(n//i)
+    return sorted(divs)
+
+def arithmetic_progressions(divs, min_len=3):
+    s = set(divs)
+    length = len(divs)
+    for i in range(length):
+        for j in range(i+1, length):
+            a = divs[i]
+            d = divs[j]-a
+            if d == 0:
+                continue
+            # Build progression
+            prog = []
+            x = a
+            while x in s:
+                prog.append(x)
+                x += d
+            if len(prog) >= min_len:
+                yield tuple(prog)
+
+def geometric_progressions(divs, min_len=3):
+    s = set(divs)
+    length = len(divs)
+    for i in range(length):
+        for j in range(i+1, length):
+            a = divs[i]
+            if a == 0:
+                continue
+            if divs[j] % a != 0:
+                continue
+            r = divs[j] // a
+            if r <= 1:
+                continue
+            prog = [a]
+            x = a*r
+            while x in s:
+                prog.append(x)
+                x *= r
+            if len(prog) >= min_len:
+                yield tuple(prog)
+
+def find_ng(max_n=100):
+    for n in range(6, max_n+1):
+        divs = divisors(n)
+        s = set(divs)
+        aps = list(arithmetic_progressions(divs))
+        gps = list(geometric_progressions(divs))
+        for A in aps:
+            setA = set(A)
+            for G in gps:
+                setG = set(G)
+                if setA.isdisjoint(setG):
+                    print(f"n={n}, A={A}, G={G}")
+                    # Once found for this n, break to next n for brevity
+                    break
+
+if __name__ == "__main__":
+    find_ng(50)
+```
+This explores \( n \leq 50 \), prints any example \( (A,G) \). You can increase the limit or tune the code further. This enumerates progressions exactly without approximations.

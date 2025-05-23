@@ -1,0 +1,40 @@
+[write_program]
+This problem is about finding the smallest number n such that any multiset of size n with elements from {0,1,2,3,4,5} must contain at least 15 copies of some element i, where i also satisfies counts[i] ≥ 15 (with counts = [28,20,19,13,11,9]). We'll write a Python program to find this minimal n by checking possible values incrementally.
+
+The approach is:
+1. For each candidate n starting from 1 upwards
+2. Check if all multisets of size n must contain some i with count ≥15 and counts[i]≥15
+3. The first n where this holds is our answer
+
+```python
+def main():
+    counts = [28, 20, 19, 13, 11, 9]
+    required = 15
+    
+    # We'll check n values incrementally
+    for n in range(1, 100):
+        # The worst case is when we maximize elements without any reaching 15
+        # We try to distribute as evenly as possible among elements with counts[i] >= 15
+        valid_indices = [i for i in range(6) if counts[i] >= required]
+        
+        if not valid_indices:
+            print("No valid indices satisfy counts[i] >= 15")
+            return
+        
+        # Maximum elements we can have without any reaching 15 is sum(min(14, counts[i]) for valid i)
+        max_without = sum(min(14, counts[i]) for i in valid_indices)
+        
+        # Also need to account for elements with counts[i] < 15 - they can be included freely
+        # since they can't satisfy both conditions
+        other_elements = sum(counts[i] for i in range(6) if counts[i] < required)
+        total_max_without = max_without + other_elements
+        
+        print(f"Testing n={n}: max without condition = {total_max_without}")
+        
+        if n > total_max_without:
+            print(f"Found minimal n: {n}")
+            return
+
+if __name__ == "__main__":
+    main()
+```

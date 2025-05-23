@@ -1,0 +1,82 @@
+[write_program]
+The problem appears to describe a graph-theoretic situation involving N people with friendships (undirected, no self-friendships), assigned positive real numbers, and a "heard" value based on neighboring friends. The task is to find the least number of distinct "heard" values possible for such a configuration with N nodes, satisfying certain conditions.
+
+To enumerate answers:
+- The minimal number of distinct "heard" values depends on the structure of the friendship graph and assigned numbers.
+- For small N, we can exhaustively generate candidate graphs and number assignments, then determine the number of distinct "heard" values.
+
+Given the complexity of the problem, we'll focus on small N (say, N=4) to illustrate enumeration:
+- Generate all possible simple graphs with no loops (friendship relations).
+- For each graph, assign small positive numbers to nodes, attempt to compute "heard".
+- Count the number of distinct "heard" values.
+- Track the minimal such count.
+
+This code will:
+- Fix small N.
+- Generate all graphs (via edge subsets).
+- Assign numeric values with small rational approximations.
+- Compute "heard" values and count distinct counts.
+- Print each minimal result when found.
+
+Note: This is a heuristic enumeration, simplified for a demonstration.
+
+```python
+import itertools
+import random
+import math
+from fractions import Fraction
+
+def generate_graphs(n):
+    """Generate all simple undirected graphs as adjacency sets."""
+    edges = [(i, j) for i in range(n) for j in range(i+1, n)]
+    for edges_subset in itertools.chain.from_iterable(
+        itertools.combinations(edges, r) for r in range(len(edges)+1)
+    ):
+        adj = [set() for _ in range(n)]
+        for (i, j) in edges_subset:
+            adj[i].add(j)
+            adj[j].add(i)
+        yield adj
+
+def assign_numbers(n):
+    """Assign small positive rationals to nodes."""
+    # For simplicity, assign numbers from a small set.
+    # Using fractions for exactness.
+    candidate_values = [Fraction(i+1, 1) for i in range(1, 4)]
+    for values in itertools.product(candidate_values, repeat=n):
+        # Optional: skip identical assignments to reduce redundancy
+        yield list(values)
+
+def compute_heard(adj, values):
+    n = len(adj)
+    degrees = [len(adj[i]) for i in range(n)] or [1 for _ in range(n)]
+    heard = []
+    for i in range(n):
+        neighbor_vals = [values[j] for j in adj[i]]
+        deg = len(neighbor_vals) or 1
+        total = sum(neighbor_vals)
+        heard.append(total / deg)
+    return heard
+
+def main():
+    n = 4  # Small N for demonstration
+    min_distinct_counts = {}
+    total_candidates = 0
+    for adj in generate_graphs(n):
+        for values in assign_numbers(n):
+            total_candidates += 1
+            heard_vals = compute_heard(adj, values)
+            distinct_count = len(set(heard_vals))
+            # Record minimal count per graph structure
+            key = frozenset(tuple(sorted(adj[i])) for i in range(n))
+            if key not in min_distinct_counts or distinct_count < min_distinct_counts[key]:
+                min_distinct_counts[key] = distinct_count
+                print(f"Graph adjacency: {adj}")
+                print(f"Number assignment: {values}")
+                print(f"Heard values: {heard_vals}")
+                print(f"Distinct heard count: {distinct_count}\n")
+    print(f"Total candidates checked: {total_candidates}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,54 @@
+[write_program]
+The problem is to find the greatest integer \( k = \frac{N}{3} \) such that there exist nonnegative integers \(r, w, b\) with \(r+w+b=N\), \(N \geq 3\), and
+
+\[
+\frac{6 r w b}{N (N-1) (N-2)} > \frac{23}{100}
+\]
+
+Because \(k = \frac{N}{3}\) must be an integer, \(N\) must be divisible by 3. We look for the maximum \(k\) (and hence maximum \(N=3k\)) for which such a triple exists.
+
+To explore this:
+
+- Iterate over small \(k\) (e.g., from 1 to some max like 10).
+- For each \(N=3k\), enumerate all triples \(r,w,b\) with \(r+w+b=N\).
+- Compute \(\frac{6 r w b}{N (N-1)(N-2)}\) and check if it exceeds 23/100.
+- Print all valid \(k\) and where they happen.
+
+This will help conjecture the maximum \(k\).
+
+```python
+# Enumerate k up to 10, check triples r,w,b summing to N=3k
+# Compute 6*r*w*b / (N*(N-1)*(N-2)) and check > 0.23
+from fractions import Fraction
+
+threshold = Fraction(23, 100)
+
+def ratio(r, w, b, N):
+    numerator = 6 * r * w * b
+    denominator = N * (N - 1) * (N - 2)
+    return Fraction(numerator, denominator)
+
+max_k = 0
+max_k_found_at = []
+
+for k in range(1, 11):
+    N = 3 * k
+    # For fixed N, enumerate r,w,b with r+w+b=N, r,w,b >=0
+    found_valid = False
+    for r in range(N+1):
+        for w in range(N - r + 1):
+            b = N - r - w
+            # if any zero, product zero, skip
+            if r == 0 or w == 0 or b == 0:
+                continue
+            val = ratio(r, w, b, N)
+            if val > threshold:
+                print(f"k={k}, N={N}, r={r}, w={w}, b={b}, value={val}")
+                found_valid = True
+    if found_valid:
+        max_k = k
+        max_k_found_at.append(k)
+
+print(f"Maximum k up to 10 with valid triple: {max_k}")
+```
+

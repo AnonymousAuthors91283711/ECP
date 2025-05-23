@@ -1,0 +1,57 @@
+[write_program]
+This problem asks for the smallest 10th element (a10) in an 11-element set A of natural numbers, where:
+1. A is strictly increasing (StrictMonoOn)
+2. Every number from 1 to 1500 can be expressed as a sum of some subset of A
+3. We need to find the minimal possible a10 in such sets
+
+We'll approach this by:
+1. Generating candidate sets with increasing a10 values
+2. Checking if they can represent all numbers 1-1500
+3. Finding the minimal a10 where such a set exists
+
+```python
+def is_valid_set(A):
+    max_needed = 1500
+    achievable = set()
+    achievable.add(0)
+    for num in A:
+        new_sums = set()
+        for s in achievable:
+            new_sum = s + num
+            if new_sum <= max_needed:
+                new_sums.add(new_sum)
+        achievable.update(new_sums)
+    return all(n in achievable for n in range(1, max_needed + 1))
+
+def find_min_a10():
+    # We know the first 9 elements must be 1,2,4,8,16,32,64,128,256 (powers of 2)
+    # to cover sums up to 511 (2^9-1)
+    base = [1, 2, 4, 8, 16, 32, 64, 128, 256]
+    
+    # The 10th element (a10) must be <= 1500 - sum(base) = 1500 - 511 = 989
+    max_a10 = 989
+    
+    # The 11th element must be large enough to cover up to 1500
+    # We'll try a10 values in increasing order
+    for a10 in range(257, max_a10 + 1):
+        # The 11th element must be at least 1500 - (sum(base) + a10)
+        min_a11 = 1500 - (511 + a10)
+        if min_a11 < a10:
+            continue  # Would violate strict ordering
+            
+        # Try the minimal possible a11
+        a11 = min_a11
+        A = base + [a10, a11]
+        if is_valid_set(A):
+            print(f"Found valid set with a10 = {a10}: {A}")
+            return a10
+    
+    return None
+
+if __name__ == "__main__":
+    result = find_min_a10()
+    if result is not None:
+        print(f"Minimal a10 found: {result}")
+    else:
+        print("No valid set found")
+```

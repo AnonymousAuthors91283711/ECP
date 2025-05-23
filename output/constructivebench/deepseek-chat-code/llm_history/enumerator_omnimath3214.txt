@@ -1,0 +1,57 @@
+[write_program]
+This problem involves finding the minimal time `t` such that three people can complete a journey of 135 km total distance (walking + riding) under constraints:
+- Each person walks at most 6t km
+- Each person rides at most 90t km
+- For any two people, their combined riding distance ≤ 90t km
+
+We'll enumerate possible `t` values and check constraints.
+
+```python
+import itertools
+
+def is_valid(t, walk_dists, ride_dists):
+    # Check all constraints for given t and distances
+    if any(w > 6*t for w in walk_dists):
+        return False
+    if any(r > 90*t for r in ride_dists):
+        return False
+    if any(w + r != 135 for w, r in zip(walk_dists, ride_dists)):
+        return False
+    for pair in itertools.combinations(ride_dists, 2):
+        if sum(pair) > 90*t:
+            return False
+    return True
+
+def find_min_t():
+    # Binary search for minimal t between 1.0 and 2.0 (reasonable range)
+    low = 1.0
+    high = 2.0
+    epsilon = 1e-6
+    best_t = high
+    
+    while high - low > epsilon:
+        mid = (low + high) / 2
+        # Try to find valid distances for this t
+        # We'll attempt to minimize riding distances to satisfy constraints
+        # Let's assume two people ride as much as possible (90t) and third adjusts
+        ride1 = min(90*mid, 135 - 6*mid)
+        ride2 = min(90*mid, 135 - 6*mid)
+        ride3 = 135*3 - (ride1 + ride2) - 6*mid*3  # Total distance minus others
+        
+        walk1 = 135 - ride1
+        walk2 = 135 - ride2
+        walk3 = 135 - ride3
+        
+        walk_dists = [walk1, walk2, walk3]
+        ride_dists = [ride1, ride2, ride3]
+        
+        if is_valid(mid, walk_dists, ride_dists):
+            best_t = mid
+            high = mid
+        else:
+            low = mid
+    
+    print(f"Minimal t found: {best_t:.6f}")
+
+find_min_t()
+```

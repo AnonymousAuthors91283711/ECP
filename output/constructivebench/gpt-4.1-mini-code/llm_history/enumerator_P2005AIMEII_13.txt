@@ -1,0 +1,114 @@
+[write_program]
+The problem relates to finding a polynomial \( P(x) \) with integer coefficients such that:
+- \( P(17) = 10 \)
+- \( P(24) = 17 \)
+- There exist exactly two distinct integers \( n_1, n_2 \) where \( P(n) = n + 3 \), and
+- For these two integers, \( n_1 n_2 \) is the quantity to determine.
+
+We want to enumerate possible pairs \((n_1, n_2)\) to guess the product \( n_1 n_2 \) under these constraints.
+
+The polynomial \( Q(x) = P(x) - (x + 3) \) has integer coefficients, and vanishes exactly at two distinct integers \( n_1, n_2 \), and nowhere else for integer inputs. So \( Q(x) \) has exactly two integer roots and no other integer roots.
+
+From conditions, \( Q(17) = P(17) - 20 = 10 - 20 = -10 \), \( Q(24) = P(24) - 27 = 17 - 27 = -10 \). So \( Q(17) = Q(24) = -10 \).
+
+Let's try \( Q(x) = A(x - n_1)(x - n_2) \) for some integer \( A \neq 0 \).
+
+Then:
+\[
+Q(17) = A(17 - n_1)(17 - n_2) = -10 \\
+Q(24) = A(24 - n_1)(24 - n_2) = -10
+\]
+
+So:
+\[
+(17 - n_1)(17 - n_2) = (24 - n_1)(24 - n_2) = \frac{-10}{A}
+\]
+
+We enumerate possible divisors of -10 for \(A\) and \((17 - n_1)(17 - n_2)\), etc.
+
+We will iterate all integer divisors \(d\) of 10, and try to find \( n_1, n_2 \) such that:
+\[
+(17 - n_1)(17 - n_2) = d, \quad
+(24 - n_1)(24 - n_2) = d
+\]
+for some \( d \in \{ \pm1, \pm2, \pm5, \pm10 \} \).
+
+We print candidates and possible products \( n_1 \cdot n_2 \).
+
+```python
+# Enumerate possible integer pairs n1, n2 for the polynomial conditions in P2005AIMEII_13.
+# Q(x) = P(x) - (x+3) = A(x - n1)(x - n2)
+# and Q(17) = Q(24) = -10
+
+def divisors(n):
+    res = set()
+    for i in range(1, abs(n)+1):
+        if n % i == 0:
+            res.add(i)
+            res.add(-i)
+    return res
+
+def possible_roots_for_product(prod):
+    # Find all integer pairs (a,b) with a*b = prod
+    pairs = []
+    for i in range(-abs(prod), abs(prod)+1):
+        if i == 0:
+            continue
+        if prod % i == 0:
+            pairs.append( (i, prod//i) )
+    return pairs
+
+dvals = divisors(-10)  # Possible values for (x - n1)(x - n2) at 17 and 24
+printed_products = set()
+
+print("Possible (n1, n2) and their product n1*n2:")
+
+for d in dvals:
+    # For given d, we want integer n1,n2 so that:
+    # (17 - n1)*(17 - n2) = d
+    # (24 - n1)*(24 - n2) = d
+    # So (17 - n1)(17 - n2) = (24 - n1)(24 - n2) = d
+
+    # Suppose p = n1 + n2, q = n1*n2
+    # Then:
+    # (x - n1)(x - n2) = x^2 - p x + q
+    # So at x=17: 289 - 17 p + q = d
+    # at x=24: 576 - 24 p + q = d
+
+    # Subtract: (576 - 24 p + q) - (289 - 17 p + q) = 0 => 576 - 24 p - 289 +17 p =0
+    # 287 - 7 p =0 => p = 41
+
+    p = 41  # fixed sum of roots from above deduction
+
+    # Now solve for q:
+    # 289 - 17*41 + q = d
+    # 289 - 697 + q = d
+    # q = d + 408
+
+    q = d + 408
+
+    # Check discriminant for roots n1,n2:
+    disc = p*p - 4*q
+    if disc < 0:
+        continue
+    sqrt_disc = int(disc**0.5)
+    if sqrt_disc*sqrt_disc != disc:
+        continue
+
+    n1 = (p + sqrt_disc)//2
+    n2 = (p - sqrt_disc)//2
+    if n1 == n2:
+        continue
+
+    # Verify original values:
+    val17 = (17 - n1)*(17 - n2)
+    val24 = (24 - n1)*(24 - n2)
+    if val17 != d or val24 != d:
+        continue
+
+    prod_roots = n1 * n2
+    if prod_roots not in printed_products:
+        printed_products.add(prod_roots)
+        print(f"n1={n1}, n2={n2}, product={prod_roots}")
+```
+This enumerates candidate root pairs \((n_1,n_2)\) consistent with the problem and prints their product \( n_1 n_2 \). The candidates and their products will help conjecture the answer.

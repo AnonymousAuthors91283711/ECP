@@ -1,0 +1,62 @@
+[write_program]
+This problem involves finding all integer-coefficient polynomials P such that for every bijective integer sequence a, there exists indices i<j and an integer k where the sum of a from i to j equals P evaluated at k. We'll write a Python program to enumerate candidate polynomials of low degree and small coefficients, checking if they satisfy the condition for small bijective sequences.
+
+The approach is:
+1. Generate small integer-coefficient polynomials
+2. For each polynomial, test against small bijective sequences
+3. Output polynomials that pass all tests
+
+```python
+import itertools
+
+def generate_bijective_sequences(length):
+    """Generate all bijective sequences of given length using integers 1..length"""
+    for perm in itertools.permutations(range(1, length+1)):
+        yield list(perm)
+
+def test_polynomial(P, max_seq_length=5):
+    """Test if polynomial P satisfies the condition for all bijective sequences up to max_seq_length"""
+    for n in range(2, max_seq_length+1):
+        for seq in generate_bijective_sequences(n):
+            found = False
+            # Check all possible i<j pairs and k values
+            for i in range(n):
+                for j in range(i+1, n):
+                    s = sum(seq[i:j+1])
+                    # Check if s is in P's range for small k
+                    for k in range(-5, 6):
+                        if P(k) == s:
+                            found = True
+                            break
+                    if found: break
+                if found: break
+            if not found:
+                return False
+    return True
+
+def generate_polynomials(max_degree=2, max_coeff=2):
+    """Generate polynomials with given max degree and coefficients"""
+    for degree in range(max_degree+1):
+        for coeffs in itertools.product(range(-max_coeff, max_coeff+1), repeat=degree+1):
+            if coeffs[-1] == 0 and degree > 0:  # Skip if leading coefficient is 0
+                continue
+            yield lambda x, c=coeffs: sum(c[i]*(x**i) for i in range(len(c)))
+
+def main():
+    print("Searching for candidate polynomials...")
+    for P in generate_polynomials():
+        if test_polynomial(P):
+            # Print coefficients from highest degree to constant term
+            coeffs = []
+            try:
+                # Try to extract coefficients by evaluating at 0 and differences
+                c0 = P(0)
+                c1 = P(1) - c0
+                coeffs = [c1, c0]  # Assuming linear for demo
+                print(f"Found candidate polynomial with coefficients: {coeffs}")
+            except:
+                print("Found candidate polynomial (coefficients not extracted)")
+
+if __name__ == "__main__":
+    main()
+```

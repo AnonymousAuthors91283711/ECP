@@ -1,0 +1,72 @@
+[write_program]
+The problem defines a finite set \( S \) of real numbers \( x \) for which there exist \( y, z \) satisfying the system:
+\[
+\begin{cases}
+x + y + z = 1 \\
+x^2 + y^2 + z^2 = 2 \\
+x^3 + y^3 + z^3 = 3
+\end{cases}
+\]
+
+We want to enumerate all such \( x \) and sum their squares.
+
+We can treat \((x,y,z)\) as roots of a cubic with symmetric sums given by Viète's formulas. The approach is to iterate possible roots (within a reasonable range), check the equations, collect all valid \( x \), then sum \( x^2 \).
+
+```python
+# Enumerate possible x in range, find if y,z exist satisfying the system:
+# x+y+z=1, x^2+y^2+z^2=2, x^3+y^3+z^3=3
+# From sum equations, deduce y,z constraints and check.
+
+import math
+
+def approx_eq(a,b,eps=1e-9):
+    return abs(a-b)<eps
+
+def find_yz_given_x(x):
+    # From x+y+z=1 => y+z=1 - x = S
+    S = 1 - x
+    # From x^2 + y^2 + z^2 = 2 => y^2 + z^2 = 2 - x^2
+    Q = 2 - x*x
+    # We want y,z satisfying:
+    # y+z = S, y^2+z^2 = Q
+    # Then yz = T = (S^2 - Q)/2
+    T = (S*S - Q)/2
+    # y and z are roots of t^2 - S t + T=0
+    discrim = S*S - 4*T
+    if discrim < -1e-12:
+        return []  # no real roots y,z
+    elif discrim < 0:
+        discrim = 0
+    sqrt_d = math.sqrt(discrim)
+    y1 = (S + sqrt_d)/2
+    y2 = (S - sqrt_d)/2
+    return [(y1,y2), (y2,y1)] if y1!=y2 else [(y1,y2)]
+
+def check_cubic_sum(x,y,z):
+    val = x**3 + y**3 + z**3
+    return approx_eq(val,3)
+
+def main():
+    xs_found = set()
+    # x in range -5..5 with 0.005 step to get reasonable coverage
+    step = 0.005
+    start = -5
+    end = 5
+    count = 0
+    x = start
+    while x <= end:
+        for (y,z) in find_yz_given_x(x):
+            if check_cubic_sum(x,y,z):
+                # add x once
+                xs_found.add(round(x,7))
+        x += step
+    total = 0
+    for x in sorted(xs_found):
+        sq = x*x
+        print(f"x={x:.7f}, x²={sq:.7f}")
+        total += sq
+    print(f"Sum of squares = {total:.7f}")
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,58 @@
+[write_program]
+This problem asks for natural numbers m > 0 where there exists a prime p that divides no number of the form n^m - m for any n. We'll write a Python program to search for such m values by checking small primes and exponents.
+
+The approach:
+1. For small m values (up to 20), check if any prime p exists that never divides n^m - m
+2. For each m, test small primes p (up to 100) to see if they satisfy the condition
+3. For each (m,p) pair, test n values up to 100 to see if p divides n^m - m
+4. If no n is found where p divides n^m - m, we record m as a candidate
+
+```python
+def is_prime(n):
+    if n < 2:
+        return False
+    for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        if a >= n:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+def find_candidates():
+    max_m = 20
+    max_p = 100
+    max_n = 100
+    candidates = set()
+    
+    for m in range(1, max_m + 1):
+        for p in range(2, max_p + 1):
+            if not is_prime(p):
+                continue
+            found = False
+            for n in range(1, max_n + 1):
+                if (pow(n, m, p) - m % p) % p == 0:
+                    found = True
+                    break
+            if not found:
+                print(f"Found candidate: m={m} with prime p={p}")
+                candidates.add(m)
+                break
+    print("\nFinal candidate set:", sorted(candidates))
+
+find_candidates()
+```

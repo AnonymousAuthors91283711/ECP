@@ -1,0 +1,43 @@
+[write_program]
+The problem asks to count the number of functions f from a 7-element set to itself such that f(f(x)) is a constant function (i.e., f∘f maps every element to the same constant c). We need to compute this count modulo 1000.
+
+We'll enumerate all possible functions on a small set first (n=3) to understand the pattern, then compute for n=7. The key observations are:
+1. The constant c must be a fixed point of f (f(c)=c)
+2. All other elements must map to c either directly or through one intermediate step
+
+Here's the Python program to compute this:
+
+```python
+def count_special_functions(n):
+    # Count functions where f(f(x)) is constant for a set of size n
+    from math import comb
+    
+    total = 0
+    # Iterate over possible constant values c
+    for c in range(n):
+        # Case 1: f(x) = c for all x (all map directly to c)
+        case1 = 1
+        
+        # Case 2: Some elements map to c, others map to those elements
+        # We can have k elements that map to something other than c (but must map to c via f)
+        case2 = 0
+        for k in range(1, n):  # number of non-c elements not directly mapping to c
+            # Choose k elements that will map to other elements
+            ways_choose = comb(n-1, k)
+            # Each of these k elements can map to any of the (n-1-k) elements that map directly to c
+            ways_map = (n-1-k) ** k
+            case2 += ways_choose * ways_map
+        
+        total += case1 + case2
+    
+    return total
+
+# First show small cases to verify the pattern
+for n in range(1, 5):
+    print(f"n={n}: {count_special_functions(n)}")
+
+# Compute for n=7 and mod 1000
+n = 7
+result = count_special_functions(n) % 1000
+print(f"\nFor n=7, result mod 1000: {result}")
+```
